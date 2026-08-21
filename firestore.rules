@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // The web app performs sensitive reads/writes through the authenticated server gateway.
+    // Users may read only their own profile directly if a future client feature needs it.
+    match /users/{uid} {
+      allow read: if isSelf(uid);
+      allow create, update, delete: if false;
+    }
+
+    // Backend-only collections. Firebase Admin SDK enforces server RBAC + tenant scope.
+    match /{collection}/{docId} {
+      allow read, write: if false;
+    }
+  }
+}

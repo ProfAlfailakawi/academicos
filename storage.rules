@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Academic originals are uploaded and served through the authenticated backend.
+    // Signed URLs are time-limited; direct client writes are denied by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

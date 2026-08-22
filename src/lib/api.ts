@@ -33,11 +33,14 @@ import type {
   PublicPlatformShare,
   ProjectActivityRecord,
   ProjectComment,
+  ProjectDocument,
   ProjectDNA,
   ProjectPresenceRecord,
   ProjectEvidence,
   ProjectMemberRecord,
   ProjectVersionRecord,
+  ProjectWriterRequest,
+  ProjectXRayReport,
   RescuePlan,
   SubmissionAudit,
   SupportTicket,
@@ -621,6 +624,59 @@ export const api = {
       method: "POST",
       body: JSON.stringify(intake),
     }),
+  projectDocument: (projectId: string) =>
+    request<{ success: true; document: ProjectDocument | null }>(
+      `/api/projects/${encodeURIComponent(projectId)}/writer`,
+    ),
+  generateProjectDocument: (projectId: string, body: ProjectWriterRequest) =>
+    request<{
+      success: true;
+      document: ProjectDocument;
+      project: ProjectDNA;
+      source: "ai" | "safe_scaffold";
+      notice?: string;
+    }>(`/api/projects/${encodeURIComponent(projectId)}/writer/generate`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  projectXRay: (projectId: string, draft?: string) =>
+    request<{ success: true; report: ProjectXRayReport }>(
+      `/api/projects/${encodeURIComponent(projectId)}/xray`,
+      { method: "POST", body: JSON.stringify({ draft }) },
+    ),
+  projectSectionAction: (
+    projectId: string,
+    artifactId: string,
+    body: {
+      action:
+        | "explain"
+        | "simplify"
+        | "expand"
+        | "shorten"
+        | "voice"
+        | "academic"
+        | "translate"
+        | "challenge"
+        | "source";
+      instruction?: string;
+      assistanceMode?: ProjectWriterRequest["assistanceMode"];
+      apply?: boolean;
+    },
+  ) =>
+    request<{
+      success: true;
+      artifact: WorkspaceArtifact;
+      applied: boolean;
+      output: {
+        summary: string;
+        findings: string[];
+        suggestions: string[];
+        warnings: string[];
+      };
+    }>(
+      `/api/projects/${encodeURIComponent(projectId)}/writer/section/${encodeURIComponent(artifactId)}/action`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
   updateTask: (projectId: string, taskId: string, status: string) =>
     request<{ success: true; project: ProjectDNA }>(
       `/api/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`,
@@ -981,11 +1037,16 @@ export const api = {
   billingStatus: () =>
     request<{
       success: true;
-      billing: { provider: string; configured: boolean };
+      billing: {
+        provider: string;
+        configured: boolean;
+        plans: Array<{ id: string; name: string; amountKwd: number; pages: number; projects: number; description: string }>;
+      };
     }>("/api/billing/status"),
-  createCheckout: () =>
+  createCheckout: (planId: "project" | "project_viva" | "group" = "project") =>
     request<{ success: true; url: string }>("/api/billing/checkout", {
       method: "POST",
+      body: JSON.stringify({ planId }),
     }),
   learnExplain: (body: {
     topic: string;
@@ -1027,6 +1088,7 @@ export const api = {
         strategy?: string;
         steps: string[];
         verify: string[];
+        practiceQuestion?: string;
         caveats: string[];
         disclosure: string;
         source: string;

@@ -26,8 +26,6 @@ export function Settings() {
     useAppPreferences();
   const [h, setH] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [billingBusy, setBillingBusy] = useState(false);
-  const [billingMessage, setBillingMessage] = useState("");
   const [exportBusy, setExportBusy] = useState(false);
   const [deletionMessage, setDeletionMessage] = useState("");
   const [deletionBusy, setDeletionBusy] = useState(false);
@@ -58,18 +56,6 @@ export function Settings() {
       await api.exportMyData();
     } finally {
       setExportBusy(false);
-    }
-  }
-  async function checkout() {
-    setBillingBusy(true);
-    setBillingMessage("");
-    try {
-      const r = await api.createCheckout();
-      window.location.assign(r.url);
-    } catch (e: any) {
-      setBillingMessage(e.message);
-    } finally {
-      setBillingBusy(false);
     }
   }
   async function joinCourse() {
@@ -317,7 +303,7 @@ export function Settings() {
           <CardContent>
             <div className="flex items-center gap-2">
               <CreditCard size={17} className="brand-text" />
-              <h2 className="section-title">{t("settings.billing")}</h2>
+              <h2 className="section-title">الباقات والدفع لكل مشروع</h2>
             </div>
             <div className="mt-4 rounded-xl bg-[var(--bg)] border hairline p-3 flex items-center justify-between gap-3">
               <div>
@@ -331,25 +317,14 @@ export function Settings() {
                 <div className="text-[10px] muted mt-1">
                   {h?.billing?.configured
                     ? t("settings.configuredServer")
-                    : t("settings.notConfiguredPaywall")}
+                    : "جاهز لربط مفاتيح بوابة الدفع"}
                 </div>
               </div>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${h?.billing?.configured ? "bg-emerald-500" : "bg-amber-500"}`}
               />
             </div>
-            <Button
-              className="mt-4"
-              onClick={checkout}
-              disabled={!h?.billing?.configured || billingBusy}
-            >
-              {t("settings.upgradePro")}
-            </Button>
-            {billingMessage && (
-              <p className="text-xs text-[var(--warning)] mt-3">
-                {billingMessage}
-              </p>
-            )}
+            <Button className="mt-4" asChild><Link to="/app/plans">شاهد باقات المشاريع</Link></Button>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">

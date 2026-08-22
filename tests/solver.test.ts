@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decideSolveMode, buildSolveRequest, toSolveResult, nativeSolveScaffold, solverPlatformInstruction } from '../src/server/solver';
+import { decideSolveMode, buildSolveRequest, buildSolveVariation, toSolveResult, nativeSolveScaffold, solverPlatformInstruction } from '../src/server/solver';
 
 test('Practice problems (not linked to graded assignment) get a full worked solution', () => {
   const d = decideSolveMode({ linkedToAssignment: false });
@@ -37,11 +37,12 @@ test('Guided instruction forbids the final submittable answer; worked provides i
 });
 
 test('toSolveResult exposes finalAnswer only in worked mode', () => {
-  const out = { summary: '42', findings: ['step1', 'step2'], suggestions: ['check units'], warnings: ['assumed g=9.8'] };
+  const out = { summary: '42', findings: ['step1', 'step2'], suggestions: ['PRACTICE: solve x+3=8', 'check units'], warnings: ['assumed g=9.8'] };
   const worked = toSolveResult('worked', 'العربية', out);
   assert.equal(worked.finalAnswer, '42');
   assert.equal(worked.strategy, undefined);
   assert.equal(worked.steps.length, 2);
+  assert.equal(worked.practiceQuestion, 'solve x+3=8');
   const guided = toSolveResult('guided', 'العربية', out);
   assert.equal(guided.finalAnswer, undefined); // never leaks the answer in guided mode
   assert.ok(guided.strategy);
@@ -59,4 +60,11 @@ test('Native scaffold is honest and keeps guided mode answer-free', () => {
   assert.ok(w.notice);
   const g = nativeSolveScaffold('guided', 'العربية');
   assert.equal(g.finalAnswer, undefined);
+});
+
+test('The same exam question gets a stable but student-specific presentation', () => {
+  const a = buildSolveVariation('student-a', 'x^2=9', 'secret');
+  assert.deepEqual(a, buildSolveVariation('student-a', 'x^2=9', 'secret'));
+  assert.notEqual(a.id, buildSolveVariation('student-b', 'x^2=9', 'secret').id);
+  assert.ok(buildSolveRequest({ problem: 'x^2=9', mode: 'worked', variation: a }).platformInstruction?.includes(a.id));
 });

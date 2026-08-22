@@ -355,6 +355,100 @@ export interface WorkspaceArtifactVersion {
   createdAt: string;
 }
 
+export type AcademicWorkMode = "write" | "rescue" | "revise";
+export type AcademicAssistanceMode =
+  | "practice"
+  | "disclosed_submission"
+  | "policy_strict";
+
+export interface ProjectVariationProfile {
+  id: string;
+  argumentShape: string;
+  structureRhythm: string;
+  explanationStyle: string;
+  exampleLens: string;
+}
+
+export interface ProjectDocumentSection {
+  id: string;
+  artifactId?: string;
+  title: string;
+  purpose: string;
+  content: string;
+  explanation: string;
+  sourceNotes: string[];
+  defenseQuestions: string[];
+  rubricIds: string[];
+  status: "planned" | "draft" | "verified";
+  wordCount: number;
+}
+
+export interface ProjectDocument {
+  id: string;
+  projectId: string;
+  mode: AcademicWorkMode;
+  assistanceMode: AcademicAssistanceMode;
+  language: string;
+  title: string;
+  abstract: string;
+  sections: ProjectDocumentSection[];
+  bibliography: string[];
+  disclosure: string;
+  integrityWarnings: string[];
+  variation: ProjectVariationProfile;
+  quality: {
+    rubricCoverage: number;
+    sourceConfidence: number;
+    coherence: number;
+    discussability: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectWriterRequest {
+  mode: AcademicWorkMode;
+  assistanceMode: AcademicAssistanceMode;
+  language?: string;
+  desiredPages?: number;
+  academicTone?: "clear" | "formal" | "advanced";
+  topicNotes?: string;
+  learnerVoiceSample?: string;
+  existingDraft?: string;
+  professorFeedback?: string;
+}
+
+export interface ProjectXRayFinding {
+  id: string;
+  severity: "good" | "attention" | "critical";
+  category:
+    | "structure"
+    | "sources"
+    | "rubric"
+    | "coherence"
+    | "language"
+    | "understanding";
+  title: string;
+  detail: string;
+  action: string;
+}
+
+export interface ProjectXRayReport {
+  projectId: string;
+  generatedAt: string;
+  wordCount: number;
+  estimatedPages: number;
+  scores: {
+    structure: number;
+    sources: number;
+    rubric: number;
+    coherence: number;
+    discussability: number;
+  };
+  findings: ProjectXRayFinding[];
+  professorQuestions: string[];
+}
+
 export interface ProjectEvidence {
   id: string;
   projectId: string;

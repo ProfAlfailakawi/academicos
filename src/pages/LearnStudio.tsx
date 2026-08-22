@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { GraduationCap, Lightbulb, ListChecks, AlertTriangle, Play, Square, Sparkles, ShieldCheck } from "lucide-react";
+import { CheckCircle2, GraduationCap, Lightbulb, ListChecks, AlertTriangle, Play, Square, Sparkles, ShieldCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
@@ -83,9 +83,9 @@ export function LearnStudio() {
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="AcademicOS"
-        title={t("learn.title")}
-        description={t("learn.subtitle")}
+        eyebrow="Exam Coach"
+        title="حل، افهم، ثم جرّب سؤالاً مشابهاً"
+        description="الصق السؤال أو الاختبار. نعطيك تلميحاً أو حلاً كاملاً حسب السياسة، ونوضح لك الخطوات بلغتك."
         action={
           <label className="flex items-center gap-2 text-xs">
             <span className="muted">{t("app.language")}</span>
@@ -100,6 +100,10 @@ export function LearnStudio() {
         }
       />
 
+      <div className="understanding-flow" aria-label="رحلة التدريب">
+        {["الصق السؤال", "اختر التلميح", "افهم الحل", "ثبّت الفكرة"].map((label, index) => <div key={label} className="understanding-step"><span>{index + 1}</span><CheckCircle2 size={20} /><strong>{label}</strong></div>)}
+      </div>
+
       <div className="flex gap-2">
         {(["explain", "solve"] as Tab[]).map((x) => (
           <button
@@ -108,7 +112,7 @@ export function LearnStudio() {
             className={`focus-ring rounded-xl px-4 py-2 text-sm font-semibold border hairline ${tab === x ? "brand-soft-bg brand-text" : "bg-[var(--bg)]"}`}
           >
             {x === "explain" ? <Sparkles size={15} className="inline me-1" /> : <GraduationCap size={15} className="inline me-1" />}
-            {t(x === "explain" ? "learn.explainTab" : "learn.solveTab")}
+            {x === "explain" ? "اشرح لي موضوعاً" : "حل سؤالاً أو اختباراً"}
           </button>
         ))}
       </div>
@@ -187,6 +191,7 @@ export function LearnStudio() {
             )}
             <Section icon={<ListChecks size={15} />} title={t("learn.steps")} items={solve.result.steps} />
             <Section icon={<ShieldCheck size={15} />} title={t("learn.verify")} items={solve.result.verify} />
+            {solve.result.practiceQuestion && <div className="mt-5 rounded-2xl border border-dashed border-[var(--brand)]/35 brand-soft-bg p-5"><div className="flex items-center gap-2 section-title"><GraduationCap size={16} />ثبّت الفكرة بسؤال مشابه</div><p className="mt-3 text-sm leading-7">{solve.result.practiceQuestion}</p></div>}
             <Section icon={<AlertTriangle size={15} />} title={t("learn.caveats")} items={solve.result.caveats} />
             <div className="mt-5 text-[11px] muted border-t hairline pt-3">{solve.result.disclosure}</div>
           </CardContent>

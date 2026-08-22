@@ -4,11 +4,13 @@ import type {
   ProjectDNA,
   VivaMode,
   VivaSession,
+  WorkspaceArtifact,
 } from "../types";
 
 export function createVivaSession(
   project: ProjectDNA,
   mode: VivaMode,
+  artifacts: WorkspaceArtifact[] = [],
 ): VivaSession {
   const questions: VivaSession["questions"] = [];
   const add = (prompt: string, focus: string, relatedRubricId?: string) =>
@@ -17,6 +19,25 @@ export function createVivaSession(
     `اشرح هدف مشروع “${project.title}” بكلماتك، وما المخرج الذي يفترض أن يثبت نجاحه؟`,
     "project_understanding",
   );
+  const documentSections = artifacts.filter(
+    (artifact) => artifact.kind === "academic-document-section",
+  );
+  if (documentSections.length) {
+    const offset = [...project.id].reduce(
+      (sum, character) => sum + character.charCodeAt(0),
+      0,
+    );
+    const selected = [
+      documentSections[offset % documentSections.length],
+      documentSections[(offset + Math.max(1, Math.floor(documentSections.length / 2))) % documentSections.length],
+    ].filter((section, index, all) => all.findIndex((x) => x.id === section.id) === index);
+    for (const section of selected)
+      add(
+        `في قسم «${section.title}» كتبت فكرة محورية. لخّصها من ذاكرتك، ثم اذكر دليلاً يدعمها وحدّاً واحداً لا ينبغي تجاوزه.`,
+        `section:${section.id}`,
+        section.rubricIds?.[0],
+      );
+  }
   const req =
     project.requirements.find((r) => r.confidence === "needs_confirmation") ||
     project.requirements[0];

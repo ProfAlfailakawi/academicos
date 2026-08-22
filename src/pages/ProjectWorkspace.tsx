@@ -10,49 +10,36 @@ import {
   CircleDashed,
   ClipboardCheck,
   Database,
-  Download,
+  FilePenLine,
   FileCheck2,
   FileText,
   GitBranch,
   GraduationCap,
   ListChecks,
   LoaderCircle,
-  MessageSquareText,
-  Network,
   Play,
+  Sparkles,
   UsersRound,
   ShieldCheck,
-  Send,
-  Sparkles,
-  Target,
-  Zap,
   X,
 } from "lucide-react";
 import { api } from "../lib/api";
-import type { CourseSubmissionRecord, ProjectDNA, ProjectTask, RescuePlan, SubmissionAudit } from "../types";
+import type { ProjectDNA, ProjectTask, ProjectWriterRequest, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { EvidenceStudio } from "../components/project/EvidenceStudio";
 import { VivaStudio } from "../components/project/VivaStudio";
-import { ReviewStudio } from "../components/project/ReviewStudio";
 import { TeamStudio } from "../components/project/TeamStudio";
-import { WorkspaceStudios } from "../components/project/WorkspaceStudios";
-import { ProjectIntelligence } from "../components/project/ProjectIntelligence";
+import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
 import { useI18n } from "../lib/i18n";
 
 const tabs = [
-  ["overview", "pw.tabOverview", Target],
-  ["studios", "Workspaces", GitBranch],
-  ["tasks", "pw.tabTasks", ListChecks],
-  ["deliverables", "pw.tabDeliverables", FileCheck2],
-  ["requirements", "pw.tabRequirements", ClipboardCheck],
-  ["rubric", "Rubric", BookOpenCheck],
-  ["evidence", "Evidence", Database],
-  ["viva", "Viva", GraduationCap],
-  ["team", "Team", UsersRound],
-  ["review", "pw.tabReview", MessageSquareText],
-  ["twin", "Intelligence", Network],
+  ["writer", "المشروع", FilePenLine],
+  ["plan", "المطلوب والخطة", ListChecks],
+  ["evidence", "المصادر", Database],
+  ["viva", "ناقشني", GraduationCap],
+  ["team", "الفريق", UsersRound],
 ] as const;
 type Tab = (typeof tabs)[number][0];
 
@@ -61,15 +48,10 @@ export function ProjectWorkspace() {
   const { id = "" } = useParams();
   const location = useLocation();
   const [project, setProject] = useState<ProjectDNA | null>(null);
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("writer");
   const [error, setError] = useState("");
-  const [actionError, setActionError] = useState("");
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submission, setSubmission] = useState<CourseSubmissionRecord | null>(null);
-  const [rescue, setRescue] = useState<RescuePlan | null>(null);
-  const [rescueLoading, setRescueLoading] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [original, setOriginal] = useState<{
     text?: string;
@@ -82,10 +64,6 @@ export function ProjectWorkspace() {
     }>;
   } | null>(null);
   const [originalLoading, setOriginalLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [exportFormat, setExportFormat] = useState<
-    "zip" | "docx" | "pptx" | "xlsx" | "csv" | "json" | "md" | "pdf"
-  >("zip");
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({
     VivaStudio: true,
     ProjectExport: true,
@@ -105,12 +83,12 @@ export function ProjectWorkspace() {
         ),
       )
       .catch(() => undefined);
-    api.projectSubmission(id).then((r) => setSubmission(r.submission)).catch(() => undefined);
   }, [id]);
   useEffect(() => {
     const focus = new URLSearchParams(location.search).get("focus");
-    if (focus === "tasks") setTab("tasks");
-    else if (focus === "intelligence") setTab("twin");
+    if (focus === "viva") setTab("viva");
+    else if (focus === "plan" || focus === "tasks") setTab("plan");
+    else setTab("writer");
   }, [location.search]);
   if (error)
     return (
@@ -189,22 +167,6 @@ export function ProjectWorkspace() {
       setOriginalLoading(false);
     }
   }
-  async function runDownload(action: () => Promise<unknown>) {
-    setActionError("");
-    try {
-      await action();
-    } catch (e: any) {
-      setActionError(e?.message || t("pw.cannotDownload"));
-    }
-  }
-  async function exportSelected() {
-    setExporting(true);
-    try {
-      await runDownload(() => api.exportProject(project!.id, exportFormat));
-    } finally {
-      setExporting(false);
-    }
-  }
   async function runAudit() {
     setAuditing(true);
     try {
@@ -213,25 +175,6 @@ export function ProjectWorkspace() {
       setAuditing(false);
     }
   }
-  async function openRescue() {
-    setRescueLoading(true);
-    setActionError("");
-    try { setRescue((await api.rescuePlan(project!.id, 180)).plan); }
-    catch (e:any) { setActionError(e.message || t("pw.cannotBuildRescue")); }
-    finally { setRescueLoading(false); }
-  }
-  async function submitProject() {
-    if (!project?.aiPolicy.courseId || !project.aiPolicy.assignmentId) return;
-    setSubmitting(true); setActionError("");
-    try {
-      const readiness=(await api.audit(project.id)).audit;setAudit(readiness);
-      if((readiness.blockingIssues||0)>0){setActionError(t("pw.submitBlocked"));return;}
-      const confirmed=!(readiness.warnings||0)||window.confirm(`${t("pw.warnConfirmA")}${readiness.warnings}${t("pw.warnConfirmB")}`);
-      if(!confirmed)return;
-      const result=await api.submitProject(project.id,project.aiPolicy.courseId,project.aiPolicy.assignmentId,Boolean(readiness.warnings));setSubmission(result.submission);setAudit(null);
-    }catch(e:any){setActionError(e.message||t("pw.cannotCreateReceipt"));if(e?.audit)setAudit(e.audit)}finally{setSubmitting(false)}
-  }
-
   return (
     <div className="space-y-5">
       {location.state?.justCompiled && (
@@ -294,68 +237,14 @@ export function ProjectWorkspace() {
               <FileText size={16} />
               {t("pw.originalAssignment")}
             </Button>
-            <select
-              aria-label={t("pw.exportFormat")}
-              className="field w-auto text-xs"
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value as any)}
-            >
-              <option value="zip">Submission ZIP</option>
-              <option value="docx">DOCX</option>
-              <option value="pptx">PPTX</option>
-              <option value="xlsx">XLSX</option>
-              <option value="csv">CSV</option>
-              <option value="json">JSON</option>
-              <option value="md">Markdown</option>
-              <option value="pdf">PDF</option>
-            </select>
-            <Button
-              variant="outline"
-              onClick={exportSelected}
-              disabled={exporting || featureFlags.ProjectExport === false}
-              title={
-                featureFlags.ProjectExport === false
-                  ? t("pw.exportDisabled")
-                  : undefined
-              }
-            >
-              {exporting ? (
-                <LoaderCircle size={16} className="animate-spin" />
-              ) : (
-                <Download size={16} />
-              )}
-              {t("pw.export")}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() =>
-                runDownload(() => api.exportCitations(project.id, "ris"))
-              }
-            >
-              Bibliography
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() =>
-                runDownload(() => api.exportLearningEvidence(project.id, "md"))
-              }
-            >
-              Learning Evidence
-            </Button>
-            <Button onClick={runAudit} disabled={auditing}>
+            <Button variant="outline" onClick={runAudit} disabled={auditing}>
               {auditing ? (
                 <LoaderCircle size={16} className="animate-spin" />
               ) : (
                 <ShieldCheck size={16} />
               )}
-              {t("pw.auditSubmission")}
+              افحص الجاهزية
             </Button>
-            <Button variant="outline" onClick={openRescue} disabled={rescueLoading}>
-              {rescueLoading?<LoaderCircle size={16} className="animate-spin"/>:<Zap size={16}/>}{t("pw.rescuePlan")}
-            </Button>
-            {project.aiPolicy.courseId&&project.aiPolicy.assignmentId&&(!submission||submission.status==='returned')&&<Button onClick={submitProject} disabled={submitting} title={t("pw.submitTitle")}>
-              {submitting?<LoaderCircle size={16} className="animate-spin"/>:<Send size={16}/>}{t("pw.officialSubmit")}
-            </Button>}
           </div>
         </div>
         <div className="mt-5 pt-4 border-t hairline overflow-x-auto">
@@ -364,7 +253,8 @@ export function ProjectWorkspace() {
               .filter(
                 ([key]) =>
                   (key !== "viva" || featureFlags.VivaStudio !== false) &&
-                  (key !== "evidence" || featureFlags.EvidenceStudio !== false),
+                  (key !== "evidence" || featureFlags.EvidenceStudio !== false) &&
+                  (key !== "team" || project.collaborationMode === "group"),
               )
               .map(([key, label, Icon]) => (
                 <button
@@ -373,32 +263,31 @@ export function ProjectWorkspace() {
                   className={`focus-ring rounded-xl px-3.5 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg" : "muted hover:bg-[var(--panel-2)]"}`}
                 >
                   <Icon size={15} />
-                  {t(label)}
+                  {label}
                 </button>
               ))}
           </div>
         </div>
       </header>
-      {actionError&&<div role="alert" className="rounded-xl bg-red-500/5 border border-red-500/20 p-3 text-sm text-[var(--danger)]">{actionError}</div>}
-      {submission&&<section className="rounded-2xl brand-soft-bg p-4 md:p-5"><div className="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><div className="eyebrow">Submission receipt · {t("pw.attempt")} {submission.attempt}</div><h2 className="section-title mt-1">{submission.status==='released'?`${t("pw.grade")} ${submission.totalScore}/${submission.maxScore}`:submission.status==='returned'?t("pw.returnedForReview"):submission.status==='grading'||submission.status==='graded'?t("pw.gradingStatus"):t("pw.receivedOk")}</h2><div dir="ltr" className="text-[10px] font-mono muted mt-2 break-all">SHA-256 {submission.receiptHash}</div></div><div className="text-xs muted">{new Date(submission.submittedAt).toLocaleString('ar-KW')} · Revision {submission.projectRevision}</div></div>{submission.feedback&&<p className="text-xs leading-6 mt-3">{submission.feedback}</p>}{submission.returnedReason&&<p className="text-xs leading-6 mt-3 text-[var(--warning)]">{t("pw.returnReason")}: {submission.returnedReason}</p>}</section>}
-
-      {tab === "overview" && <Overview project={project} onTab={setTab} />}
-      {tab === "studios" && <WorkspaceStudios project={project} />}
-      {tab === "tasks" && <Tasks project={project} onChange={setTaskStatus} />}
-      {tab === "deliverables" && (
-        <Deliverables project={project} onChange={setDeliverableStatus} />
+      {tab === "writer" && (
+        <ProjectWriterStudio
+          project={project}
+          initialRequest={(location.state as { writerRequest?: ProjectWriterRequest } | null)?.writerRequest}
+          onProjectChange={setProject}
+          onOpenViva={() => setTab("viva")}
+        />
       )}
-      {tab === "requirements" && <Requirements project={project} />}
-      {tab === "rubric" && (
-        <Rubric project={project} onChange={setRubricStatus} />
+      {tab === "plan" && (
+        <StudentPlan
+          project={project}
+          onTask={setTaskStatus}
+          onDeliverable={setDeliverableStatus}
+          onRubric={setRubricStatus}
+        />
       )}
       {tab === "evidence" && <EvidenceStudio project={project} />}
       {tab === "viva" && <VivaStudio project={project} />}
       {tab === "team" && <TeamStudio project={project} />}
-      {tab === "review" && (
-        <ReviewStudio project={project} onRestored={setProject} />
-      )}
-      {tab === "twin" && <ProjectIntelligence project={project} />}
 
       {showOriginal && (
         <Modal title={t("pw.originalAssignment")} onClose={() => setShowOriginal(false)}>
@@ -462,7 +351,32 @@ export function ProjectWorkspace() {
         </Modal>
       )}
       {audit && <AuditModal audit={audit} onClose={() => setAudit(null)} />}
-      {rescue&&<Modal title={t("pw.realisticRescue")} onClose={()=>setRescue(null)}><div className="rounded-2xl brand-soft-bg p-4"><div className="eyebrow">{rescue.availableMinutes} {t("pw.minutesAvailable")} · {rescue.remainingMinutes} {t("pw.minutesRemaining")}</div><h3 className="section-title mt-2">{rescue.summary}</h3><p className="text-[10px] muted mt-2">{t("pw.rescueNote")}</p></div><div className="mt-4 space-y-2">{rescue.phases.map((phase,index)=><div key={phase.id} className="rounded-xl border hairline p-3 flex gap-3"><div className="h-8 w-8 rounded-lg brand-soft-bg grid place-items-center text-xs font-semibold">{index+1}</div><div><div className="text-sm font-semibold">{phase.title} · {phase.minutes} {t("pw.minutes")}</div><p className="text-xs muted leading-6 mt-1">{phase.reason}</p></div></div>)}</div></Modal>}
+    </div>
+  );
+}
+
+function StudentPlan({
+  project,
+  onTask,
+  onDeliverable,
+  onRubric,
+}: {
+  project: ProjectDNA;
+  onTask: (task: ProjectTask, status: ProjectTask["status"]) => void;
+  onDeliverable: (id: string, status: string) => void;
+  onRubric: (id: string, status: string) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <section className="grid sm:grid-cols-3 gap-3">
+        <Mini label="الخطوات" value={String(project.tasks.length)} hint="مرتبة من ملف التكليف" />
+        <Mini label="المخرجات" value={String(project.deliverables.length)} hint="ملفات يجب تسليمها" />
+        <Mini label="Rubric" value={String(project.rubric.length)} hint="معايير يجب تغطيتها" />
+      </section>
+      <Tasks project={project} onChange={onTask} />
+      <Requirements project={project} />
+      <Rubric project={project} onChange={onRubric} />
+      <Deliverables project={project} onChange={onDeliverable} />
     </div>
   );
 }
@@ -472,7 +386,7 @@ function Overview({
   onTab,
 }: {
   project: ProjectDNA;
-  onTab: (t: Tab) => void;
+  onTab: (t: any) => void;
 }) {
   const { t } = useI18n();
   const next =

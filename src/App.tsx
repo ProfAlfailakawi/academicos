@@ -44,6 +44,9 @@ const Skills = lazy(() =>
 const LearnStudio = lazy(() =>
   import("./pages/LearnStudio").then((m) => ({ default: m.LearnStudio })),
 );
+const Plans = lazy(() =>
+  import("./pages/Plans").then((m) => ({ default: m.Plans })),
+);
 const Passport = lazy(() =>
   import("./pages/Passport").then((m) => ({ default: m.Passport })),
 );
@@ -284,11 +287,11 @@ function CurriculumGuard() {
 }
 function HomeRoute() {
   const { user } = useAuth();
-  return user && ["student", "student_group_leader"].includes(user.role) ? (
-    <MissionControl />
-  ) : (
-    <RoleHome />
-  );
+  if (user && ["student", "student_group_leader"].includes(user.role))
+    return <MissionControl />;
+  if (user && ["professor", "course_coordinator"].includes(user.role))
+    return <ProfessorOS />;
+  return <RoleHome />;
 }
 
 function AppSuspenseFallback() {
@@ -358,6 +361,7 @@ export default function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="skills" element={<Skills />} />
             <Route path="learn" element={<LearnStudio />} />
+            <Route path="plans" element={<Plans />} />
             <Route path="passport" element={<Passport />} />
             <Route path="archive" element={<Archive />} />
             <Route path="jobs" element={<Jobs />} />

@@ -39,6 +39,7 @@ import {
 import {
   decideSolveMode,
   buildSolveRequest,
+  buildSolveVariation,
   toSolveResult,
   nativeSolveScaffold,
 } from "./src/server/solver";
@@ -59,6 +60,7 @@ import {
   projectExportHtml,
 } from "./src/server/export";
 import {
+  billingPlan,
   billingStatus,
   getBillingProvider,
   verifyMyFatoorahWebhook,
@@ -66,6 +68,11 @@ import {
   type VerifiedPaymentEvent,
 } from "./src/server/billing";
 import { completeViva, createVivaSession } from "./src/server/viva";
+import {
+  composeProjectDocument,
+  decideProjectWritingAccess,
+  inspectProjectDraft,
+} from "./src/server/project-writer";
 import { PLATFORM_RESOURCES, platformStore } from "./src/server/platform-store";
 import { emitWebhookEvent } from "./src/server/webhooks";
 import { platformCapability } from "./src/server/capability-registry";
@@ -126,7 +133,9 @@ import type {
   JobRecord,
   OcrExtractionRecord,
   PlatformResourceKey,
+  ProjectDocument,
   ProjectDNA,
+  ProjectWriterRequest,
   ProjectMemberRecord,
   ProjectPresenceRecord,
   ProjectEvidence,
@@ -779,6 +788,7 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
           userId: event.userId || null,
           amount: event.amount,
           currency: event.currency,
+          planId: event.planId || null,
           receivedAt: at,
         },
       },
@@ -786,17 +796,19 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
     );
     if (event.status === "paid") {
       await platformStore.create(
-        "subscriptions",
+        "entitlements",
         event.tenantId,
         event.provider,
         {
-          title: "AcademicOS Student Pro",
+          title: `AcademicOS ${event.planId || "project"}`,
           status: "active",
           ownerId: event.userId || undefined,
           data: {
             provider: event.provider,
             externalId: event.externalId,
             userId: event.userId || null,
+            planId: event.planId || "project",
+            projectsRemaining: 1,
             activatedAt: at,
           },
         },
@@ -805,8 +817,8 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
       await platformStore.recordEvent({
         tenantId: event.tenantId,
         userId: event.userId || event.provider,
-        name: "subscription_started",
-        properties: { provider: event.provider },
+        name: "project_plan_purchased",
+        properties: { provider: event.provider, planId: event.planId || "project" },
         provenance: "server",
       });
     }
@@ -1401,6 +1413,97 @@ async function loadProjectIntelligence(
     aiRuns,
   };
 }
+
+async function persistProjectDocument(
+  actor: { userId: string; tenantId: string },
+  project: ProjectDNA,
+  document: ProjectDocument,
+) {
+  const now = new Date().toISOString();
+  const persistedSections = [] as ProjectDocument["sections"];
+  for (const section of document.sections) {
+    const artifact: WorkspaceArtifact = {
+      id: randomUUID(),
+      projectId: project.id,
+      tenantId: actor.tenantId,
+      createdBy: actor.userId,
+      updatedBy: actor.userId,
+      module: "writing",
+      kind: "academic-document-section",
+      title: section.title,
+      content: section.content,
+      status: section.status === "verified" ? "ready" : "in_progress",
+      rubricIds: section.rubricIds,
+      isCanonical: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const persisted = await firestoreStore.saveWorkspaceArtifact(
+      artifact,
+      actor.userId,
+    );
+    persistedSections.push({ ...section, artifactId: persisted.id });
+  }
+  const persistedDocument: ProjectDocument = {
+    ...document,
+    sections: persistedSections,
+    updatedAt: now,
+  };
+  const compactManifest = {
+    ...persistedDocument,
+    sections: persistedSections.map(({ content: _content, ...section }) =>
+      section,
+    ),
+  };
+  await firestoreStore.saveWorkspaceArtifact(
+    {
+      id: randomUUID(),
+      projectId: project.id,
+      tenantId: actor.tenantId,
+      createdBy: actor.userId,
+      updatedBy: actor.userId,
+      module: "writing",
+      kind: "academic-document-manifest",
+      title: `AcademicOS Project Document · ${document.variation.id}`,
+      content: JSON.stringify(compactManifest),
+      status: "in_progress",
+      isCanonical: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+    actor.userId,
+  );
+  return persistedDocument;
+}
+
+async function loadLatestProjectDocument(
+  projectId: string,
+  tenantId: string,
+): Promise<ProjectDocument | null> {
+  const artifacts = await firestoreStore.listWorkspaceArtifacts(
+    projectId,
+    tenantId,
+  );
+  const manifest = artifacts
+    .filter((artifact) => artifact.kind === "academic-document-manifest")
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  if (!manifest) return null;
+  try {
+    const parsed = JSON.parse(manifest.content) as ProjectDocument;
+    const byId = new Map(artifacts.map((artifact) => [artifact.id, artifact]));
+    return {
+      ...parsed,
+      sections: parsed.sections.map((section) => ({
+        ...section,
+        content: section.artifactId
+          ? byId.get(section.artifactId)?.content || ""
+          : section.content || "",
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
 async function startServer() {
   initFirebase();
   const app = express();
@@ -1595,19 +1698,40 @@ async function startServer() {
                     0,
                 ),
                 currency: String(object.currency || "").toUpperCase(),
+                planId: String(object?.metadata?.planId || "") || null,
                 receivedAt: at,
               },
             },
             `Stripe webhook ${type}`,
           );
-          if (type === "checkout.session.completed")
+          if (type === "checkout.session.completed") {
+            await platformStore.create(
+              "entitlements",
+              tenantId,
+              "stripe",
+              {
+                title: `AcademicOS ${String(object?.metadata?.planId || "project")}`,
+                status: "active",
+                ownerId: userId || undefined,
+                data: {
+                  provider: "stripe",
+                  externalId: object.id || null,
+                  userId: userId || null,
+                  planId: String(object?.metadata?.planId || "project"),
+                  projectsRemaining: 1,
+                  activatedAt: at,
+                },
+              },
+              `Stripe verified ${type}`,
+            );
             await platformStore.recordEvent({
               tenantId,
               userId: userId || "stripe",
-              name: "subscription_started",
-              properties: { provider: "stripe" },
+              name: "project_plan_purchased",
+              properties: { provider: "stripe", planId: String(object?.metadata?.planId || "project") },
               provenance: "server",
             });
+          }
         }
         await platformStore.completeExternalWebhook(
           webhookClaimId,
@@ -3990,6 +4114,7 @@ async function startServer() {
           };
         }
         const decision = decideSolveMode(policyCtx);
+        const variation = buildSolveVariation(a.userId, problem);
         if (!aiConfigured({ complexity: "high", risk: "medium" })) {
           return res.json({
             success: true,
@@ -4006,6 +4131,7 @@ async function startServer() {
           problem,
           language,
           mode: decision.mode,
+          variationId: variation.id,
         });
         if (cacheable) {
           const hit = await firestoreStore.getLearnCache(solveScope, solveKey);
@@ -4029,6 +4155,7 @@ async function startServer() {
               language,
               mode: decision.mode,
               context,
+              variation,
             }),
           );
         } finally {
@@ -4049,7 +4176,7 @@ async function startServer() {
           "learn.solve",
           assignmentId || "practice",
           undefined,
-          { mode: decision.mode, linked: policyCtx.linkedToAssignment },
+          { mode: decision.mode, linked: policyCtx.linkedToAssignment, variationId: variation.id },
         );
         res.json({ success: true, decision, result: solveResult, source: "ai" });
       } catch (e) {
@@ -6162,6 +6289,381 @@ async function startServer() {
       }
     },
   );
+  app.get(
+    "/api/projects/:id/writer",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const document = await loadLatestProjectDocument(
+          project.id,
+          a.tenantId,
+        );
+        res.json({ success: true, document });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:id/writer/generate",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      let reservation:
+        | { id: string; counterId: string; reservedUsd: number }
+        | undefined;
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const mode = cleanField(req.body?.mode, 20) as ProjectWriterRequest["mode"];
+        const assistanceMode = cleanField(
+          req.body?.assistanceMode,
+          40,
+        ) as ProjectWriterRequest["assistanceMode"];
+        if (!new Set(["write", "rescue", "revise"]).has(mode))
+          return res.status(400).json({
+            error: "Invalid project writer mode",
+            code: "PROJECT_WRITER_MODE_INVALID",
+          });
+        if (
+          !new Set(["practice", "disclosed_submission", "policy_strict"]).has(
+            assistanceMode,
+          )
+        )
+          return res.status(400).json({
+            error: "Invalid assistance mode",
+            code: "PROJECT_ASSISTANCE_MODE_INVALID",
+          });
+        const request: ProjectWriterRequest = {
+          mode,
+          assistanceMode,
+          language: cleanField(req.body?.language, 80) || "العربية",
+          desiredPages: Math.max(
+            3,
+            Math.min(35, Number(req.body?.desiredPages || 12)),
+          ),
+          academicTone: new Set(["clear", "formal", "advanced"]).has(
+            String(req.body?.academicTone),
+          )
+            ? req.body.academicTone
+            : "clear",
+          topicNotes: cleanField(req.body?.topicNotes, 12_000),
+          learnerVoiceSample: cleanField(req.body?.learnerVoiceSample, 4_000),
+          existingDraft: cleanField(req.body?.existingDraft, 120_000),
+          professorFeedback: cleanField(req.body?.professorFeedback, 20_000),
+        };
+        if (mode === "rescue" && !request.existingDraft) {
+          const previous = await loadLatestProjectDocument(
+            project.id,
+            a.tenantId,
+          );
+          request.existingDraft =
+            previous?.sections.map((section) => section.content).join("\n\n") ||
+            project.originalAssignment?.text ||
+            "";
+        }
+        if (mode === "revise" && !request.professorFeedback)
+          return res.status(400).json({
+            error: "Professor feedback is required for revision mode",
+            code: "PROJECT_FEEDBACK_REQUIRED",
+          });
+
+        const evidence = await firestoreStore.listProjectEvidence(
+          project.id,
+          a.userId,
+          a.tenantId,
+        );
+        const verifiedSources = evidence
+          .filter((item) => item.type === "source")
+          .map((item) => ({
+            title: item.title,
+            detail: item.detail,
+            sourceUrl: item.sourceUrl,
+            verification: item.verification,
+          }));
+        const ready = aiConfigured({
+          taskType: `project_${mode}`,
+          complexity: project.complexity,
+          risk: "high",
+          requiredModality: "text",
+        });
+        const provider = ready
+          ? getAIProvider({
+              taskType: `project_${mode}`,
+              complexity: project.complexity,
+              risk: "high",
+              requiredModality: "text",
+            })
+          : null;
+        if (provider) {
+          const gate = await platformStore.reserveAiBudget(
+            a.tenantId,
+            a.userId,
+          );
+          reservation = gate.reservation;
+        }
+        const document = await composeProjectDocument({
+          project,
+          request,
+          userId: a.userId,
+          verifiedSources,
+          generateSection: provider
+            ? async (section) => {
+                const result = await provider.runAcademicTask({
+                  taskType: `project_${mode}_section`,
+                  agent: "Project Co-Writer",
+                  projectContext: facultyProjectContext(project),
+                  artifact: {
+                    module: "writing",
+                    title: section.sectionTitle,
+                    content: section.previousMemory,
+                  },
+                  platformInstruction: section.prompt,
+                  learnerInstruction: request.topicNotes,
+                  policySummary: `Level ${project.aiPolicy.level}. ${project.aiPolicy.summary}. Assistance mode: ${request.assistanceMode}.`,
+                });
+                await firestoreStore.recordAIUsage(
+                  result.usage,
+                  a,
+                  project.id,
+                );
+                return result.output;
+              }
+            : undefined,
+        });
+        const persisted = await persistProjectDocument(a, project, document);
+        const updatedProject: ProjectDNA = {
+          ...project,
+          workspaceModules: project.workspaceModules.includes("writing")
+            ? project.workspaceModules
+            : ["writing", ...project.workspaceModules],
+          status: project.status === "not_started" ? "in_progress" : project.status,
+          progress: Math.max(project.progress, 42),
+          nextAction: "راجع أقسام المشروع، ثبّت المصادر، ثم ابدأ تدريب المناقشة.",
+          updatedAt: new Date().toISOString(),
+        };
+        await firestoreStore.saveProject(updatedProject);
+        await firestoreStore.writeAudit(
+          a.tenantId,
+          a.userId,
+          "project.writer.generate",
+          project.id,
+          undefined,
+          {
+            mode,
+            assistanceMode,
+            variationId: persisted.variation.id,
+            sections: persisted.sections.length,
+            ai: Boolean(provider),
+          },
+        );
+        await recordProductEventSafe(a, "project_writer_generated", {
+          projectId: project.id,
+          properties: {
+            mode,
+            assistanceMode,
+            sections: persisted.sections.length,
+          },
+        });
+        res.status(201).json({
+          success: true,
+          document: persisted,
+          project: updatedProject,
+          source: provider ? "ai" : "safe_scaffold",
+          notice: provider
+            ? undefined
+            : "لا يوجد مزود AI مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
+        });
+      } catch (e) {
+        next(e);
+      } finally {
+        if (reservation)
+          await platformStore
+            .releaseAiBudgetReservation(reservation)
+            .catch(() => undefined);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:id/xray",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        let draft = cleanField(req.body?.draft, 160_000);
+        if (!draft) {
+          const document = await loadLatestProjectDocument(
+            project.id,
+            a.tenantId,
+          );
+          draft =
+            document?.sections.map((section) => section.content).join("\n\n") ||
+            project.originalAssignment?.text ||
+            "";
+        }
+        if (!draft.trim())
+          return res.status(400).json({
+            error: "Add or generate a draft before running Project X-Ray",
+            code: "PROJECT_DRAFT_REQUIRED",
+          });
+        const report = inspectProjectDraft(project, draft);
+        await recordProductEventSafe(a, "project_xray_completed", {
+          projectId: project.id,
+          properties: report.scores,
+        });
+        res.json({ success: true, report });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:projectId/writer/section/:artifactId/action",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      let reservation:
+        | { id: string; counterId: string; reservedUsd: number }
+        | undefined;
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.projectId,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const artifact = await firestoreStore.getWorkspaceArtifact(
+          req.params.artifactId,
+        );
+        if (
+          !artifact ||
+          artifact.projectId !== project.id ||
+          artifact.tenantId !== a.tenantId ||
+          artifact.kind !== "academic-document-section"
+        )
+          return res.status(404).json({
+            error: "Project section not found",
+            code: "PROJECT_SECTION_NOT_FOUND",
+          });
+        const action = cleanField(req.body?.action, 40);
+        const actions: Record<string, string> = {
+          explain: "Explain the section in plain language. Do not rewrite it.",
+          simplify: "Rewrite with simpler academic wording while preserving every supported meaning.",
+          expand: "Expand the analysis with deeper reasoning; mark every new evidence need as [مصدر مطلوب].",
+          shorten: "Shorten substantially without removing the central argument or verified evidence.",
+          voice: "Rewrite transparently toward the supplied student voice sample; do not evade AI detection.",
+          academic: "Improve formal academic tone, transitions, precision, and qualification.",
+          translate: "Translate into the requested language while preserving citations and meaning.",
+          challenge: "Challenge the section as a strict professor and return objections and questions, not replacement prose.",
+          source: "Identify exact claims needing sources and add [مصدر مطلوب] markers; never invent a source.",
+        };
+        if (!actions[action])
+          return res.status(400).json({
+            error: "Unsupported section action",
+            code: "PROJECT_SECTION_ACTION_INVALID",
+          });
+        const assistanceMode = new Set([
+          "practice",
+          "disclosed_submission",
+          "policy_strict",
+        ]).has(String(req.body?.assistanceMode))
+          ? req.body.assistanceMode
+          : "practice";
+        decideProjectWritingAccess(project, assistanceMode);
+        const provider = getAIProvider({
+          taskType: `revision_${action}`,
+          complexity: project.complexity,
+          risk: "medium",
+          requiredModality: "text",
+        });
+        if (!provider.configured())
+          return res.status(503).json({
+            error: "ميزة إعادة الصياغة تحتاج ربط مزود الذكاء الاصطناعي.",
+            code: "AI_NOT_CONFIGURED",
+          });
+        const gate = await platformStore.reserveAiBudget(
+          a.tenantId,
+          a.userId,
+        );
+        reservation = gate.reservation;
+        const result = await provider.runAcademicTask({
+          taskType: `revision_${action}`,
+          agent: action === "challenge" ? "Strict Professor" : "Revision Editor",
+          projectContext: facultyProjectContext(project),
+          artifact: {
+            module: "writing",
+            title: artifact.title,
+            content: artifact.content,
+          },
+          platformInstruction: `${actions[action]} Return the rewritten section in summary unless this is explain or challenge. Put explanation or objections in findings.`,
+          learnerInstruction: cleanField(req.body?.instruction, 4_000),
+          policySummary: `Level ${project.aiPolicy.level}. ${project.aiPolicy.summary}. Assistance mode: ${assistanceMode}.`,
+        });
+        await firestoreStore.recordAIUsage(result.usage, a, project.id);
+        const shouldApply =
+          Boolean(req.body?.apply) && !new Set(["explain", "challenge"]).has(action);
+        let persisted = artifact;
+        if (shouldApply) {
+          persisted = await firestoreStore.saveWorkspaceArtifact(
+            {
+              ...artifact,
+              content: result.output.summary,
+              updatedBy: a.userId,
+              updatedAt: new Date().toISOString(),
+            },
+            a.userId,
+            artifact.revision,
+          );
+        }
+        await recordProductEventSafe(a, "project_section_action", {
+          projectId: project.id,
+          properties: { action, applied: shouldApply },
+        });
+        res.json({
+          success: true,
+          artifact: persisted,
+          applied: shouldApply,
+          output: result.output,
+        });
+      } catch (e) {
+        next(e);
+      } finally {
+        if (reservation)
+          await platformStore
+            .releaseAiBudgetReservation(reservation)
+            .catch(() => undefined);
+      }
+    },
+  );
   app.post(
     "/api/projects/:id/presence",
     authenticate,
@@ -7189,7 +7691,11 @@ async function startServer() {
           return res
             .status(400)
             .json({ error: "Invalid viva mode", code: "INVALID_VIVA_MODE" });
-        const session = createVivaSession(project, mode);
+        const artifacts = await firestoreStore.listWorkspaceArtifacts(
+          project.id,
+          a.tenantId,
+        );
+        const session = createVivaSession(project, mode, artifacts);
         await firestoreStore.saveVivaSession(session);
         res.status(201).json({ success: true, session });
       } catch (e) {
@@ -8202,6 +8708,12 @@ async function startServer() {
           });
         const idempotencyKey =
           cleanField(req.header("x-idempotency-key"), 120) || randomUUID();
+        const selectedPlan = billingPlan(cleanField(req.body?.planId, 40));
+        if (!selectedPlan || selectedPlan.id === "preview")
+          return res.status(400).json({
+            error: "اختر باقة مدفوعة صحيحة.",
+            code: "BILLING_PLAN_INVALID",
+          });
         const provider = getBillingProvider();
         const result = await provider.createCheckout({
           customerEmail: a.email,
@@ -8209,15 +8721,20 @@ async function startServer() {
           tenantId: a.tenantId,
           userId: a.userId,
           idempotencyKey,
+          planId: selectedPlan.id,
+          amountKwd: selectedPlan.amountKwd,
+          description: `AcademicOS — ${selectedPlan.name}`,
           webhookUrl: `${appUrl}/api/billing/webhook/${provider.id}`,
-          successUrl: `${appUrl}/app/settings?billing=success`,
-          cancelUrl: `${appUrl}/app/settings?billing=cancelled`,
+          successUrl: `${appUrl}/app/plans?billing=success&plan=${selectedPlan.id}`,
+          cancelUrl: `${appUrl}/app/plans?billing=cancelled`,
         });
         await firestoreStore.writeAudit(
           a.tenantId,
           a.userId,
           "billing.checkout.create",
           a.userId,
+          undefined,
+          { planId: selectedPlan.id, amountKwd: selectedPlan.amountKwd },
         );
         res.json({ success: true, ...result });
       } catch (e) {

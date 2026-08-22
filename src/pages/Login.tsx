@@ -13,7 +13,9 @@ import { Card, CardContent } from "../components/ui/card";
 
 export function Login() {
   const { t } = useI18n();
-  const { user, login, configured } = useAuth(),
+  const { user, login, signup, configured } = useAuth(),
+    [mode, setMode] = useState<"login" | "signup">("login"),
+    [name, setName] = useState(""),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [busy, setBusy] = useState(false),
@@ -26,7 +28,8 @@ export function Login() {
     setBusy(true);
     setError("");
     try {
-      await login(email, password);
+      if (mode === "signup") await signup(name, email, password);
+      else await login(email, password);
     } catch (e: any) {
       setError(e.message || t("login.errorGeneric"));
       setBusy(false);
@@ -42,16 +45,16 @@ export function Login() {
           <div className="font-semibold">AcademicOS</div>
         </Link>
         <div className="max-w-xl">
-          <div className="eyebrow brand-text">Production identity</div>
+          <div className="eyebrow brand-text">من التكليف إلى المناقشة</div>
           <h1 className="text-5xl xl:text-6xl font-semibold tracking-[-0.05em] leading-[1.06] mt-4">
-            {t("login.heroLine1")}
+            مشروعك كامل.
             <br />
-            {t("login.heroLine2")}
+            وأنت فاهم كل سطر.
           </h1>
-          <p className="body-copy mt-5 text-base">{t("login.heroBody")}</p>
+          <p className="body-copy mt-5 text-base">اكتب، عدّل، افحص المصادر، ثم تدرّب على أسئلة الدكتور داخل مساحة واحدة.</p>
         </div>
         <div className="text-xs muted">
-          Firebase Authentication · App Check · Tenant isolation
+          حساب خاص · ملفات مشفرة · لا مشاركة دون إذنك
         </div>
       </section>
       <main className="flex items-center justify-center p-4 md:p-8">
@@ -66,8 +69,8 @@ export function Login() {
             <div className="h-12 w-12 rounded-2xl brand-soft-bg flex items-center justify-center">
               <LockKeyhole size={20} />
             </div>
-            <h1 className="text-2xl font-semibold mt-5">{t("login.title")}</h1>
-            <p className="body-copy mt-2">{t("login.subtitle")}</p>
+            <h1 className="text-2xl font-semibold mt-5">{mode === "signup" ? "أنشئ حساب الطالب" : "أهلاً بعودتك"}</h1>
+            <p className="body-copy mt-2">{mode === "signup" ? "دقيقة واحدة ونفتح لك أول مشروع." : "ادخل وكمل من آخر قسم."}</p>
             {!configured ? (
               <div
                 role="alert"
@@ -81,6 +84,7 @@ export function Login() {
               </div>
             ) : (
               <form onSubmit={submit} className="space-y-4 mt-5">
+                {mode === "signup" && <label className="block"><span className="text-xs font-semibold">الاسم</span><input autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} className="field mt-1.5" placeholder="اسمك الأول يكفي" /></label>}
                 <label className="block">
                   <span className="text-xs font-semibold">
                     {t("login.emailLabel")}
@@ -99,7 +103,7 @@ export function Login() {
                     {t("login.passwordLabel")}
                   </span>
                   <input
-                    autoComplete="current-password"
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
                     type="password"
                     required
                     value={password}
@@ -119,13 +123,14 @@ export function Login() {
                       {t("login.verifying")}
                     </>
                   ) : (
-                    t("login.submit")
+                    mode === "signup" ? "أنشئ حسابي" : t("login.submit")
                   )}
                 </Button>
               </form>
             )}
+            {configured && <button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }} className="focus-ring w-full text-xs font-semibold brand-text mt-5 rounded-xl py-2">{mode === "login" ? "جديد؟ أنشئ حساب طالب" : "عندك حساب؟ سجّل الدخول"}</button>}
             <div className="mt-6 pt-5 border-t hairline text-[11px] muted leading-5">
-              {t("login.footerNote")}
+              نحفظ حسابك ومشاريعك بصلاحيات منفصلة. لا توجد كلمة مرور أو هوية تجريبية مخفية داخل الواجهة.
             </div>
           </CardContent>
         </Card>

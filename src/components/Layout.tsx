@@ -1,30 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import {
-  Archive,
-  Bell,
-  BookOpenCheck,
-  CircleHelp,
-  Building2,
-  CalendarDays,
   Command,
+  CreditCard,
   FolderKanban,
-  Gauge,
   GraduationCap,
-  ServerCog,
+  Home,
   ArrowLeft,
   LogOut,
   Menu,
-  Plug,
   Moon,
   Plus,
   Search,
   Settings,
   Sparkles,
   Sun,
-  UserPlus,
   UserRound,
-  UsersRound,
   X,
 } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -45,70 +36,28 @@ type NavItem = {
 const studentNav: NavItem[] = [
   {
     to: "/app",
-    label: "layout.navToday",
-    short: "layout.navToday",
-    icon: Gauge,
+    label: "الرئيسية",
+    short: "الرئيسية",
+    icon: Home,
     end: true,
   },
   {
     to: "/app/projects",
-    label: "layout.navProjects",
-    short: "layout.navProjects",
+    label: "مشاريعي",
+    short: "المشاريع",
     icon: FolderKanban,
   },
   {
     to: "/app/learn",
-    label: "layout.navLearn",
-    short: "layout.navLearnShort",
+    label: "مدرب الاختبارات",
+    short: "اختباراتي",
     icon: Sparkles,
   },
   {
-    to: "/app/search",
-    label: "layout.navSearch",
-    short: "layout.navSearchShort",
-    icon: Search,
-  },
-  {
-    to: "/app/calendar",
-    label: "layout.navCalendar",
-    short: "layout.navCalendar",
-    icon: CalendarDays,
-  },
-  {
-    to: "/app/notifications",
-    label: "layout.navNotifications",
-    short: "layout.navNotifications",
-    icon: Bell,
-  },
-  {
-    to: "/app/jobs",
-    label: "layout.navJobs",
-    short: "layout.navJobsShort",
-    icon: ServerCog,
-  },
-  {
-    to: "/app/invitations",
-    label: "layout.navInvitations",
-    short: "layout.navInvitationsShort",
-    icon: UserPlus,
-  },
-  {
-    to: "/app/skills",
-    label: "layout.navSkills",
-    short: "layout.navSkillsShort",
-    icon: BookOpenCheck,
-  },
-  {
-    to: "/app/passport",
-    label: "layout.navPassport",
-    short: "layout.navPassportShort",
-    icon: GraduationCap,
-  },
-  {
-    to: "/app/archive",
-    label: "layout.navArchive",
-    short: "layout.navArchive",
-    icon: Archive,
+    to: "/app/plans",
+    label: "الباقات",
+    short: "الأسعار",
+    icon: CreditCard,
   },
 ];
 
@@ -298,7 +247,7 @@ export function Layout() {
     ].includes(user.role),
   );
   const canPlatform = Boolean(user && !studentMode);
-  const academicWorkMode = studentMode || canFaculty;
+  const academicWorkMode = studentMode;
   const nav = useMemo(
     () =>
       studentMode
@@ -306,78 +255,32 @@ export function Layout() {
         : [
             {
               to: "/app",
-              label: "layout.navBriefing",
-              short: "layout.navHome",
-              icon: Gauge,
+              label: "الرئيسية",
+              short: "الرئيسية",
+              icon: Home,
               end: true,
             },
             ...(canFaculty
               ? [
                   {
                     to: "/app/professor",
-                    label: "layout.navCourses",
-                    short: "layout.navCoursesShort",
+                    label: "Teacher Lite",
+                    short: "المقررات",
                     icon: GraduationCap,
-                  } as NavItem,
-                ]
-              : []),
-            ...(canControl
-              ? [
-                  {
-                    to: "/app/control",
-                    label: "layout.navInstitution",
-                    short: "layout.navInstitutionShort",
-                    icon: Building2,
-                  } as NavItem,
-                ]
-              : []),
-            ...(canUserAdmin
-              ? [
-                  {
-                    to: "/app/users",
-                    label: "layout.navUsers",
-                    short: "layout.navUsersShort",
-                    icon: UsersRound,
-                  } as NavItem,
-                ]
-              : []),
-            ...(canSupport
-              ? [
-                  {
-                    to: "/app/support-console",
-                    label: "layout.navSupportInbox",
-                    short: "layout.navSupportShort",
-                    icon: CircleHelp,
-                  } as NavItem,
-                ]
-              : []),
-            ...(canPlatform
-              ? [
-                  {
-                    to: "/app/platform",
-                    label: "layout.navOps",
-                    short: "layout.navOpsShort",
-                    icon: Settings,
                   } as NavItem,
                 ]
               : []),
             {
               to: "/app/search",
-              label: "layout.navUnifiedSearch",
-              short: "layout.navSearchShort",
+              label: "البحث",
+              short: "البحث",
               icon: Search,
             },
             {
-              to: "/app/notifications",
-              label: "layout.navDecisionCenter",
-              short: "layout.navNotifications",
-              icon: Bell,
-            },
-            {
-              to: "/app/jobs",
-              label: "layout.navJobs",
-              short: "layout.navJobsShort",
-              icon: ServerCog,
+              to: "/app/settings",
+              label: "الإعدادات",
+              short: "الإعدادات",
+              icon: Settings,
             },
           ],
     [
@@ -401,10 +304,10 @@ export function Layout() {
   const predictionPool = useMemo(
     () => [
       ...nav.map((item) => ({ to: item.to, label: t(item.label) })),
-      ...(academicWorkMode
+      ...(studentMode
         ? [
-            { to: "/app/upload", label: t("layout.actionAnalyzeAssignment") },
-            { to: "/app/semester", label: t("layout.actionCurrentSemester") },
+            { to: "/app/upload?mode=write", label: "اكتب مشروعاً" },
+            { to: "/app/upload?mode=rescue", label: "طوّر مسودة" },
           ]
         : []),
       { to: "/app/support", label: t("layout.navSupportShort") },
@@ -776,27 +679,6 @@ export function Layout() {
                   </div>
                 </button>
               )}
-              {academicWorkMode && (
-                <button
-                  onClick={() => {
-                    navigate("/app/semester");
-                    setPaletteOpen(false);
-                  }}
-                  className="focus-ring w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-start hover:bg-[var(--panel-2)]"
-                >
-                  <span className="h-8 w-8 rounded-lg soft-bg flex items-center justify-center">
-                    <CalendarDays size={16} />
-                  </span>
-                  <div>
-                    <div className="text-sm font-semibold">
-                      {t("layout.actionCurrentSemester")}
-                    </div>
-                    <div className="text-[11px] muted">
-                      {t("layout.semesterDesc")}
-                    </div>
-                  </div>
-                </button>
-              )}
               <div className="eyebrow px-3 pt-4 pb-2">
                 {t("layout.navigation")}
               </div>
@@ -885,34 +767,6 @@ function SidebarContent({
       </nav>
       <div className="mt-auto pt-5">
         <div className="eyebrow px-3 mb-2">{t("layout.system")}</div>
-        <NavLink
-          to="/app/support"
-          className={({ isActive }) =>
-            cn(
-              "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
-              isActive
-                ? "brand-soft-bg font-semibold"
-                : "muted hover:bg-[var(--panel-2)] hover:text-[var(--ink)]",
-            )
-          }
-        >
-          <CircleHelp size={17} />
-          {t("layout.navSupportShort")}
-        </NavLink>
-        <NavLink
-          to="/app/integrations"
-          className={({ isActive }) =>
-            cn(
-              "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
-              isActive
-                ? "brand-soft-bg font-semibold"
-                : "muted hover:bg-[var(--panel-2)] hover:text-[var(--ink)]",
-            )
-          }
-        >
-          <Plug size={17} />
-          {t("layout.navIntegrations")}
-        </NavLink>
         <NavLink
           to="/app/settings"
           className={({ isActive }) =>

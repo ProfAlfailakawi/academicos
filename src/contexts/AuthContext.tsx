@@ -6,10 +6,12 @@ import React, {
   useState,
 } from "react";
 import {
+  createUserWithEmailAndPassword,
   getIdTokenResult,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
 import { getToken as getAppCheckToken } from "firebase/app-check";
@@ -26,6 +28,7 @@ interface AuthState {
   loading: boolean;
   configured: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 const Context = createContext<AuthState | null>(null);
@@ -112,6 +115,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login: async (email, password) => {
         if (!firebaseAuth) throw new Error("Firebase Authentication is not configured");
         await signInWithEmailAndPassword(firebaseAuth, email, password);
+      },
+      signup: async (name, email, password) => {
+        if (!firebaseAuth) throw new Error("Firebase Authentication is not configured");
+        const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        await updateProfile(result.user, { displayName: name.trim() || email.split("@")[0] });
+        setUser(await mapFirebaseUser(result.user));
       },
       logout: async () => {
         if (firebaseAuth) await signOut(firebaseAuth);

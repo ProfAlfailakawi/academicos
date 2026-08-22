@@ -19,6 +19,21 @@ test("variation is stable per student and different across students", () => {
   assert.notEqual(buildVariationProfile(p, "student-a", "secret").id, buildVariationProfile(p, "student-b", "secret").id);
 });
 
+test("500 students receive unique deterministic writer fingerprints and varied structures", () => {
+  const p = project();
+  const profiles = Array.from({ length: 500 }, (_, index) =>
+    buildVariationProfile(p, `student-${index}`, "large-sample-secret"),
+  );
+  assert.equal(new Set(profiles.map((profile) => profile.id)).size, 500);
+  assert.ok(
+    new Set(
+      profiles.map((profile) =>
+        [profile.argumentShape, profile.structureRhythm, profile.explanationStyle, profile.exampleLens].join("|"),
+      ),
+    ).size > 250,
+  );
+});
+
 test("full disclosed submission is blocked until policy is confirmed and permissive", () => {
   assert.throws(() => decideProjectWritingAccess(project(2, true), "disclosed_submission"), (error: any) => error.code === "PROJECT_WRITING_POLICY_BLOCKED");
   assert.equal(decideProjectWritingAccess(project(4), "disclosed_submission").fullDraft, true);

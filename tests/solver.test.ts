@@ -68,3 +68,9 @@ test('The same exam question gets a stable but student-specific presentation', (
   assert.notEqual(a.id, buildSolveVariation('student-b', 'x^2=9', 'secret').id);
   assert.ok(buildSolveRequest({ problem: 'x^2=9', mode: 'worked', variation: a }).platformInstruction?.includes(a.id));
 });
+
+test('500 students receive unique solution fingerprints and broad presentation variation', () => {
+  const variations = Array.from({ length: 500 }, (_, index) => buildSolveVariation(`student-${index}`, 'x^2=9', 'large-sample-secret'));
+  assert.equal(new Set(variations.map((variation) => variation.id)).size, 500);
+  assert.ok(new Set(variations.map((variation) => `${variation.approach}|${variation.explanation}|${variation.example}`)).size > 100);
+});

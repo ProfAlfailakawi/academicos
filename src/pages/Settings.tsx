@@ -12,7 +12,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { api } from "../lib/api";
 import { useAppPreferences } from "../contexts/AppContext";
 import { PageHeader } from "../components/PageHeader";
@@ -21,6 +21,7 @@ import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
 
 export function Settings() {
+  const location = useLocation();
   const { t } = useI18n();
   const { theme, setTheme, accessibility, setAccessibility } =
     useAppPreferences();
@@ -37,6 +38,13 @@ export function Settings() {
   const [studyMinutes, setStudyMinutes] = useState(150);
   const [studyBusy, setStudyBusy] = useState(false);
   const [studyMessage, setStudyMessage] = useState("");
+  useEffect(() => {
+    const invitedCode = new URLSearchParams(location.hash.replace(/^#/, "")).get("join");
+    if (invitedCode) {
+      setJoinCode(invitedCode.toUpperCase());
+      setJoinMessage("راجع رمز المقرر ثم اضغط «انضم».");
+    }
+  }, [location.hash]);
   useEffect(() => {
     api
       .health()

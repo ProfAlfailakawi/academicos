@@ -43,3 +43,13 @@ test('ZIP export contains a real archive payload', () => {
   assert.equal(out.data.readUInt32LE(0),0x04034b50);
   assert.ok(out.data.length>100);
 });
+
+test('DOCX export preserves the canonical ordered writer sections', () => {
+  const project = buildProjectDNA({title:'Writer export',course:'T',projectType:'Report',academicDomain:'General',complexity:'low',collaborationMode:'individual',requiredActions:['WRITE'],requiredSkills:[],learningOutcomes:[],deliverables:[{title:'Report',format:'DOCX'}],requirements:[],rubric:[],aiPolicy:{level:4,summary:'Disclosed drafting',needsConfirmation:false},riskFlags:[]},{userId:'u',tenantId:'t'});
+  const at = new Date().toISOString();
+  const section = {id:'section-1',projectId:project.id,tenantId:'t',createdBy:'u',updatedBy:'u',module:'writing' as const,kind:'academic-document-section',title:'القسم الأول',content:'محتوى أكاديمي محفوظ داخل ملف Word النهائي.',status:'in_progress' as const,isCanonical:true,createdAt:at,updatedAt:at};
+  const manifest = {...section,id:'manifest',kind:'academic-document-manifest',title:'manifest',content:JSON.stringify({sections:[{artifactId:section.id}]})};
+  const out = exportProject(project,'docx',[manifest,section]);
+  assert.equal(out.contentType,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  assert.ok(out.data.includes(Buffer.from(section.content,'utf8')));
+});

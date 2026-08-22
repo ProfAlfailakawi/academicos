@@ -396,6 +396,9 @@ export interface ProjectDocument {
   disclosure: string;
   integrityWarnings: string[];
   variation: ProjectVariationProfile;
+  accessTier?: "preview" | "paid";
+  planId?: Exclude<ProjectPlanId, "preview">;
+  targetPages?: number;
   quality: {
     rubricCoverage: number;
     sourceConfidence: number;
@@ -404,6 +407,20 @@ export interface ProjectDocument {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+export type ProjectPlanId = "preview" | "project" | "project_viva" | "group";
+
+export interface ProjectAccess {
+  tier: "preview" | "paid";
+  status: "preview" | "active" | "revoked";
+  planId?: Exclude<ProjectPlanId, "preview">;
+  entitlementId?: string;
+  unlocked: boolean;
+  canWriteFull: boolean;
+  canExport: boolean;
+  canViva: boolean;
+  canCollaborate: boolean;
 }
 
 export interface ProjectWriterRequest {

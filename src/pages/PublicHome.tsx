@@ -17,7 +17,7 @@ export function PublicHome() {
   return (
     <div dir="rtl" className="public-shell min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <header className="public-header px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 focus-ring rounded-xl">
+        <Link to="/" className="min-h-11 flex items-center gap-3 focus-ring rounded-xl">
           <div className="h-10 w-10 rounded-2xl brand-bg grid place-items-center text-xs font-black">AO</div>
           <div><div className="font-bold">AcademicOS</div><div className="text-[10px] muted">مشروعك من البداية إلى المناقشة</div></div>
         </Link>
@@ -83,7 +83,7 @@ export function PublicHome() {
         </section>
       </main>
 
-      <footer className="px-4 md:px-8 py-8"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — اكتب، افهم، ناقش.</span><span className="flex flex-wrap gap-4"><Link to="/p/academic-integrity">النزاهة</Link><Link to="/p/privacy">الخصوصية</Link><Link to="/p/terms">الشروط</Link><Link to="/p/faq">الأسئلة</Link></span></div></footer>
+      <footer className="px-4 md:px-8 py-8"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — اكتب، افهم، ناقش.</span><span className="flex flex-wrap gap-x-4"><Link className="min-h-11 inline-flex items-center" to="/p/academic-integrity">النزاهة</Link><Link className="min-h-11 inline-flex items-center" to="/p/privacy">الخصوصية</Link><Link className="min-h-11 inline-flex items-center" to="/p/terms">الشروط</Link><Link className="min-h-11 inline-flex items-center" to="/p/faq">الأسئلة</Link></span></div></footer>
     </div>
   );
 }

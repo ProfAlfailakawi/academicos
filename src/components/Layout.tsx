@@ -311,7 +311,6 @@ export function Layout() {
           ]
         : []),
       { to: "/app/support", label: t("layout.navSupportShort") },
-      { to: "/app/integrations", label: t("layout.navIntegrations") },
       { to: "/app/settings", label: t("layout.navSettings") },
     ],
     [nav, academicWorkMode, t],
@@ -570,11 +569,11 @@ export function Layout() {
             <MobileNav key={item.to} item={item} />
           ))}
           <NavLink
-            to={academicWorkMode ? "/app/upload" : "/app/platform"}
+            to={academicWorkMode ? "/app/upload" : "/app/professor"}
             className="focus-ring flex flex-col items-center justify-center -mt-5"
           >
             <span className="mobile-add-button h-12 w-12 rounded-2xl brand-bg flex items-center justify-center">
-              {academicWorkMode ? <Plus size={22} /> : <Settings size={20} />}
+              {academicWorkMode ? <Plus size={22} /> : <GraduationCap size={20} />}
             </span>
             <span className="text-[10px] font-semibold mt-1">
               {academicWorkMode ? t("layout.add") : t("layout.work")}

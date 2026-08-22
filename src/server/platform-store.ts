@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, scrypt, timingSafeEqual } from 'no
 import { promisify } from 'node:util';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import type { AIOutputFeedback, ApiKeyRecord, JobRecord, PlatformMetrics, PlatformRecord, PlatformRecordVersion, PlatformResourceKey, ProductEventRecord, PublicShareRecord } from '../types';
+import { isPaidProjectPlan, projectAccessFromEntitlements, type PaidProjectPlanId } from './project-access';
 
 const MAX_PAGE = 200;
 const COLLECTION_PREFIX = 'platform_';
@@ -138,6 +139,23 @@ export const platformStore = {
     return{claimed,id};
   },
   async completeExternalWebhook(id:string,status:'completed'|'failed',error?:string){await db().collection(EXTERNAL_WEBHOOK_EVENTS).doc(id).set({status,updatedAt:now(),...(error?{error:error.slice(0,500)}:{error:FieldValue.delete()})},{merge:true});},
+  async projectEntitlementAccess(tenantId:string,userId:string,projectId:string){
+    const snap=await db().collection(collectionFor('entitlements')).where('ownerId','==',userId).limit(100).get();
+    const records=snap.docs.map(d=>d.data() as PlatformRecord).filter(record=>record.tenantId===tenantId);
+    return projectAccessFromEntitlements(records,projectId);
+  },
+  async grantProjectEntitlement(input:{tenantId:string;userId:string;projectId:string;planId:PaidProjectPlanId;provider:string;externalId:string;eventId:string;externalRefs?:string[]}){
+    if(!input.tenantId||!input.userId||!input.projectId||!input.externalId||!isPaidProjectPlan(input.planId))throw Object.assign(new Error('Project entitlement metadata is incomplete'),{status:400,code:'PAYMENT_METADATA_INVALID'});
+    const id=hash(`project-entitlement:${input.provider}:${input.externalId}:${input.tenantId}:${input.projectId}`),ref=db().collection(collectionFor('entitlements')).doc(id);let record!:PlatformRecord;
+    await db().runTransaction(async tx=>{const existing=await tx.get(ref);if(existing.exists){record=existing.data() as PlatformRecord;if(record.status!=='active'){const at=now();record={...record,status:'active',updatedBy:input.provider,updatedAt:at,version:Number(record.version||1)+1,data:{...record.data,planId:input.planId,eventId:input.eventId,reactivatedAt:at}};tx.set(ref,record,{merge:true});}return;}const at=now();record={id,resource:'entitlements',tenantId:input.tenantId,ownerId:input.userId,status:'active',title:`AcademicOS ${input.planId}`,data:{kind:'project',projectId:input.projectId,planId:input.planId,provider:input.provider,externalId:input.externalId,externalRefs:[...new Set([input.externalId,...(input.externalRefs||[])].filter(Boolean))],eventId:input.eventId,activatedAt:at},version:1,createdBy:input.provider,updatedBy:input.provider,createdAt:at,updatedAt:at};tx.set(ref,record);});
+    await audit(input.tenantId,input.provider,'project_entitlement.grant',id,`${input.provider} verified payment`,{projectId:input.projectId,userId:input.userId,planId:input.planId,eventId:input.eventId});return record;
+  },
+  async revokeProjectEntitlement(input:{tenantId:string;userId:string;projectId:string;provider:string;externalId?:string;eventId:string;reason:'refunded'|'chargeback'}){
+    if(!input.tenantId||!input.userId||!input.projectId)throw Object.assign(new Error('Project entitlement metadata is incomplete'),{status:400,code:'PAYMENT_METADATA_INVALID'});
+    const snap=await db().collection(collectionFor('entitlements')).where('ownerId','==',input.userId).limit(MAX_PAGE).get();const candidates=snap.docs.filter(doc=>{const x=doc.data() as PlatformRecord;return x.tenantId===input.tenantId&&x.status==='active'&&String(x.data?.kind||'')==='project'&&String(x.data?.projectId||'')===input.projectId&&String(x.data?.provider||'')===input.provider;});
+    const exact=input.externalId?candidates.filter(doc=>{const data=doc.data().data||{};return String(data.externalId||'')===input.externalId||(Array.isArray(data.externalRefs)&&data.externalRefs.map(String).includes(input.externalId!));}):[];const matches=exact.length?exact:candidates.sort((a,b)=>String(b.data().updatedAt||'').localeCompare(String(a.data().updatedAt||''))).slice(0,1);
+    if(!matches.length)return 0;const batch=db().batch(),at=now();for(const doc of matches)batch.set(doc.ref,{status:'revoked',updatedAt:at,updatedBy:input.provider,version:FieldValue.increment(1),data:{...doc.data().data,revokedAt:at,revocationReason:input.reason,revocationEventId:input.eventId,revocationExternalId:input.externalId||null}},{merge:true});await batch.commit();await audit(input.tenantId,input.provider,'project_entitlement.revoke',input.projectId,input.reason,{projectId:input.projectId,userId:input.userId,eventId:input.eventId,count:matches.length});return matches.length;
+  },
   async listJobs(tenantId:string,userId?:string){let q:any=db().collection(JOBS).where('tenantId','==',tenantId);if(userId)q=q.where('userId','==',userId);const snap=await q.limit(100).get();return snap.docs.map((d:any)=>d.data() as JobRecord).sort((a:JobRecord,b:JobRecord)=>b.updatedAt.localeCompare(a.updatedAt));},
   async createApiKey(tenantId:string,actorId:string,name:string,scopes:string[],expiresAt?:string){const raw=`aos_${randomBytes(30).toString('base64url')}`;const id=randomUUID();const prefix=raw.slice(0,12);const record:ApiKeyRecord={id,tenantId,name,prefix,scopes:[...new Set(scopes)].slice(0,30),status:'active',createdBy:actorId,createdAt:now(),expiresAt};await db().collection(API_KEYS).doc(id).set({...record,keyHash:hash(raw)});await audit(tenantId,actorId,'api_key.create',id,undefined,{name,prefix,scopes:record.scopes});return {record,secret:raw};},
   async listApiKeys(tenantId:string){const snap=await db().collection(API_KEYS).where('tenantId','==',tenantId).limit(100).get();return snap.docs.map(d=>{const x=d.data();delete x.keyHash;return x as ApiKeyRecord}).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));},

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useParams } from "react-router";
 import { ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
@@ -201,6 +201,8 @@ const pages: Record<string, PageContent> = {
 export function PublicPage() {
   const { t } = useI18n();
   const { slug = "about" } = useParams();
+  if (["universities", "governments", "employers"].includes(slug))
+    return <Navigate to="/" replace />;
   const c = pages[slug] || pages.about;
   return (
     <div className="min-h-screen bg-[var(--bg)]">

@@ -73,6 +73,11 @@ import {
   decideProjectWritingAccess,
   inspectProjectDraft,
 } from "./src/server/project-writer";
+import {
+  PREVIEW_PAGE_LIMIT,
+  decideProjectGeneration,
+  isPaidProjectPlan,
+} from "./src/server/project-access";
 import { PLATFORM_RESOURCES, platformStore } from "./src/server/platform-store";
 import { emitWebhookEvent } from "./src/server/webhooks";
 import { platformCapability } from "./src/server/capability-registry";
@@ -789,38 +794,46 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
           amount: event.amount,
           currency: event.currency,
           planId: event.planId || null,
+          projectId: event.projectId || null,
           receivedAt: at,
         },
       },
       `${event.provider} verified webhook`,
     );
     if (event.status === "paid") {
-      await platformStore.create(
-        "entitlements",
-        event.tenantId,
-        event.provider,
-        {
-          title: `AcademicOS ${event.planId || "project"}`,
-          status: "active",
-          ownerId: event.userId || undefined,
-          data: {
-            provider: event.provider,
-            externalId: event.externalId,
-            userId: event.userId || null,
-            planId: event.planId || "project",
-            projectsRemaining: 1,
-            activatedAt: at,
-          },
-        },
-        `${event.provider} verified payment`,
-      );
+      if (!event.userId || !event.projectId || !isPaidProjectPlan(event.planId))
+        throw Object.assign(new Error("Paid project metadata is incomplete"), {
+          status: 400,
+          code: "PAYMENT_METADATA_INVALID",
+        });
+      await platformStore.grantProjectEntitlement({
+        tenantId: event.tenantId,
+        userId: event.userId,
+        projectId: event.projectId,
+        planId: event.planId,
+        provider: event.provider,
+        externalId: event.externalId,
+        eventId: event.eventId,
+      });
       await platformStore.recordEvent({
         tenantId: event.tenantId,
         userId: event.userId || event.provider,
         name: "project_plan_purchased",
-        properties: { provider: event.provider, planId: event.planId || "project" },
+        projectId: event.projectId,
+        properties: { provider: event.provider, planId: event.planId },
         provenance: "server",
       });
+    } else if (event.status === "refunded" || event.status === "chargeback") {
+      if (event.userId && event.projectId)
+        await platformStore.revokeProjectEntitlement({
+          tenantId: event.tenantId,
+          userId: event.userId,
+          projectId: event.projectId,
+          provider: event.provider,
+          externalId: event.externalId,
+          eventId: event.eventId,
+          reason: event.status,
+        });
     }
     await platformStore.completeExternalWebhook(claim.id, "completed");
     return { duplicate: false };
@@ -1603,16 +1616,37 @@ async function startServer() {
             code: "STRIPE_EVENT_ID_REQUIRED",
           });
         const object = event?.data?.object || {};
+        const type = String(event.type || "unknown");
+        let stripeMetadata =
+          object?.metadata || object?.subscription_details?.metadata || {};
+        const paymentIntentId = String(
+          typeof object?.payment_intent === "string"
+            ? object.payment_intent
+            : object?.payment_intent?.id || "",
+        );
+        if (
+          !stripeMetadata?.tenantId &&
+          /^pi_[A-Za-z0-9_]+$/.test(paymentIntentId) &&
+          process.env.STRIPE_SECRET_KEY
+        ) {
+          const lookup = await fetch(
+            `https://api.stripe.com/v1/payment_intents/${paymentIntentId}`,
+            {
+              headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+              signal: AbortSignal.timeout(10_000),
+            },
+          );
+          if (lookup.ok) {
+            const paymentIntent: any = await lookup.json();
+            stripeMetadata = paymentIntent?.metadata || stripeMetadata;
+          }
+        }
         const tenantId = String(
-          object?.metadata?.tenantId ||
-            object?.subscription_details?.metadata?.tenantId ||
-            "",
+          stripeMetadata?.tenantId || "",
         );
-        const userId = String(
-          object?.metadata?.userId ||
-            object?.subscription_details?.metadata?.userId ||
-            "",
-        );
+        const userId = String(stripeMetadata?.userId || "");
+        const projectId = String(stripeMetadata?.projectId || "");
+        const planId = String(stripeMetadata?.planId || "");
         if (!tenantId)
           return res.status(202).json({ received: true, ignored: true });
         const claim = await platformStore.claimExternalWebhook(
@@ -1623,7 +1657,6 @@ async function startServer() {
         if (!claim.claimed)
           return res.json({ received: true, duplicate: true });
         const at = new Date().toISOString();
-        const type = String(event.type || "unknown");
         if (type.startsWith("customer.subscription.")) {
           const rawStatus = String(object.status || "incomplete");
           const status =
@@ -1698,39 +1731,48 @@ async function startServer() {
                     0,
                 ),
                 currency: String(object.currency || "").toUpperCase(),
-                planId: String(object?.metadata?.planId || "") || null,
+                planId: planId || null,
+                projectId: projectId || null,
                 receivedAt: at,
               },
             },
             `Stripe webhook ${type}`,
           );
           if (type === "checkout.session.completed") {
-            await platformStore.create(
-              "entitlements",
+            if (!userId || !projectId || !isPaidProjectPlan(planId))
+              throw Object.assign(new Error("Paid project metadata is incomplete"), {
+                status: 400,
+                code: "PAYMENT_METADATA_INVALID",
+              });
+            await platformStore.grantProjectEntitlement({
               tenantId,
-              "stripe",
-              {
-                title: `AcademicOS ${String(object?.metadata?.planId || "project")}`,
-                status: "active",
-                ownerId: userId || undefined,
-                data: {
-                  provider: "stripe",
-                  externalId: object.id || null,
-                  userId: userId || null,
-                  planId: String(object?.metadata?.planId || "project"),
-                  projectsRemaining: 1,
-                  activatedAt: at,
-                },
-              },
-              `Stripe verified ${type}`,
-            );
+              userId,
+              projectId,
+              planId,
+              provider: "stripe",
+              externalId: String(object.id || paymentIntentId),
+              eventId,
+              externalRefs: [paymentIntentId],
+            });
             await platformStore.recordEvent({
               tenantId,
               userId: userId || "stripe",
               name: "project_plan_purchased",
-              properties: { provider: "stripe", planId: String(object?.metadata?.planId || "project") },
+              projectId,
+              properties: { provider: "stripe", planId },
               provenance: "server",
             });
+          } else if (status === "refunded" || status === "chargeback") {
+            if (userId && projectId)
+              await platformStore.revokeProjectEntitlement({
+                tenantId,
+                userId,
+                projectId,
+                provider: "stripe",
+                externalId: String(paymentIntentId || object.id),
+                eventId,
+                reason: status,
+              });
           }
         }
         await platformStore.completeExternalWebhook(
@@ -2080,8 +2122,8 @@ async function startServer() {
           category: "billing",
           mode: "server",
           description: "Optional checkout provider behind Billing abstraction.",
-          setupKeys: ["STRIPE_SECRET_KEY", "STRIPE_STUDENT_PRO_PRICE_ID"],
-          env: ["STRIPE_SECRET_KEY", "STRIPE_STUDENT_PRO_PRICE_ID"],
+          setupKeys: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+          env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
         },
         {
           key: "tap-knet",
@@ -2093,12 +2135,10 @@ async function startServer() {
           setupKeys: [
             "TAP_SECRET_KEY",
             "TAP_MERCHANT_ID",
-            "BILLING_STUDENT_PRO_AMOUNT_KWD",
           ],
           env: [
             "TAP_SECRET_KEY",
             "TAP_MERCHANT_ID",
-            "BILLING_STUDENT_PRO_AMOUNT_KWD",
           ],
         },
         {
@@ -5707,6 +5747,20 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const format = String(req.query.format || "zip").toLowerCase();
+        if (format !== "json") {
+          const access = await platformStore.projectEntitlementAccess(
+            a.tenantId,
+            a.userId,
+            project.id,
+          );
+          if (!access.canExport)
+            return res.status(402).json({
+              error: "التصدير بصيغة التسليم متاح بعد فتح المشروع الكامل.",
+              code: "PROJECT_EXPORT_PAYMENT_REQUIRED",
+              access,
+            });
+        }
         const workspaceArtifacts = await firestoreStore.listWorkspaceArtifacts(
           project.id,
           a.tenantId,
@@ -5722,7 +5776,6 @@ async function startServer() {
             ) || undefined,
           footer: cleanField(brandRecord?.data?.footer, 500) || undefined,
         };
-        const format = String(req.query.format || "zip").toLowerCase();
         if (format === "pdf") {
           if (!externalServices.pdf.configured())
             return res.status(503).json({
@@ -6308,7 +6361,12 @@ async function startServer() {
           project.id,
           a.tenantId,
         );
-        res.json({ success: true, document });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        res.json({ success: true, document, access });
       } catch (e) {
         next(e);
       }
@@ -6332,6 +6390,25 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const [existingDocument, access] = await Promise.all([
+          loadLatestProjectDocument(project.id, a.tenantId),
+          platformStore.projectEntitlementAccess(
+            a.tenantId,
+            a.userId,
+            project.id,
+          ),
+        ]);
+        const generation = decideProjectGeneration(
+          access,
+          existingDocument ? existingDocument.accessTier || "preview" : undefined,
+        );
+        if (!generation.allowed)
+          return res.status(402).json({
+            error:
+              "استخدمت المعاينة المجانية لهذا المشروع. افتح المشروع الكامل للمتابعة والتعديل والتصدير.",
+            code: generation.code,
+            access,
+          });
         const mode = cleanField(req.body?.mode, 20) as ProjectWriterRequest["mode"];
         const assistanceMode = cleanField(
           req.body?.assistanceMode,
@@ -6351,14 +6428,15 @@ async function startServer() {
             error: "Invalid assistance mode",
             code: "PROJECT_ASSISTANCE_MODE_INVALID",
           });
+        const targetPages = Math.max(
+          3,
+          Math.min(35, Number(req.body?.desiredPages || 12)),
+        );
         const request: ProjectWriterRequest = {
           mode,
           assistanceMode,
           language: cleanField(req.body?.language, 80) || "العربية",
-          desiredPages: Math.max(
-            3,
-            Math.min(35, Number(req.body?.desiredPages || 12)),
-          ),
+          desiredPages: generation.preview ? PREVIEW_PAGE_LIMIT : targetPages,
           academicTone: new Set(["clear", "formal", "advanced"]).has(
             String(req.body?.academicTone),
           )
@@ -6419,7 +6497,7 @@ async function startServer() {
           );
           reservation = gate.reservation;
         }
-        const document = await composeProjectDocument({
+        const composed = await composeProjectDocument({
           project,
           request,
           userId: a.userId,
@@ -6448,6 +6526,12 @@ async function startServer() {
               }
             : undefined,
         });
+        const document: ProjectDocument = {
+          ...composed,
+          accessTier: generation.preview ? "preview" : "paid",
+          planId: access.planId,
+          targetPages,
+        };
         const persisted = await persistProjectDocument(a, project, document);
         const updatedProject: ProjectDNA = {
           ...project,
@@ -6472,6 +6556,8 @@ async function startServer() {
             variationId: persisted.variation.id,
             sections: persisted.sections.length,
             ai: Boolean(provider),
+            accessTier: persisted.accessTier || "preview",
+            planId: persisted.planId || null,
           },
         );
         await recordProductEventSafe(a, "project_writer_generated", {
@@ -6480,6 +6566,7 @@ async function startServer() {
             mode,
             assistanceMode,
             sections: persisted.sections.length,
+            accessTier: persisted.accessTier || "preview",
           },
         });
         res.status(201).json({
@@ -6487,9 +6574,12 @@ async function startServer() {
           document: persisted,
           project: updatedProject,
           source: provider ? "ai" : "safe_scaffold",
-          notice: provider
-            ? undefined
-            : "لا يوجد مزود AI مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
+          access,
+          notice: generation.preview
+            ? `هذه معاينة مجانية من ${PREVIEW_PAGE_LIMIT} صفحات. افتح المشروع الكامل لإكمال ${targetPages} صفحة والتعديلات والتصدير.`
+            : provider
+              ? undefined
+              : "لا يوجد مزود AI مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
         });
       } catch (e) {
         next(e);
@@ -6561,6 +6651,17 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        if (!access.canWriteFull)
+          return res.status(402).json({
+            error: "تعديلات الأقسام متاحة بعد فتح المشروع الكامل.",
+            code: "PROJECT_PAYMENT_REQUIRED",
+            access,
+          });
         const artifact = await firestoreStore.getWorkspaceArtifact(
           req.params.artifactId,
         );
@@ -7685,6 +7786,17 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        if (!access.canViva)
+          return res.status(402).json({
+            error: "تدريب المناقشة يحتاج باقة المشروع + المناقشة.",
+            code: "PROJECT_VIVA_PLAN_REQUIRED",
+            access,
+          });
         const allowed = new Set(["easy", "normal", "strict", "external"]);
         const mode = String(req.body?.mode || "normal") as VivaMode;
         if (!allowed.has(mode))
@@ -7719,6 +7831,17 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        if (!access.canViva)
+          return res.status(402).json({
+            error: "انتهت صلاحية تدريب المناقشة لهذا المشروع.",
+            code: "PROJECT_VIVA_PLAN_REQUIRED",
+            access,
+          });
         const session = await firestoreStore.getVivaSession(
           req.params.sessionId,
           project.id,
@@ -7771,6 +7894,17 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        if (!access.canViva)
+          return res.status(402).json({
+            error: "انتهت صلاحية تدريب المناقشة لهذا المشروع.",
+            code: "PROJECT_VIVA_PLAN_REQUIRED",
+            access,
+          });
         const session = await firestoreStore.getVivaSession(
           req.params.sessionId,
           project.id,
@@ -8687,6 +8821,32 @@ async function startServer() {
   app.get("/api/billing/status", authenticate, (_req, res) =>
     res.json({ success: true, billing: billingStatus() }),
   );
+  app.get(
+    "/api/projects/:id/access",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        res.json({ success: true, access });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
   app.post(
     "/api/billing/checkout",
     authenticate,
@@ -8714,19 +8874,41 @@ async function startServer() {
             error: "اختر باقة مدفوعة صحيحة.",
             code: "BILLING_PLAN_INVALID",
           });
+        const projectId = cleanField(req.body?.projectId, 180);
+        if (!projectId)
+          return res.status(400).json({
+            error: "اختر المشروع الذي تريد فتحه قبل الدفع.",
+            code: "BILLING_PROJECT_REQUIRED",
+          });
+        const project = await firestoreStore.getProject(
+          projectId,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res.status(404).json({
+            error: "المشروع غير موجود أو لا تملكه.",
+            code: "PROJECT_NOT_FOUND",
+          });
+        if (project.collaborationMode === "group" && selectedPlan.id !== "group")
+          return res.status(400).json({
+            error: "مشروع المجموعة يحتاج باقة المجموعة.",
+            code: "GROUP_PLAN_REQUIRED",
+          });
         const provider = getBillingProvider();
         const result = await provider.createCheckout({
           customerEmail: a.email,
           customerName: a.displayName,
           tenantId: a.tenantId,
           userId: a.userId,
+          projectId: project.id,
           idempotencyKey,
           planId: selectedPlan.id,
           amountKwd: selectedPlan.amountKwd,
-          description: `AcademicOS — ${selectedPlan.name}`,
+          description: `AcademicOS — ${selectedPlan.name} — ${project.title}`,
           webhookUrl: `${appUrl}/api/billing/webhook/${provider.id}`,
-          successUrl: `${appUrl}/app/plans?billing=success&plan=${selectedPlan.id}`,
-          cancelUrl: `${appUrl}/app/plans?billing=cancelled`,
+          successUrl: `${appUrl}/app/plans?billing=success&plan=${selectedPlan.id}&project=${encodeURIComponent(project.id)}`,
+          cancelUrl: `${appUrl}/app/plans?billing=cancelled&project=${encodeURIComponent(project.id)}`,
         });
         await firestoreStore.writeAudit(
           a.tenantId,
@@ -8734,7 +8916,7 @@ async function startServer() {
           "billing.checkout.create",
           a.userId,
           undefined,
-          { planId: selectedPlan.id, amountKwd: selectedPlan.amountKwd },
+          { planId: selectedPlan.id, amountKwd: selectedPlan.amountKwd, projectId: project.id },
         );
         res.json({ success: true, ...result });
       } catch (e) {

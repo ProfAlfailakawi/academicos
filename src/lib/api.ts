@@ -32,6 +32,7 @@ import type {
   PlatformResourceKey,
   PublicPlatformShare,
   ProjectActivityRecord,
+  ProjectAccess,
   ProjectComment,
   ProjectDocument,
   ProjectDNA,
@@ -625,14 +626,19 @@ export const api = {
       body: JSON.stringify(intake),
     }),
   projectDocument: (projectId: string) =>
-    request<{ success: true; document: ProjectDocument | null }>(
+    request<{ success: true; document: ProjectDocument | null; access: ProjectAccess }>(
       `/api/projects/${encodeURIComponent(projectId)}/writer`,
+    ),
+  projectAccess: (projectId: string) =>
+    request<{ success: true; access: ProjectAccess }>(
+      `/api/projects/${encodeURIComponent(projectId)}/access`,
     ),
   generateProjectDocument: (projectId: string, body: ProjectWriterRequest) =>
     request<{
       success: true;
       document: ProjectDocument;
       project: ProjectDNA;
+      access: ProjectAccess;
       source: "ai" | "safe_scaffold";
       notice?: string;
     }>(`/api/projects/${encodeURIComponent(projectId)}/writer/generate`, {
@@ -1043,10 +1049,13 @@ export const api = {
         plans: Array<{ id: string; name: string; amountKwd: number; pages: number; projects: number; description: string }>;
       };
     }>("/api/billing/status"),
-  createCheckout: (planId: "project" | "project_viva" | "group" = "project") =>
+  createCheckout: (
+    planId: "project" | "project_viva" | "group",
+    projectId: string,
+  ) =>
     request<{ success: true; url: string }>("/api/billing/checkout", {
       method: "POST",
-      body: JSON.stringify({ planId }),
+      body: JSON.stringify({ planId, projectId }),
     }),
   learnExplain: (body: {
     topic: string;

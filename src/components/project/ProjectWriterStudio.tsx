@@ -5,10 +5,11 @@ import {
   BookOpenCheck,
   Check,
   CheckCircle2,
+  CreditCard,
   Download,
   Expand,
   FileSearch,
-  Languages,
+  LockKeyhole,
   LoaderCircle,
   MessageSquareText,
   Mic2,
@@ -22,6 +23,7 @@ import {
 import { api } from "../../lib/api";
 import type {
   ProjectDNA,
+  ProjectAccess,
   ProjectDocument,
   ProjectDocumentSection,
   ProjectWriterRequest,
@@ -67,6 +69,7 @@ export function ProjectWriterStudio({
   onOpenViva?: () => void;
 }) {
   const [document, setDocument] = useState<ProjectDocument | null>(null);
+  const [access, setAccess] = useState<ProjectAccess | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -85,6 +88,7 @@ export function ProjectWriterStudio({
       .projectDocument(project.id)
       .then((response) => {
         if (!active) return;
+        setAccess(response.access);
         if (response.document) {
           setDocument(response.document);
           setSelectedId(response.document.sections[0]?.id || "");
@@ -116,6 +120,7 @@ export function ProjectWriterStudio({
     try {
       const response = await api.generateProjectDocument(project.id, request);
       setDocument(response.document);
+      setAccess(response.access);
       setSelectedId(response.document.sections[0]?.id || "");
       setNotice(
         response.notice ||
@@ -168,6 +173,10 @@ export function ProjectWriterStudio({
 
   async function runAction(action: SectionAction, apply = false) {
     if (!section?.artifactId) return;
+    if (!access?.canWriteFull) {
+      window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`);
+      return;
+    }
     if (draft !== section.content) await saveSection();
     setActionBusy(action);
     setError("");
@@ -219,6 +228,10 @@ export function ProjectWriterStudio({
 
   async function applyFeedback() {
     if (!document || !feedback.trim()) return;
+    if (!access?.canWriteFull) {
+      window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`);
+      return;
+    }
     setActionBusy("feedback");
     try {
       const response = await api.generateProjectDocument(project.id, {
@@ -231,6 +244,7 @@ export function ProjectWriterStudio({
         professorFeedback: feedback,
       });
       setDocument(response.document);
+      setAccess(response.access);
       setSelectedId(response.document.sections[0]?.id || "");
       setFeedback("");
       setShowFeedback(false);
@@ -243,6 +257,10 @@ export function ProjectWriterStudio({
   }
 
   async function exportWord() {
+    if (!access?.canExport) {
+      window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`);
+      return;
+    }
     setActionBusy("export");
     try {
       if (section && draft !== section.content) await saveSection();
@@ -252,6 +270,18 @@ export function ProjectWriterStudio({
     } finally {
       setActionBusy("");
     }
+  }
+
+  async function completePaidProject() {
+    if (!document || !access?.unlocked) return;
+    await generate({
+      mode: "write",
+      assistanceMode: document.assistanceMode,
+      language: document.language,
+      desiredPages: document.targetPages || 12,
+      academicTone: "clear",
+      topicNotes: "أكمل المشروع الكامل اعتماداً على الخطة والمعاينة السابقة، مع الحفاظ على الترابط والبصمة المخصصة.",
+    });
   }
 
   if (busy)
@@ -278,6 +308,17 @@ export function ProjectWriterStudio({
   return (
     <div className="space-y-5">
       <ProjectFlow document={document} />
+      {document.accessTier === "preview" && (
+        <section className="rounded-[24px] border border-amber-500/30 bg-amber-500/10 p-4 md:p-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span className="h-12 w-12 rounded-2xl bg-[var(--panel)] grid place-items-center shrink-0"><LockKeyhole size={20} /></span>
+              <div><div className="eyebrow">معاينة مجانية · 3 صفحات</div><h2 className="section-title mt-1">جرّبت أسلوب مشروعك؛ افتحه الآن بالكامل</h2><p className="text-xs leading-6 muted mt-2">النسخة الكاملة تفتح جميع الصفحات، تعديل الأقسام، ملاحظات الدكتور وتصدير Word. مشروعك وبصمتك محفوظان.</p></div>
+            </div>
+            {access?.unlocked ? <Button onClick={completePaidProject} disabled={busy}><Sparkles size={15} /> أكمل {document.targetPages || 12} صفحة الآن</Button> : <Button onClick={() => window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)}><CreditCard size={15} /> افتح المشروع الكامل</Button>}
+          </div>
+        </section>
+      )}
       {(notice || error) && (
         <div className={`rounded-xl px-4 py-3 text-xs flex items-start gap-2 ${error ? "bg-red-500/10 text-[var(--danger)]" : "brand-soft-bg"}`} role={error ? "alert" : "status"}>
           {error ? <AlertTriangle size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
@@ -316,7 +357,7 @@ export function ProjectWriterStudio({
               <div className="writer-toolbar px-3 md:px-5 py-3 border-b hairline flex gap-2 overflow-x-auto">
                 {actionButtons.map(({ action, label, icon: Icon, apply }) => (
                   <button key={action} type="button" onClick={() => runAction(action, apply)} disabled={Boolean(actionBusy)} className="writer-action focus-ring rounded-xl border hairline px-3 py-2 inline-flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap">
-                    {actionBusy === action ? <LoaderCircle size={14} className="animate-spin" /> : <Icon size={14} />}{label}
+                    {actionBusy === action ? <LoaderCircle size={14} className="animate-spin" /> : !access?.canWriteFull ? <LockKeyhole size={14} /> : <Icon size={14} />}{label}
                   </button>
                 ))}
               </div>
@@ -360,12 +401,12 @@ export function ProjectWriterStudio({
             </CardContent>
           </Card>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <LoaderCircle size={15} className="animate-spin" /> : <Download size={15} />} Word</Button>
-            <Button onClick={onOpenViva}><Mic2 size={15} /> ناقشني</Button>
+            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <LoaderCircle size={15} className="animate-spin" /> : access?.canExport ? <Download size={15} /> : <LockKeyhole size={15} />} Word</Button>
+            <Button onClick={() => access?.canViva ? onOpenViva?.() : window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)}>{access?.canViva ? <Mic2 size={15} /> : <LockKeyhole size={15} />} ناقشني</Button>
           </div>
         </aside>
       </div>
-      {xray && <XRayPanel report={xray} onClose={() => setXray(null)} onOpenViva={onOpenViva} />}
+      {xray && <XRayPanel report={xray} onClose={() => setXray(null)} onOpenViva={() => access?.canViva ? onOpenViva?.() : window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)} />}
     </div>
   );
 }

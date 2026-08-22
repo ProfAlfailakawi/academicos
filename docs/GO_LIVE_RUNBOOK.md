@@ -1,6 +1,6 @@
 # AcademicOS — دليل الإطلاق التنفيذي (Go-Live Runbook)
 
-آخر تحديث: 2026-08-20
+آخر تحديث: 2026-08-22
 
 ## الحالة الجذرية
 
@@ -39,16 +39,18 @@ MYFATOORAH_API_BASE_URL=https://apitest.myfatoorah.com
 MYFATOORAH_API_TOKEN=<sandbox token>
 MYFATOORAH_PAYMENT_METHOD_ID=<sandbox method>
 MYFATOORAH_WEBHOOK_SECRET=<sandbox secret>
-BILLING_STUDENT_PRO_AMOUNT_KWD=<amount>
 ```
 
 خطوات الاختبار:
-1. `POST /api/billing/checkout` → يجب أن يُعيد `PaymentURL` مستضافًا (https).
+1. أنشئ مشروع طالب ثم نفّذ `POST /api/billing/checkout` مع `{ "planId": "project", "projectId": "..." }` → يجب أن يُعيد `PaymentURL` مستضافًا (https). الأسعار تُقرأ حصراً من `BILLING_PLANS` على الخادم.
 2. أكمل الدفع في بيئة الـsandbox → يصل webhook إلى `POST /api/billing/webhook/myfatoorah`.
 3. تحقق من رفض التوقيع غير الصالح (HMAC-SHA256 مقابل `MYFATOORAH_WEBHOOK_SECRET`) بـ 401.
-4. اختبر الحالات: `paid` / `failed` / `pending` / `refunded` / `chargeback` وتأكد أن الاستحقاق (entitlement) يتغيّر بشكل صحيح.
+4. اختبر الحالات: `paid` / `failed` / `pending` / `refunded` / `chargeback` وتأكد أن الصلاحية مرتبطة بالمشروع المحدد، وأن الاسترجاع أو الاعتراض المالي يسحب الباقة الصحيحة ويعيد المشروع للباقة السابقة أو المعاينة.
 5. تحقق من الـidempotency: إعادة نفس `idempotencyKey` لا تُنشئ عملية مزدوجة.
-6. **معيار القبول:** `GET /api/billing/status` يُظهر `configured:true` للمزوّد، ودورة دفع→استرجاع→إلغاء كاملة مسجّلة في السجل التدقيقي.
+6. تحقق من التسلسل: معاينة 3 صفحات مرة واحدة → محاولة ثانية 402 → دفع → مشروع كامل + Word → باقة Viva للمناقشة → استرجاع يسحب الميزة المناسبة.
+7. **معيار القبول:** `GET /api/billing/status` يُظهر `configured:true` للمزوّد، و`GET /api/projects/:id/access` يعكس الباقة الصحيحة، ودورة دفع→استرجاع→إلغاء كاملة مسجّلة في السجل التدقيقي.
+
+اختبار التدفق المحلي الكامل متوفر بالأمر `npm run emulators:student-flow:test` ويحتاج Java لتشغيل Firestore Emulator.
 
 > Stripe و Tap مدعومان بنفس البنية إن لزم تبديل المزوّد.
 

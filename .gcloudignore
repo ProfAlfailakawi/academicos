@@ -4,6 +4,8 @@
 .codex-qa/**
 node_modules
 node_modules/**
+bun.lock
+bun.lockb
 dist
 dist/**
 coverage

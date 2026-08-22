@@ -1,0 +1,15 @@
+.git
+.git/**
+.codex-qa
+.codex-qa/**
+node_modules
+node_modules/**
+dist
+dist/**
+coverage
+coverage/**
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

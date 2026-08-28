@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-export type BillingProviderId = 'disabled' | 'stripe' | 'tap' | 'myfatoorah';
+export type BillingProviderId = 'disabled' | 'stripe' | 'tap' | 'myfatoorah' | 'lemonsqueezy';
 export type BillingPlanId = 'preview' | 'project' | 'project_viva' | 'group';
 
 export const BILLING_PLANS = [
@@ -39,7 +39,7 @@ const requestTimeout = () => Math.min(30_000, Math.max(3_000, Number(process.env
 async function providerJson(url:string,init:RequestInit){
   const response=await fetch(url,{...init,signal:AbortSignal.timeout(requestTimeout())});
   const json:any=await response.json().catch(()=>({}));
-  if(!response.ok)throw Object.assign(new Error(json?.error?.message||json?.Message||json?.message||'Billing provider request failed'),{code:'BILLING_PROVIDER_ERROR',status:502});
+  if(!response.ok)throw Object.assign(new Error(json?.error?.message||json?.Message||json?.message||json?.errors?.[0]?.detail||'Billing provider request failed'),{code:'BILLING_PROVIDER_ERROR',status:502});
   return json;
 }
 
@@ -89,21 +89,36 @@ class MyFatoorahBillingProvider implements BillingProvider {
   }
 }
 
+class LemonSqueezyBillingProvider implements BillingProvider {
+  id='lemonsqueezy' as const;
+  configured(){return Boolean(process.env.LEMONSQUEEZY_API_KEY&&process.env.LEMONSQUEEZY_STORE_ID&&process.env.LEMONSQUEEZY_VARIANT_ID&&process.env.LEMONSQUEEZY_WEBHOOK_SECRET);}
+  async createCheckout(input:BillingCheckoutInput){
+    if(!this.configured())throw Object.assign(new Error('Lemon Squeezy API key, store, variant, or webhook secret are not configured'),{code:'BILLING_NOT_CONFIGURED'});
+    const rate=Math.max(0.1,Number(process.env.LEMONSQUEEZY_KWD_USD_RATE||3.26));
+    const cents=Math.max(1,Math.round(input.amountKwd*rate*100));
+    const custom={tenantId:input.tenantId,userId:input.userId,projectId:input.projectId,planId:input.planId,idempotencyKey:input.idempotencyKey};
+    const json=await providerJson('https://api.lemonsqueezy.com/v1/checkouts',{method:'POST',headers:{Authorization:`Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,'Content-Type':'application/vnd.api+json',Accept:'application/vnd.api+json'},body:JSON.stringify({data:{type:'checkouts',attributes:{custom_price:cents,product_options:{name:input.description.slice(0,255),redirect_url:input.successUrl},checkout_data:{email:input.customerEmail,name:(input.customerName||'AcademicOS user').slice(0,255),custom}},relationships:{store:{data:{type:'stores',id:String(process.env.LEMONSQUEEZY_STORE_ID)}},variant:{data:{type:'variants',id:String(process.env.LEMONSQUEEZY_VARIANT_ID)}}}}})});
+    const url=String(json?.data?.attributes?.url||'');if(!url.startsWith('https://'))throw Object.assign(new Error('Lemon Squeezy did not return a hosted checkout URL'),{code:'BILLING_PROVIDER_ERROR',status:502});
+    return{url,externalId:String(json?.data?.id||'')||undefined};
+  }
+}
+
 export function getBillingProvider(): BillingProvider {
   const provider = String(process.env.BILLING_PROVIDER || 'disabled').toLowerCase();
   if (provider === 'stripe') return new StripeBillingProvider();
   if (provider === 'tap') return new TapBillingProvider();
   if (provider === 'myfatoorah') return new MyFatoorahBillingProvider();
+  if (provider === 'lemonsqueezy') return new LemonSqueezyBillingProvider();
   return new DisabledBillingProvider();
 }
 
 export function billingStatus() {
   const active = getBillingProvider();
-  const readiness = [new StripeBillingProvider(),new TapBillingProvider(),new MyFatoorahBillingProvider()].map(provider=>({provider:provider.id,configured:provider.configured()}));
+  const readiness = [new StripeBillingProvider(),new TapBillingProvider(),new MyFatoorahBillingProvider(),new LemonSqueezyBillingProvider()].map(provider=>({provider:provider.id,configured:provider.configured()}));
   return { provider: active.id, configured: active.configured(), readiness, plans: BILLING_PLANS };
 }
 
-export interface VerifiedPaymentEvent {provider:'tap'|'myfatoorah';eventId:string;tenantId:string;userId:string;projectId?:string;planId?:string;externalId:string;status:'paid'|'failed'|'pending'|'refunded'|'chargeback';amount:number;currency:string;rawType:string}
+export interface VerifiedPaymentEvent {provider:'tap'|'myfatoorah'|'lemonsqueezy';eventId:string;tenantId:string;userId:string;projectId?:string;planId?:string;externalId:string;status:'paid'|'failed'|'pending'|'refunded'|'chargeback';amount:number;currency:string;rawType:string}
 function equalSignature(expected:string,provided:string){const a=Buffer.from(expected),b=Buffer.from(provided);return a.length===b.length&&timingSafeEqual(a,b);}
 
 export function verifyTapWebhook(raw:Buffer,signature:string):VerifiedPaymentEvent{
@@ -121,4 +136,13 @@ export function verifyMyFatoorahWebhook(raw:Buffer,signature:string):VerifiedPay
   const expected=createHmac('sha256',secret).update(material).digest('base64');if(!equalSignature(expected,signature))throw Object.assign(new Error('Invalid MyFatoorah webhook signature'),{status:401,code:'MYFATOORAH_SIGNATURE_INVALID'});
   let metadata:any={};try{metadata=JSON.parse(String(invoice.UserDefinedField||''));}catch{metadata={};}const invoiceState=String(invoice.Status||'').toUpperCase(),transactionState=String(transaction.Status||'').toUpperCase();const status:VerifiedPaymentEvent['status']=invoiceState==='PAID'&&transactionState==='SUCCESS'?'paid':invoiceState==='REFUNDED'?'refunded':invoiceState.includes('CHARGEBACK')||transactionState.includes('CHARGEBACK')||transactionState.includes('DISPUTE')?'chargeback':invoiceState==='FAILED'||transactionState==='FAILED'?'failed':'pending';
   return{provider:'myfatoorah',eventId:`${String(body?.Event?.Reference||transaction.PaymentId||invoice.Id||'')}:${invoiceState}:${transactionState}`,tenantId:String(metadata.tenantId||''),userId:String(metadata.userId||''),projectId:String(metadata.projectId||'')||undefined,planId:String(metadata.planId||'')||undefined,externalId:String(transaction.PaymentId||invoice.Id||''),status,amount:Number(invoice.InvoiceValue||invoice.Value||0),currency:String(invoice.DisplayCurrencyIso||invoice.CurrencyIso||'KWD').toUpperCase(),rawType:String(body?.Event?.Name||'PAYMENT_STATUS_CHANGED')};
+}
+
+export function verifyLemonSqueezyWebhook(raw:Buffer,signature:string):VerifiedPaymentEvent{
+  const secret=String(process.env.LEMONSQUEEZY_WEBHOOK_SECRET||'');if(!secret||!signature)throw Object.assign(new Error('Lemon Squeezy webhook is not configured'),{status:503,code:'LEMONSQUEEZY_WEBHOOK_NOT_CONFIGURED'});
+  const expected=createHmac('sha256',secret).update(raw).digest('hex');if(!equalSignature(expected,signature))throw Object.assign(new Error('Invalid Lemon Squeezy webhook signature'),{status:401,code:'LEMONSQUEEZY_SIGNATURE_INVALID'});
+  const body=JSON.parse(raw.toString('utf8')),custom=body?.meta?.custom_data||{},attributes=body?.data?.attributes||{};
+  const eventName=String(body?.meta?.event_name||''),state=String(attributes.status||'').toLowerCase(),externalId=String(body?.data?.id||attributes.identifier||'');
+  const status:VerifiedPaymentEvent['status']=attributes.refunded===true||state==='refunded'?'refunded':state==='paid'?'paid':state==='failed'||state==='void'?'failed':'pending';
+  return{provider:'lemonsqueezy',eventId:`${externalId}:${eventName}:${state}`,tenantId:String(custom.tenantId||''),userId:String(custom.userId||''),projectId:String(custom.projectId||'')||undefined,planId:String(custom.planId||'')||undefined,externalId,status,amount:Number(attributes.total_usd||attributes.total||0)/100,currency:String(attributes.currency||'USD').toUpperCase(),rawType:eventName||'order_created'};
 }

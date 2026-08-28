@@ -63,6 +63,7 @@ import {
   billingPlan,
   billingStatus,
   getBillingProvider,
+  verifyLemonSqueezyWebhook,
   verifyMyFatoorahWebhook,
   verifyTapWebhook,
   type VerifiedPaymentEvent,
@@ -1839,6 +1840,29 @@ async function startServer() {
         res.status(Number(error?.status || 400)).json({
           error: "MyFatoorah webhook could not be verified",
           code: error?.code || "MYFATOORAH_WEBHOOK_INVALID",
+        });
+      }
+    },
+  );
+  app.post(
+    "/api/billing/webhook/lemonsqueezy",
+    apiRateLimit,
+    express.raw({ type: "application/json", limit: "1mb" }),
+    async (req, res) => {
+      try {
+        const raw = Buffer.isBuffer(req.body)
+          ? req.body
+          : Buffer.from(req.body || "");
+        const event = verifyLemonSqueezyWebhook(
+          raw,
+          String(req.header("x-signature") || ""),
+        );
+        const result = await persistVerifiedPayment(event);
+        res.json({ received: true, ...result });
+      } catch (error: any) {
+        res.status(Number(error?.status || 400)).json({
+          error: "Lemon Squeezy webhook could not be verified",
+          code: error?.code || "LEMONSQUEEZY_WEBHOOK_INVALID",
         });
       }
     },

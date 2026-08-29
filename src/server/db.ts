@@ -88,6 +88,7 @@ export const COLLECTIONS = {
   featureFlags: "featureFlags",
   systemConfig: "systemConfig",
   learnCache: "learnCache",
+  copilotChunks: "copilotChunks",
 } as const;
 
 function db() {
@@ -1271,6 +1272,55 @@ export const firestoreStore = {
           createdAt: new Date().toISOString(),
         }),
       );
+  },
+  // ---- Project Copilot self-hosted vector store (File Search) ----
+  // Vectors live in YOUR Firestore, scoped strictly by tenant + (project|course).
+  // Raw files never leave to a managed third-party File Search store.
+  async replaceRetrievalIndex(
+    tenantId: string,
+    scopeType: "project" | "course",
+    scopeId: string,
+    chunks: Array<Record<string, unknown> & { id: string }>,
+    projectId?: string,
+  ) {
+    const database = db();
+    const col = database.collection(COLLECTIONS.copilotChunks);
+    const scopeKey = `${tenantId}__${scopeType}__${scopeId}`;
+    // Delete any previous index for this scope, then write fresh (bounded batches ≤ 400).
+    const existing = await col.where("scopeKey", "==", scopeKey).limit(1000).get();
+    const capped = chunks.slice(0, 400);
+    const ops: ReturnType<typeof database.batch>[] = [];
+    let batch = database.batch();
+    let count = 0;
+    const push = () => { ops.push(batch); batch = database.batch(); count = 0; };
+    for (const doc of existing.docs) {
+      batch.delete(doc.ref);
+      if (++count >= 400) push();
+    }
+    const at = new Date().toISOString();
+    for (const chunk of capped) {
+      batch.set(
+        col.doc(`${scopeKey}__${chunk.id}`),
+        firestoreSafe({ ...chunk, id: `${scopeKey}__${chunk.id}`, chunkId: chunk.id, tenantId, scopeType, scopeId, scopeKey, projectId: projectId || null, updatedAt: at }),
+      );
+      if (++count >= 400) push();
+    }
+    if (count > 0) push();
+    for (const b of ops) await b.commit();
+    return { indexed: capped.length, removed: existing.size, truncated: chunks.length > capped.length };
+  },
+  async listRetrievalChunks(
+    tenantId: string,
+    scopeType: "project" | "course",
+    scopeId: string,
+  ): Promise<any[]> {
+    const scopeKey = `${tenantId}__${scopeType}__${scopeId}`;
+    const snap = await db()
+      .collection(COLLECTIONS.copilotChunks)
+      .where("scopeKey", "==", scopeKey)
+      .limit(1000)
+      .get();
+    return snap.docs.map((d) => d.data() as any);
   },
   async writeAudit(
     tenantId: string,

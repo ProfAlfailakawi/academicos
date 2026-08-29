@@ -120,6 +120,16 @@ import {
 } from "./src/server/security-controls";
 import { ocrStatus, runOcr } from "./src/server/ocr";
 import {
+  buildCopilotPlatformInstruction,
+  copilotEnabled,
+  copilotFeatureFlag,
+  finalizeCopilotRun,
+  nativeCopilotResponse,
+  shouldBlockCopilot,
+} from "./src/server/copilot";
+import { embeddingsConfigured, embeddingBackend, groundingConfigured, groundedResearch } from "./src/server/retrieval";
+import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
+import {
   addConcierge,
   buildFacultyAutomation,
   buildInstitutionCommandCenter,
@@ -130,6 +140,7 @@ import type {
   AdminUserRecord,
   AIUsagePolicy,
   AssignmentIntake,
+  CopilotMode,
   CourseAssignmentRecord,
   CourseRecord,
   CourseSubmissionRecord,
@@ -256,6 +267,41 @@ const FEATURE_DEFAULTS = [
     enabled: false,
     description:
       "Employer/challenge network sharing with explicit learner consent",
+  },
+  {
+    key: "ProjectCopilot",
+    enabled: true,
+    description: "Project Copilot shell with rubric/evidence grounded outputs",
+  },
+  {
+    key: "ProjectCopilotFileSearch",
+    enabled: true,
+    description: "Private project/course semantic file search over a self-hosted vector store with citations",
+  },
+  {
+    key: "ResearchStudioGrounding",
+    enabled: false,
+    description: "Real Google Search Grounding inside Research Studio (native tool or institution gateway)",
+  },
+  {
+    key: "MultimodalAssignmentCompiler",
+    enabled: true,
+    description: "Multimodal assignment compiler linked to Project DNA",
+  },
+  {
+    key: "AdaptiveCopilotTutor",
+    enabled: true,
+    description: "Adaptive tutoring that coaches without doing the submission",
+  },
+  {
+    key: "WorkspaceFunctionCalling",
+    enabled: false,
+    description: "Governed function calling between project workspaces",
+  },
+  {
+    key: "GeminiLiveViva",
+    enabled: false,
+    description: "Gemini Live Viva and proof-of-learning adapter",
   },
   {
     key: "ExternalCodeExecution",
@@ -6361,6 +6407,306 @@ async function startServer() {
             latencyMs: result.usage.latencyMs,
           },
         });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:id/copilot",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!,
+          project = await firestoreStore.getProject(
+            req.params.id,
+            a.userId,
+            a.tenantId,
+          );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const mode = cleanField(req.body?.mode, 40) as CopilotMode;
+        const validModes: CopilotMode[] = [
+          "file_search",
+          "research",
+          "assignment_compile",
+          "tutor",
+          "workspace_function",
+          "viva_live",
+        ];
+        if (!validModes.includes(mode))
+          return res
+            .status(400)
+            .json({ error: "Invalid copilot mode", code: "COPILOT_MODE_INVALID" });
+        const query = cleanField(req.body?.query, 4000);
+        const storedFlags = await firestoreStore.listFeatureFlags(a.tenantId);
+        const flagMap = Object.fromEntries([
+          ...FEATURE_DEFAULTS.map((flag) => [flag.key, flag.enabled] as const),
+          ...storedFlags.map((flag) => [flag.key, flag.enabled] as const),
+        ]);
+        if (!copilotEnabled(mode, flagMap))
+          return res.status(403).json({
+            error: "Project Copilot mode is disabled for this tenant",
+            code: "FEATURE_DISABLED",
+            featureFlag: copilotFeatureFlag(mode),
+          });
+        const [artifacts, evidence] = await Promise.all([
+          firestoreStore.listWorkspaceArtifacts(project.id, a.tenantId),
+          firestoreStore.listProjectEvidence(project.id, a.userId, a.tenantId),
+        ]);
+        let grounded = mode === "research" && groundingConfigured();
+        let response = nativeCopilotResponse({
+          mode,
+          query,
+          project,
+          artifacts,
+          evidence,
+          actor: a,
+          grounded,
+        });
+        const guard = shouldBlockCopilot(project, mode, query);
+        let usage;
+        let groundedAnswer = "";
+        const retrievalMeta: Record<string, unknown> = {};
+
+        // Real semantic File Search over the tenant-scoped, self-hosted vector index.
+        if (!guard && mode === "file_search" && embeddingsConfigured()) {
+          try {
+            const fs = await semanticFileSearch(
+              { tenantId: a.tenantId, scopeType: "project", scopeId: project.id, projectId: project.id },
+              query,
+            );
+            retrievalMeta.fileSearch = { ok: fs.ok, reason: fs.reason, matched: fs.matched, indexSize: fs.indexSize, backend: fs.backend };
+            if (fs.ok && fs.citations.length) {
+              const seen = new Set(fs.citations.map((c) => c.id));
+              response = {
+                ...response,
+                citations: [...fs.citations, ...response.citations.filter((c) => !seen.has(c.id))].slice(0, 24),
+                controls: { ...response.controls, defenses: [...new Set([...response.controls.defenses, "semantic-file-search", "self-hosted-vector-store"])] },
+                observability: {
+                  ...response.observability,
+                  evals: [
+                    ...response.observability.evals.filter((e) => e.id !== "citation_grounding"),
+                    { id: "citation_grounding", status: "pass" as const, detail: `${fs.matched} semantic matches from ${fs.indexSize} indexed chunks (${fs.backend}).` },
+                    { id: "semantic_retrieval", status: "pass" as const, detail: `Self-hosted embeddings (${fs.backend}); no student files sent to a managed store.` },
+                  ],
+                },
+              };
+            } else {
+              response = {
+                ...response,
+                observability: {
+                  ...response.observability,
+                  evals: [...response.observability.evals, { id: "semantic_retrieval", status: "warn" as const, detail: fs.reason === "index_empty" ? "No File Search index built yet for this project." : "Semantic retrieval returned no confident match; falling back to the local index." }],
+                },
+              };
+            }
+            await firestoreStore.recordAIUsage(
+              { provider: `embedding:${fs.backend}`, model: fs.model || embeddingBackend(), latencyMs: fs.latencyMs, taskType: "project_copilot_file_search_retrieval", promptId: "file-search:v1", promptVersion: "1", estimatedCostUsd: 0 },
+              a,
+              project.id,
+            );
+          } catch (error) {
+            retrievalMeta.fileSearch = { ok: false, error: cleanField((error as any)?.message, 200) };
+          }
+        }
+
+        // Real Google Search Grounding for Research Studio.
+        if (!guard && mode === "research" && grounded) {
+          const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+          try {
+            const g = await groundedResearch(query);
+            groundedAnswer = g.answer;
+            retrievalMeta.grounding = { citations: g.citations.length, queries: g.queries, provider: g.provider };
+            const seen = new Set(g.citations.map((c) => c.id));
+            response = {
+              ...response,
+              citations: [...g.citations, ...response.citations.filter((c) => !seen.has(c.id))].slice(0, 24),
+              controls: { ...response.controls, grounded: true, defenses: [...new Set([...response.controls.defenses, "google-search-grounding", "untrusted-search-snippet-boundary"])] },
+              observability: {
+                ...response.observability,
+                evals: [
+                  ...response.observability.evals.filter((e) => e.id !== "citation_grounding"),
+                  { id: "citation_grounding", status: g.citations.length ? "pass" as const : "warn" as const, detail: `${g.citations.length} grounded web sources via ${g.provider}.` },
+                ],
+              },
+            };
+            await firestoreStore.recordAIUsage(
+              { provider: `grounding:${g.provider}`, model: g.model, inputTokens: g.usage?.inputTokens, outputTokens: g.usage?.outputTokens, totalTokens: g.usage?.totalTokens, latencyMs: response.observability.latencyMs, taskType: "project_copilot_research_grounding", promptId: "research-grounding:v1", promptVersion: "1", estimatedCostUsd: 0 },
+              a,
+              project.id,
+            );
+          } catch (error) {
+            grounded = false;
+            retrievalMeta.grounding = { ok: false, error: cleanField((error as any)?.message, 200) };
+            response = { ...response, controls: { ...response.controls, grounded: false } };
+          } finally {
+            await platformStore.releaseAiBudgetReservation(gate.reservation);
+          }
+        }
+        if (!guard && aiConfigured({ taskType: `project_copilot_${mode}`, complexity: project.complexity, risk: mode === "research" || mode === "viva_live" ? "high" : "medium" })) {
+          const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+          try {
+            const result = await getAIProvider({
+              taskType: `project_copilot_${mode}`,
+              complexity: project.complexity,
+              risk: mode === "research" || mode === "viva_live" ? "high" : "medium",
+              requiredModality: mode === "assignment_compile" ? "multimodal" : "text",
+            }).runAcademicTask({
+              taskType: `project_copilot_${mode}`,
+              agent: "project_copilot",
+              projectContext: {
+                project: {
+                  id: project.id,
+                  title: project.title,
+                  revision: project.revision,
+                  course: project.course,
+                  outcomes: project.learningOutcomes,
+                  requiredActions: project.requiredActions,
+                },
+                rubric: project.rubric,
+                evidence: evidence.slice(0, 20).map((item) => ({
+                  id: item.id,
+                  title: item.title,
+                  verification: item.verification,
+                  rubricIds: item.rubricIds || [],
+                })),
+                citations: response.citations.slice(0, 12),
+                googleGroundingAvailable: grounded,
+                groundedFindings: groundedAnswer
+                  ? `BEGIN UNTRUSTED GROUNDED SEARCH FINDINGS\n${groundedAnswer.slice(0, 8000)}\nEND UNTRUSTED GROUNDED SEARCH FINDINGS`
+                  : "",
+              },
+              artifact: { module: mode, title: "Project Copilot query", content: query },
+              platformInstruction: buildCopilotPlatformInstruction(project, mode),
+              learnerInstruction: query,
+              policySummary: `Level ${project.aiPolicy.level}. ${project.aiPolicy.summary || ""}`,
+            });
+            usage = result.usage;
+            response = {
+              ...response,
+              answer: result.output.summary || response.answer,
+              guidance: [...result.output.findings, ...result.output.suggestions].slice(0, 8),
+            };
+          } catch (error) {
+            response = {
+              ...response,
+              guidance: [
+                ...response.guidance,
+                `AI gateway fallback: ${cleanField((error as any)?.message, 240) || "provider unavailable"}`,
+              ].slice(0, 8),
+            };
+          } finally {
+            await platformStore.releaseAiBudgetReservation(gate.reservation);
+          }
+        }
+        // If generation was not available but grounding produced findings, surface them directly.
+        if (!usage && groundedAnswer) {
+          response = { ...response, answer: groundedAnswer };
+        }
+        const runId = await firestoreStore.recordAIUsage(
+          usage || {
+            provider: "native",
+            model: "project-copilot-scaffold",
+            latencyMs: response.observability.latencyMs,
+            taskType: `project_copilot_${mode}`,
+            promptId: response.observability.promptId,
+            promptVersion: "1",
+            estimatedCostUsd: 0,
+          },
+          a,
+          project.id,
+        );
+        response = finalizeCopilotRun(response, runId, usage);
+        await firestoreStore.writeAudit(
+          a.tenantId,
+          a.userId,
+          "ai.project_copilot",
+          project.id,
+          undefined,
+          {
+            mode,
+            runId,
+            featureFlag: copilotFeatureFlag(mode),
+            grounded,
+            blocked: response.controls.blocked,
+            evals: response.observability.evals,
+            retrieval: retrievalMeta,
+          },
+        );
+        await recordProductEventSafe(a, "project_copilot_run", {
+          projectId: project.id,
+          properties: {
+            mode,
+            provider: response.controls.provider,
+            grounded,
+            blocked: response.controls.blocked,
+          },
+        });
+        res.json({ success: true, copilot: response });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  // Build/refresh the self-hosted File Search index for a project (embeddings stay in your Firestore).
+  app.post(
+    "/api/projects/:id/copilot/index",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(req.params.id, a.userId, a.tenantId);
+        if (!project)
+          return res.status(404).json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const storedFlags = await firestoreStore.listFeatureFlags(a.tenantId);
+        const flagMap = Object.fromEntries([
+          ...FEATURE_DEFAULTS.map((flag) => [flag.key, flag.enabled] as const),
+          ...storedFlags.map((flag) => [flag.key, flag.enabled] as const),
+        ]);
+        if (!copilotEnabled("file_search", flagMap))
+          return res.status(403).json({ error: "Project Copilot File Search is disabled for this tenant", code: "FEATURE_DISABLED", featureFlag: copilotFeatureFlag("file_search") });
+        if (!embeddingsConfigured())
+          return res.status(503).json({ error: "No embedding provider is configured for File Search", code: "AI_NOT_CONFIGURED" });
+        const [artifacts, evidence] = await Promise.all([
+          firestoreStore.listWorkspaceArtifacts(project.id, a.tenantId),
+          firestoreStore.listProjectEvidence(project.id, a.userId, a.tenantId),
+        ]);
+        const extra = Array.isArray(req.body?.sources)
+          ? (req.body.sources as any[]).slice(0, 50).map((s, i) => ({
+              sourceType: "artifact" as const,
+              sourceId: `provided:${cleanField(s?.id, 60) || i}`,
+              title: cleanField(s?.title, 200) || `Provided source ${i + 1}`,
+              trust: "recorded" as const,
+              text: cleanField(s?.text, 40000),
+            })).filter((s) => s.text)
+          : [];
+        const sources = projectRawSources(project, artifacts, evidence, extra);
+        const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+        let result;
+        try {
+          result = await ingestRetrievalIndex(
+            { tenantId: a.tenantId, scopeType: "project", scopeId: project.id, projectId: project.id },
+            sources,
+          );
+        } finally {
+          await platformStore.releaseAiBudgetReservation(gate.reservation);
+        }
+        await firestoreStore.recordAIUsage(
+          { provider: `embedding:${result.backend}`, model: result.model, latencyMs: result.latencyMs, taskType: "project_copilot_file_search_index", promptId: "file-search-index:v1", promptVersion: "1", estimatedCostUsd: 0 },
+          a,
+          project.id,
+        );
+        await firestoreStore.writeAudit(a.tenantId, a.userId, "ai.project_copilot_index", project.id, undefined, {
+          indexed: result.indexed,
+          removed: result.removed,
+          truncated: result.truncated,
+          backend: result.backend,
+          sources: sources.length,
+        });
+        res.json({ success: true, index: result });
       } catch (e) {
         next(e);
       }

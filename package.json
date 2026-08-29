@@ -25,7 +25,7 @@
     "test:scale": "node scripts/scale-benchmark.mjs --records=1000000",
     "test:security": "tsx --test tests/security-regressions.test.ts",
     "test:billing": "tsx --test tests/lemonsqueezy.test.ts",
-    "test": "npm run typecheck && npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:security && npm run test:billing && npm run test:scale",
+    "test": "npm run typecheck && npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing && npm run test:scale",
     "test:core": "tsx --test tests/core.test.ts",
     "test:writer": "tsx --test tests/project-writer.test.ts",
     "test:access": "tsx --test tests/project-access.test.ts",
@@ -36,6 +36,8 @@
     "test:tutor": "tsx --test tests/tutor.test.ts",
     "test:solver": "tsx --test tests/solver.test.ts",
     "test:learncache": "tsx --test tests/learn-cache.test.ts",
+    "test:copilot": "tsx --test tests/copilot.test.ts",
+    "test:retrieval": "tsx --test tests/retrieval.test.ts",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh"
   },
   "dependencies": {

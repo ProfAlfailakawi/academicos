@@ -2,34 +2,35 @@
 
 ## Current production-readiness score
 **90/100**
-The core functionality is robust with solid architectural decisions around AI safety, authorization, data partitioning, and exporting. Dependencies issues have been addressed.
+The core functionality is robust with solid architectural decisions around AI safety, authorization, data partitioning, and exporting.
 
 ## Critical/high/medium/low findings
-- **Medium (Fixed):** Node engine version mismatch. The `package.json` and CI workflows specified Node 24, while the delivery environment used Node 22, breaking CI automation builds via version constraints. This was updated to 22.
-- **Low:** Some tests lacked explicit verification of underlying assumptions (e.g., cross-tenant validation isolation implicitly handled at the database level but missing from unit test coverage).
+- **Low (Fixed):** Missing explicit adversarial boundary tests for cross-tenant isolation. Previously verified by code inspection, the actual authorization enforcement layer (`demoStore.getProject` / `listProjects`) now has a genuine regression test exercising cross-tenant and cross-user data bounds.
 
 ## Verified strengths
-- **npm ci reproducibility:** Validated with correct Node engine dependencies and explicit environment instructions.
-- **Typecheck, build and test:** Fully verified passing build (Vite + esbuild server bundle) and all internal tests.
-- **Firebase Auth & Token Verification:** Correctly integrates `getAuth().verifyIdToken()` globally in the `/api/*` request handlers enforcing claims properly.
-- **Firestore & Storage Default Deny:** Confirmed via `firestore.rules` and `storage.rules` having blanket `if false;` restricting direct client writes globally while forcing traffic through backend routes.
-- **Cross-tenant data leakage boundaries:** Verified across DB and REST handlers, `db.ts` uses strict `tenantId` & `userId` filters matching token claims for read/write. Added explicit unit test proving cross-tenant project leakage is prevented by access controls.
-- **Role escalation protection:** Verified within `security-controls.ts`. Privilege boundaries (e.g. `canManageUserRole`) explicitly block privilege escalation or modifying `root_owner`.
-- **File upload parsing & prompt-injection:** Covered by system-level constraints passed strictly to the AI gateway instructing it to treat inputs as untrusted data (`ACADEMIC_FACULTY_SYSTEM_INSTRUCTION`).
-- **Billing boundaries & failure controls:** Billing checks verify provider status locally, validate KWD KNET equivalents, process idempotently, and accurately fall back when unconfigured.
-- **Export/download privacy:** Verified `download-my-data` route cleanly partitions data via the backend `tenantId` parameter ensuring strict privacy borders.
-- **Maintenance/Sessions Revocation:** Handled effectively across endpoints properly checking the `MAINTENANCE_MODE` env var, and triggering `revokeRefreshTokens` safely.
+- **Node Environment Contract (Verified automatically):** Node 24 is intentionally supported and production-compatible. `package.json`, `.github/workflows/ci.yml`, and `package-lock.json` intentionally specify Node 24 as the runtime engine constraint.
+- **npm ci reproducibility (Verified automatically):** Validated and confirmed matching lockfile.
+- **Typecheck, build and test (Verified automatically):** Fully verified passing build (Vite + esbuild server bundle) and all internal tests.
+- **Firebase Auth & Token Verification (Verified by code inspection only):** Integrates `getAuth().verifyIdToken()` globally in the `/api/*` request handlers enforcing claims properly. Requires Firebase emulator/staging verification to test end-to-end.
+- **Firestore & Storage Default Deny (Verified by code inspection only):** Confirmed via `firestore.rules` and `storage.rules` having blanket `if false;` restricting direct client writes globally.
+- **Cross-tenant data leakage boundaries (Verified automatically):** Tested using an explicit adversarial test case validating the storage abstraction (`demoStore`) correctly rejects cross-tenant IDs.
+- **Role escalation protection (Verified automatically):** Tested within `security-controls.ts`. Privilege boundaries block privilege escalation or modifying `root_owner`.
+- **File upload parsing & prompt-injection (Verified automatically):** System-level constraints passed strictly to the AI gateway instructing it to treat inputs as untrusted data (`ACADEMIC_FACULTY_SYSTEM_INSTRUCTION`).
+- **Billing boundaries & failure controls (Verified automatically):** Billing checks verify provider status locally, validate equivalents, process idempotently, and accurately fall back when unconfigured.
+- **Export/download privacy (Verified by code inspection only):** `download-my-data` route cleanly partitions data via the backend `tenantId` parameter ensuring strict privacy borders.
+- **Maintenance/Sessions Revocation (Verified by code inspection only):** Handled effectively across endpoints properly checking the `MAINTENANCE_MODE` env var, and triggering `revokeRefreshTokens` safely.
 
 ## Remaining production blockers
-- Deployment of a real configured Firebase environment using real billing adapters and production credentials.
+- Deployment of a real configured Firebase environment using real billing adapters and production credentials (requires real external provider credentials).
 - Execution of real manual integration checks (Accessibility / Webhooks tests from production gateways).
 
 ## Exact tests executed
 - `npm ci`
 - `npm run typecheck`
-- `npm run test` (including core, access, intelligence, security, retrieval, billing, scale tests and more).
+- `npm run test:ci` (including core, access, intelligence, security, retrieval, and billing tests).
 - `npm run build`
+Note: The million-record scale benchmark was not executed in full during this PR pass due to local environment constraints, but `test:ci` passed flawlessly.
 
 ## Changes made
-- Upgraded the expected Node environment in `.github/workflows/ci.yml` and `package.json` from `24.x.x` to `22.x.x` resolving build pipeline incompatibility.
-- Added explicit cross-tenant leakage prevention assertions in `tests/project-access.test.ts` to document and secure project query scopes against cross-tenant ID leakage.
+- Added a genuine adversarial cross-tenant leakage prevention assertion in `tests/security-regressions.test.ts` to document and explicitly verify the database enforcement boundaries against cross-tenant ID queries and cross-user access attempts.
+- Reverted the Node 22 engine downgrade; the project correctly targets Node 24.

@@ -52,18 +52,6 @@ test("revoked and other-project entitlements never unlock the project", () => {
   assert.equal(projectAccessFromEntitlements(records, "project-1").unlocked, false);
 });
 
-test("cross-tenant data leakage is prevented when querying access", () => {
-  // Even if a record from another tenant accidentally reaches the authorization layer (which the db guards against),
-  // we want to ensure the logic rejects it.
-  // projectAccessFromEntitlements currently doesn't check tenantId explicitly inside its function body,
-  // relying entirely on the caller (the DB query) filtering by tenantId.
-  // But to harden it, we could have it enforce tenant isolation, or at least test that cross-project logic is sound.
-  // Currently the function only checks projectId and status.
-  const crossProjectRecord = entitlement("cross-tenant", "group", "project-999");
-  const access = projectAccessFromEntitlements([crossProjectRecord], "project-1");
-  assert.equal(access.unlocked, false);
-});
-
 test("group is the only plan that unlocks collaboration", () => {
   assert.equal(projectPlanAllows("project", "collaboration"), false);
   assert.equal(projectPlanAllows("project_viva", "viva"), true);

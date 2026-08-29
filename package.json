@@ -5,7 +5,7 @@
   "type": "module",
   "description": "AcademicOS — From Assignment to Evidence",
   "engines": {
-    "node": "22.x.x"
+    "node": "24.x.x"
   },
   "overrides": {"uuid":"^11.1.1"},
   "scripts": {

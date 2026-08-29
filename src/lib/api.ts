@@ -4,6 +4,8 @@ import type {
   AdminUserRecord,
   ApiKeyRecord,
   AssignmentIntake,
+  CopilotMode,
+  CopilotResponse,
   ControlPlaneData,
   CourseAssignmentRecord,
   CourseEnrollmentRecord,
@@ -959,6 +961,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  projectCopilot: (
+    projectId: string,
+    body: { mode: CopilotMode; query?: string },
+  ) =>
+    request<{ success: true; copilot: CopilotResponse }>(
+      `/api/projects/${encodeURIComponent(projectId)}/copilot`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
   aiFeedback: (
     runId: string,
     verdict: "helpful" | "incorrect" | "missing" | "report",

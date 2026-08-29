@@ -291,6 +291,55 @@ export interface PassportData {
 }
 
 export type VivaMode = "easy" | "normal" | "strict" | "external";
+export type CopilotMode =
+  | "file_search"
+  | "research"
+  | "assignment_compile"
+  | "tutor"
+  | "workspace_function"
+  | "viva_live";
+
+export interface CopilotCitation {
+  id: string;
+  title: string;
+  sourceType: "project" | "artifact" | "evidence" | "rubric" | "web" | "policy";
+  locator?: string;
+  quote?: string;
+  trust: "recorded" | "user_verified" | "institution_verified" | "grounded" | "unverified";
+  rubricIds?: string[];
+  evidenceIds?: string[];
+}
+
+export interface CopilotResponse {
+  mode: CopilotMode;
+  answer: string;
+  guidance: string[];
+  citations: CopilotCitation[];
+  rubricLinks: Array<{ rubricId: string; title: string; relevance: string }>;
+  evidenceLinks: Array<{ evidenceId: string; title: string; relevance: string }>;
+  projectDNA: {
+    projectId: string;
+    revision?: number;
+    policyLevel: number;
+    assistanceBoundary: string;
+  };
+  controls: {
+    featureFlag: string;
+    provider: string;
+    model: string;
+    grounded: boolean;
+    costEstimateUsd?: number;
+    budgetScope: "tenant" | "user" | "soft";
+    blocked: boolean;
+    defenses: string[];
+  };
+  observability: {
+    runId?: string;
+    latencyMs: number;
+    promptId: string;
+    evals: Array<{ id: string; status: "pass" | "warn" | "fail"; detail: string }>;
+  };
+}
 
 export interface VivaQuestion {
   id: string;

@@ -10,6 +10,7 @@ import {
   CircleDashed,
   ClipboardCheck,
   Database,
+  Bot,
   FilePenLine,
   FileCheck2,
   FileText,
@@ -32,9 +33,11 @@ import { EvidenceStudio } from "../components/project/EvidenceStudio";
 import { VivaStudio } from "../components/project/VivaStudio";
 import { TeamStudio } from "../components/project/TeamStudio";
 import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
+import { ProjectCopilot } from "../components/project/ProjectCopilot";
 import { useI18n } from "../lib/i18n";
 
 const tabs = [
+  ["copilot", "Project Copilot", Bot],
   ["writer", "المشروع", FilePenLine],
   ["plan", "المطلوب والخطة", ListChecks],
   ["evidence", "المصادر", Database],
@@ -252,6 +255,7 @@ export function ProjectWorkspace() {
             {tabs
               .filter(
                 ([key]) =>
+                  (key !== "copilot" || featureFlags.ProjectCopilot !== false) &&
                   (key !== "viva" || featureFlags.VivaStudio !== false) &&
                   (key !== "evidence" || featureFlags.EvidenceStudio !== false) &&
                   (key !== "team" || project.collaborationMode === "group"),
@@ -277,6 +281,7 @@ export function ProjectWorkspace() {
           onOpenViva={() => setTab("viva")}
         />
       )}
+      {tab === "copilot" && <ProjectCopilot project={project} />}
       {tab === "plan" && (
         <StudentPlan
           project={project}

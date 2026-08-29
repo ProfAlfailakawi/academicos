@@ -39,7 +39,7 @@ test('demoStore enforces cross-tenant boundaries for project access', async () =
     tasks: [],
     deadlines: { milestones: [] },
     workspaceModules: [],
-    status: 'active',
+    status: 'in_progress',
     progress: 0,
     revision: 1,
     createdAt: new Date().toISOString(),

@@ -5,7 +5,7 @@
 The core functionality is robust with solid architectural decisions around AI safety, authorization, data partitioning, and exporting.
 
 ## Critical/high/medium/low findings
-- **Low (Fixed):** Missing explicit adversarial boundary tests for cross-tenant isolation. Previously verified by code inspection, the actual authorization enforcement layer (`demoStore.getProject` / `listProjects`) now has a genuine regression test exercising cross-tenant and cross-user data bounds.
+- **Low (Fixed):** Missing explicit adversarial boundary tests for cross-tenant isolation. The production boundary (`firestoreStore`) remains verified by code inspection and awaits emulator/staging verification. To establish a local verification baseline, an explicit regression test was added to exercise the `demoStore` fallback storage layer, validating it correctly enforces cross-tenant and cross-user boundaries.
 
 ## Verified strengths
 - **Node Environment Contract (Verified automatically):** Node 24 is intentionally supported and production-compatible. `package.json`, `.github/workflows/ci.yml`, and `package-lock.json` intentionally specify Node 24 as the runtime engine constraint.
@@ -32,5 +32,4 @@ The core functionality is robust with solid architectural decisions around AI sa
 Note: The million-record scale benchmark was not executed in full during this PR pass due to local environment constraints, but `test:ci` passed flawlessly.
 
 ## Changes made
-- Added a genuine adversarial cross-tenant leakage prevention assertion in `tests/security-regressions.test.ts` to document and explicitly verify the database enforcement boundaries against cross-tenant ID queries and cross-user access attempts.
-- Reverted the Node 22 engine downgrade; the project correctly targets Node 24.
+- Added an adversarial cross-tenant leakage prevention assertion against the fallback layer (`demoStore`) in `tests/security-regressions.test.ts`. This test demonstrates correct boundary enforcement locally, while the production layer (`firestoreStore`) is verified by code inspection.

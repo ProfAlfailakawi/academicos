@@ -22,6 +22,7 @@
     "emulators:auth:test": "firebase emulators:exec --only auth --project academicos-local 'FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=academicos-local node scripts/test-auth-emulator.mjs'",
     "emulators:workflow:test": "firebase emulators:exec --only auth,firestore --project academicos-local 'FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=academicos-local node scripts/test-production-workflows.mjs'",
     "emulators:student-flow:test": "firebase emulators:exec --only auth,firestore --project academicos-local 'FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=academicos-local ./node_modules/.bin/tsx scripts/test-student-payment-flow.ts'",
+    "emulators:writer-persistence:test": "firebase emulators:exec --only auth,firestore --project academicos-local 'FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=academicos-local ./node_modules/.bin/tsx scripts/test-writer-persistence.mjs'",
     "test:scale": "node scripts/scale-benchmark.mjs --records=1000000",
     "test:security": "tsx --test tests/security-regressions.test.ts",
     "test:billing": "tsx --test tests/lemonsqueezy.test.ts",

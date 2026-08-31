@@ -6913,7 +6913,11 @@ async function startServer() {
           nextAction: "راجع أقسام المشروع، ثبّت المصادر، ثم ابدأ تدريب المناقشة.",
           updatedAt: new Date().toISOString(),
         };
-        await firestoreStore.saveProject(updatedProject);
+        await firestoreStore.updateProject(
+          updatedProject,
+          a.userId,
+          "Project writer generated",
+        );
         await firestoreStore.writeAudit(
           a.tenantId,
           a.userId,

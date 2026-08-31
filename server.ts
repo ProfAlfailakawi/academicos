@@ -164,7 +164,10 @@ import type {
   WorkspaceArtifact,
 } from "./src/types";
 // Production-only runtime. Test data runs through Firebase emulators, never a user-facing bypass.
-const PORT = 3000;
+const PORT =
+  process.env.PORT && process.env.PORT !== "8080"
+    ? Number(process.env.PORT)
+    : 3000;
 const MAX_FILE_BYTES = Number(
   process.env.MAX_ASSIGNMENT_FILE_BYTES || 20 * 1024 * 1024,
 );

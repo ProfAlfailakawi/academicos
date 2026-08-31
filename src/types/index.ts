@@ -1467,3 +1467,22 @@ export interface PublicPlatformShare {
   viewCount?: number;
   snapshot: Record<string, unknown>;
 }
+
+export type CopilotMode =
+  | "file_search"
+  | "research"
+  | "assignment_compile"
+  | "tutor"
+  | "workspace_function"
+  | "viva_live";
+
+export interface CopilotCitation {
+  id: string;
+  title: string;
+  sourceType: "project" | "rubric" | "artifact" | "evidence" | "web";
+  locator?: string;
+  quote?: string;
+  trust: "recorded" | "user_verified" | "institution_verified" | "unverified" | "grounded";
+  rubricIds?: string[];
+  evidenceIds?: string[];
+}

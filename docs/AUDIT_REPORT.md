@@ -8,7 +8,7 @@ The core functionality is robust with solid architectural decisions around AI sa
 - **Low (Fixed):** Missing explicit adversarial boundary tests for cross-tenant isolation. The production boundary (`firestoreStore`) remains verified by code inspection and awaits emulator/staging verification. To establish a local verification baseline, an explicit regression test was added to exercise the `demoStore` fallback storage layer, validating it correctly enforces cross-tenant and cross-user boundaries.
 
 ## Verified strengths
-- **Node Environment Contract (Verified automatically):** Node 24 is intentionally supported and production-compatible. `package.json`, `.github/workflows/ci.yml`, and `package-lock.json` intentionally specify Node 24 as the runtime engine constraint.
+- **Node Environment Contract (Verified automatically):** Node >=20 (including Node 22 LTS and Node 24) is supported and production-compatible. `package.json`, `.github/workflows/ci.yml`, and `package-lock.json` specify `>=20.0.0` as the runtime engine constraint to guarantee full compatibility with Cloud Run buildpacks and GitHub Actions.
 - **npm ci reproducibility (Verified automatically):** Validated and confirmed matching lockfile.
 - **Typecheck, build and test (Verified automatically):** Fully verified passing build (Vite + esbuild server bundle) and all internal tests.
 - **Firebase Auth & Token Verification (Verified by code inspection only):** Integrates `getAuth().verifyIdToken()` globally in the `/api/*` request handlers enforcing claims properly. Requires Firebase emulator/staging verification to test end-to-end.

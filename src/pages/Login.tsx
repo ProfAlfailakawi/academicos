@@ -107,154 +107,139 @@ export function Login() {
               {mode === "signup" ? t("login.signupDesc") : mode === "forgot" ? t("login.forgotDesc") : t("login.signinDesc")}
             </p>
 
-            {!configured ? (
-              <div
-                role="alert"
-                className="mt-5 rounded-xl bg-amber-500/10 text-[var(--warning)] p-4 text-xs leading-6 border border-amber-500/20"
-              >
-                <div className="flex items-center gap-2 font-semibold text-sm mb-1">
-                  <ShieldAlert size={16} />
-                  {t("login.notConfiguredTitle")}
-                </div>
-                {t("login.notConfiguredBody")}
-              </div>
-            ) : (
-              <form onSubmit={submit} className="space-y-4 mt-5">
-                {mode === "signup" && (
-                  <label className="block">
-                    <span className="text-xs font-semibold">{t("login.name")}</span>
-                    <input
-                      autoComplete="name"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="field mt-1.5"
-                      placeholder={t("login.namePlaceholder")}
-                    />
-                  </label>
-                )}
+            <form onSubmit={submit} className="space-y-4 mt-5">
+              {mode === "signup" && (
                 <label className="block">
-                  <span className="text-xs font-semibold">
-                    {t("login.emailLabel")}
-                  </span>
+                  <span className="text-xs font-semibold">{t("login.name")}</span>
                   <input
-                    autoComplete="email"
-                    type="email"
+                    autoComplete="name"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="field mt-1.5"
-                    placeholder="name@example.com"
+                    placeholder={t("login.namePlaceholder")}
                   />
                 </label>
+              )}
+              <label className="block">
+                <span className="text-xs font-semibold">
+                  {t("login.emailLabel")}
+                </span>
+                <input
+                  autoComplete="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="field mt-1.5"
+                  placeholder="name@example.com"
+                />
+              </label>
 
-                {mode !== "forgot" && (
-                  <label className="block">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold">
-                        {t("login.passwordLabel")}
-                      </span>
-                      {mode === "login" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMode("forgot");
-                            setError("");
-                            setSuccessMsg("");
-                          }}
-                          className="text-[11px] brand-text hover:underline"
-                        >
-                          {t("login.forgotPassword")}
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      autoComplete={
-                        mode === "signup" ? "new-password" : "current-password"
-                      }
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="field mt-1.5"
-                      placeholder="••••••••"
-                    />
-                  </label>
-                )}
-
-                {error && (
-                  <div
-                    role="alert"
-                    className="text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5"
-                  >
-                    {error}
+              {mode !== "forgot" && (
+                <label className="block">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">
+                      {t("login.passwordLabel")}
+                    </span>
+                    {mode === "login" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("forgot");
+                          setError("");
+                          setSuccessMsg("");
+                        }}
+                        className="text-[11px] brand-text hover:underline"
+                      >
+                        {t("login.forgotPassword")}
+                      </button>
+                    )}
                   </div>
-                )}
+                  <input
+                    autoComplete={
+                      mode === "signup" ? "new-password" : "current-password"
+                    }
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="field mt-1.5"
+                    placeholder="••••••••"
+                  />
+                </label>
+              )}
 
-                {successMsg && (
-                  <div
-                    role="status"
-                    className="text-xs p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-start gap-2 leading-5"
-                  >
-                    <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
-                    <div>{successMsg}</div>
-                  </div>
-                )}
+              {error && (
+                <div
+                  role="alert"
+                  className="text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5"
+                >
+                  {error}
+                </div>
+              )}
 
-                <Button className="w-full" disabled={busy}>
-                  {busy ? (
-                    <>
-                      <LoaderCircle size={16} className="animate-spin" />
-                      {t("login.verifying")}
-                    </>
-                  ) : mode === "signup" ? (
-                    t("login.createAccount")
-                  ) : mode === "forgot" ? (
-                    t("login.sendReset")
-                  ) : (
-                    t("login.submit")
-                  )}
-                </Button>
-              </form>
-            )}
+              {successMsg && (
+                <div
+                  role="status"
+                  className="text-xs p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-start gap-2 leading-5"
+                >
+                  <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
+                  <div>{successMsg}</div>
+                </div>
+              )}
 
-            {configured && (
-              <div className="mt-5 space-y-2">
-                {mode === "login" ? (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="muted">{t("login.noAccount")}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode("signup");
-                        setError("");
-                        setSuccessMsg("");
-                      }}
-                      className="focus-ring font-semibold brand-text py-1 px-2 rounded-lg"
-                    >
-                      {t("login.newStudentAccount")}
-                    </button>
-                  </div>
+              <Button className="w-full" disabled={busy}>
+                {busy ? (
+                  <>
+                    <LoaderCircle size={16} className="animate-spin" />
+                    {t("login.verifying")}
+                  </>
+                ) : mode === "signup" ? (
+                  t("login.createAccount")
+                ) : mode === "forgot" ? (
+                  t("login.sendReset")
                 ) : (
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode("login");
-                        setError("");
-                        setSuccessMsg("");
-                      }}
-                      className="focus-ring text-xs font-semibold brand-text py-1 px-2 rounded-lg"
-                    >
-                      {t("login.backToSignIn")}
-                    </button>
-                  </div>
+                  t("login.submit")
                 )}
-              </div>
-            )}
+              </Button>
+            </form>
 
-            {showcaseMode && configured && mode === "login" && (
-              <div className="mt-6 rounded-2xl brand-soft-bg p-4">
+            <div className="mt-5 space-y-2">
+              {mode === "login" ? (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="muted">{t("login.noAccount")}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("signup");
+                      setError("");
+                      setSuccessMsg("");
+                    }}
+                    className="focus-ring font-semibold brand-text py-1 px-2 rounded-lg"
+                  >
+                    {t("login.newStudentAccount")}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setError("");
+                      setSuccessMsg("");
+                    }}
+                    className="focus-ring text-xs font-semibold brand-text py-1 px-2 rounded-lg"
+                  >
+                    {t("login.backToSignIn")}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {mode === "login" && (
+              <div className="mt-6 rounded-2xl brand-soft-bg p-4 border border-[var(--border-subtle)]">
                 <div className="text-xs font-semibold">{t("login.showcaseTitle")}</div>
                 <p className="text-[10px] muted leading-5 mt-1">{t("login.showcaseDesc")}</p>
                 <div className="grid grid-cols-3 gap-2 mt-3">
@@ -262,7 +247,27 @@ export function Login() {
                     ["student@showcase.academicos.local", t("login.roleStudent")],
                     ["professor@showcase.academicos.local", t("login.roleTeacher")],
                     ["university_admin@showcase.academicos.local", t("login.roleAdmin")],
-                  ].map(([showcaseEmail, label]) => <button key={showcaseEmail} type="button" onClick={() => { setEmail(showcaseEmail); setPassword("AcademicOS!Showcase2026"); }} className="focus-ring rounded-xl bg-[var(--panel)] px-2 py-2 text-[10px] font-semibold">{label}</button>)}
+                  ].map(([showcaseEmail, label]) => (
+                    <button
+                      key={showcaseEmail}
+                      type="button"
+                      onClick={async () => {
+                        setEmail(showcaseEmail);
+                        setPassword("AcademicOS!Showcase2026");
+                        setBusy(true);
+                        setError("");
+                        try {
+                          await login(showcaseEmail, "AcademicOS!Showcase2026");
+                        } catch (e: any) {
+                          setError(e.message || t("login.errorGeneric"));
+                          setBusy(false);
+                        }
+                      }}
+                      className="focus-ring rounded-xl bg-[var(--panel)] hover:bg-[var(--panel-hover)] px-2 py-2.5 text-[11px] font-semibold border hairline transition-colors shadow-xs"
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

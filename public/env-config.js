@@ -16,13 +16,11 @@
 //   EOF
 // ---------------------------------------------------------------------------
 window.__ENV__ = {
-  // ↓↓↓ ضع قيم مشروع Firebase الخاص بك هنا (استبدل النصوص الفارغة) ↓↓↓
-  VITE_FIREBASE_API_KEY: "",
-  VITE_FIREBASE_AUTH_DOMAIN: "",          // مثال: your-project.firebaseapp.com
-  VITE_FIREBASE_PROJECT_ID: "",           // مثال: academicos-prod
-  VITE_FIREBASE_STORAGE_BUCKET: "",       // مثال: your-project.appspot.com
-  VITE_FIREBASE_MESSAGING_SENDER_ID: "",  // مثال: 522016905178
-  VITE_FIREBASE_APP_ID: "",               // مثال: 1:522016905178:web:xxxxxxxx
-  // اختياري:
-  VITE_FIREBASE_APPCHECK_SITE_KEY: "",    // مفتاح reCAPTCHA Enterprise (App Check)
+  VITE_FIREBASE_API_KEY: "AIzaSyBTsN8lR4KmWHwH9LM1xvMxh13mn3LvUws",
+  VITE_FIREBASE_AUTH_DOMAIN: "tebyan-clean-2026-5f13b.firebaseapp.com",
+  VITE_FIREBASE_PROJECT_ID: "tebyan-clean-2026-5f13b",
+  VITE_FIREBASE_STORAGE_BUCKET: "tebyan-clean-2026-5f13b.firebasestorage.app",
+  VITE_FIREBASE_MESSAGING_SENDER_ID: "522016905178",
+  VITE_FIREBASE_APP_ID: "1:522016905178:web:c5fe247cc7d44a045c52e3",
+  VITE_FIREBASE_APPCHECK_SITE_KEY: "",
 };

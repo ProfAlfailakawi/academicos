@@ -371,8 +371,8 @@ export const api = {
       course: CourseRecord;
       assignments: CourseAssignmentRecord[];
     }>(`/api/courses/${encodeURIComponent(id)}`),
-  exportCourseArchive: (courseId: string) =>
-    download(`/api/courses/${encodeURIComponent(courseId)}/archive`),
+  exportCourseArchive: (courseId: string, locale = "en") =>
+    download(`/api/courses/${encodeURIComponent(courseId)}/archive?locale=${encodeURIComponent(locale)}`),
   joinCodes: (courseId: string) =>
     request<{ success: true; codes: CourseJoinCodeRecord[] }>(
       `/api/courses/${encodeURIComponent(courseId)}/join-codes`,
@@ -610,13 +610,13 @@ export const api = {
   ) =>
     download(`/api/projects/${encodeURIComponent(id)}/export?format=${format}`),
   exportMyData: () => download("/api/me/export"),
-  exportCitations: (id: string, format: "ris" | "bibtex" | "json" = "ris") =>
+  exportCitations: (id: string, format: "ris" | "bibtex" | "json" = "ris", locale = "en") =>
     download(
-      `/api/projects/${encodeURIComponent(id)}/citations/export?format=${format}`,
+      `/api/projects/${encodeURIComponent(id)}/citations/export?format=${format}&locale=${encodeURIComponent(locale)}`,
     ),
-  exportLearningEvidence: (id: string, format: "md" | "json" = "md") =>
+  exportLearningEvidence: (id: string, format: "md" | "json" = "md", locale = "en") =>
     download(
-      `/api/projects/${encodeURIComponent(id)}/learning-evidence/export?format=${format}`,
+      `/api/projects/${encodeURIComponent(id)}/learning-evidence/export?format=${format}&locale=${encodeURIComponent(locale)}`,
     ),
   createProject: (intake: AssignmentIntake) =>
     request<{

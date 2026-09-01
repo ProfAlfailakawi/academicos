@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   BookOpenCheck,
   Check,
@@ -44,7 +45,7 @@ import { RequirementMatrixStudio } from "../components/project/RequirementMatrix
 import { AutoPresentationStudio } from "../components/project/AutoPresentationStudio";
 import { PortfolioArtifactBadge } from "../components/project/PortfolioArtifactBadge";
 import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
-import { useI18n } from "../lib/i18n";
+import { formatDate, useI18n } from "../lib/i18n";
 import {
   Fingerprint,
   Search,
@@ -258,7 +259,7 @@ export function ProjectWorkspace() {
                 aria-label={t("pw.backToProjectsAria")}
               >
                 <Link to="/app/projects">
-                  <ArrowRight size={18} />
+                  <ArrowLeft size={18} className="directional-icon" />
                 </Link>
               </Button>
               <span>{project.course}</span>
@@ -471,7 +472,7 @@ function StudentPlan({
       <section className="grid sm:grid-cols-3 gap-3">
         <Mini label={t("pw.tasksMetric")} value={String(project.tasks.length)} hint={t("pw.tasksMetricHint")} />
         <Mini label={t("pw.deliverablesMetric")} value={String(project.deliverables.length)} hint={t("pw.deliverablesMetricHint")} />
-        <Mini label="Rubric" value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
+        <Mini label={t("ui.rubric")} value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
       </section>
       <Tasks project={project} onChange={onTask} />
       <Requirements project={project} />
@@ -501,7 +502,7 @@ function Overview({
           <div className="relative">
             <div className="text-xs text-white/70 flex items-center gap-2">
               <Sparkles size={15} />
-              What should I do next?
+              {t("ui.whatNext")}
             </div>
             <h2 className="text-2xl md:text-3xl font-semibold tracking-[-0.03em] mt-3">
               {next?.title || project.nextAction}
@@ -528,7 +529,7 @@ function Overview({
             hint={t("pw.readyHint")}
           />
           <Mini
-            label="Rubric"
+            label={t("ui.rubric")}
             value={`${project.rubric.filter((r) => r.readiness === "covered").length}/${project.rubric.length || 0}`}
             hint={t("pw.criteriaCovered")}
           />
@@ -572,18 +573,18 @@ function Overview({
       <aside className="space-y-5">
         <Card>
           <CardContent>
-            <h2 className="text-sm font-semibold">Project DNA</h2>
+            <h2 className="text-sm font-semibold">{t("ui.projectDna")}</h2>
             <dl className="mt-4 space-y-3 text-xs">
               {[
                 [t("pw.projectType"), project.projectType],
                 [t("pw.complexity"), project.complexity],
                 [t("pw.collabMode"), project.collaborationMode],
-                ["Citation", project.citationStyle || "Needs confirmation"],
+                [t("ui.citation"), project.citationStyle || t("pw.needsConfirm")],
                 [
                   t("pw.workload"),
                   project.estimatedWorkloadHours
                     ? `${project.estimatedWorkloadHours} ${t("pw.hours")}`
-                    : "Needs confirmation",
+                    : t("pw.needsConfirm"),
                 ],
               ].map(([k, v]) => (
                 <div
@@ -601,7 +602,7 @@ function Overview({
           <CardContent>
             <div className="flex items-center gap-2">
               <ShieldCheck size={17} className="brand-text" />
-              <h2 className="text-sm font-semibold">AI Policy</h2>
+              <h2 className="text-sm font-semibold">{t("ui.aiPolicy")}</h2>
             </div>
             <p className="body-copy mt-3">{project.aiPolicy.summary}</p>
             {project.aiPolicy.needsConfirmation && (
@@ -639,7 +640,7 @@ function Tasks({
   project: ProjectDNA;
   onChange: (t: ProjectTask, s: ProjectTask["status"]) => void;
 }) {
-  const { t: tr } = useI18n();
+  const { t: tr, locale } = useI18n();
   return (
     <Card>
       <CardContent className="p-2 md:p-3">
@@ -667,7 +668,7 @@ function Tasks({
                   )}
                   {t.dueDate && (
                     <span>
-                      · {new Date(t.dueDate).toLocaleDateString(document.documentElement.lang || undefined)}
+                      · {formatDate(t.dueDate, locale)}
                     </span>
                   )}
                 </div>
@@ -750,7 +751,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
       <CardContent>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="section-title">Requirement Traceability</h2>
+            <h2 className="section-title">{t("ui.requirementTraceability")}</h2>
             <p className="body-copy mt-1">
               {t("pw.reqNote")}
             </p>
@@ -775,14 +776,14 @@ function Requirements({ project }: { project: ProjectDNA }) {
                 <tr key={r.id} className="border-b hairline last:border-0">
                   <td className="py-3 font-semibold">{r.label}</td>
                   <td className="py-3">{r.value}</td>
-                  <td className="py-3 muted">{r.category}</td>
+                  <td className="py-3 muted">{t(`req.category.${r.category}`)}</td>
                   <td className="py-3">
                     <span
                       className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-[#f7eddd] text-[var(--warning)] dark:bg-[#332a1d]" : "brand-soft-bg"}`}
                     >
                       {r.confidence === "needs_confirmation"
-                        ? "Needs confirmation"
-                        : r.confidence}
+                        ? t("pw.needsConfirm")
+                        : t(`req.confidence.${r.confidence}`)}
                     </span>
                   </td>
                   <td className="py-3 muted max-w-xs truncate">
@@ -823,7 +824,7 @@ function Rubric({
             <div className="mt-5 grid sm:grid-cols-[1fr_auto] items-end gap-3">
               <div>
                 <label className="text-[11px] muted">
-                  Rubric readiness · {t("pw.notFinalGrade")}
+                  {t("ui.rubricReadiness")} · {t("pw.notFinalGrade")}
                 </label>
                 <select
                   aria-label={`${t("pw.readinessOf")} ${r.title}`}
@@ -908,7 +909,7 @@ function AuditModal({
               <div className="text-sm font-semibold">{c.label}</div>
               <div className="text-xs leading-6 muted mt-1">{c.detail}</div>
               {c.action&&<div className="text-[10px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
-              {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} ←</button>}
+              {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
             </div>
           </div>
         ))}
@@ -937,7 +938,7 @@ function RescueModal({
   const severity = plan?.severity === "critical" ? t("pw.rescueCritical") : plan?.severity === "tight" ? t("pw.rescueTight") : t("pw.rescuePossible");
   return <Modal title={t("pw.rescueTitle")} onClose={onClose}>
     <div className="rounded-2xl brand-soft-bg p-5">
-      <div className="eyebrow">Deadline Rescue</div>
+      <div className="eyebrow">{t("ui.deadlineRescue")}</div>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-2">
         <div><h3 className="text-xl font-semibold">{loading ? t("pw.rescueCalculating") : severity}</h3><p className="body-copy mt-2">{plan?.summary || t("pw.rescuePrompt")}</p></div>
         {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[10px] muted">{t("pw.estimatedWork")}</div></div>}

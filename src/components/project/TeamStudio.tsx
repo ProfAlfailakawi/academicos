@@ -122,7 +122,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
               <div>
                 <div className="flex items-center gap-2">
                   <UsersRound size={18} className="brand-text" />
-                  <h2 className="section-title">Team Studio</h2>
+                  <h2 className="section-title">{t("ui.teamStudio")}</h2>
                 </div>
                 <p className="body-copy mt-2">{t("team.studioDesc")}</p>
               </div>
@@ -130,8 +130,8 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 className={`rounded-full px-2 py-1 text-[9px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
               >
                 {project.collaborationMode === "group"
-                  ? "Group project"
-                  : "Individual"}
+                  ? t("ui.groupProject")
+                  : t("ui.individual")}
               </span>
             </div>
             {project.collaborationMode !== "group" ? (
@@ -182,11 +182,11 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
           <CardContent>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="eyebrow">Presence</div>
+                <div className="eyebrow">{t("ui.presence")}</div>
                 <h2 className="section-title mt-1">{t("team.presenceTitle")}</h2>
               </div>
               <span className="text-[11px] muted">
-                {presence.length} online
+                {presence.length} {t("ui.online")}
               </span>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     <span className="font-semibold">
                       {p.userId === user?.id ? t("team.you") : p.displayName}
                     </span>
-                    <span className="muted">{p.location || "project"}</span>
+                    <span className="muted">{p.location || t("ui.projectLocation")}</span>
                   </div>
                 ))
               ) : (
@@ -215,7 +215,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="eyebrow">Membership</div>
+                <div className="eyebrow">{t("ui.membership")}</div>
                 <h2 className="section-title mt-1">{t("team.membersTitle")}</h2>
               </div>
               {loading ? (
@@ -286,7 +286,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
           <div className="flex items-center gap-2">
             <ShieldCheck size={18} className="brand-text" />
             <div>
-              <h2 className="section-title">Contribution Proof</h2>
+              <h2 className="section-title">{t("ui.contributionProof")}</h2>
               <p className="body-copy mt-1">{t("team.contributionDesc")}</p>
             </div>
           </div>
@@ -352,6 +352,7 @@ function MemberRow({
   name: string;
   meta: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-xl border hairline p-3 flex items-center gap-3">
       <div className="h-9 w-9 rounded-xl brand-soft-bg grid place-items-center">
@@ -360,7 +361,7 @@ function MemberRow({
       <div className="min-w-0 flex-1">
         <div className="text-xs font-semibold">{name}</div>
         <div className="text-[9px] muted mt-1">
-          {owner ? "Owner · leader" : "member"} · {short(meta)}
+          {owner ? t("ui.ownerLeader") : t("ui.member")} · {short(meta)}
         </div>
       </div>
     </div>

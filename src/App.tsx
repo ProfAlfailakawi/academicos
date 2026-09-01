@@ -95,6 +95,27 @@ const CurriculumTwin = lazy(() =>
 const SupportConsole = lazy(() =>
   import("./pages/SupportConsole").then((m) => ({ default: m.SupportConsole })),
 );
+const Calendar = lazy(() =>
+  import("./pages/Calendar").then((m) => ({ default: m.Calendar })),
+);
+const Notifications = lazy(() =>
+  import("./pages/Notifications").then((m) => ({ default: m.Notifications })),
+);
+const Skills = lazy(() =>
+  import("./pages/Skills").then((m) => ({ default: m.Skills })),
+);
+const Passport = lazy(() =>
+  import("./pages/Passport").then((m) => ({ default: m.Passport })),
+);
+const Archive = lazy(() =>
+  import("./pages/Archive").then((m) => ({ default: m.Archive })),
+);
+const Invitations = lazy(() =>
+  import("./pages/Invitations").then((m) => ({ default: m.Invitations })),
+);
+const Jobs = lazy(() =>
+  import("./pages/Jobs").then((m) => ({ default: m.Jobs })),
+);
 
 const FACULTY_ROLES = new Set([
   "professor",
@@ -249,17 +270,17 @@ export default function App() {
               path="curriculum-twin"
               element={<RoleGuard roles={CONTROL_ROLES}><CurriculumTwin /></RoleGuard>}
             />
-            <Route path="invitations" element={<Navigate to="/app" replace />} />
+            <Route path="invitations" element={<Invitations />} />
             <Route
               path="support-console"
               element={<RoleGuard roles={SUPPORT_ROLES}><SupportConsole /></RoleGuard>}
             />
-            <Route path="calendar" element={<Navigate to="/app" replace />} />
-            <Route path="notifications" element={<Navigate to="/app" replace />} />
-            <Route path="skills" element={<Navigate to="/app" replace />} />
-            <Route path="passport" element={<Navigate to="/app" replace />} />
-            <Route path="archive" element={<Navigate to="/app" replace />} />
-            <Route path="jobs" element={<Navigate to="/app" replace />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="skills" element={<Skills />} />
+            <Route path="passport" element={<Passport />} />
+            <Route path="archive" element={<Archive />} />
+            <Route path="jobs" element={<Jobs />} />
             <Route
               path="control"
               element={<RoleGuard roles={CONTROL_ROLES}><ControlPlane /></RoleGuard>}

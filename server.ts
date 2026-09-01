@@ -4860,7 +4860,7 @@ async function startServer() {
           course.id,
           a.tenantId,
         );
-        const out = exportCourseArchive(course, assignments as any);
+        const out = exportCourseArchive(course, assignments as any, { locale: String(req.query.locale || "en") });
         res.setHeader("Content-Type", out.contentType);
         res.setHeader(
           "Content-Disposition",
@@ -9085,6 +9085,7 @@ async function startServer() {
         const out = exportCitations(
           evidence,
           String(req.query.format || "ris").toLowerCase(),
+          { locale: String(req.query.locale || project.language || "en") },
         );
         res.setHeader("Content-Type", out.contentType);
         res.setHeader(
@@ -9121,6 +9122,7 @@ async function startServer() {
           project,
           evidence,
           String(req.query.format || "md").toLowerCase(),
+          { locale: String(req.query.locale || project.language || "en") },
         );
         res.setHeader("Content-Type", out.contentType);
         res.setHeader(

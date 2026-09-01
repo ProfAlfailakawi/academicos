@@ -20,7 +20,8 @@ import {
   X,
 } from "lucide-react";
 import { api } from "../lib/api";
-import { useI18n } from "../lib/i18n";
+import { formatDate, useI18n } from "../lib/i18n";
+import { runtimeEnumLabel } from "../lib/platform-locale";
 import type {
   CourseAssignmentRecord,
   CourseJoinCodeRecord,
@@ -33,7 +34,7 @@ import { StatusPill } from "../components/StatusPill";
 type DraftDeliverable = { title: string; format: string };
 type DraftRubric = { title: string; description: string; weighting: number };
 export function CourseOS() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -117,7 +118,7 @@ export function CourseOS() {
   async function exportArchive() {
     setError("");
     try {
-      await api.exportCourseArchive(id);
+      await api.exportCourseArchive(id, locale);
     } catch (e: any) {
       setError(e.message || t("course.exportError"));
     }
@@ -335,9 +336,9 @@ export function CourseOS() {
           </div>
         </div>
         <div className="grid sm:grid-cols-3 gap-3 mt-6 pt-5 border-t hairline">
-          <Mini label="Course Outcomes" value={course.outcomes.length} />
-          <Mini label="Assignments" value={assignments.length} />
-          <Mini label="Default AI Policy" value={`L${course.aiPolicy.level}`} />
+          <Mini label={t("ui.courseOutcomes")} value={course.outcomes.length} />
+          <Mini label={t("ui.assignments")} value={assignments.length} />
+          <Mini label={t("ui.defaultAiPolicy")} value={`L${course.aiPolicy.level}`} />
         </div>
       </header>
       {error && (
@@ -351,7 +352,7 @@ export function CourseOS() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Target size={17} className="brand-text" />
-                <h2 className="section-title">Course Outcomes</h2>
+                <h2 className="section-title">{t("ui.courseOutcomes")}</h2>
               </div>
               <div className="mt-4 space-y-2">
                 {course.outcomes.length ? (
@@ -380,7 +381,7 @@ export function CourseOS() {
               </div>
               <div className="mt-4 rounded-2xl brand-soft-bg p-4">
                 <div className="text-3xl font-semibold">
-                  Level {course.aiPolicy.level}
+                  {t("ui.level")} {course.aiPolicy.level}
                 </div>
                 <p className="text-xs leading-6 mt-2">
                   {course.aiPolicy.summary}
@@ -441,8 +442,8 @@ export function CourseOS() {
                           </div>
                           <div className="text-[9px] muted mt-1">
                             {c.useCount}/{c.maxUses} · {t("course.expires")}{" "}
-                            {new Date(c.expiresAt).toLocaleDateString(document.documentElement.lang || undefined)}{" "}
-                            · {c.status}
+                            {formatDate(c.expiresAt, locale, { year: "numeric", month: "short", day: "numeric" })}{" "}
+                            · {runtimeEnumLabel(c.status, locale)}
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -487,10 +488,10 @@ export function CourseOS() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <ClipboardCheck size={17} className="brand-text" />
-                <h2 className="section-title">Outcome Mapping</h2>
+                <h2 className="section-title">{t("ui.outcomeMapping")}</h2>
               </div>
               <p className="body-copy mt-2">
-                Course Outcome → Assignment evidence map.
+                {t("ui.courseOutcomeMapDesc")}
               </p>
               <div className="mt-4 space-y-2">
                 {course.outcomes.length ? (
@@ -531,7 +532,7 @@ export function CourseOS() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="eyebrow">Assignment Builder</div>
+                <div className="eyebrow">{t("ui.assignmentBuilder")}</div>
                 <h2 className="section-title mt-1">{t("course.courseAssignments")}</h2>
               </div>
               <Button variant="outline" onClick={() => setBuilder(true)}>
@@ -587,7 +588,7 @@ export function CourseOS() {
                           onClick={() => checkQuality(a)}
                         >
                           <ClipboardCheck size={14} />
-                          Quality
+                          {t("ui.quality")}
                         </Button>
                         <Button
                           size="sm"
@@ -625,12 +626,12 @@ export function CourseOS() {
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-4">
                       <Sub label={t("course.deliverables")} value={a.deliverables.length} />
-                      <Sub label="Rubric" value={a.rubric.length} />
-                      <Sub label="Outcomes" value={a.outcomes.length} />
+                      <Sub label={t("ui.rubric")} value={a.rubric.length} />
+                      <Sub label={t("ui.outcomes")} value={a.outcomes.length} />
                     </div>
                     {a.deadline && (
                       <div className="text-[10px] muted mt-3">
-                        {t("course.deadlineLabel")} {new Date(a.deadline).toLocaleString(document.documentElement.lang || undefined)}
+                        {t("course.deadlineLabel")} {formatDate(a.deadline, locale, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </div>
                     )}
                     {quality[a.id] && (
@@ -647,7 +648,7 @@ export function CourseOS() {
                             />
                           )}
                           <span className="text-xs font-semibold">
-                            Assignment Quality Checker ·{" "}
+                            {t("ui.assignmentQualityChecker")} ·{" "}
                             {quality[a.id].status === "ready"
                               ? t("course.qualityReady")
                               : quality[a.id].status === "critical"
@@ -668,7 +669,7 @@ export function CourseOS() {
                                 <span
                                   className={`text-[9px] ${c.status === "pass" ? "brand-text" : c.status === "critical" ? "text-[var(--danger)]" : "text-[var(--warning)]"}`}
                                 >
-                                  {c.status}
+                                  {runtimeEnumLabel(c.status, locale)}
                                 </span>
                               </div>
                               <p className="text-[10px] muted leading-5 mt-1">
@@ -702,7 +703,7 @@ export function CourseOS() {
           <div className="relative panel rounded-2xl w-full max-w-4xl max-h-[94vh] overflow-hidden">
             <div className="h-14 px-5 flex items-center justify-between border-b hairline">
               <div>
-                <div className="text-xs font-semibold">Assignment Builder</div>
+                <div className="text-xs font-semibold">{t("ui.assignmentBuilder")}</div>
                 <div className="text-[10px] muted">
                   {course.code} · {course.title}
                 </div>
@@ -725,7 +726,7 @@ export function CourseOS() {
                     onChange={(e) =>
                       setForm({ ...form, title: e.target.value })
                     }
-                    placeholder="Final project"
+                    placeholder={t("ui.finalProjectPlaceholder")}
                   />
                 </Field>
                 <Field label={t("course.deadline")}>
@@ -763,7 +764,7 @@ export function CourseOS() {
                     <option value="either">{t("course.eitherMode")}</option>
                   </select>
                 </Field>
-                <Field label={`AI Policy — L${form.policyLevel}`}>
+                <Field label={`${t("ui.aiPolicy")} — L${form.policyLevel}`}>
                   <input
                     type="range"
                     min="0"
@@ -816,7 +817,7 @@ export function CourseOS() {
                           ),
                         })
                       }
-                      placeholder="PDF / PPTX…"
+                      placeholder={t("ui.deliverablePlaceholder")}
                     />
                     <Button
                       size="icon"
@@ -853,7 +854,7 @@ export function CourseOS() {
                 </Button>
               </BuilderList>
               <BuilderList
-                title={`Rubric · ${t("course.total")} ${totalWeight}%`}
+                title={`${t("ui.rubric")} · ${t("course.total")} ${totalWeight}%`}
                 icon={Target}
               >
                 {form.rubric.map((r, i) => (

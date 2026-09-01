@@ -501,7 +501,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
               <div>
-                <div className="eyebrow">Adaptive Workspace</div>
+                <div className="eyebrow">{t("pw.adaptiveWorkspace")}</div>
                 <h2 className="text-xl font-semibold mt-1">{config.name}</h2>
                 <p className="body-copy mt-2 max-w-3xl">
                   {t(config.description)}
@@ -536,17 +536,17 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="eyebrow">
-                    {editing === "new" ? "New work item" : "Edit work item"}
+                    {editing === "new" ? t("studio.newWorkItem") : t("ui.editWorkItem")}
                   </div>
                   <h3 className="section-title mt-1">{config.name}</h3>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-[9px] muted">
                     {autosaveState === "saving"
-                      ? "Saving…"
+                      ? t("ui.saving")
                       : autosaveState === "offline"
                         ? t("studio.offlineSaved")
-                        : "Saved locally"}
+                        : t("ui.savedLocally")}
                   </span>
                   <button
                     className="focus-ring text-xs muted"
@@ -596,7 +596,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                         {t("studio.aiFacultyReview")}
                       </div>
                       <p className="text-[10px] muted mt-1">
-                        Level {project.aiPolicy.level}:{" "}
+                        {t("ui.level")} {project.aiPolicy.level}:{" "}
                         {project.aiPolicy.summary || t("studio.reviewPolicyFallback")}{" "}
                         {t("studio.suggestionsNotAuto")}
                       </p>
@@ -641,7 +641,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                       {faculty.output.findings.length > 0 && (
                         <div>
                           <div className="text-[10px] font-semibold muted">
-                            Findings
+                            {t("ui.findings")}
                           </div>
                           <ul className="mt-1.5 space-y-1.5 text-xs list-disc ps-5">
                             {faculty.output.findings.map((x, i) => (
@@ -653,7 +653,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                       {faculty.output.suggestions.length > 0 && (
                         <div>
                           <div className="text-[10px] font-semibold muted">
-                            Suggestions
+                            {t("ui.suggestions")}
                           </div>
                           <ul className="mt-1.5 space-y-1.5 text-xs list-disc ps-5">
                             {faculty.output.suggestions.map((x, i) => (
@@ -665,7 +665,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                       {faculty.output.warnings.length > 0 && (
                         <div className="rounded-lg soft-bg p-3">
                           <div className="text-[10px] font-semibold">
-                            Warnings
+                            {t("ui.warnings")}
                           </div>
                           <ul className="mt-1.5 space-y-1.5 text-xs list-disc ps-5">
                             {faculty.output.warnings.map((x, i) => (
@@ -746,7 +746,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                 {project.rubric.length > 0 && (
                   <div>
                     <div className="text-[11px] font-semibold muted">
-                      Rubric evidence mapping
+                      {t("ui.rubricEvidenceMapping")}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {project.rubric.map((r) => (
@@ -921,17 +921,16 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                   <div className="mt-4 pt-3 border-t hairline flex flex-wrap gap-2 text-[9px] muted">
                     {item.deliverableId && (
                       <span>
-                        →{" "}
-                        {project.deliverables.find(
+                        {t("ui.deliverable")}: {project.deliverables.find(
                           (d) => d.id === item.deliverableId,
-                        )?.title || "Deliverable"}
+                        )?.title || t("ui.deliverable")}
                       </span>
                     )}
                     {(item.rubricIds || []).map((id) => (
                       <span key={id}>
                         ·{" "}
                         {project.rubric.find((r) => r.id === id)?.title ||
-                          "Rubric"}
+                          t("ui.rubric")}
                       </span>
                     ))}
                   </div>

@@ -58,7 +58,7 @@ export function PublicHome() {
         <section className="public-xray-section border-y hairline">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid lg:grid-cols-2 gap-10 items-center">
             <div className="xray-visual panel">
-              <div className="flex items-center justify-between"><span className="eyebrow">Project X-Ray</span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
+              <div className="flex items-center justify-between"><span className="eyebrow">{t("ui.projectXray")}</span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
               <div className="xray-score-grid mt-7"><Score value="91" label={t("landing.structure")} /><Score value="78" label={t("landing.sources")} /><Score value="88" label={t("landing.coherence")} /></div>
               <div className="xray-finding mt-6"><Check size={16} /> {t("landing.findingGood")}</div>
               <div className="xray-finding xray-finding--warn"><FileSearch size={16} /> {t("landing.findingWarn")}</div>

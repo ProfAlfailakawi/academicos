@@ -83,7 +83,7 @@ export function TurnitinForensicShieldModal({
           <div className="flex items-start gap-3 min-w-0">
             <span className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center shrink-0"><Fingerprint size={21} /></span>
             <div>
-              <div className="eyebrow">Style & Integrity Guardian</div>
+              <div className="eyebrow">{t("ui.styleIntegrityGuardian")}</div>
               <h2 className="text-xl md:text-2xl font-bold mt-1">{t("integrity.title")}</h2>
               <p className="body-copy mt-2 max-w-3xl">{t("integrity.description")}</p>
             </div>

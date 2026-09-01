@@ -95,50 +95,18 @@ function requireFirebase() {
   return firebaseAuth;
 }
 
-const LOCAL_USER_STORAGE_KEY = "academicos_local_user";
-
-function getStoredLocalUser(): User | null {
-  try {
-    const raw = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
-
-function createLocalUser(email: string, displayName?: string, roleOverride?: UserRole): User {
-  const cleanEmail = email.trim().toLowerCase();
-  let role: UserRole = roleOverride || "student";
-  if (!roleOverride) {
-    if (cleanEmail.includes("professor") || cleanEmail.includes("prof") || cleanEmail.includes("teacher")) {
-      role = "professor";
-    } else if (cleanEmail.includes("admin") || cleanEmail.includes("university_admin")) {
-      role = "university_admin";
-    }
-  }
-  const name = displayName?.trim() || cleanEmail.split("@")[0] || "AcademicOS User";
-  return {
-    id: `local_${cleanEmail.replace(/[^a-z0-9]/gi, "_")}`,
-    email: cleanEmail,
-    displayName: name,
-    role,
-    tenantId: role === "university_admin" ? "platform" : `individual_${cleanEmail.replace(/[^a-z0-9]/gi, "_")}`,
-    emailVerified: true,
-  };
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     setApiTokenProvider(async () => {
-      if (firebaseAuth?.currentUser) {
-        try {
-          return await firebaseAuth.currentUser.getIdToken();
-        } catch {}
+      if (!firebaseAuth?.currentUser) return null;
+      try {
+        return await firebaseAuth.currentUser.getIdToken();
+      } catch {
+        return null;
       }
-      const local = getStoredLocalUser();
-      return local ? `demo_token_${local.id}` : null;
     });
 
     setApiAppCheckTokenProvider(async () =>
@@ -147,100 +115,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         : null,
     );
 
-    if (firebaseAuth && firebaseClientConfigured) {
-      const unsubscribe = onAuthStateChanged(firebaseAuth, async (current) => {
-        try {
-          if (current) {
-            setUser(await mapFirebaseUser(current));
-          } else {
-            setUser(getStoredLocalUser());
-          }
-        } catch (error) {
-          console.error("Failed to map authenticated Firebase user", error);
-          setUser(getStoredLocalUser());
-        } finally {
-          setLoading(false);
-        }
-      });
-      return unsubscribe;
-    } else {
-      setUser(getStoredLocalUser());
+    if (!firebaseAuth || !firebaseClientConfigured) {
+      setUser(null);
       setLoading(false);
+      return;
     }
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (current) => {
+      try {
+        setUser(current ? await mapFirebaseUser(current) : null);
+      } catch (error) {
+        console.error("Failed to map authenticated Firebase user", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const value = useMemo<AuthState>(
     () => ({
       user,
       loading,
-      configured: true,
+      configured: firebaseClientConfigured,
       login: async (email, password) => {
-        if (firebaseAuth && firebaseClientConfigured) {
-          try {
-            await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
-            localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
-            return;
-          } catch (err: any) {
-            if (
-              err?.code === "auth/invalid-credential" ||
-              err?.code === "auth/wrong-password" ||
-              err?.code === "auth/user-not-found"
-            ) {
-              throw err;
-            }
-          }
-        }
-        const local = createLocalUser(email);
-        localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(local));
-        setUser(local);
+        const auth = requireFirebase();
+        await signInWithEmailAndPassword(auth, email.trim(), password);
       },
       signup: async (name, email, password) => {
-        if (firebaseAuth && firebaseClientConfigured) {
-          try {
-            const result = await createUserWithEmailAndPassword(
-              firebaseAuth,
-              email.trim().toLowerCase(),
-              password,
-            );
-            await updateProfile(result.user, {
-              displayName:
-                name.trim() || result.user.email?.split("@")[0] || "AcademicOS learner",
-            });
-            await sendEmailVerification(result.user).catch(() => undefined);
-            await result.user.getIdToken(true);
-            setUser(await mapFirebaseUser(result.user));
-            localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
-            return;
-          } catch (err: any) {
-            if (
-              err?.code === "auth/email-already-in-use" ||
-              err?.code === "auth/weak-password"
-            ) {
-              throw err;
-            }
-          }
-        }
-        const local = createLocalUser(email, name);
-        localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(local));
-        setUser(local);
+        const auth = requireFirebase();
+        const result = await createUserWithEmailAndPassword(
+          auth,
+          email.trim().toLowerCase(),
+          password,
+        );
+        await updateProfile(result.user, {
+          displayName:
+            name.trim() || result.user.email?.split("@")[0] || "AcademicOS learner",
+        });
+        await sendEmailVerification(result.user).catch(() => undefined);
+        await result.user.getIdToken(true);
+        setUser(await mapFirebaseUser(result.user));
       },
       logout: async () => {
-        if (firebaseAuth) await signOut(firebaseAuth).catch(() => undefined);
-        localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
+        const auth = requireFirebase();
+        await signOut(auth);
         setUser(null);
       },
       resetPassword: async (email) => {
-        if (firebaseAuth && firebaseClientConfigured) {
-          await sendPasswordResetEmail(firebaseAuth, email.trim().toLowerCase()).catch(
-            () => undefined,
-          );
-        }
+        const auth = requireFirebase();
+        await sendPasswordResetEmail(auth, email.trim().toLowerCase());
       },
       resendVerification: async () => {
-        if (firebaseAuth && firebaseClientConfigured && firebaseAuth.currentUser) {
-          if (!firebaseAuth.currentUser.emailVerified) {
-            await sendEmailVerification(firebaseAuth.currentUser);
-          }
+        const auth = requireFirebase();
+        if (auth.currentUser && !auth.currentUser.emailVerified) {
+          await sendEmailVerification(auth.currentUser);
         }
       },
     }),

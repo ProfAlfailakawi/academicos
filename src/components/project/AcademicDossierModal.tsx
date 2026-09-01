@@ -41,7 +41,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
   async function createReviewLink() {
     setSharing(true); setError("");
     try {
-      const response = await api.createShare({ kind: "project", targetId: project.id, label: `Academic evidence · ${project.title}`, watermark: "AcademicOS Evidence Capsule" });
+      const response = await api.createShare({ kind: "project", targetId: project.id, label: `${t("ui.evidenceCapsule")} · ${project.title}`, watermark: `AcademicOS · ${t("ui.evidenceCapsule")}` });
       const url = new URL(response.url, window.location.origin).toString();
       setShareUrl(url);
       await navigator.clipboard.writeText(url);
@@ -72,7 +72,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border hairline bg-[var(--panel)] shadow-2xl p-6 md:p-8 space-y-6">
         <div className="flex items-start justify-between gap-4 border-b hairline pb-5">
-          <div className="flex items-center gap-3"><div className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center text-indigo-600 shrink-0"><Fingerprint size={26}/></div><div><div className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">Evidence Capsule</div><h2 className="text-xl md:text-2xl font-bold tracking-tight mt-0.5">{t("dossier.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("dossier.description")}</p></div></div>
+          <div className="flex items-center gap-3"><div className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center text-indigo-600 shrink-0"><Fingerprint size={26}/></div><div><div className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">{t("ui.evidenceCapsule")}</div><h2 className="text-xl md:text-2xl font-bold tracking-tight mt-0.5">{t("dossier.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("dossier.description")}</p></div></div>
           <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => window.print()}><Download size={15}/>{t("common.print")}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t("common.close")}</Button></div>
         </div>
 
@@ -89,9 +89,9 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
 
               <div className="grid sm:grid-cols-4 gap-3">
                 <Metric icon={<FileCheck2 size={15}/>} label={t("dossier.evidenceItems")} value={capsule.provenance.evidenceItems} detail={`${capsule.provenance.verifiedEvidenceItems} ${t("dossier.markedVerified")}`} />
-                <Metric icon={<History size={15}/>} label="Artifacts" value={capsule.provenance.artifacts} detail={`${capsule.provenance.canonicalArtifacts} canonical`} />
+                <Metric icon={<History size={15}/>} label={t("ui.artifacts")} value={capsule.provenance.artifacts} detail={`${capsule.provenance.canonicalArtifacts} ${t("ui.canonical")}`} />
                 <Metric icon={<BrainCircuit size={15}/>} label={t("dossier.aiRuns")} value={capsule.provenance.aiAssistedRuns} detail={t("dossier.aiDisclosure")}/>
-                <Metric icon={<ShieldCheck size={15}/>} label={t("dossier.learningProofs")} value={capsule.proofOfLearning.length} detail="Viva / Proof of Learning" />
+                <Metric icon={<ShieldCheck size={15}/>} label={t("dossier.learningProofs")} value={capsule.proofOfLearning.length} detail={`Viva / ${t("ui.proofOfLearning")}`} />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -107,7 +107,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
                 {shareUrl && <div className="rounded-lg bg-white/70 dark:bg-black/20 p-2 text-[10px] break-all ltr flex gap-2 items-center"><span className="flex-1">{shareUrl}</span>{copied && <Check size={13} className="text-emerald-500 shrink-0"/>}</div>}
               </div>
             </div>
-            <div className="flex justify-between items-center gap-4 text-[10px] text-muted-foreground pt-2"><span>AcademicOS Evidence Capsule v{capsule.schemaVersion}</span><span>SHA-256{capsule.integrity.signatureStatus === "signed" ? " · Ed25519" : " · hash only"} · Traceability · Proof of Learning</span></div>
+            <div className="flex justify-between items-center gap-4 text-[10px] text-muted-foreground pt-2"><span>AcademicOS {t("ui.evidenceCapsule")} v{capsule.schemaVersion}</span><span>SHA-256{capsule.integrity.signatureStatus === "signed" ? " · Ed25519" : ` · ${t("ui.hashOnly")}`} · {t("ui.traceability")} · {t("ui.proofOfLearning")}</span></div>
           </>
         )}
       </div>

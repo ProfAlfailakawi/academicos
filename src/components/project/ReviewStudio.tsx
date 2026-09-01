@@ -9,7 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../../lib/api";
-import { useI18n } from "../../lib/i18n";
+import { formatDateTime, useI18n } from "../../lib/i18n";
 import type {
   ProjectActivityRecord,
   ProjectComment,
@@ -26,7 +26,7 @@ export function ReviewStudio({
   project: ProjectDNA;
   onRestored: (project: ProjectDNA) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [comments, setComments] = useState<ProjectComment[]>([]);
   const [versions, setVersions] = useState<ProjectVersionRecord[]>([]);
   const [activity, setActivity] = useState<ProjectActivityRecord[]>([]);
@@ -165,7 +165,7 @@ export function ReviewStudio({
                           {c.displayName}
                         </div>
                         <div className="text-[10px] muted mt-1">
-                          {formatDate(c.createdAt)}
+                          {formatDateTime(c.createdAt, locale)}
                         </div>
                       </div>
                       <Button
@@ -206,7 +206,7 @@ export function ReviewStudio({
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock3 size={18} className="brand-text" />
-              <h2 className="section-title">Activity Trail</h2>
+              <h2 className="section-title">{t("ui.activityTrail")}</h2>
             </div>
             <p className="body-copy mt-2">{t("review.activityDesc")}</p>
             <div className="mt-5 space-y-0">
@@ -224,7 +224,7 @@ export function ReviewStudio({
                         {actionLabel(a.action, t)}
                       </div>
                       <div className="text-[10px] muted mt-1">
-                        {formatDate(a.timestamp)} · {shortActor(a.actor)}
+                        {formatDateTime(a.timestamp, locale)} · {shortActor(a.actor)}
                       </div>
                       {a.reason && (
                         <div className="text-xs muted mt-1">{a.reason}</div>
@@ -248,7 +248,7 @@ export function ReviewStudio({
               <div>
                 <div className="flex items-center gap-2">
                   <History size={18} className="brand-text" />
-                  <h2 className="section-title">Version History</h2>
+                  <h2 className="section-title">{t("ui.versionHistory")}</h2>
                 </div>
                 <p className="body-copy mt-2">{t("review.versionHistoryDesc")}</p>
               </div>
@@ -266,7 +266,7 @@ export function ReviewStudio({
                           {t("review.versionLabel")} {v.versionNumber}
                         </div>
                         <div className="text-[10px] muted mt-1">
-                          {formatDate(v.createdAt)}
+                          {formatDateTime(v.createdAt, locale)}
                         </div>
                       </div>
                       <Button
@@ -325,16 +325,6 @@ function SnapshotMetric({ label, value }: { label: string; value: string }) {
       <div className="text-xs font-semibold mt-1 mono-number">{value}</div>
     </div>
   );
-}
-function formatDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
 }
 function shortActor(value: string) {
   return value.length > 20 ? `${value.slice(0, 8)}…${value.slice(-5)}` : value;

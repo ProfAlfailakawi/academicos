@@ -132,7 +132,7 @@ export function LearnStudio() {
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="Exam Coach"
+        eyebrow={t("ui.examCoach")}
         title={t("learn.heroTitle")}
         description={t("learn.heroDescription")}
         action={
@@ -153,7 +153,7 @@ export function LearnStudio() {
         <CardContent>
           <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-5 items-start">
             <div>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><BrainCircuit size={19} /></span><div><div className="eyebrow">Exam Autopilot</div><h2 className="section-title mt-1">{t("learn.autopilotTitle")}</h2></div></div>
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><BrainCircuit size={19} /></span><div><div className="eyebrow">{t("ui.examAutopilot")}</div><h2 className="section-title mt-1">{t("learn.autopilotTitle")}</h2></div></div>
               <p className="body-copy mt-3">{t("learn.autopilotDescription")}</p>
               <input ref={studyFileRef} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(event) => ingestStudyFiles(event.target.files)} />
               <div className="flex flex-wrap gap-2 mt-4">

@@ -131,9 +131,9 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400">Source Guardian</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400">{t("source.title")}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20 flex items-center gap-1">
-                <Database size={10} /> Crossref Live
+                <Database size={10} /> {t("ui.crossrefLive")}
               </span>
             </div>
             <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("source.title")}</h2>
@@ -155,14 +155,14 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
       {activeTab === "search" ? (
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder={t("source.searchPlaceholder")}
-              className="w-full rounded-xl border hairline bg-[var(--panel)] pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="w-full rounded-xl border hairline bg-[var(--panel)] ps-10 pe-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
           <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
@@ -225,11 +225,11 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                    <CheckCircle2 size={11} /> Crossref record matched
+                    <CheckCircle2 size={11} /> {t("ui.crossrefRecordMatched")}
                   </span>
                   <span className="text-[11px] font-mono text-muted-foreground">{t("source.result")} #{index + 1}</span>
                   {typeof source.citedByCount === "number" && (
-                    <span className="text-[11px] text-muted-foreground">Crossref cited-by: {source.citedByCount}</span>
+                    <span className="text-[11px] text-muted-foreground">{t("ui.crossrefCitedBy")}: {source.citedByCount}</span>
                   )}
                   {!!source.licenseUrls?.length && (
                     <span className="px-2 py-0.5 rounded-md text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400">{t("source.licenseAvailable")}</span>
@@ -256,7 +256,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
 
             <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-[11px] leading-5 flex gap-2">
               <Link2 size={14} className="text-sky-600 shrink-0 mt-0.5" />
-              <span><strong>Source Guardian:</strong> {t("source.guardianNote")}</span>
+              <span><strong>{t("source.title")}:</strong> {t("source.guardianNote")}</span>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t hairline text-xs">

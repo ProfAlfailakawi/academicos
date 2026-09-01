@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
-  ArrowLeft,
+  ArrowRight,
   BookOpenCheck,
   Check,
   CheckCircle2,
@@ -379,7 +379,7 @@ export function ProjectWriterStudio({
           {insight && (
             <Card className="writer-insight">
               <CardContent>
-                <div className="flex items-start justify-between gap-3"><div><div className="eyebrow">AcademicOS Coach</div><h3 className="section-title mt-1">{insight.title}</h3></div><Button variant="ghost" size="sm" onClick={() => setInsight(null)}>{t("writer.close")}</Button></div>
+                <div className="flex items-start justify-between gap-3"><div><div className="eyebrow">{t("ui.academicosCoach")}</div><h3 className="section-title mt-1">{insight.title}</h3></div><Button variant="ghost" size="sm" onClick={() => setInsight(null)}>{t("writer.close")}</Button></div>
                 <p className="body-copy mt-4 whitespace-pre-wrap">{insight.body}</p>
                 {insight.points.length > 0 && <div className="grid sm:grid-cols-2 gap-2 mt-4">{insight.points.map((point) => <div key={point} className="rounded-xl bg-[var(--bg)] border hairline p-3 text-xs leading-6">{point}</div>)}</div>}
               </CardContent>
@@ -391,7 +391,7 @@ export function ProjectWriterStudio({
           <QualityCard document={document} />
           <Card>
             <CardContent>
-              <div className="flex items-center gap-2"><ScanSearch size={17} className="brand-text" /><h3 className="text-sm font-semibold">Project X-Ray</h3></div>
+              <div className="flex items-center gap-2"><ScanSearch size={17} className="brand-text" /><h3 className="text-sm font-semibold">{t("ui.projectXray")}</h3></div>
               <p className="text-[11px] leading-5 muted mt-2">{t("writer.xrayDesc")}</p>
               <Button className="w-full mt-4" variant="outline" onClick={runXRay} disabled={actionBusy === "xray"}>{actionBusy === "xray" ? <LoaderCircle size={15} className="animate-spin" /> : <ScanSearch size={15} />} {t("writer.runXray")}</Button>
             </CardContent>
@@ -429,7 +429,7 @@ function ProjectFlow({ document }: { document: ProjectDocument }) {
     { label: t("writer.flowSources"), icon: ShieldCheck, done: document.quality.sourceConfidence >= 60 },
     { label: t("writer.flowViva"), icon: Mic2, done: document.quality.discussability >= 75 },
   ];
-  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><div className="grid grid-cols-4 gap-2">{steps.map(({ label, icon: Icon, done }, index) => <div key={label} className={`project-flow-step ${done ? "is-done" : ""}`}><span className="project-flow-icon"><Icon size={16} /></span><span className="hidden sm:block text-[10px] font-semibold">{label}</span>{index < steps.length - 1 && <ArrowLeft size={13} className="project-flow-arrow directional-icon" />}</div>)}</div></section>;
+  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><div className="grid grid-cols-4 gap-2">{steps.map(({ label, icon: Icon, done }, index) => <div key={label} className={`project-flow-step ${done ? "is-done" : ""}`}><span className="project-flow-icon"><Icon size={16} /></span><span className="hidden sm:block text-[10px] font-semibold">{label}</span>{index < steps.length - 1 && <ArrowRight size={13} className="project-flow-arrow directional-icon" />}</div>)}</div></section>;
 }
 
 function QualityCard({ document }: { document: ProjectDocument }) {
@@ -446,5 +446,5 @@ function QualityCard({ document }: { document: ProjectDocument }) {
 function XRayPanel({ report, onClose, onOpenViva }: { report: ProjectXRayReport; onClose: () => void; onOpenViva?: () => void }) {
   const { t } = useI18n();
   const scores = Object.entries(report.scores) as Array<[string, number]>;
-  return <div className="fixed inset-0 z-[90] flex items-end md:items-center justify-center p-0 md:p-4"><button className="absolute inset-0 bg-black/35 backdrop-blur-sm" onClick={onClose} aria-label={t("writer.closeXray")} /><section role="dialog" aria-modal="true" aria-labelledby="xray-title" className="relative panel w-full max-w-5xl max-h-[92vh] overflow-auto rounded-t-[28px] md:rounded-[28px]"><div className="sticky top-0 z-10 bg-[var(--panel)] border-b hairline px-5 py-4 flex items-center justify-between gap-4"><div><div className="eyebrow">Project X-Ray</div><h2 id="xray-title" className="section-title mt-1">{t("writer.xrayTitle")}</h2></div><Button variant="ghost" size="sm" onClick={onClose}>{t("writer.close")}</Button></div><div className="p-5 md:p-7"><div className="grid grid-cols-2 md:grid-cols-5 gap-3">{scores.map(([key, value]) => <div key={key} className="rounded-2xl soft-bg p-4 text-center"><div className="text-2xl font-semibold mono-number">{value}%</div><div className="text-[10px] muted mt-1">{key}</div></div>)}</div><div className="grid lg:grid-cols-[1.2fr_.8fr] gap-5 mt-6"><div><h3 className="text-sm font-semibold">{t("writer.xrayFindings")}</h3><div className="space-y-2 mt-3">{report.findings.map((finding) => <div key={finding.id} className="rounded-2xl border hairline p-4 flex gap-3"><span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${finding.severity === "good" ? "brand-soft-bg" : finding.severity === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}>{finding.severity === "good" ? <Check size={16} /> : <AlertTriangle size={16} />}</span><div><strong className="text-xs">{finding.title}</strong><p className="text-[11px] leading-5 muted mt-1">{finding.detail}</p><p className="text-[11px] leading-5 mt-2">{finding.action}</p></div></div>)}</div></div><aside><h3 className="text-sm font-semibold">{t("writer.professorQuestions")}</h3><div className="space-y-2 mt-3">{report.professorQuestions.map((question, index) => <div key={question} className="rounded-2xl brand-soft-bg p-4 text-xs leading-6"><span className="font-semibold me-2">{index + 1}.</span>{question}</div>)}</div><Button className="w-full mt-4" onClick={onOpenViva}><Mic2 size={15} /> {t("writer.startViva")}</Button></aside></div></div></section></div>;
+  return <div className="fixed inset-0 z-[90] flex items-end md:items-center justify-center p-0 md:p-4"><button className="absolute inset-0 bg-black/35 backdrop-blur-sm" onClick={onClose} aria-label={t("writer.closeXray")} /><section role="dialog" aria-modal="true" aria-labelledby="xray-title" className="relative panel w-full max-w-5xl max-h-[92vh] overflow-auto rounded-t-[28px] md:rounded-[28px]"><div className="sticky top-0 z-10 bg-[var(--panel)] border-b hairline px-5 py-4 flex items-center justify-between gap-4"><div><div className="eyebrow">{t("ui.projectXray")}</div><h2 id="xray-title" className="section-title mt-1">{t("writer.xrayTitle")}</h2></div><Button variant="ghost" size="sm" onClick={onClose}>{t("writer.close")}</Button></div><div className="p-5 md:p-7"><div className="grid grid-cols-2 md:grid-cols-5 gap-3">{scores.map(([key, value]) => <div key={key} className="rounded-2xl soft-bg p-4 text-center"><div className="text-2xl font-semibold mono-number">{value}%</div><div className="text-[10px] muted mt-1">{key}</div></div>)}</div><div className="grid lg:grid-cols-[1.2fr_.8fr] gap-5 mt-6"><div><h3 className="text-sm font-semibold">{t("writer.xrayFindings")}</h3><div className="space-y-2 mt-3">{report.findings.map((finding) => <div key={finding.id} className="rounded-2xl border hairline p-4 flex gap-3"><span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${finding.severity === "good" ? "brand-soft-bg" : finding.severity === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}>{finding.severity === "good" ? <Check size={16} /> : <AlertTriangle size={16} />}</span><div><strong className="text-xs">{finding.title}</strong><p className="text-[11px] leading-5 muted mt-1">{finding.detail}</p><p className="text-[11px] leading-5 mt-2">{finding.action}</p></div></div>)}</div></div><aside><h3 className="text-sm font-semibold">{t("writer.professorQuestions")}</h3><div className="space-y-2 mt-3">{report.professorQuestions.map((question, index) => <div key={question} className="rounded-2xl brand-soft-bg p-4 text-xs leading-6"><span className="font-semibold me-2">{index + 1}.</span>{question}</div>)}</div><Button className="w-full mt-4" onClick={onOpenViva}><Mic2 size={15} /> {t("writer.startViva")}</Button></aside></div></div></section></div>;
 }

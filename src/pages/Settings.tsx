@@ -131,7 +131,7 @@ export function Settings() {
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="Preferences & Policy"
+        eyebrow={t("ui.preferencesPolicy")}
         title={t("settings.title")}
         description={t("settings.description")}
       />
@@ -352,38 +352,38 @@ export function Settings() {
                 <Service
                   label="Firestore"
                   ok={h.firebase}
-                  value={h.firebase ? "Configured" : "Not configured"}
+                  value={h.firebase ? t("ui.configured") : t("ui.notConfigured")}
                 />
                 <Service
-                  label="Storage"
+                  label={t("ui.storage")}
                   ok={h.storageConfigured}
-                  value={h.storageConfigured ? "Configured" : "Not configured"}
+                  value={h.storageConfigured ? t("ui.configured") : t("ui.notConfigured")}
                 />
                 <Service
-                  label="AI Gateway"
+                  label={t("ui.aiGateway")}
                   ok={h.aiConfigured}
-                  value={h.aiConfigured ? "Configured" : "Not configured"}
+                  value={h.aiConfigured ? t("ui.configured") : t("ui.notConfigured")}
                 />
                 <Service
                   label="OCR"
                   ok={h.ocr?.configured}
                   value={
                     h.ocr?.ensemble
-                      ? "Ensemble"
+                      ? t("ui.ensemble")
                       : h.ocr?.configured
-                        ? "Single provider"
-                        : "Not configured"
+                        ? t("ui.singleProvider")
+                        : t("ui.notConfigured")
                   }
                 />
                 <Service
-                  label="Malware scan"
+                  label={t("ui.malwareScan")}
                   ok={h.malware?.configured}
                   value={
-                    h.malware?.configured ? "Configured" : "Not configured"
+                    h.malware?.configured ? t("ui.configured") : t("ui.notConfigured")
                   }
                 />
                 <Service
-                  label="External notices"
+                  label={t("ui.externalNotices")}
                   ok={
                     h.notifications?.email ||
                     h.notifications?.push ||
@@ -393,17 +393,17 @@ export function Settings() {
                     h.notifications?.email ||
                     h.notifications?.push ||
                     h.notifications?.sms
-                      ? "Configured"
-                      : "Not configured"
+                      ? t("ui.configured")
+                      : t("ui.notConfigured")
                   }
                 />
                 <Service
-                  label="Backup"
+                  label={t("ui.backup")}
                   ok={h.backup?.configured}
-                  value={h.backup?.configured ? "Configured" : "Not configured"}
+                  value={h.backup?.configured ? t("ui.configured") : t("ui.notConfigured")}
                 />
                 <Service
-                  label="Data region"
+                  label={t("ui.dataRegion")}
                   ok
                   value={h.dataRegion || "global"}
                 />
@@ -426,7 +426,7 @@ export function Settings() {
               onClick={exportData}
               disabled={exportBusy}
             >
-              {exportBusy ? t("settings.preparing") : "Download My Data"}
+              {exportBusy ? t("settings.preparing") : t("ui.downloadMyData")}
             </Button>
           </CardContent>
         </Card>

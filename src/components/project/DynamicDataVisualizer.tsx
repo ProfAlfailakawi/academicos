@@ -4,6 +4,7 @@ import type { ProjectDNA } from "../../types";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { formatDate, useI18n, type LocaleCode } from "../../lib/i18n";
+import { runtimeEnumLabel } from "../../lib/platform-locale";
 
 type ChartType = "bar" | "flowchart" | "timeline";
 
@@ -20,7 +21,7 @@ function escapeXml(value: string) {
 
 export function DynamicDataVisualizer({ project }: { project: ProjectDNA }) {
   const { t, locale, meta } = useI18n();
-  const statusText = (status: string) => t(`visual.status.${status}`) === `visual.status.${status}` ? status : t(`visual.status.${status}`);
+  const statusText = (status: string) => { const keyed = t(`visual.status.${status}`); return keyed === `visual.status.${status}` ? runtimeEnumLabel(status, locale) : keyed; };
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [copied, setCopied] = useState(false);
 
@@ -73,7 +74,7 @@ export function DynamicDataVisualizer({ project }: { project: ProjectDNA }) {
 
   return <div className="space-y-6">
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border hairline bg-[var(--panel)]">
-      <div><div className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400">Evidence-bound Visual Studio</div><h2 className="text-lg font-bold tracking-tight mt-0.5">{t("visual.title")}</h2><p className="text-xs text-muted-foreground mt-1 max-w-2xl">{t("visual.description")}</p></div>
+      <div><div className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400">{t("ui.evidenceBoundVisualStudio")}</div><h2 className="text-lg font-bold tracking-tight mt-0.5">{t("visual.title")}</h2><p className="text-xs text-muted-foreground mt-1 max-w-2xl">{t("visual.description")}</p></div>
       <div className="flex items-center gap-2 flex-wrap"><div className="flex rounded-xl border hairline p-1 bg-[var(--bg)]">
         <button onClick={() => setChartType("bar")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "bar" ? "bg-blue-600 text-white" : "text-muted-foreground"}`}><BarChart2 size={13}/>{t("visual.readiness")}</button>
         <button onClick={() => setChartType("flowchart")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "flowchart" ? "bg-blue-600 text-white" : "text-muted-foreground"}`}><GitGraph size={13}/>{t("visual.workflow")}</button>

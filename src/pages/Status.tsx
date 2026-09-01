@@ -16,11 +16,11 @@ export function Status() {
   }, []);
   const services = h
     ? [
-        ["API", h.status === "ok"],
-        ["Identity / Firestore", Boolean(h.firebase)],
-        ["Storage", Boolean(h.storageConfigured)],
-        ["AI Gateway", Boolean(h.aiConfigured)],
-        ["Billing", Boolean(h.billing?.configured)],
+        [t("ui.api"), h.status === "ok"],
+        [t("ui.identityFirestore"), Boolean(h.firebase)],
+        [t("ui.storage"), Boolean(h.storageConfigured)],
+        [t("ui.aiGateway"), Boolean(h.aiConfigured)],
+        [t("ui.billing"), Boolean(h.billing?.configured)],
       ]
     : [];
   return (

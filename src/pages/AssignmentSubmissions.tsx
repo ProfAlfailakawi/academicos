@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   ClipboardCheck,
   Clock3,
@@ -18,7 +18,7 @@ import type {
 } from "../types";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { useI18n } from "../lib/i18n";
+import { formatDateTime, useI18n } from "../lib/i18n";
 
 type GradeDraft = {
   rubricGrades: Array<{
@@ -30,7 +30,7 @@ type GradeDraft = {
   returnedReason: string;
 };
 export function AssignmentSubmissions() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { courseId = "", assignmentId = "" } = useParams();
   const [course, setCourse] = useState<CourseRecord | null>(null),
     [assignment, setAssignment] = useState<CourseAssignmentRecord | null>(null),
@@ -123,10 +123,10 @@ export function AssignmentSubmissions() {
           to={`/app/course/${course.id}`}
           className="focus-ring inline-flex items-center gap-2 text-xs muted"
         >
-          <ArrowRight size={15} />
+          <ArrowLeft size={15} className="directional-icon" />
           {course.code}
         </Link>
-        <div className="eyebrow brand-text mt-4">Submission & Grading Desk</div>
+        <div className="eyebrow brand-text mt-4">{t("ui.submissionGradingDesk")}</div>
         <h1 className="text-3xl font-semibold tracking-[-.04em] mt-1">
           {assignment.title}
         </h1>
@@ -169,7 +169,7 @@ export function AssignmentSubmissions() {
                   </div>
                   <div className="text-[10px] muted mt-2">
                     {t("subm.attempt")} {item.attempt} ·{" "}
-                    {new Date(item.submittedAt).toLocaleString(document.documentElement.lang || undefined)}
+                    {formatDateTime(item.submittedAt, locale)}
                   </div>
                   <div
                     dir="ltr"
@@ -194,13 +194,13 @@ export function AssignmentSubmissions() {
               <>
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                   <div>
-                    <div className="eyebrow">Grade with evidence</div>
+                    <div className="eyebrow">{t("ui.gradeWithEvidence")}</div>
                     <h2 className="section-title mt-1">
                       {current.studentName}
                     </h2>
                     <p className="text-[10px] muted mt-2">
-                      Revision {current.projectRevision} · Audit{" "}
-                      {current.audit.score ?? 0}% · Evidence{" "}
+                      {t("ui.revision")} {current.projectRevision} · {t("ui.audit")}{" "}
+                      {current.audit.score ?? 0}% · {t("ui.evidence")}{" "}
                       {current.audit.evidenceCoverage ?? 0}%
                     </p>
                   </div>

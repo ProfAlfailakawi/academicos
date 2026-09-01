@@ -10,10 +10,10 @@ import type { SupportTicket } from "../types";
 import { PageHeader } from "../components/PageHeader";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { useI18n } from "../lib/i18n";
+import { formatDate, useI18n } from "../lib/i18n";
 
 export function Support() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,7 +51,7 @@ export function Support() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Support System"
+        eyebrow={t("ui.supportSystem")}
         title={t("support.title")}
         description={t("support.description")}
       />
@@ -148,7 +148,7 @@ export function Support() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="eyebrow">My tickets</div>
+                <div className="eyebrow">{t("ui.myTickets")}</div>
                 <h2 className="section-title mt-1">{t("support.historyTitle")}</h2>
               </div>
               {loading ? (
@@ -179,14 +179,14 @@ export function Support() {
                         </h3>
                       </div>
                       <time className="text-[9px] muted shrink-0">
-                        {new Date(ticket.updatedAt).toLocaleDateString(document.documentElement.lang || undefined)}
+                        {formatDate(ticket.updatedAt, locale)}
                       </time>
                     </div>
                     <p className="text-xs leading-6 muted mt-3 whitespace-pre-wrap">
                       {ticket.message}
                     </p>
                     <div className="text-[9px] muted mt-3 mono-number">
-                      Ticket {ticket.id.slice(0, 8)}
+                      {t("ui.ticket")} {ticket.id.slice(0, 8)}
                     </div>
                   </div>
                 ))

@@ -8,7 +8,7 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow?: 
         <h1 className="page-title">{title}</h1>
         {description && <p className="body-copy mt-3 max-w-2xl">{description}</p>}
       </div>
-      {action && <div className="page-header__action shrink-0">{action}</div>}
+      {action && <div className="page-header__action w-full md:w-auto md:shrink-0">{action}</div>}
     </header>
   );
 }

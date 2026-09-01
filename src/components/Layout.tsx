@@ -6,13 +6,26 @@ import {
   FolderKanban,
   GraduationCap,
   Home,
-  ArrowLeft,
+  Building2,
+  Boxes,
+  PlugZap,
+  UsersRound,
+  Headphones,
+  Network,
+  ArrowRight,
+  Archive,
+  Award,
+  Bell,
+  CalendarDays,
   LogOut,
+  MailOpen,
   Menu,
   Moon,
   Plus,
   Search,
+  ServerCog,
   Settings,
+  ShieldCheck,
   Sparkles,
   Sun,
   UserRound,
@@ -26,6 +39,7 @@ import { Button } from "./ui/button";
 import { predictNext, recordNavigation } from "../lib/predictiveNavigation";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { roleTranslationKey } from "../lib/role-labels";
 
 type NavItem = {
   to: string;
@@ -39,6 +53,17 @@ const studentNav: NavItem[] = [
   { to: "/app/projects", label: "layout.navProjects", short: "layout.navProjects", icon: FolderKanban },
   { to: "/app/learn", label: "layout.navLearn", short: "layout.navLearnShort", icon: Sparkles },
   { to: "/app/plans", label: "layout.navPlans", short: "layout.navPricing", icon: CreditCard },
+];
+const sharedUtilityNav: NavItem[] = [
+  { to: "/app/notifications", label: "layout.navNotifications", short: "layout.navNotifications", icon: Bell },
+  { to: "/app/calendar", label: "layout.navCalendar", short: "layout.navCalendar", icon: CalendarDays },
+  { to: "/app/invitations", label: "layout.navInvitations", short: "layout.navInvitationsShort", icon: MailOpen },
+  { to: "/app/jobs", label: "layout.navJobs", short: "layout.navJobsShort", icon: ServerCog },
+];
+const studentUtilityNav: NavItem[] = [
+  { to: "/app/skills", label: "layout.navSkills", short: "layout.navSkillsShort", icon: Award },
+  { to: "/app/passport", label: "layout.navPassport", short: "layout.navPassportShort", icon: ShieldCheck },
+  { to: "/app/archive", label: "layout.navArchive", short: "layout.navArchive", icon: Archive },
 ];
 
 export function Layout() {
@@ -141,8 +166,13 @@ export function Layout() {
         setMenuOpen(false);
       }
     };
+    const openPalette = () => setPaletteOpen(true);
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("academicos:open-palette", openPalette);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("academicos:open-palette", openPalette);
+    };
   }, []);
   useEffect(() => {
     if (!menuOpen) {
@@ -214,8 +244,6 @@ export function Layout() {
   const canControl = Boolean(
     user &&
     [
-      "professor",
-      "course_coordinator",
       "department_admin",
       "college_admin",
       "university_admin",
@@ -227,7 +255,32 @@ export function Layout() {
       "root_owner",
     ].includes(user.role),
   );
-  const canPlatform = Boolean(user && !studentMode);
+  const canCurriculum = Boolean(
+    user &&
+    [
+      "department_admin",
+      "college_admin",
+      "university_admin",
+      "ai_governance_officer",
+      "accreditation_officer",
+      "national_admin",
+      "admin",
+      "superadmin",
+      "root_owner",
+    ].includes(user.role),
+  );
+  const canPlatform = Boolean(
+    user &&
+    [
+      "university_admin",
+      "national_admin",
+      "finance_admin",
+      "trust_safety_admin",
+      "admin",
+      "superadmin",
+      "root_owner",
+    ].includes(user.role),
+  );
   const academicWorkMode = studentMode;
   const nav = useMemo(
     () =>
@@ -251,6 +304,24 @@ export function Layout() {
                   } as NavItem,
                 ]
               : []),
+            ...(canControl
+              ? [{ to: "/app/control", label: "layout.navControl", short: "layout.navControlShort", icon: Building2 } as NavItem]
+              : []),
+            ...(canCurriculum
+              ? [{ to: "/app/curriculum-twin", label: "layout.navCurriculum", short: "layout.navCurriculumShort", icon: Network } as NavItem]
+              : []),
+            ...(canPlatform
+              ? [
+                  { to: "/app/platform", label: "layout.navPlatform", short: "layout.navPlatformShort", icon: Boxes } as NavItem,
+                  { to: "/app/integrations", label: "layout.navIntegrations", short: "layout.navIntegrationsShort", icon: PlugZap } as NavItem,
+                ]
+              : []),
+            ...(canUserAdmin
+              ? [{ to: "/app/users", label: "layout.navUsers", short: "layout.navUsersShort", icon: UsersRound } as NavItem]
+              : []),
+            ...(canSupport
+              ? [{ to: "/app/support-console", label: "layout.navSupportConsole", short: "layout.navSupportShort", icon: Headphones } as NavItem]
+              : []),
             {
               to: "/app/search",
               label: "layout.navSearch",
@@ -270,21 +341,34 @@ export function Layout() {
       canUserAdmin,
       canSupport,
       canControl,
+      canCurriculum,
       canPlatform,
     ],
   );
-  const filtered = useMemo(
-    () =>
-      nav.filter(
-        (item) =>
-          t(item.label).includes(query) || t(item.short).includes(query),
-      ),
-    [query, nav, t],
+  const utilityNav = useMemo(
+    () => [...sharedUtilityNav, ...(studentMode ? studentUtilityNav : [])],
+    [studentMode],
   );
+  const normalizeSearch = (value: string) =>
+    value.trim().toLocaleLowerCase(locale);
+  const filtered = useMemo(() => {
+    const needle = normalizeSearch(query);
+    const matches = (item: NavItem) =>
+      !needle ||
+      normalizeSearch(t(item.label)).includes(needle) ||
+      normalizeSearch(t(item.short)).includes(needle);
+    return {
+      primary: nav.filter(matches),
+      utilities: utilityNav.filter(matches),
+    };
+  }, [query, nav, utilityNav, t, locale]);
   const predictionStorageKey = `academicos.predictive-nav.v1:${user?.id || user?.role || "anonymous"}`;
   const predictionPool = useMemo(
     () => [
       ...nav.map((item) => ({ to: item.to, label: t(item.label) })),
+      ...utilityNav
+        .filter((item) => item.to !== "/app/jobs")
+        .map((item) => ({ to: item.to, label: t(item.label) })),
       ...(studentMode
         ? [
             { to: "/app/upload?mode=write", label: t("layout.actionWriteProject") },
@@ -294,7 +378,7 @@ export function Layout() {
       { to: "/app/support", label: t("layout.navSupportShort") },
       { to: "/app/settings", label: t("layout.navSettings") },
     ],
-    [nav, academicWorkMode, t],
+    [nav, utilityNav, studentMode, t],
   );
   const prediction = useMemo(
     () =>
@@ -322,17 +406,28 @@ export function Layout() {
   const goToPrediction = () => {
     if (prediction) navigate(prediction.to);
   };
+  const primaryWorkTarget = academicWorkMode
+    ? "/app/upload"
+    : canFaculty
+      ? "/app/professor"
+      : canControl
+        ? "/app/control"
+        : canSupport
+          ? "/app/support-console"
+          : canPlatform
+            ? "/app/platform"
+            : "/app/search";
   const cycleTheme = () =>
     setTheme(
       theme === "light" ? "dark" : theme === "dark" ? "system" : "light",
     );
 
   return (
-    <div className="app-shell app-surface min-h-screen lg:grid lg:grid-cols-[276px_1fr]">
+    <div className="app-shell app-surface min-h-screen">
       <a href="#main-content" className="skip-link focus-ring">
         {t("layout.skipToContent")}
       </a>
-      <aside className="app-sidebar hidden lg:flex fixed inset-y-0 right-0 w-[276px] border-l hairline bg-[var(--panel)] flex-col z-40">
+      <aside className="app-sidebar app-sidebar--desktop hidden lg:flex fixed inset-y-0 w-[276px] bg-[var(--panel)] flex-col z-40">
         <SidebarContent
           userName={user?.displayName || "AcademicOS"}
           role={user?.role || "student"}
@@ -355,9 +450,9 @@ export function Layout() {
             role="dialog"
             aria-modal="true"
             aria-label={t("layout.mainMenu")}
-            className="app-sidebar absolute inset-y-0 right-0 w-[min(90vw,340px)] bg-[var(--panel)] border-l hairline shadow-2xl"
+            className="app-sidebar app-sidebar--mobile absolute inset-y-0 w-[min(90vw,340px)] bg-[var(--panel)] shadow-2xl"
           >
-            <div className="absolute left-3 top-3">
+            <div className="mobile-menu-close absolute top-3">
               <Button
                 size="icon"
                 variant="ghost"
@@ -382,7 +477,7 @@ export function Layout() {
 
       <div
         aria-hidden={menuOpen ? true : undefined}
-        className="lg:col-start-2 min-w-0 min-h-screen"
+        className="app-content min-w-0 min-h-screen"
       >
         <header className="app-topbar sticky top-0 z-30 h-[68px] border-b hairline backdrop-blur-xl flex items-center px-4 md:px-7 gap-3">
           <Button
@@ -417,7 +512,7 @@ export function Layout() {
             <button
               onClick={goToPrediction}
               title={prediction.reason}
-              className="predictive-chip focus-ring hidden xl:flex h-10 max-w-[260px] items-center gap-2 rounded-xl px-3 text-start"
+              className="predictive-chip focus-ring hidden 2xl:flex h-10 max-w-[260px] items-center gap-2 rounded-xl px-3 text-start"
             >
               <span className="predictive-chip__spark h-7 w-7 shrink-0 rounded-lg flex items-center justify-center">
                 <Sparkles size={14} />
@@ -430,10 +525,20 @@ export function Layout() {
                   {prediction.label}
                 </span>
               </span>
-              <ArrowLeft size={14} className="shrink-0 muted" />
+              <ArrowRight size={14} className="shrink-0 muted directional-icon" />
             </button>
           )}
           <LanguageSwitcher compact />
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => navigate("/app/notifications")}
+            aria-label={t("layout.navNotifications")}
+            title={t("layout.navNotifications")}
+            className={location.pathname === "/app/notifications" ? "brand-soft-bg brand-text" : undefined}
+          >
+            <Bell size={18} />
+          </Button>
           <Button
             size="icon"
             variant="ghost"
@@ -452,7 +557,7 @@ export function Layout() {
                   {user?.displayName}
                 </div>
                 <div className="text-[10px] muted">
-                  {t(roleLabel(user?.role))}
+                  {t(roleTranslationKey(user?.role))}
                 </div>
               </div>
             </div>
@@ -510,7 +615,7 @@ export function Layout() {
         )}
 
         {prediction && (
-          <div className="predictive-mobile-wrap xl:hidden px-4 md:px-7 pt-3">
+          <div className="predictive-mobile-wrap 2xl:hidden px-4 md:px-7 pt-3">
             <button
               onClick={goToPrediction}
               className="predictive-mobile focus-ring mx-auto w-full max-w-[1440px] flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-start"
@@ -533,7 +638,7 @@ export function Layout() {
                   {prediction.label}
                 </span>
               </span>
-              <ArrowLeft size={15} className="shrink-0 muted" />
+              <ArrowRight size={15} className="shrink-0 muted directional-icon" />
             </button>
           </div>
         )}
@@ -559,7 +664,7 @@ export function Layout() {
             <MobileNav key={item.to} item={item} />
           ))}
           <NavLink
-            to={academicWorkMode ? "/app/upload" : "/app/professor"}
+            to={primaryWorkTarget}
             className="focus-ring flex flex-col items-center justify-center -mt-5"
           >
             <span className="mobile-add-button h-12 w-12 rounded-2xl brand-bg flex items-center justify-center">
@@ -621,7 +726,7 @@ export function Layout() {
                       {prediction.reason}
                     </div>
                   </div>
-                  <ArrowLeft size={15} className="muted" />
+                  <ArrowRight size={15} className="muted directional-icon" />
                 </button>
               )}
               {academicWorkMode && (
@@ -640,7 +745,7 @@ export function Layout() {
                       {t("layout.actionAnalyzeAssignment")}
                     </div>
                     <div className="text-[11px] muted">
-                      Universal Assignment Compiler
+                      {t("ui.universalAssignmentCompiler")}
                     </div>
                   </div>
                 </button>
@@ -671,7 +776,7 @@ export function Layout() {
               <div className="eyebrow px-3 pt-4 pb-2">
                 {t("layout.navigation")}
               </div>
-              {filtered.map((item) => {
+              {filtered.primary.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
@@ -687,6 +792,34 @@ export function Layout() {
                   </button>
                 );
               })}
+              {filtered.utilities.length > 0 && (
+                <>
+                  <div className="eyebrow px-3 pt-4 pb-2">
+                    {t("layout.academicTools")}
+                  </div>
+                  {filtered.utilities.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.to}
+                        onClick={() => {
+                          navigate(item.to);
+                          setPaletteOpen(false);
+                        }}
+                        className="focus-ring w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-start hover:bg-[var(--panel-2)]"
+                      >
+                        <span className="h-8 w-8 rounded-lg soft-bg flex items-center justify-center shrink-0">
+                          <Icon size={15} className="muted" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold">{t(item.label)}</span>
+                          <span className="block text-[10px] muted">{t(item.short)}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -736,7 +869,7 @@ function SidebarContent({
               {branding.institutionName || "AcademicOS"}
             </div>
             <div className="text-[10px] muted">
-              AcademicOS · Human Learning Infrastructure
+              AcademicOS · {t("layout.tagline")}
             </div>
           </div>
         </div>
@@ -748,7 +881,7 @@ function SidebarContent({
         {academicWorkMode ? <Plus size={17} /> : <Sparkles size={17} />}{" "}
         {academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}
       </NavLink>
-      <div className="eyebrow px-3 mb-2">{t(roleLabel(role))}</div>
+      <div className="eyebrow px-3 mb-2">{t(roleTranslationKey(role))}</div>
       <nav className="space-y-1">
         {nav.map((item) => (
           <DesktopNav key={item.to} item={item} />
@@ -835,28 +968,4 @@ function MobileNav({ item }: { item: NavItem }) {
       <span>{t(item.short)}</span>
     </NavLink>
   );
-}
-
-function roleLabel(role?: string) {
-  const labels: Record<string, string> = {
-    student: "layout.roleStudent",
-    student_group_leader: "layout.roleGroupLeader",
-    teaching_assistant: "layout.roleTeachingAssistant",
-    professor: "layout.roleProfessor",
-    course_coordinator: "layout.roleCourseCoordinator",
-    department_admin: "layout.roleDepartmentAdmin",
-    college_admin: "layout.roleCollegeAdmin",
-    university_admin: "layout.roleUniversityAdmin",
-    ai_governance_officer: "layout.roleAiGovernance",
-    accreditation_officer: "layout.roleAccreditation",
-    national_admin: "layout.roleNationalAdmin",
-    employer: "layout.roleEmployer",
-    support_agent: "layout.roleSupport",
-    finance_admin: "layout.roleFinanceAdmin",
-    trust_safety_admin: "layout.roleTrustSafety",
-    admin: "layout.rolePlatformAdmin",
-    superadmin: "layout.roleSuperAdmin",
-    root_owner: "layout.roleRootOwner",
-  };
-  return labels[role || "student"] || "layout.roleDefault";
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Arabic", "Noto Kufi Arabic", Tahoma, Arial, sans-serif;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Noto Sans Arabic", "Noto Kufi Arabic", "Noto Sans Devanagari", "Noto Sans SC", "Noto Nastaliq Urdu", Tahoma, Arial, sans-serif;
 }
 
 :root {
@@ -184,7 +184,8 @@ svg.lucide {
 
   .page-header { min-width: 0; }
   .page-header__copy { min-width: 0; }
-  .page-header__action { display: flex; align-items: center; }
+  .page-header__action { display: flex; align-items: center; flex-wrap: wrap; max-width: 100%; }
+  .page-header__action > * { max-width: 100%; }
 
   .empty-state {
     background:
@@ -201,14 +202,39 @@ svg.lucide {
   }
 }
 
+
+/* Locale-aware typography: avoid Latin tracking/casing artifacts in scripts that do not use them. */
+html[data-locale="ar"] .eyebrow,
+html[data-locale="ur"] .eyebrow,
+html[data-locale="zh"] .eyebrow,
+html[data-locale="hi"] .eyebrow {
+  letter-spacing: 0;
+  text-transform: none;
+}
+html[data-locale="ur"] body { line-height: 1.65; }
+html[data-locale="zh"] body { line-break: strict; word-break: normal; }
+
 /* App chrome */
-.app-shell { isolation: isolate; }
+.app-shell { isolation: isolate; width: 100%; overflow-x: clip; }
+.app-content { width: 100%; min-width: 0; }
 .app-sidebar {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--panel) 98%, var(--brand-soft)) 0%, var(--panel) 42%, color-mix(in srgb, var(--panel) 96%, var(--bg)) 100%);
-  box-shadow: -12px 0 38px rgba(20, 32, 27, .035);
 }
-.dark .app-sidebar { box-shadow: -12px 0 38px rgba(0, 0, 0, .17); }
+/* The app chrome is logical-direction aware: LTR => sidebar left, RTL => sidebar right.
+   This prevents the fixed sidebar from covering content after a live language switch. */
+.app-sidebar--desktop, .app-sidebar--mobile {
+  inset-inline-start: 0;
+  border-inline-end: 1px solid var(--line);
+}
+.mobile-menu-close { inset-inline-end: .75rem; }
+html[dir="ltr"] .app-sidebar { box-shadow: 12px 0 38px rgba(20, 32, 27, .035); }
+html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 32, 27, .035); }
+.dark[dir="ltr"] .app-sidebar, html.dark[dir="ltr"] .app-sidebar { box-shadow: 12px 0 38px rgba(0, 0, 0, .17); }
+.dark[dir="rtl"] .app-sidebar, html.dark[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(0, 0, 0, .17); }
+@media (min-width: 1024px) {
+  .app-content { margin-inline-start: 276px; width: calc(100% - 276px); }
+}
 
 .app-topbar {
   background: color-mix(in srgb, var(--bg) 86%, transparent);
@@ -265,8 +291,7 @@ svg.lucide {
 [dir="ltr"] .command-palette button:hover { transform: translateX(1px); }
 
 .mobile-dock {
-  left: 10px !important;
-  right: 10px !important;
+  inset-inline: 10px !important;
   bottom: max(10px, env(safe-area-inset-bottom));
   border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
   border-radius: 22px;
@@ -551,7 +576,11 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .writer-toolbar { background: color-mix(in srgb, var(--bg) 76%, var(--panel)); scrollbar-width: thin; }
 .writer-action { background: var(--panel); color: var(--ink); transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
 .writer-action:hover { color: var(--brand-2); border-color: color-mix(in srgb, var(--brand) 30%, var(--line)); background: var(--brand-soft); }
-.writer-canvas { border: 0; font-family: "Noto Naskh Arabic", "Noto Sans Arabic", Georgia, serif; }
+.writer-canvas { border: 0; font-family: "Noto Serif", Georgia, "Times New Roman", serif; }
+html[data-locale="ar"] .writer-canvas { font-family: "Noto Naskh Arabic", "Noto Serif Arabic", serif; }
+html[data-locale="ur"] .writer-canvas { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif; }
+html[data-locale="hi"] .writer-canvas { font-family: "Noto Serif Devanagari", "Noto Sans Devanagari", serif; }
+html[data-locale="zh"] .writer-canvas { font-family: "Noto Serif SC", "Noto Sans SC", serif; }
 .writer-canvas:focus { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--brand) 24%, transparent); }
 .writer-insight { border-color: color-mix(in srgb, var(--brand) 28%, var(--line)); background: color-mix(in srgb, var(--brand-soft) 36%, var(--panel)); }
 .quality-ring { text-align: center; }
@@ -584,9 +613,41 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
   .plan-card.is-popular { transform: none; }
 }
 
-.language-switcher{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--line);border-radius:.85rem;padding:.1rem .6rem;background:var(--panel);color:var(--ink)}
-.language-switcher select{color:inherit;max-width:9rem}
+.language-switcher{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--line);border-radius:.85rem;padding:.1rem .6rem;background:var(--panel);color:var(--ink);max-width:11.5rem;min-width:0;flex:0 1 auto}
+.language-switcher select{color:inherit;max-width:8.5rem;min-width:0;text-overflow:ellipsis}
 .language-switcher--compact{padding-inline:.45rem}
+
+/* Global-language resilience: long translations must wrap rather than force horizontal overflow. */
+.app-main, .app-main > div, .page-header, .panel, .panel-flat, .academic-card { min-width: 0; }
+.app-main :where(h1,h2,h3,p,dd,dt,label,button,a,span) { overflow-wrap: anywhere; }
+.app-main :where(pre,code,[dir="ltr"]) { overflow-wrap: anywhere; }
+.responsive-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+
+/* Topbar density is based on the remaining content width after the desktop sidebar. */
+@media (min-width: 1024px) and (max-width: 1535px) {
+  .app-topbar .command-trigger { display: none !important; }
+}
+@media (max-width: 767px) {
+  .app-topbar { gap: .45rem !important; padding-inline: .75rem !important; }
+  .app-topbar .language-switcher { max-width: 7.5rem; }
+  .app-topbar .language-switcher svg { display: none; }
+}
+@media (max-width: 419px) {
+  .app-topbar .language-switcher { max-width: 5.7rem; padding-inline: .35rem; }
+}
+
 html[dir="ltr"] .rtl-only{display:none!important}
 html[dir="rtl"] .ltr-only{display:none!important}
 .directional-icon{transition:transform .15s ease}html[dir="rtl"] .directional-icon{transform:rotate(180deg)}
+
+/* Global i18n resilience: long translated labels must never push cards off-screen. */
+.ui-button { max-width: 100%; }
+@media (max-width: 767px) {
+  .ui-button:not([data-size="icon"]) {
+    white-space: normal;
+    height: auto;
+    min-height: 42px;
+    line-height: 1.25;
+    text-align: center;
+  }
+}

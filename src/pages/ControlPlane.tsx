@@ -20,10 +20,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
-import { useI18n } from "../lib/i18n";
+import { formatDateTime, useI18n } from "../lib/i18n";
 
 export function ControlPlane() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { user } = useAuth();
   const [data, setData] = useState<ControlPlaneData | null>(null);
   const [error, setError] = useState("");
@@ -85,7 +85,7 @@ export function ControlPlane() {
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="Institution Control Plane"
+        eyebrow={t("ui.institutionControlPlane")}
         title={t('ctrl.title')}
         description={t('ctrl.desc')}
       />
@@ -110,9 +110,9 @@ export function ControlPlane() {
         <section className="grid xl:grid-cols-[1.15fr_.85fr] gap-5">
           <Card>
             <CardContent>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Route size={18} /></span><div><div className="eyebrow">Product Funnel</div><h2 className="section-title mt-1">{t("control.funnelTitle")}</h2></div></div>
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Route size={18} /></span><div><div className="eyebrow">{t("ui.productFunnel")}</div><h2 className="section-title mt-1">{t("control.funnelTitle")}</h2></div></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">
-                <Funnel label="Activation" value={product.activation} />
+                <Funnel label={t("ui.activation")} value={product.activation} />
                 <Funnel label={t("control.firstAssignment")} value={product.firstAssignmentSuccess} />
                 <Funnel label={t("control.secondProject")} value={product.secondProjectRetention} />
                 <Funnel label={t("control.paidConversion")} value={product.paidConversion} />
@@ -123,8 +123,8 @@ export function ControlPlane() {
           </Card>
           <Card>
             <CardContent>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Gauge size={18} /></span><div><div className="eyebrow">AI Cost & Quality Gate</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
-              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label="AI runs" value={product.ai.runs} /><Twin label="Cost" value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label="Cost/run" value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% failures</span></div><p className="text-[10px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Gauge size={18} /></span><div><div className="eyebrow">{t("ui.aiCostQualityGate")}</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
+              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[10px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
               <div className="mt-4 flex items-center gap-2 text-[10px] muted"><DollarSign size={13} /> {t("control.costCaveat")}</div>
             </CardContent>
           </Card>
@@ -136,7 +136,7 @@ export function ControlPlane() {
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
               <div className="flex items-start gap-3">
                 <span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center shrink-0"><Fingerprint size={19} /></span>
-                <div><div className="eyebrow">Fair-Use Shield</div><h2 className="section-title mt-1">{t("control.fairUseTitle")}</h2><p className="body-copy mt-2 max-w-3xl">{t("control.fairUseDesc")}</p></div>
+                <div><div className="eyebrow">{t("ui.fairUseShield")}</div><h2 className="section-title mt-1">{t("control.fairUseTitle")}</h2><p className="body-copy mt-2 max-w-3xl">{t("control.fairUseDesc")}</p></div>
               </div>
               <span className="rounded-full px-3 py-1.5 text-xs font-semibold brand-soft-bg">{t("control.noMac")}</span>
             </div>
@@ -146,14 +146,14 @@ export function ControlPlane() {
               <Twin label={t("control.fairUseStepUp")} value={fairUse.stepUpSignals} />
               <Twin label={t("control.fairUseDevices")} value={fairUse.suspiciousDevices} />
             </div>
-            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{item.benefit}</span><span className="text-xs font-bold mono-number">Risk {item.score}</span></div><div className="text-[10px] muted mt-1">{item.reasonCodes.join(" · ")}</div></div>)}</div>}
+            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{item.benefit}</span><span className="text-xs font-bold mono-number">{t("ui.risk")} {item.score}</span></div><div className="text-[10px] muted mt-1">{item.reasonCodes.join(" · ")}</div></div>)}</div>}
           </CardContent>
         </Card>
       )}
       {command && (
         <section className="panel-flat rounded-2xl p-5 md:p-6">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
-            <div><div className="eyebrow">Institution decision room</div><h2 className="section-title mt-1">{t('ctrl.twinTitle')}</h2><p className="body-copy mt-2">{t('ctrl.twinDesc')}</p></div>
+            <div><div className="eyebrow">{t("ui.institutionDecisionRoom")}</div><h2 className="section-title mt-1">{t('ctrl.twinTitle')}</h2><p className="body-copy mt-2">{t('ctrl.twinDesc')}</p></div>
             <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${command.posture === "healthy" ? "brand-soft-bg" : command.posture === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}>{command.posture === "healthy" ? t('ctrl.posture.healthy') : command.posture === "critical" ? t('ctrl.posture.critical') : t('ctrl.posture.attention')}</span>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5"><Twin label={t('ctrl.twin.projects')} value={command.twin.projects}/><Twin label={t('ctrl.twin.courses')} value={command.twin.courses}/><Twin label={t('ctrl.twin.assignments')} value={command.twin.assignments}/><Twin label={t('ctrl.twin.coverage')} value={`${command.twin.outcomeCoverage}%`}/><Twin label={t('ctrl.twin.submissions')} value={command.twin.submissions}/><Twin label={t('ctrl.twin.released')} value={command.twin.released}/></div>
@@ -165,7 +165,7 @@ export function ControlPlane() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="eyebrow">Operational view</div>
+                <div className="eyebrow">{t("ui.operationalView")}</div>
                 <h2 className="section-title mt-1">
                   {t('ctrl.projectsInTenant')}
                 </h2>
@@ -183,7 +183,7 @@ export function ControlPlane() {
                     <th className="text-start font-medium">{t('ctrl.col.status')}</th>
                     <th className="text-start font-medium">{t('ctrl.col.progress')}</th>
                     <th className="text-start font-medium">{t('ctrl.col.risks')}</th>
-                    <th className="text-start font-medium">AI Policy</th>
+                    <th className="text-start font-medium">{t("ui.aiPolicy")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -192,7 +192,7 @@ export function ControlPlane() {
                       <td className="py-4 font-semibold">
                         {p.title}
                         <div className="text-[10px] muted font-normal mt-1">
-                          {new Date(p.updatedAt).toLocaleString(document.documentElement.lang || undefined)}
+                          {formatDateTime(p.updatedAt, locale)}
                         </div>
                       </td>
                       <td>{p.course}</td>
@@ -227,7 +227,7 @@ export function ControlPlane() {
         <div className="space-y-5">
           <Card>
             <CardContent>
-              <div className="eyebrow">System truth</div>
+              <div className="eyebrow">{t("ui.systemTruth")}</div>
               <h2 className="section-title mt-1">{t('ctrl.systemState')}</h2>
               <div className="mt-4 space-y-2">
                 {Object.entries(data.system).map(([k, v]) => (
@@ -249,7 +249,7 @@ export function ControlPlane() {
               <div className="flex items-center gap-2">
                 <Flag size={16} className="brand-text" />
                 <div>
-                  <div className="eyebrow">Emergency controls · Feature flags</div>
+                  <div className="eyebrow">{t("ui.emergencyControlsFlags")}</div>
                   <h2 className="section-title mt-1 flex items-center gap-2"><Siren size={15} /> {t("control.emergencyControls")}</h2>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function ControlPlane() {
                         className={`focus-ring relative h-6 w-11 rounded-full transition-colors ${f.enabled ? "brand-bg" : "soft-bg"}`}
                       >
                         <span
-                          className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${f.enabled ? "right-6" : "right-1"}`}
+                          className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${f.enabled ? "end-6" : "end-1"}`}
                         />
                       </button>
                     </div>
@@ -295,7 +295,7 @@ export function ControlPlane() {
           </Card>
           <Card>
             <CardContent>
-              <div className="eyebrow">Audit trail</div>
+              <div className="eyebrow">{t("ui.auditTrail")}</div>
               <h2 className="section-title mt-1">{t('ctrl.recentOps')}</h2>
               <div className="mt-4 space-y-3 max-h-[420px] overflow-auto">
                 {data.audit.slice(0, 20).map((a) => (
@@ -306,7 +306,7 @@ export function ControlPlane() {
                     <div className="text-xs font-semibold">{a.action}</div>
                     <div className="text-[10px] muted mt-1">
                       {a.target} ·{" "}
-                      {new Date(a.timestamp).toLocaleString(document.documentElement.lang || undefined)}
+                      {formatDateTime(a.timestamp, locale)}
                     </div>
                   </div>
                 ))}

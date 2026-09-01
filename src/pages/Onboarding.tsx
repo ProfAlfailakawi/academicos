@@ -48,9 +48,9 @@ export function Onboarding() {
   const value = useMemo(
     () =>
       current.key === "courses"
-        ? (profile.courses || []).join("، ")
+        ? (profile.courses || []).join(locale === "ar" || locale === "ur" ? "، " : ", ")
         : String(profile[current.key as keyof UserProfile] || ""),
-    [current.key, profile],
+    [current.key, profile, locale],
   );
   const setValue = (v: string) => {
     if (current.key === "language" && LOCALES.some((item) => item.code === v)) setLocale(v as LocaleCode);
@@ -162,7 +162,7 @@ export function Onboarding() {
               onClick={() => (step ? setStep((s) => s - 1) : navigate("/app"))}
               disabled={saving}
             >
-              <ArrowRight size={16} />
+              <ArrowLeft size={16} className="directional-icon" />
               {step ? t("onboard.prev") : t("onboard.later")}
             </Button>
             <div className="flex gap-2">
@@ -174,7 +174,7 @@ export function Onboarding() {
                 {saving ? (
                   <LoaderCircle size={16} className="animate-spin" />
                 ) : (
-                  <ArrowLeft size={16} />
+                  <ArrowRight size={16} className="directional-icon" />
                 )}{" "}
                 {step === steps.length - 1
                   ? t("onboard.start")

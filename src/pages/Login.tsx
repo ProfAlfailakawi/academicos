@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router";
 import {
-  ArrowRight,
+  ArrowLeft,
   LoaderCircle,
   LockKeyhole,
   ShieldAlert,
@@ -67,7 +67,7 @@ export function Login() {
 
   return (
     <div className="auth-shell min-h-screen grid lg:grid-cols-[1fr_.8fr] bg-[var(--bg)]">
-      <section className="auth-visual hidden lg:flex paper-grid p-10 xl:p-16 flex-col justify-between border-l hairline">
+      <section className="auth-visual hidden lg:flex paper-grid p-10 xl:p-16 flex-col justify-between border-e hairline">
         <Link to="/" className="flex items-center gap-3 w-fit">
           <div className="h-10 w-10 rounded-xl brand-bg flex items-center justify-center text-xs font-semibold">
             AO
@@ -93,7 +93,7 @@ export function Login() {
           <CardContent className="p-6 md:p-8">
             <Button variant="ghost" asChild size="sm" className="-ms-2 mb-6">
               <Link to="/">
-                <ArrowRight size={15} />
+                <ArrowLeft size={15} className="directional-icon" />
                 {t("login.home")}
               </Link>
             </Button>

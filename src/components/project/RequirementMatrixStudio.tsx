@@ -24,7 +24,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
         <div className="flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 grid place-items-center shrink-0"><ListChecks size={22} /></div>
           <div>
-            <div className="text-[10px] font-bold tracking-wider uppercase text-violet-600 dark:text-violet-400">Requirement Truth Matrix</div>
+            <div className="text-[10px] font-bold tracking-wider uppercase text-violet-600 dark:text-violet-400">{t("ui.requirementTruthMatrix")}</div>
             <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("req.title")}</h2>
             <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">{t("req.description")}</p>
           </div>
@@ -41,7 +41,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
           const count = requirements.filter((item) => item.category === category).length;
           return count ? <FilterButton key={category} active={filter === category} onClick={() => setFilter(category)}>{categoryLabel(category)} ({count})</FilterButton> : null;
         })}
-        <FilterButton active={filter === "rubric"} onClick={() => setFilter("rubric")}>Rubric ({rubric.length})</FilterButton>
+        <FilterButton active={filter === "rubric"} onClick={() => setFilter("rubric")}>{t("ui.rubric")} ({rubric.length})</FilterButton>
       </div>
 
       {filter !== "rubric" && (
@@ -54,7 +54,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
                   <h3 className="text-sm font-bold">{item.label}</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground">{categoryLabel(item.category)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-6 md:pr-8 whitespace-pre-wrap">{item.value || t("req.noDetail")}</p>
+                <p className="text-xs text-muted-foreground leading-6 md:pe-8 whitespace-pre-wrap">{item.value || t("req.noDetail")}</p>
                 {item.source && <p className="text-[10px] text-muted-foreground">{t("req.source")}: {item.source}</p>}
               </div>
               <Confidence confidence={item.confidence} label={confidenceLabel(item.confidence)} />

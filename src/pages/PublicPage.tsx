@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
 
@@ -224,7 +224,7 @@ export function PublicPage() {
           </Button>
           <Button asChild>
             <Link to="/app">
-              {t("pub.nav.open")} <ArrowLeft size={15} />
+              {t("pub.nav.open")} <ArrowRight size={15} className="directional-icon" />
             </Link>
           </Button>
         </div>

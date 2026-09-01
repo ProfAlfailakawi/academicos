@@ -110,6 +110,15 @@ interface I18nCtx {
 const Ctx = createContext<I18nCtx | null>(null);
 const STORAGE_KEY = "academicos.locale.v1";
 
+function applyDocumentLocale(code: LocaleCode) {
+  if (typeof document === "undefined") return;
+  const selected = localeMeta(code);
+  const root = document.documentElement;
+  root.setAttribute("lang", code);
+  root.setAttribute("dir", selected.dir);
+  root.dataset.locale = code;
+}
+
 function initialLocale(): LocaleCode {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as LocaleCode | null;
@@ -131,13 +140,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const meta = useMemo(() => localeMeta(locale), [locale]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("lang", locale);
-    root.setAttribute("dir", meta.dir);
+    applyDocumentLocale(locale);
     try { localStorage.setItem(STORAGE_KEY, locale); } catch {}
-  }, [locale, meta.dir]);
+  }, [locale]);
 
-  const setLocale = useCallback((code: LocaleCode) => setLocaleState(code), []);
+  const setLocale = useCallback((code: LocaleCode) => {
+    // Apply direction synchronously so fixed chrome and responsive layout never spend a frame in the old direction.
+    applyDocumentLocale(code);
+    setLocaleState(code);
+  }, []);
   const t = useCallback(
     (key: string) => {
       const entry = DICT[key];

@@ -45,7 +45,9 @@
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
     "emulators:showcase:seed": "FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=academicos-local node scripts/seed-showcase.mjs",
     "verify:production": "node scripts/verify-production-env.mjs",
-    "audit:release": "node scripts/static-release-audit.mjs"
+    "audit:release": "node scripts/static-release-audit.mjs",
+    "audit:global-ui": "node scripts/global-ui-audit.cjs",
+    "audit:launch": "node scripts/static-release-audit.mjs && node scripts/global-ui-audit.cjs && node scripts/ts-syntax-audit.cjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

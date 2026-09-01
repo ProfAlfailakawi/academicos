@@ -16,7 +16,7 @@ import { api } from "../../lib/api";
 import type { LearningEvidenceRecord, ProjectDNA, VivaMode, VivaSession } from "../../types";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { useI18n } from "../../lib/i18n";
+import { formatDateTime, useI18n } from "../../lib/i18n";
 
 function speak(text: string, lang = "en-US") {
   try {
@@ -176,7 +176,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
         <Card>
           <CardContent>
             <div className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center"><GraduationCap size={20} /></div>
-            <div className="eyebrow mt-5">Voice Viva Simulator</div>
+            <div className="eyebrow mt-5">{t("ui.voiceVivaSimulator")}</div>
             <h2 className="text-2xl font-semibold mt-1">{t("viva.heroTitle")}</h2>
             <p className="body-copy mt-3 max-w-2xl">{t("viva.heroDesc")}</p>
             <div className="grid sm:grid-cols-4 gap-2 mt-6">
@@ -208,7 +208,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
         <CardContent>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="eyebrow">Live Voice Viva · {session.mode}</div>
+              <div className="eyebrow">{t("ui.liveVoiceViva")} · {t(`viva.mode.${session.mode}`)}</div>
               <h2 className="section-title mt-1">{t("viva.liveTitle")}</h2>
             </div>
             <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-[10px] muted">{answeredCount} {t("viva.answered")}</div></div>
@@ -244,6 +244,6 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
 }
 
 function Learning({ evidence }: { evidence: LearningEvidenceRecord[] }) {
-  const { t } = useI18n();
-  return <Card><CardContent><div className="flex items-center gap-2"><CheckCircle2 size={17} className="brand-text" /><h2 className="section-title">Proof of Learning</h2></div><p className="body-copy mt-2">{t('viva.learningDesc')}</p><div className="mt-5 space-y-3">{evidence.map((item) => <div key={item.id} className="rounded-xl bg-[var(--bg)] border hairline p-3"><div className="text-[10px] uppercase muted">{item.source}</div><p className="text-xs leading-6 mt-1">{item.summary}</p><div className="text-[10px] muted mt-2">{new Date(item.createdAt).toLocaleString(document.documentElement.lang || undefined)}</div></div>)}{!evidence.length && <div className="rounded-xl soft-bg p-4 text-xs muted">{t('viva.learningEmpty')}</div>}</div></CardContent></Card>;
+  const { t, locale } = useI18n();
+  return <Card><CardContent><div className="flex items-center gap-2"><CheckCircle2 size={17} className="brand-text" /><h2 className="section-title">{t("ui.proofOfLearning")}</h2></div><p className="body-copy mt-2">{t('viva.learningDesc')}</p><div className="mt-5 space-y-3">{evidence.map((item) => <div key={item.id} className="rounded-xl bg-[var(--bg)] border hairline p-3"><div className="text-[10px] uppercase muted">{item.source}</div><p className="text-xs leading-6 mt-1">{item.summary}</p><div className="text-[10px] muted mt-2">{formatDateTime(item.createdAt, locale)}</div></div>)}{!evidence.length && <div className="rounded-xl soft-bg p-4 text-xs muted">{t('viva.learningEmpty')}</div>}</div></CardContent></Card>;
 }

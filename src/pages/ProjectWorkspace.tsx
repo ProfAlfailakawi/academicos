@@ -465,6 +465,7 @@ function StudentPlan({
   onDeliverable: (id: string, status: string) => void;
   onRubric: (id: string, status: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-5">
       <section className="grid sm:grid-cols-3 gap-3">

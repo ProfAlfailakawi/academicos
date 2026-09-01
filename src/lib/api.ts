@@ -46,6 +46,7 @@ import type {
   ProjectXRayReport,
   RescuePlan,
   SubmissionAudit,
+  DeepAIDetectionReport,
   SupportTicket,
   UserProfile,
   VivaMode,
@@ -982,6 +983,11 @@ export const api = {
     request<{ success: true; audit: SubmissionAudit }>(
       `/api/projects/${encodeURIComponent(projectId)}/audit`,
       { method: "POST" },
+    ),
+  detectAI: (projectId: string, text?: string) =>
+    request<{ success: true; report: DeepAIDetectionReport }>(
+      `/api/projects/${encodeURIComponent(projectId)}/detect-ai`,
+      { method: "POST", body: JSON.stringify({ text }) },
     ),
   passport: () =>
     request<{ success: true; passport: PassportData }>("/api/passport"),

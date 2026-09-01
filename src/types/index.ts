@@ -1467,3 +1467,41 @@ export interface PublicPlatformShare {
   viewCount?: number;
   snapshot: Record<string, unknown>;
 }
+
+export interface SentenceAnalysis {
+  text: string;
+  aiProbability: number;
+  burstinessScore: number;
+  perplexityIndicator: "very_low" | "low" | "medium" | "high" | "human_like";
+  reasons: string[];
+  highlightColor: "red" | "orange" | "yellow" | "green";
+}
+
+export interface DeepAIDetectionReport {
+  overallAIScore: number;
+  verdict: "authentic_human" | "human_ai_collaborative" | "likely_ai_generated" | "heavily_synthetic_ai";
+  verdictLabel: string;
+  confidenceScore: number;
+  metrics: {
+    perplexityScore: number;
+    burstinessScore: number;
+    vocabularyDiversity: number;
+    syntacticUniformity: number;
+    aiHallmarkPhrasesCount: number;
+    ghostCitationCount: number;
+    passiveOveruseScore: number;
+  };
+  sentenceBreakdown: SentenceAnalysis[];
+  detectedClichés: Array<{
+    phrase: string;
+    category: "ai_hallmark" | "hedging" | "fake_elaboration" | "robotic_transition";
+    occurrences: number;
+  }>;
+  forensicSignals: Array<{
+    title: string;
+    description: string;
+    severity: "low" | "medium" | "high" | "critical";
+  }>;
+  humanizationRecommendations: string[];
+}
+

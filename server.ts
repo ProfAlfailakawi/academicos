@@ -51,6 +51,7 @@ import {
   firestoreStore,
 } from "./src/server/db";
 import { runSubmissionAudit } from "./src/server/audit";
+import { runDeepAIDetection } from "./src/server/deep-ai-detector";
 import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
 import {
   exportCitations,
@@ -8800,6 +8801,52 @@ async function startServer() {
           });
         }
         res.json({ success: true, audit });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:id/detect-ai",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const text = String(req.body?.text || "").trim();
+        let targetText = text;
+        if (!targetText) {
+          const artifacts = await firestoreStore.listWorkspaceArtifacts(
+            project.id,
+            a.tenantId,
+          );
+          targetText = artifacts
+            .filter((art) => !art.deletedAt && art.content)
+            .map((art) => art.content)
+            .join("\n\n");
+        }
+        const report = runDeepAIDetection(targetText);
+        await firestoreStore.writeAudit(
+          a.tenantId,
+          a.userId,
+          "ai.deep_detection_run",
+          project.id,
+          undefined,
+          {
+            score: report.overallAIScore,
+            verdict: report.verdict,
+            hallmarksCount: report.metrics.aiHallmarkPhrasesCount,
+          },
+        );
+        res.json({ success: true, report });
       } catch (e) {
         next(e);
       }

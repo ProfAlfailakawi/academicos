@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { runDeepAIDetection } from "./deep-ai-detector";
 import type {
   AuditCheck,
   ProjectDNA,
@@ -179,6 +180,25 @@ export function runSubmissionAudit(
         action: disclosure
           ? undefined
           : "أضف إقرار الاستخدام المطلوب إلى المخرج النهائي.",
+      }),
+    );
+  }
+  const allContent = artifacts.map((x) => x.content || "").join("\n\n");
+  if (allContent.length > 80) {
+    const aiForensic = runDeepAIDetection(allContent);
+    const isAiRisky = aiForensic.overallAIScore >= 65;
+    const isAiModerate = aiForensic.overallAIScore >= 35;
+    checks.push(
+      check({
+        label: "رادار فحص النزاهة الجنائية (Turnitin & AI Detection Radar)",
+        status: isAiRisky ? "critical" : isAiModerate ? "warning" : "pass",
+        detail: `احتمالية الذكاء الاصطناعي الجنائية: ${aiForensic.overallAIScore}% (${aiForensic.verdictLabel}). الحيرة (Perplexity): ${aiForensic.metrics.perplexityScore}/100، النبضية (Burstiness): ${aiForensic.metrics.burstinessScore}/100.`,
+        category: "integrity",
+        action: isAiRisky
+          ? "افتح نافذة 'رادار كشف AI' وطبق بروتوكول إضفاء الطابع البشري وتوثيق المراجع الحية."
+          : isAiModerate
+            ? "راجع الكليشيهات المرصودة ونوّع في أطوال الجمل لضمان خلو النص من أي اشتباه."
+            : undefined,
       }),
     );
   }

@@ -35,6 +35,7 @@ import { TeamStudio } from "../components/project/TeamStudio";
 import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
 import { ProjectCopilot } from "../components/project/ProjectCopilot";
 import { AcademicDossierModal } from "../components/project/AcademicDossierModal";
+import { TurnitinForensicShieldModal } from "../components/project/TurnitinForensicShieldModal";
 import { LiveScholarVerifier } from "../components/project/LiveScholarVerifier";
 import { DynamicDataVisualizer } from "../components/project/DynamicDataVisualizer";
 import { RedTeamingArena } from "../components/project/RedTeamingArena";
@@ -80,6 +81,7 @@ export function ProjectWorkspace() {
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
+  const [showForensicRadar, setShowForensicRadar] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [original, setOriginal] = useState<{
     text?: string;
@@ -255,11 +257,19 @@ export function ProjectWorkspace() {
           <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
+              onClick={() => setShowForensicRadar(true)}
+              className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40"
+            >
+              <Fingerprint size={16} />
+              رادار كشف AI (Turnitin+)
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setShowDossier(true)}
               className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
             >
-              <Fingerprint size={16} />
-              تقرير النزاهة والبصمة
+              <ShieldCheck size={16} />
+              ملف الدفاع والنزاهة
             </Button>
             <Button
               variant="outline"
@@ -338,6 +348,13 @@ export function ProjectWorkspace() {
         <AcademicDossierModal
           project={project}
           onClose={() => setShowDossier(false)}
+        />
+      )}
+
+      {showForensicRadar && (
+        <TurnitinForensicShieldModal
+          project={project}
+          onClose={() => setShowForensicRadar(false)}
         />
       )}
 

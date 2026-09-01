@@ -104,7 +104,14 @@ class GeminiProvider implements AIProvider {
       body: JSON.stringify({ systemInstruction: { parts: [{ text: ASSIGNMENT_COMPILER_PROMPT.systemInstruction }] }, contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json', responseSchema: ASSIGNMENT_OUTPUT_SCHEMA } }),
     });
     const json: any = await response.json().catch(()=>({}));
-    if (!response.ok) throw Object.assign(new Error(json?.error?.message || 'AI provider request failed'), { code: response.status===429?'AI_RATE_LIMIT':'AI_PROVIDER_ERROR',status:response.status===429?429:502 });
+    const errMsg = json?.error?.message || json?.error || '';
+    const isQuotaOrRateLimit = response.status === 429 || /resource_exhausted|quota|rate limit/i.test(errMsg);
+    if (!response.ok || isQuotaOrRateLimit) {
+      throw Object.assign(new Error(errMsg || 'AI provider request failed'), {
+        code: isQuotaOrRateLimit ? 'AI_RATE_LIMIT' : 'AI_PROVIDER_ERROR',
+        status: isQuotaOrRateLimit ? 429 : 502
+      });
+    }
     const text = json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') || '';
     if (!text) throw Object.assign(new Error('AI provider returned no structured output'), { code: 'AI_EMPTY_OUTPUT' });
     let output:ParsedAssignment;try{output=validateParsedAssignment(JSON.parse(text));}catch(error){if((error as any)?.code)throw error;throw Object.assign(new Error('AI provider returned invalid JSON'),{code:'AI_INVALID_OUTPUT'});}
@@ -116,7 +123,15 @@ class GeminiProvider implements AIProvider {
     const apiBase=process.env.GEMINI_API_BASE||'https://generativelanguage.googleapis.com/v1beta';const started=Date.now();
     const systemInstruction=`You are the ${input.agent} inside AcademicOS. ${academicSystemInstruction(input.taskType)}`;
     const response=await fetch(`${apiBase}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,{method:'POST',headers:{'content-type':'application/json'},signal:AbortSignal.timeout(Number(process.env.AI_REQUEST_TIMEOUT_MS||60000)),body:JSON.stringify({systemInstruction:{parts:[{text:systemInstruction}]},contents:[{role:'user',parts:[{text:JSON.stringify({taskType:input.taskType,policy:input.policySummary||'',platformInstruction:input.platformInstruction||'',learnerInstruction:input.learnerInstruction||'',project:input.projectContext,artifact:input.artifact||null}).slice(0,120000)}]}],generationConfig:{temperature:/^(project_|draft_|revision_|worked_solution|guided_solution)/.test(input.taskType)?0.48:0.15,responseMimeType:'application/json',responseSchema:ACADEMIC_TASK_OUTPUT_SCHEMA}})});
-    const json:any=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(new Error(json?.error?.message||'AI provider request failed'),{code:response.status===429?'AI_RATE_LIMIT':'AI_PROVIDER_ERROR',status:response.status===429?429:502});const text=json?.candidates?.[0]?.content?.parts?.map((p:any)=>p.text||'').join('')||'';let output:AcademicTaskOutput;try{output=validateAcademicTaskOutput(JSON.parse(text));}catch(error){if((error as any)?.code)throw error;throw Object.assign(new Error('AI provider returned invalid task JSON'),{code:'AI_INVALID_OUTPUT'});}const inputTokens=finiteNumber(json?.usageMetadata?.promptTokenCount),outputTokens=finiteNumber(json?.usageMetadata?.candidatesTokenCount),totalTokens=finiteNumber(json?.usageMetadata?.totalTokenCount);return{output,usage:{provider:this.id,model,inputTokens,outputTokens,totalTokens,estimatedCostUsd:estimateCost(this.id,inputTokens,outputTokens),latencyMs:Date.now()-started,taskType:input.taskType,promptId:`faculty:${input.agent}`,promptVersion:'1'}};
+    const json:any=await response.json().catch(()=>({}));
+    const errMsg = json?.error?.message || json?.error || '';
+    const isQuotaOrRateLimit = response.status === 429 || /resource_exhausted|quota|rate limit/i.test(errMsg);
+    if (!response.ok || isQuotaOrRateLimit) {
+      throw Object.assign(new Error(errMsg || 'AI provider request failed'), {
+        code: isQuotaOrRateLimit ? 'AI_RATE_LIMIT' : 'AI_PROVIDER_ERROR',
+        status: isQuotaOrRateLimit ? 429 : 502
+      });
+    }const text=json?.candidates?.[0]?.content?.parts?.map((p:any)=>p.text||'').join('')||'';let output:AcademicTaskOutput;try{output=validateAcademicTaskOutput(JSON.parse(text));}catch(error){if((error as any)?.code)throw error;throw Object.assign(new Error('AI provider returned invalid task JSON'),{code:'AI_INVALID_OUTPUT'});}const inputTokens=finiteNumber(json?.usageMetadata?.promptTokenCount),outputTokens=finiteNumber(json?.usageMetadata?.candidatesTokenCount),totalTokens=finiteNumber(json?.usageMetadata?.totalTokenCount);return{output,usage:{provider:this.id,model,inputTokens,outputTokens,totalTokens,estimatedCostUsd:estimateCost(this.id,inputTokens,outputTokens),latencyMs:Date.now()-started,taskType:input.taskType,promptId:`faculty:${input.agent}`,promptVersion:'1'}};
   }
 }
 

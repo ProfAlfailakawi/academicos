@@ -34,12 +34,36 @@ import { VivaStudio } from "../components/project/VivaStudio";
 import { TeamStudio } from "../components/project/TeamStudio";
 import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
 import { ProjectCopilot } from "../components/project/ProjectCopilot";
+import { AcademicDossierModal } from "../components/project/AcademicDossierModal";
+import { LiveScholarVerifier } from "../components/project/LiveScholarVerifier";
+import { DynamicDataVisualizer } from "../components/project/DynamicDataVisualizer";
+import { RedTeamingArena } from "../components/project/RedTeamingArena";
+import { RequirementMatrixStudio } from "../components/project/RequirementMatrixStudio";
+import { AutoPresentationStudio } from "../components/project/AutoPresentationStudio";
+import { PortfolioArtifactBadge } from "../components/project/PortfolioArtifactBadge";
+import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
 import { useI18n } from "../lib/i18n";
+import {
+  Fingerprint,
+  Search,
+  BarChart2,
+  Flame,
+  Presentation,
+  Award,
+  ArrowRightLeft,
+} from "lucide-react";
 
 const tabs = [
   ["copilot", "Project Copilot", Bot],
   ["writer", "المشروع", FilePenLine],
-  ["plan", "المطلوب والخطة", ListChecks],
+  ["req_matrix", "تفكيك الشروط", ListChecks],
+  ["red_teaming", "تفكيك الحجج (Red Team)", Flame],
+  ["scholar", "المراجع الحية (DOI)", Search],
+  ["slides", "الشرائح والإلقاء", Presentation],
+  ["visualizer", "الرسوم والبيانات", BarChart2],
+  ["formatter", "محول التنسيقات", ArrowRightLeft],
+  ["portfolio", "محفظة الإنجاز (CV)", Award],
+  ["plan", "الخطة والمهام", ListChecks],
   ["evidence", "المصادر", Database],
   ["viva", "ناقشني", GraduationCap],
   ["team", "الفريق", UsersRound],
@@ -55,6 +79,7 @@ export function ProjectWorkspace() {
   const [error, setError] = useState("");
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
+  const [showDossier, setShowDossier] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [original, setOriginal] = useState<{
     text?: string;
@@ -230,6 +255,14 @@ export function ProjectWorkspace() {
           <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
+              onClick={() => setShowDossier(true)}
+              className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+            >
+              <Fingerprint size={16} />
+              تقرير النزاهة والبصمة
+            </Button>
+            <Button
+              variant="outline"
               onClick={openOriginal}
               disabled={
                 !project.originalAssignment?.text &&
@@ -282,6 +315,13 @@ export function ProjectWorkspace() {
         />
       )}
       {tab === "copilot" && <ProjectCopilot project={project} />}
+      {tab === "req_matrix" && <RequirementMatrixStudio project={project} />}
+      {tab === "red_teaming" && <RedTeamingArena project={project} />}
+      {tab === "scholar" && <LiveScholarVerifier project={project} />}
+      {tab === "slides" && <AutoPresentationStudio project={project} />}
+      {tab === "visualizer" && <DynamicDataVisualizer project={project} />}
+      {tab === "formatter" && <CrossStyleFormatter project={project} />}
+      {tab === "portfolio" && <PortfolioArtifactBadge project={project} />}
       {tab === "plan" && (
         <StudentPlan
           project={project}
@@ -293,6 +333,13 @@ export function ProjectWorkspace() {
       {tab === "evidence" && <EvidenceStudio project={project} />}
       {tab === "viva" && <VivaStudio project={project} />}
       {tab === "team" && <TeamStudio project={project} />}
+
+      {showDossier && (
+        <AcademicDossierModal
+          project={project}
+          onClose={() => setShowDossier(false)}
+        />
+      )}
 
       {showOriginal && (
         <Modal title={t("pw.originalAssignment")} onClose={() => setShowOriginal(false)}>

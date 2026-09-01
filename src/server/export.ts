@@ -100,7 +100,7 @@ const ENUM_LABELS:Record<string,Record<ExportLocale,string>>={
 function enumLabel(value:unknown,locale:ExportLocale){const raw=String(value??'').trim();const key=raw.toLowerCase().replace(/[\s-]+/g,'_');return ENUM_LABELS[key]?.[locale]||raw;}
 function normalizeExportLocale(raw:unknown):ExportLocale{const short=String(raw||'en').trim().toLowerCase().slice(0,2) as ExportLocale;return short in EXPORT_LOCALES?short:'en';}
 function formatExportDate(value:unknown,locale:ExportLocale){const raw=String(value??'').trim();if(!raw)return w('needsConfirmation',locale);const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(raw);const d=new Date(dateOnly?`${raw}T00:00:00Z`:raw);if(Number.isNaN(d.getTime()))return raw;return new Intl.DateTimeFormat(EXPORT_LOCALES[locale].bcp,{dateStyle:'medium',...(dateOnly?{timeZone:'UTC'}:{})}).format(d);}
-function formatExportDateTime(value:Date|number|string,locale:ExportLocale){const d=value instanceof Date?value:new Date(value);if(Number.isNaN(d.getTime()))return String(value);return new Intl.DateTimeFormat(EXPORT_LOCALES[locale].bcp,{dateStyle:'medium',timeStyle:'short',timeZone:'UTC',timeZoneName:'short'}).format(d);}
+function formatExportDateTime(value:Date|number|string,locale:ExportLocale){const d=value instanceof Date?value:new Date(value);if(Number.isNaN(d.getTime()))return String(value);return new Intl.DateTimeFormat(EXPORT_LOCALES[locale].bcp,{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'}).format(d);}
 
 function academicSections(artifacts:WorkspaceArtifact[]){
   const manifest=artifacts.filter(a=>a.kind==='academic-document-manifest').sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0];

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const ts = require('/opt/nvm/versions/node/v22.16.0/lib/node_modules/typescript/lib/typescript.js');
+const ts = require('typescript');
 
 const root = path.resolve(__dirname, '..');
 const LOCALES = ['ar','en','tr','zh','hi','es','fr','ur'];

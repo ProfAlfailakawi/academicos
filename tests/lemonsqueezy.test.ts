@@ -75,8 +75,8 @@ test('Lemon Squeezy checkout uses canonical USD cents and forwards project metad
       assert.equal(captured.url, 'https://api.lemonsqueezy.com/v1/checkouts');
       assert.match(String(captured.init.headers.Authorization), /Bearer test-api-key/);
       const payload = JSON.parse(captured.init.body);
-      // 6.9 KWD * 3.26 * 100 = 2249 cents (USD)
-      assert.equal(payload.data.attributes.custom_price, 2249);
+      // 8.99 USD * 100 = 899 cents
+      assert.equal(payload.data.attributes.custom_price, 899);
       assert.equal(payload.data.relationships.store.data.id, '55555');
       assert.equal(payload.data.relationships.variant.data.id, '99999');
       const custom = payload.data.attributes.checkout_data.custom;

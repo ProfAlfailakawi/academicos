@@ -16,7 +16,7 @@ test('Project DNA builds adaptive modules and honest confirmation states', () =>
   assert.ok(project.workspaceModules.includes('research'));
   assert.ok(project.workspaceModules.includes('writing'));
   assert.ok(project.workspaceModules.includes('presentation'));
-  assert.ok(project.riskFlags.some(x=>x.includes('تأكيد مطلوب')));
+  assert.ok(project.riskFlags.some(x=>x.includes('Confirmation required')));
 });
 
 test('Submission Audit does not call an unfinished deliverable ready', () => {

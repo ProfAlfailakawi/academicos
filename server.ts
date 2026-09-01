@@ -164,10 +164,7 @@ import type {
   WorkspaceArtifact,
 } from "./src/types";
 // Production-only runtime. Test data runs through Firebase emulators, never a user-facing bypass.
-const PORT =
-  process.env.PORT && process.env.PORT !== "8080"
-    ? Number(process.env.PORT)
-    : 3000;
+const PORT = 3000;
 const MAX_FILE_BYTES = Number(
   process.env.MAX_ASSIGNMENT_FILE_BYTES || 20 * 1024 * 1024,
 );
@@ -1581,7 +1578,9 @@ async function startServer() {
   app.use((req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-AcademicOS-API-Version", "1");
-    res.setHeader("X-Frame-Options", "DENY");
+    if (process.env.NODE_ENV === "production" && !process.env.ALLOW_IFRAME) {
+      res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    }
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader(
       "Permissions-Policy",
@@ -1590,7 +1589,7 @@ async function startServer() {
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
     const devScript =
       process.env.NODE_ENV === "production"
-        ? "'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net"
+        ? "'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.recaptcha.net"
         : "'self' 'unsafe-inline' 'unsafe-eval'";
     const configuredEmulator = String(
         process.env.VITE_FIREBASE_AUTH_EMULATOR_URL || "",
@@ -1600,7 +1599,7 @@ async function startServer() {
         /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(configuredEmulator)
           ? ` ${new URL(configuredEmulator).origin}`
           : "";
-    const csp = `default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src ${devScript}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
+    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors *; form-action 'self'; script-src ${devScript}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
     res.setHeader(
       "Content-Security-Policy",
       `${csp}${process.env.NODE_ENV === "production" ? "; upgrade-insecure-requests" : ""}`,

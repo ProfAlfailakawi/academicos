@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci
+RUN npm install
 
 # Copy application code
 COPY . .
@@ -29,7 +29,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built assets from builder
 COPY --from=builder /app/dist ./dist

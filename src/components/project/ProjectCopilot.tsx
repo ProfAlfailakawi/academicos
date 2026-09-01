@@ -73,6 +73,7 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
 }
 
 function CopilotResult({ result }: { result: CopilotResponse }) {
+  const { t } = useI18n();
   return (
     <>
       <Card>

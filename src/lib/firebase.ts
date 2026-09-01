@@ -1,33 +1,39 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import firebaseAppletConfig from '../../firebase-applet-config.json';
 
 // يقرأ الإعداد أولًا من window.__ENV__ (حقن وقت التشغيل عبر public/env-config.js)
-// ثم يعود لمتغيرات البناء (import.meta.env). هذا يسمح بضبط القيم في Cloud Run
-// دون إعادة بناء الحزمة، مع بقاء التطوير المحلي عبر .env يعمل كما هو.
+// ثم يعود لمتغيرات البناء (import.meta.env)، ثم إلى firebase-applet-config.json. هذا يسمح بضبط القيم في Cloud Run
+// دون إعادة بناء الحزمة، مع بقاء التطوير المحلي عبر .env وملف الإعداد المباشر يعمل بسلاسة.
 const runtimeEnv: Record<string, string | undefined> =
   (typeof window !== 'undefined' && (window as any).__ENV__) || {};
-function envValue(key: string): string | undefined {
+function envValue(key: string, fallback?: string): string | undefined {
   const runtime = runtimeEnv[key];
   if (runtime !== undefined && String(runtime).trim() !== '') return String(runtime);
   const built = (import.meta.env as unknown as Record<string, string | undefined>)[key];
-  return built && String(built).trim() !== '' ? built : undefined;
+  if (built && String(built).trim() !== '') return built;
+  return fallback || undefined;
 }
 
 const config = {
-  apiKey: envValue('VITE_FIREBASE_API_KEY'),
-  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: envValue('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: envValue('VITE_FIREBASE_APP_ID'),
+  apiKey: envValue('VITE_FIREBASE_API_KEY', firebaseAppletConfig.apiKey),
+  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN', firebaseAppletConfig.authDomain),
+  projectId: envValue('VITE_FIREBASE_PROJECT_ID', firebaseAppletConfig.projectId),
+  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET', firebaseAppletConfig.storageBucket),
+  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID', firebaseAppletConfig.messagingSenderId),
+  appId: envValue('VITE_FIREBASE_APP_ID', firebaseAppletConfig.appId),
 };
 
 export const firebaseClientConfigured = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);
 export const firebaseApp = firebaseClientConfigured ? (getApps()[0] || initializeApp(config)) : null;
 export const firebaseAuth = firebaseApp ? getAuth(firebaseApp) : null;
-const authEmulatorUrl=String(import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_URL||'');
-if(firebaseAuth&&import.meta.env.DEV&&/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(authEmulatorUrl))connectAuthEmulator(firebaseAuth,authEmulatorUrl,{disableWarnings:true});
+const authEmulatorUrl = String(import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_URL || '');
+if (firebaseAuth && import.meta.env.DEV && /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(authEmulatorUrl)) {
+  connectAuthEmulator(firebaseAuth, authEmulatorUrl, { disableWarnings: true });
+}
 
-const appCheckSiteKey = envValue('VITE_FIREBASE_APPCHECK_SITE_KEY');
-export const firebaseAppCheck = firebaseApp && appCheckSiteKey && typeof window !== 'undefined' ? initializeAppCheck(firebaseApp,{provider:new ReCaptchaEnterpriseProvider(appCheckSiteKey),isTokenAutoRefreshEnabled:true}) : null;
+const appCheckSiteKey = envValue('VITE_FIREBASE_APPCHECK_SITE_KEY', (firebaseAppletConfig as any).recaptchaSiteKey);
+export const firebaseAppCheck = firebaseApp && appCheckSiteKey && typeof window !== 'undefined'
+  ? initializeAppCheck(firebaseApp, { provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey), isTokenAutoRefreshEnabled: true })
+  : null;

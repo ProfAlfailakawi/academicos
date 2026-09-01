@@ -64,12 +64,13 @@ function requestSignals(req: Request, actor: FairUseActor): Signal[] {
   const device = validHeader(req.header("X-Academicos-Device"));
   const email = actor.email ? normalizedEmailFamily(actor.email) : "";
   const network = networkPrefix(req.ip || req.socket.remoteAddress || "");
-  return [
+  const signals: Signal[] = [
     { type: "install", hash: install ? hmac(`install:${install}`) : "", rawPresent: Boolean(install) },
     { type: "device", hash: device ? hmac(`device:${device}`) : "", rawPresent: Boolean(device) },
     { type: "email", hash: email ? hmac(`email:${email}`) : "", rawPresent: Boolean(email) },
     { type: "network", hash: network !== "unknown" ? hmac(`network:${network}`) : "", rawPresent: network !== "unknown" },
-  ].filter((x) => x.hash);
+  ];
+  return signals.filter((x) => Boolean(x.hash));
 }
 function positiveEnvNumber(key: string, fallback: number, minimum = 1) {
   const parsed = Number(process.env[key] ?? fallback);

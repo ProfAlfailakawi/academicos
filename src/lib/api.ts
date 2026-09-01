@@ -1,5 +1,6 @@
 import type {
   AcademicTimeMachine,
+  AcademicSourceRecord,
   AcademicTrustGraph,
   AdminUserRecord,
   ApiKeyRecord,
@@ -54,6 +55,7 @@ import type {
   WorkspaceArtifact,
   WorkspaceArtifactVersion,
 } from "../types";
+import { deviceTrustHeaders } from "./device-trust";
 
 type TokenProvider = () => Promise<string | null>;
 let tokenProvider: TokenProvider = async () => null;
@@ -89,6 +91,8 @@ async function authHeaders(init?: HeadersInit) {
     appCheckTokenProvider(),
   ]);
   const headers = new Headers(init || {});
+  const trustHeaders = await deviceTrustHeaders();
+  for (const [key, value] of Object.entries(trustHeaders)) headers.set(key, value);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (appCheckToken) headers.set("X-Firebase-AppCheck", appCheckToken);
   return headers;
@@ -452,6 +456,11 @@ export const api = {
       };
     }>(
       `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(id)}/quality`,
+    ),
+  facultyCopilot: (query: string) =>
+    request<{ success: true; source: "ai" | "scaffold"; answer: string; suggestions: string[]; warnings: string[] }>(
+      "/api/faculty/copilot",
+      { method: "POST", body: JSON.stringify({ query }) },
     ),
   facultyAutomation: () =>
     request<{ success: true; brief: FacultyAutomationBrief }>(
@@ -826,6 +835,14 @@ export const api = {
       `/api/projects/${encodeURIComponent(projectId)}/artifacts/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}/restore`,
       { method: "POST" },
     ),
+  researchSourcesSearch: (query: string) =>
+    request<{ success: true; provider: "crossref"; sources: AcademicSourceRecord[] }>(
+      `/api/research/sources/search?q=${encodeURIComponent(query)}`,
+    ),
+  researchSourceDoi: (doi: string) =>
+    request<{ success: true; provider: "crossref"; source: AcademicSourceRecord }>(
+      `/api/research/sources/doi?doi=${encodeURIComponent(doi)}`,
+    ),
   evidence: (projectId: string) =>
     request<{ success: true; evidence: ProjectEvidence[] }>(
       `/api/projects/${encodeURIComponent(projectId)}/evidence`,
@@ -984,14 +1001,40 @@ export const api = {
       `/api/projects/${encodeURIComponent(projectId)}/audit`,
       { method: "POST" },
     ),
+  redTeam: (projectId: string) =>
+    request<{
+      success: true;
+      challenges: Array<{
+        category: "methodology" | "sampling" | "generalizability" | "theoretical" | "requirements" | "evidence";
+        challengeTitle: string;
+        critiqueText: string;
+        suggestedDefense: string;
+      }>;
+      provider: string;
+    }>(`/api/projects/${encodeURIComponent(projectId)}/red-team`, { method: "POST" }),
+  styleIntegrity: (projectId: string, text?: string, locale?: string) =>
+    request<{ success: true; report: DeepAIDetectionReport }>(
+      `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
+      { method: "POST", body: JSON.stringify({ text, locale }) },
+    ),
+  improveStyle: (projectId: string, text: string, locale?: string) =>
+    request<{
+      success: true;
+      improvedText: string;
+      improvementsMade: string[];
+    }>(`/api/projects/${encodeURIComponent(projectId)}/improve-style`, {
+      method: "POST",
+      body: JSON.stringify({ text, locale }),
+    }),
+  // Compatibility aliases for older callers. No authorship detection/evasion is performed.
   detectAI: (projectId: string, text?: string) =>
     request<{ success: true; report: DeepAIDetectionReport }>(
-      `/api/projects/${encodeURIComponent(projectId)}/detect-ai`,
+      `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
       { method: "POST", body: JSON.stringify({ text }) },
     ),
   humanize: (projectId: string, text: string) =>
     request<{ success: true; humanizedText: string; improvementsMade: string[] }>(
-      `/api/projects/${encodeURIComponent(projectId)}/humanize`,
+      `/api/projects/${encodeURIComponent(projectId)}/improve-style`,
       { method: "POST", body: JSON.stringify({ text }) },
     ),
   exportBundleUrl: (projectId: string) =>
@@ -1041,6 +1084,10 @@ export const api = {
     request<{ success: true; command: InstitutionCommandCenter }>(
       "/api/institution/command-center",
     ),
+  fairUseMetrics: () =>
+    request<{ success: true; fairUse: { eventsReviewed: number; deniedBenefits: number; stepUpSignals: number; suspiciousDevices: number; recent: Array<{ createdAt: string; benefit: string; score: number; reasonCodes: string[] }> } }>(
+      "/api/admin/fair-use",
+    ),
   adminSummary: () =>
     request<{
       success: true;
@@ -1069,7 +1116,7 @@ export const api = {
       billing: {
         provider: string;
         configured: boolean;
-        plans: Array<{ id: string; name: string; amountKwd: number; pages: number; projects: number; description: string }>;
+        currency: string; localProviderCurrency?: string; plans: Array<{ id: string; name: string; amountUsd: number; pages: number; projects: number; description: string }>;
       };
     }>("/api/billing/status"),
   createCheckout: (
@@ -1080,6 +1127,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ planId, projectId }),
     }),
+  learnIntake: (body: { note?: string; files?: Array<{ name: string; mimeType: string; base64: string; size: number }> }) =>
+    request<{
+      success: true;
+      source: "ai" | "scaffold";
+      materialText: string;
+      guide: { summary: string; keyIdeas: string[]; examPrompts: string[]; warnings: string[] };
+    }>("/api/learn/intake", { method: "POST", body: JSON.stringify(body) }),
   learnExplain: (body: {
     topic: string;
     language?: string;

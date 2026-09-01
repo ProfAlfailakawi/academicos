@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CircleDashed,
   ClipboardCheck,
+  Clock3,
   Database,
   Bot,
   FilePenLine,
@@ -25,7 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { api } from "../lib/api";
-import type { ProjectDNA, ProjectTask, ProjectWriterRequest, SubmissionAudit } from "../types";
+import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
@@ -55,19 +56,19 @@ import {
 } from "lucide-react";
 
 const tabs = [
-  ["copilot", "Project Copilot", Bot],
-  ["writer", "المشروع", FilePenLine],
-  ["req_matrix", "تفكيك الشروط", ListChecks],
-  ["red_teaming", "تفكيك الحجج (Red Team)", Flame],
-  ["scholar", "المراجع الحية (DOI)", Search],
-  ["slides", "الشرائح والإلقاء", Presentation],
-  ["visualizer", "الرسوم والبيانات", BarChart2],
-  ["formatter", "محول التنسيقات", ArrowRightLeft],
-  ["portfolio", "محفظة الإنجاز (CV)", Award],
-  ["plan", "الخطة والمهام", ListChecks],
-  ["evidence", "المصادر", Database],
-  ["viva", "ناقشني", GraduationCap],
-  ["team", "الفريق", UsersRound],
+  ["copilot", "pw.tabCopilot", Bot],
+  ["writer", "pw.tabWriter", FilePenLine],
+  ["req_matrix", "pw.tabRequirements", ListChecks],
+  ["red_teaming", "pw.tabRedTeam", Flame],
+  ["scholar", "pw.tabScholar", Search],
+  ["slides", "pw.tabSlides", Presentation],
+  ["visualizer", "pw.tabVisuals", BarChart2],
+  ["formatter", "pw.tabFormatter", ArrowRightLeft],
+  ["portfolio", "pw.tabPortfolio", Award],
+  ["plan", "pw.tabPlan", ListChecks],
+  ["evidence", "pw.tabEvidence", Database],
+  ["viva", "pw.tabViva", GraduationCap],
+  ["team", "pw.tabTeam", UsersRound],
 ] as const;
 type Tab = (typeof tabs)[number][0];
 
@@ -83,6 +84,11 @@ export function ProjectWorkspace() {
   const [showDossier, setShowDossier] = useState(false);
   const [showForensicRadar, setShowForensicRadar] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [showMoreTools, setShowMoreTools] = useState(false);
+  const [showRescue, setShowRescue] = useState(false);
+  const [rescueMinutes, setRescueMinutes] = useState(180);
+  const [rescueLoading, setRescueLoading] = useState(false);
+  const [rescue, setRescue] = useState<RescuePlan | null>(null);
   const [original, setOriginal] = useState<{
     text?: string;
     files: Array<{
@@ -205,6 +211,27 @@ export function ProjectWorkspace() {
       setAuditing(false);
     }
   }
+  async function runRescue(minutes = rescueMinutes) {
+    setShowRescue(true);
+    setRescueLoading(true);
+    try {
+      const r = await api.rescuePlan(project!.id, minutes);
+      setRescue(r.plan);
+    } catch (e: any) {
+      setError(e?.message || t("pw.rescueError"));
+    } finally {
+      setRescueLoading(false);
+    }
+  }
+  function fixAuditCategory(category?: string) {
+    setAudit(null);
+    if (category === "evidence" || category === "integrity") setTab("evidence");
+    else if (category === "format" || category === "accessibility") setTab("formatter");
+    else if (category === "requirement" || category === "rubric") setTab("req_matrix");
+    else if (category === "deadline" || category === "deliverable") setTab("plan");
+    else if (category === "policy") setShowDossier(true);
+    else setTab("writer");
+  }
   return (
     <div className="space-y-5">
       {location.state?.justCompiled && (
@@ -254,73 +281,68 @@ export function ProjectWorkspace() {
               </span>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <a
-              href={api.exportBundleUrl(project.id)}
-              download
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-teal-500/40 text-teal-700 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-950/40 transition"
-            >
-              📥 حزمة التسليم (.ZIP)
-            </a>
-            <Button
-              variant="outline"
-              onClick={() => setShowForensicRadar(true)}
-              className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40"
-            >
-              <Fingerprint size={16} />
-              رادار كشف AI (Turnitin+)
+          <div className="flex gap-2 flex-wrap items-center">
+            <Button onClick={runAudit} disabled={auditing} className="shadow-sm">
+              {auditing ? <LoaderCircle size={16} className="animate-spin" /> : <ClipboardCheck size={16} />}
+              {t("pw.submissionReady")}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowDossier(true)}
-              className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
-            >
-              <ShieldCheck size={16} />
-              ملف الدفاع والنزاهة
+            <Button variant="outline" onClick={() => runRescue()} disabled={rescueLoading}>
+              {rescueLoading ? <LoaderCircle size={16} className="animate-spin" /> : <Clock3 size={16} />}
+              {t("pw.rescueMe")}
             </Button>
-            <Button
-              variant="outline"
-              onClick={openOriginal}
-              disabled={
-                !project.originalAssignment?.text &&
-                !project.originalAssignment?.fileName &&
-                !project.originalAssignment?.attachments?.length
-              }
-            >
-              <FileText size={16} />
-              {t("pw.originalAssignment")}
-            </Button>
-            <Button variant="outline" onClick={runAudit} disabled={auditing}>
-              {auditing ? (
-                <LoaderCircle size={16} className="animate-spin" />
-              ) : (
-                <ShieldCheck size={16} />
-              )}
-              افحص الجاهزية
-            </Button>
+            <details className="relative">
+              <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border hairline bg-[var(--panel)] hover:bg-[var(--panel-2)]">
+                {t("pw.submissionTools")} <ChevronDown size={14} />
+              </summary>
+              <div className="absolute z-30 end-0 mt-2 w-64 panel rounded-xl border hairline shadow-xl p-2 space-y-1">
+                <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
+                  <FileCheck2 size={15} /> {t("pw.submissionBundle")}
+                </a>
+                <button onClick={() => setShowForensicRadar(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                  <Fingerprint size={15} /> {t("pw.styleIntegrity")}
+                </button>
+                <button onClick={() => setShowDossier(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                  <ShieldCheck size={15} /> {t("pw.defenseDossier")}
+                </button>
+                <button onClick={openOriginal} disabled={!project.originalAssignment?.text && !project.originalAssignment?.fileName && !project.originalAssignment?.attachments?.length} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] disabled:opacity-40 text-start">
+                  <FileText size={15} /> {t("pw.originalAssignment")}
+                </button>
+              </div>
+            </details>
           </div>
         </div>
-        <div className="mt-5 pt-4 border-t hairline overflow-x-auto">
-          <div className="flex min-w-max gap-1">
+        <div className="mt-5 pt-4 border-t hairline">
+          <div className="flex flex-wrap gap-2 items-center">
             {tabs
-              .filter(
-                ([key]) =>
-                  (key !== "copilot" || featureFlags.ProjectCopilot !== false) &&
-                  (key !== "viva" || featureFlags.VivaStudio !== false) &&
-                  (key !== "evidence" || featureFlags.EvidenceStudio !== false) &&
-                  (key !== "team" || project.collaborationMode === "group"),
+              .filter(([key]) => ["writer", "evidence", "viva"].includes(key))
+              .filter(([key]) =>
+                (key !== "viva" || featureFlags.VivaStudio !== false) &&
+                (key !== "evidence" || featureFlags.EvidenceStudio !== false),
               )
               .map(([key, label, Icon]) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`focus-ring rounded-xl px-3.5 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg" : "muted hover:bg-[var(--panel-2)]"}`}
-                >
-                  <Icon size={15} />
-                  {label}
+                <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
+                  <Icon size={16} />{t(label)}
                 </button>
               ))}
+            <button onClick={() => setShowMoreTools((v) => !v)} className={`focus-ring rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${showMoreTools || !["writer","evidence","viva"].includes(tab) ? "soft-bg" : "muted hover:bg-[var(--panel-2)]"}`}>
+              <Sparkles size={16} /> {t("pw.more")} <ChevronDown size={14} className={showMoreTools ? "rotate-180 transition" : "transition"} />
+            </button>
           </div>
+          {(showMoreTools || !["writer","evidence","viva"].includes(tab)) && (
+            <div className="mt-3 pt-3 border-t hairline flex flex-wrap gap-1">
+              {tabs
+                .filter(([key]) => !["writer", "evidence", "viva"].includes(key))
+                .filter(([key]) =>
+                  (key !== "copilot" || featureFlags.ProjectCopilot !== false) &&
+                  (key !== "team" || project.collaborationMode === "group"),
+                )
+                .map(([key, label, Icon]) => (
+                  <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
+                    <Icon size={14} />{label}
+                  </button>
+                ))}
+            </div>
+          )}
         </div>
       </header>
       {tab === "writer" && (
@@ -426,7 +448,8 @@ export function ProjectWorkspace() {
           </div>
         </Modal>
       )}
-      {audit && <AuditModal audit={audit} onClose={() => setAudit(null)} />}
+      {audit && <AuditModal audit={audit} onClose={() => setAudit(null)} onFix={fixAuditCategory} />}
+      {showRescue && <RescueModal plan={rescue} minutes={rescueMinutes} loading={rescueLoading} onMinutes={setRescueMinutes} onRefresh={runRescue} onOpenPlan={() => { setShowRescue(false); setTab("plan"); }} onClose={() => setShowRescue(false)} />}
     </div>
   );
 }
@@ -445,9 +468,9 @@ function StudentPlan({
   return (
     <div className="space-y-5">
       <section className="grid sm:grid-cols-3 gap-3">
-        <Mini label="الخطوات" value={String(project.tasks.length)} hint="مرتبة من ملف التكليف" />
-        <Mini label="المخرجات" value={String(project.deliverables.length)} hint="ملفات يجب تسليمها" />
-        <Mini label="Rubric" value={String(project.rubric.length)} hint="معايير يجب تغطيتها" />
+        <Mini label={t("pw.tasksMetric")} value={String(project.tasks.length)} hint={t("pw.tasksMetricHint")} />
+        <Mini label={t("pw.deliverablesMetric")} value={String(project.deliverables.length)} hint={t("pw.deliverablesMetricHint")} />
+        <Mini label="Rubric" value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
       </section>
       <Tasks project={project} onChange={onTask} />
       <Requirements project={project} />
@@ -643,7 +666,7 @@ function Tasks({
                   )}
                   {t.dueDate && (
                     <span>
-                      · {new Date(t.dueDate).toLocaleDateString("ar-KW")}
+                      · {new Date(t.dueDate).toLocaleDateString(document.documentElement.lang || undefined)}
                     </span>
                   )}
                 </div>
@@ -846,9 +869,11 @@ function Mini({ label, value, hint }: any) {
 function AuditModal({
   audit,
   onClose,
+  onFix,
 }: {
   audit: SubmissionAudit;
   onClose: () => void;
+  onFix: (category?: string) => void;
 }) {
   const { t } = useI18n();
   const label = {
@@ -858,7 +883,7 @@ function AuditModal({
     critical_issues: t("pw.criticalIssues"),
   }[audit.status];
   return (
-    <Modal title="Submission Audit" onClose={onClose}>
+    <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
         <div className="text-[11px] muted">{t("pw.result")}</div>
         <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[9px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
@@ -882,6 +907,7 @@ function AuditModal({
               <div className="text-sm font-semibold">{c.label}</div>
               <div className="text-xs leading-6 muted mt-1">{c.detail}</div>
               {c.action&&<div className="text-[10px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
+              {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} ←</button>}
             </div>
           </div>
         ))}
@@ -889,6 +915,50 @@ function AuditModal({
     </Modal>
   );
 }
+function RescueModal({
+  plan,
+  minutes,
+  loading,
+  onMinutes,
+  onRefresh,
+  onOpenPlan,
+  onClose,
+}: {
+  plan: RescuePlan | null;
+  minutes: number;
+  loading: boolean;
+  onMinutes: (minutes: number) => void;
+  onRefresh: (minutes?: number) => void;
+  onOpenPlan: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const severity = plan?.severity === "critical" ? t("pw.rescueCritical") : plan?.severity === "tight" ? t("pw.rescueTight") : t("pw.rescuePossible");
+  return <Modal title={t("pw.rescueTitle")} onClose={onClose}>
+    <div className="rounded-2xl brand-soft-bg p-5">
+      <div className="eyebrow">Deadline Rescue</div>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-2">
+        <div><h3 className="text-xl font-semibold">{loading ? t("pw.rescueCalculating") : severity}</h3><p className="body-copy mt-2">{plan?.summary || t("pw.rescuePrompt")}</p></div>
+        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[10px] muted">{t("pw.estimatedWork")}</div></div>}
+      </div>
+    </div>
+    <div className="mt-5">
+      <label className="text-xs font-semibold">{t("pw.timeAvailable")} <span className="muted">{minutes} {t("pw.minutes")}</span></label>
+      <input type="range" min={30} max={720} step={30} value={minutes} onChange={(e) => onMinutes(Number(e.target.value))} className="w-full mt-3" />
+      <div className="flex justify-between text-[10px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
+      <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <LoaderCircle size={15} className="animate-spin" /> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
+    </div>
+    {plan && <div className="mt-5 space-y-3">
+      {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">
+        <span className="h-8 w-8 rounded-lg brand-soft-bg grid place-items-center text-xs font-semibold shrink-0">{index + 1}</span>
+        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[10px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
+      </div>)}
+      {plan.deferredTaskIds.length > 0 && <div className="rounded-xl soft-bg p-3 text-xs muted">{t("pw.deferredTasks").replace("{count}", String(plan.deferredTaskIds.length))}</div>}
+      <Button className="w-full" onClick={onOpenPlan}>{t("pw.openPlan")}</Button>
+    </div>}
+  </Modal>;
+}
+
 function Modal({
   title,
   onClose,

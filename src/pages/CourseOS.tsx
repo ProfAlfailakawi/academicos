@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -36,6 +36,7 @@ export function CourseOS() {
   const { t } = useI18n();
   const { id = "" } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [course, setCourse] = useState<CourseRecord | null>(null);
   const [assignments, setAssignments] = useState<CourseAssignmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +91,9 @@ export function CourseOS() {
       .finally(() => setLoading(false));
   }
   useEffect(load, [id]);
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("new") === "assignment") setBuilder(true);
+  }, [location.search]);
   async function setCourseStatus(status: CourseRecord["status"]) {
     if (!course) return;
     const old = course;
@@ -437,7 +441,7 @@ export function CourseOS() {
                           </div>
                           <div className="text-[9px] muted mt-1">
                             {c.useCount}/{c.maxUses} · {t("course.expires")}{" "}
-                            {new Date(c.expiresAt).toLocaleDateString("ar-KW")}{" "}
+                            {new Date(c.expiresAt).toLocaleDateString(document.documentElement.lang || undefined)}{" "}
                             · {c.status}
                           </div>
                         </div>
@@ -626,7 +630,7 @@ export function CourseOS() {
                     </div>
                     {a.deadline && (
                       <div className="text-[10px] muted mt-3">
-                        {t("course.deadlineLabel")} {new Date(a.deadline).toLocaleString("ar-KW")}
+                        {t("course.deadlineLabel")} {new Date(a.deadline).toLocaleString(document.documentElement.lang || undefined)}
                       </div>
                     )}
                     {quality[a.id] && (

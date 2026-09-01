@@ -24,7 +24,8 @@ import { useAppPreferences } from "../contexts/AppContext";
 import { api } from "../lib/api";
 import { Button } from "./ui/button";
 import { predictNext, recordNavigation } from "../lib/predictiveNavigation";
-import { useI18n } from "../lib/i18n";
+import { formatDateTime, useI18n } from "../lib/i18n";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type NavItem = {
   to: string;
@@ -34,40 +35,20 @@ type NavItem = {
   end?: boolean;
 };
 const studentNav: NavItem[] = [
-  {
-    to: "/app",
-    label: "الرئيسية",
-    short: "الرئيسية",
-    icon: Home,
-    end: true,
-  },
-  {
-    to: "/app/projects",
-    label: "مشاريعي",
-    short: "المشاريع",
-    icon: FolderKanban,
-  },
-  {
-    to: "/app/learn",
-    label: "مدرب الاختبارات",
-    short: "اختباراتي",
-    icon: Sparkles,
-  },
-  {
-    to: "/app/plans",
-    label: "الباقات",
-    short: "الأسعار",
-    icon: CreditCard,
-  },
+  { to: "/app", label: "layout.navHome", short: "layout.navHome", icon: Home, end: true },
+  { to: "/app/projects", label: "layout.navProjects", short: "layout.navProjects", icon: FolderKanban },
+  { to: "/app/learn", label: "layout.navLearn", short: "layout.navLearnShort", icon: Sparkles },
+  { to: "/app/plans", label: "layout.navPlans", short: "layout.navPricing", icon: CreditCard },
 ];
 
 export function Layout() {
-  const { t } = useI18n();
-  const { user, logout } = useAuth();
+  const { t, locale } = useI18n();
+  const { user, logout, resendVerification } = useAuth();
   const { theme, setTheme } = useAppPreferences();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({
     ProfessorOS: true,
   });
@@ -255,8 +236,8 @@ export function Layout() {
         : [
             {
               to: "/app",
-              label: "الرئيسية",
-              short: "الرئيسية",
+              label: "layout.navHome",
+              short: "layout.navHome",
               icon: Home,
               end: true,
             },
@@ -264,22 +245,22 @@ export function Layout() {
               ? [
                   {
                     to: "/app/professor",
-                    label: "Teacher Lite",
-                    short: "المقررات",
+                    label: "layout.navProfessor",
+                    short: "layout.navCourses",
                     icon: GraduationCap,
                   } as NavItem,
                 ]
               : []),
             {
               to: "/app/search",
-              label: "البحث",
-              short: "البحث",
+              label: "layout.navSearch",
+              short: "layout.navSearchShort",
               icon: Search,
             },
             {
               to: "/app/settings",
-              label: "الإعدادات",
-              short: "الإعدادات",
+              label: "layout.navSettings",
+              short: "layout.navSettings",
               icon: Settings,
             },
           ],
@@ -306,8 +287,8 @@ export function Layout() {
       ...nav.map((item) => ({ to: item.to, label: t(item.label) })),
       ...(studentMode
         ? [
-            { to: "/app/upload?mode=write", label: "اكتب مشروعاً" },
-            { to: "/app/upload?mode=rescue", label: "طوّر مسودة" },
+            { to: "/app/upload?mode=write", label: t("layout.actionWriteProject") },
+            { to: "/app/upload?mode=rescue", label: t("layout.actionRescueDraft") },
           ]
         : []),
       { to: "/app/support", label: t("layout.navSupportShort") },
@@ -452,6 +433,7 @@ export function Layout() {
               <ArrowLeft size={14} className="shrink-0 muted" />
             </button>
           )}
+          <LanguageSwitcher compact />
           <Button
             size="icon"
             variant="ghost"
@@ -487,6 +469,16 @@ export function Layout() {
           </div>
         </header>
 
+        {user && user.emailVerified === false && (
+          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-100">
+            <div className="mx-auto max-w-[1440px] flex flex-wrap items-center justify-between gap-2">
+              <span><strong>{t("layout.verifyEmailTitle")}</strong> {t("layout.verifyEmailDesc")}</span>
+              <button type="button" className="focus-ring rounded-lg px-2.5 py-1 font-semibold bg-[var(--panel)] border hairline" onClick={async()=>{ await resendVerification().catch(()=>undefined); setVerificationSent(true); }}>
+                {verificationSent ? t("layout.verificationSent") : t("layout.resendVerification")}
+              </button>
+            </div>
+          </div>
+        )}
         {user?.impersonation && (
           <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/12 text-amber-900 dark:text-amber-100">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -495,9 +487,7 @@ export function Layout() {
               </span>
               <span>
                 {t("layout.impersonationAudited")}{" "}
-                {new Date(user.impersonation.expiresAt).toLocaleTimeString(
-                  "ar-KW",
-                )}
+                {formatDateTime(user.impersonation.expiresAt, locale, { timeStyle: "short" })}
               </span>
             </div>
           </div>

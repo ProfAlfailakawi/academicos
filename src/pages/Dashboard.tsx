@@ -11,7 +11,7 @@ import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../lib/i18n';
 
-const dateFmt = new Intl.DateTimeFormat('ar-KW', { day: 'numeric', month: 'short' });
+const dateFmt = new Intl.DateTimeFormat(document.documentElement.lang || undefined, { day: 'numeric', month: 'short' });
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -44,7 +44,7 @@ export function Dashboard() {
         </section>
         <aside className="space-y-4">
           <h2 className="section-title">{t('dash.upcoming')}</h2>
-          <Card><CardContent className="space-y-1 p-2">{summary.upcoming.length ? summary.upcoming.map((item, i) => <div key={item.id} className="flex gap-3 p-3 rounded-xl hover:bg-[var(--panel-2)]"><div className="w-12 shrink-0 text-center"><div className="text-xs font-semibold mono-number">{dateFmt.format(new Date(item.date))}</div><div className="text-[10px] muted mt-1">{item.type === 'deadline' ? t('dash.deadline') : t('dash.milestone')}</div></div><div className="border-s hairline ps-3 min-w-0"><div className="text-sm font-semibold leading-5 truncate">{item.title}</div><div className="text-[11px] muted mt-1">{new Date(item.date).toLocaleString('ar-KW', { hour: '2-digit', minute: '2-digit' })}</div></div></div>) : <p className="body-copy p-4">{t('dash.noDates')}</p>}</CardContent></Card>
+          <Card><CardContent className="space-y-1 p-2">{summary.upcoming.length ? summary.upcoming.map((item, i) => <div key={item.id} className="flex gap-3 p-3 rounded-xl hover:bg-[var(--panel-2)]"><div className="w-12 shrink-0 text-center"><div className="text-xs font-semibold mono-number">{dateFmt.format(new Date(item.date))}</div><div className="text-[10px] muted mt-1">{item.type === 'deadline' ? t('dash.deadline') : t('dash.milestone')}</div></div><div className="border-s hairline ps-3 min-w-0"><div className="text-sm font-semibold leading-5 truncate">{item.title}</div><div className="text-[11px] muted mt-1">{new Date(item.date).toLocaleString(document.documentElement.lang || undefined, { hour: '2-digit', minute: '2-digit' })}</div></div></div>) : <p className="body-copy p-4">{t('dash.noDates')}</p>}</CardContent></Card>
           {summary.risks.length > 0 && <Card><CardContent><div className="flex items-center gap-2 mb-3 text-[var(--warning)]"><AlertTriangle size={17}/><h3 className="text-sm font-semibold">{t('dash.needsAttention')}</h3></div><div className="space-y-3">{summary.risks.slice(0,3).map((risk, i) => <div key={`${risk.projectId}_${i}`} className="text-xs leading-6"><div className="font-semibold">{risk.projectTitle}</div><div className="muted">{risk.message}</div></div>)}</div></CardContent></Card>}
         </aside>
       </div>

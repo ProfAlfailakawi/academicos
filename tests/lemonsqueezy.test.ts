@@ -9,7 +9,6 @@ const ENV_KEYS = [
   'LEMONSQUEEZY_STORE_ID',
   'LEMONSQUEEZY_VARIANT_ID',
   'LEMONSQUEEZY_WEBHOOK_SECRET',
-  'LEMONSQUEEZY_KWD_USD_RATE',
 ] as const;
 
 function withLemonEnv(run: () => Promise<void> | void) {
@@ -19,7 +18,6 @@ function withLemonEnv(run: () => Promise<void> | void) {
   process.env.LEMONSQUEEZY_STORE_ID = '55555';
   process.env.LEMONSQUEEZY_VARIANT_ID = '99999';
   process.env.LEMONSQUEEZY_WEBHOOK_SECRET = 'test-webhook-secret';
-  process.env.LEMONSQUEEZY_KWD_USD_RATE = '3.26';
   const restore = () => {
     for (const k of ENV_KEYS) {
       if (saved[k] === undefined) delete process.env[k];
@@ -42,7 +40,7 @@ test('Lemon Squeezy provider is selected and reported ready when configured', ()
     assert.ok(status.readiness.some((r) => r.provider === 'lemonsqueezy' && r.configured));
   }));
 
-test('Lemon Squeezy checkout converts KWD to USD cents and forwards project metadata', async () =>
+test('Lemon Squeezy checkout uses canonical USD cents and forwards project metadata', async () =>
   withLemonEnv(async () => {
     const captured: { url?: string; init?: any } = {};
     const originalFetch = globalThis.fetch;
@@ -69,7 +67,7 @@ test('Lemon Squeezy checkout converts KWD to USD cents and forwards project meta
         projectId: 'project-1',
         idempotencyKey: 'idem-1',
         planId: 'project_viva',
-        amountKwd: 6.9,
+        amountUsd: 8.99,
         description: 'AcademicOS — المشروع + المناقشة — بحثي',
       });
       assert.equal(result.url, 'https://academicos.lemonsqueezy.com/checkout/chk_abc');

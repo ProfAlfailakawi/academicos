@@ -52,7 +52,7 @@ import {
 } from "./src/server/db";
 import JSZip from "jszip";
 import { runSubmissionAudit } from "./src/server/audit";
-import { runDeepAIDetection, humanizeScholarlyText } from "./src/server/deep-ai-detector";
+import { runStyleIntegrityAnalysis, improveScholarlyStyle } from "./src/server/deep-ai-detector";
 import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
 import {
   exportCitations,
@@ -121,6 +121,7 @@ import {
   validFutureIso,
 } from "./src/server/security-controls";
 import { ocrStatus, runOcr } from "./src/server/ocr";
+import { fairUseMetrics, finalizeFreeBenefit, reserveFreeBenefit, type FairUseReservation } from "./src/server/abuse-guard";
 import {
   buildCopilotPlatformInstruction,
   copilotEnabled,
@@ -367,10 +368,14 @@ interface AuthenticatedRequest extends Request {
     impersonationExpiresAt?: number;
     mfa?: boolean;
     authTime?: number;
+    emailVerified?: boolean;
   };
 }
 async function verifyAppCheck(req: Request, res: Response, next: NextFunction) {
-  if (process.env.REQUIRE_APP_CHECK !== "true") return next();
+  const required =
+    process.env.REQUIRE_APP_CHECK === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.REQUIRE_APP_CHECK !== "false");
+  if (!required) return next();
   if (!firebaseInitialized)
     return res.status(503).json({
       error: "Firebase backend is not configured",
@@ -400,79 +405,77 @@ async function authenticate(
   const header = req.header("Authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
   
-  if (firebaseInitialized && token) {
-    try {
-      const decoded = await getAuth().verifyIdToken(token, true);
-      const rawRole = String(decoded.role || "student");
-      let role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
-        ? (rawRole as UserRole)
-        : "student";
-      const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
-      
-      // Auto-elevate the platform administrator
-      if (decoded.email?.toLowerCase() === "dr.ahmad.alfailakawi@gmail.com") {
-        role = "root_owner";
-        if (rawRole !== "root_owner") {
-          getAuth().setCustomUserClaims(decoded.uid, { tenantId, role: "root_owner" }).catch(console.error);
-        }
-      }
-      const impersonatorId = decoded.impersonatorId
-        ? String(decoded.impersonatorId)
-        : undefined;
-      const impersonationExpiresAt = decoded.impersonationExpiresAt
-        ? Number(decoded.impersonationExpiresAt)
-        : undefined;
-      const mfa = Boolean((decoded.firebase as any)?.sign_in_second_factor);
-      const authTime = Number(decoded.auth_time || 0);
-      if (
-        impersonatorId &&
-        (!impersonationExpiresAt || impersonationExpiresAt <= Date.now())
-      )
-        return res.status(401).json({
-          error: "Impersonation session has expired",
-          code: "IMPERSONATION_EXPIRED",
-        });
-      if (impersonatorId && !["GET", "HEAD", "OPTIONS"].includes(req.method))
-        return res.status(403).json({
-          error: "Impersonation sessions are read-only by design",
-          code: "IMPERSONATION_READ_ONLY",
-        });
-      if (privilegedMfaRequired(role) && !mfa && decoded.email?.toLowerCase() !== "dr.ahmad.alfailakawi@gmail.com")
-        return res.status(403).json({
-          error:
-            "Multi-factor authentication is required for this administrative role",
-          code: "ADMIN_MFA_REQUIRED",
-        });
-      req.actor = {
-        userId: decoded.uid,
-        tenantId,
-        role,
-        displayName: decoded.name || decoded.email || "AcademicOS User",
-        email: decoded.email,
-        impersonatorId,
-        impersonationReadOnly: Boolean(impersonatorId),
-        impersonationExpiresAt,
-        mfa,
-        authTime,
-      };
-      if (!enforceIdentityRateLimit(req, res, req.actor)) return;
-      return next();
-    } catch {
-      // Fallback to seamless actor
-    }
+  if (!firebaseInitialized) {
+    return res.status(503).json({
+      error: "Authentication service is not configured",
+      code: "FIREBASE_NOT_CONFIGURED",
+    });
+  }
+  if (!token) {
+    return res.status(401).json({
+      error: "Authentication required",
+      code: "AUTH_REQUIRED",
+    });
   }
 
-  // Seamless fallback actor so the application is always ready and fully accessible
-  req.actor = {
-    userId: "dr_ahmad_root",
-    tenantId: "individual_dr.ahmad.alfailakawi@gmail.com",
-    role: "root_owner",
-    displayName: "Dr. Ahmad Alfailakawi",
-    email: "Dr.Ahmad.Alfailakawi@gmail.com",
-    mfa: true,
-    authTime: Date.now(),
-  };
-  return next();
+  try {
+    const decoded = await getAuth().verifyIdToken(token, true);
+    const rawRole = String(decoded.role || "student");
+    const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
+      ? (rawRole as UserRole)
+      : "student";
+    const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
+    const impersonatorId = decoded.impersonatorId
+      ? String(decoded.impersonatorId)
+      : undefined;
+    const impersonationExpiresAt = decoded.impersonationExpiresAt
+      ? Number(decoded.impersonationExpiresAt)
+      : undefined;
+    const mfa = Boolean((decoded.firebase as any)?.sign_in_second_factor);
+    const authTime = Number(decoded.auth_time || 0);
+
+    if (
+      impersonatorId &&
+      (!impersonationExpiresAt || impersonationExpiresAt <= Date.now())
+    )
+      return res.status(401).json({
+        error: "Impersonation session has expired",
+        code: "IMPERSONATION_EXPIRED",
+      });
+    if (impersonatorId && !["GET", "HEAD", "OPTIONS"].includes(req.method))
+      return res.status(403).json({
+        error: "Impersonation sessions are read-only by design",
+        code: "IMPERSONATION_READ_ONLY",
+      });
+    if (privilegedMfaRequired(role) && !mfa)
+      return res.status(403).json({
+        error:
+          "Multi-factor authentication is required for this administrative role",
+        code: "ADMIN_MFA_REQUIRED",
+      });
+
+    req.actor = {
+      userId: decoded.uid,
+      tenantId,
+      role,
+      displayName: decoded.name || decoded.email || "AcademicOS User",
+      email: decoded.email,
+      impersonatorId,
+      impersonationReadOnly: Boolean(impersonatorId),
+      impersonationExpiresAt,
+      mfa,
+      authTime,
+      emailVerified: Boolean(decoded.email_verified),
+    };
+    if (!enforceIdentityRateLimit(req, res, req.actor)) return;
+    return next();
+  } catch (error: any) {
+    const revoked = String(error?.code || "").includes("id-token-revoked");
+    return res.status(401).json({
+      error: revoked ? "Session has been revoked" : "Invalid or expired authentication token",
+      code: revoked ? "AUTH_REVOKED" : "AUTH_INVALID",
+    });
+  }
 }
 function requireRoles(...roles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -521,6 +524,68 @@ function cleanStringList(value: unknown, maxItems = 50, maxChars = 300) {
       ].slice(0, maxItems)
     : [];
 }
+type CrossrefWork = Record<string, any>;
+function crossrefUserAgent() {
+  const appUrl = cleanField(process.env.APP_URL, 500) || "https://academicos.app";
+  const mailto = cleanField(process.env.CROSSREF_MAILTO, 320);
+  return `AcademicOS/0.9 (${appUrl}${mailto ? `; mailto:${mailto}` : ""})`;
+}
+function crossrefSourceFromWork(work: CrossrefWork) {
+  const doi = cleanField(work?.DOI, 500);
+  if (!doi) return null;
+  const title = cleanField(Array.isArray(work?.title) ? work.title[0] : work?.title, 1000) || doi;
+  const authors = Array.isArray(work?.author)
+    ? work.author.slice(0, 30).map((author: any) => {
+        const given = cleanField(author?.given, 200), family = cleanField(author?.family, 200), name = cleanField(author?.name, 300);
+        return [given, family].filter(Boolean).join(" ") || name;
+      }).filter(Boolean)
+    : [];
+  const dateParts = work?.["published-print"]?.["date-parts"]?.[0]
+    || work?.["published-online"]?.["date-parts"]?.[0]
+    || work?.published?.["date-parts"]?.[0]
+    || work?.created?.["date-parts"]?.[0]
+    || [];
+  const year = Number(dateParts?.[0]);
+  const containerTitle = cleanField(Array.isArray(work?.["container-title"]) ? work["container-title"][0] : work?.["container-title"], 600) || undefined;
+  const citedByCountRaw = Number(work?.["is-referenced-by-count"]);
+  const issn = Array.isArray(work?.ISSN) ? cleanStringList(work.ISSN, 10, 80) : [];
+  const licenseUrls = Array.isArray(work?.license)
+    ? [...new Set(work.license.map((item: any) => cleanField(item?.URL, 1000)).filter((url: string) => /^https?:\/\//i.test(url)))].slice(0, 10)
+    : [];
+  return {
+    doi,
+    title,
+    authors,
+    ...(Number.isFinite(year) && year > 0 ? { year } : {}),
+    ...(containerTitle ? { containerTitle } : {}),
+    ...(Number.isFinite(citedByCountRaw) && citedByCountRaw >= 0 ? { citedByCount: citedByCountRaw } : {}),
+    ...(issn.length ? { issn } : {}),
+    url: `https://doi.org/${doi}`,
+    ...(cleanField(work?.type, 160) ? { type: cleanField(work.type, 160) } : {}),
+    ...(licenseUrls.length ? { licenseUrls } : {}),
+    provider: "crossref" as const,
+    metadataVerifiedAt: new Date().toISOString(),
+  };
+}
+async function crossrefJson(path: string, params?: URLSearchParams) {
+  const url = new URL(`https://api.crossref.org${path}`);
+  if (params) params.forEach((value, key) => url.searchParams.append(key, value));
+  const mailto = cleanField(process.env.CROSSREF_MAILTO, 320);
+  if (mailto && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailto)) url.searchParams.set("mailto", mailto);
+  let response: Awaited<ReturnType<typeof fetch>>;
+  try {
+    response = await fetch(url, {
+      headers: { Accept: "application/json", "User-Agent": crossrefUserAgent() },
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch (error) {
+    throw Object.assign(new Error("Crossref is temporarily unreachable"), { status: 502, code: "CROSSREF_UNAVAILABLE", cause: error });
+  }
+  if (response.status === 404) throw Object.assign(new Error("DOI was not found in Crossref"), { status: 404, code: "DOI_NOT_FOUND" });
+  if (!response.ok) throw Object.assign(new Error("Crossref request failed"), { status: 502, code: "CROSSREF_UPSTREAM_ERROR" });
+  return await response.json() as any;
+}
+
 function sanitizePlatformData(
   value: unknown,
   depth = 0,
@@ -1613,7 +1678,7 @@ async function startServer() {
         /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(configuredEmulator)
           ? ` ${new URL(configuredEmulator).origin}`
           : "";
-    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors *; form-action 'self'; script-src ${devScript}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
+    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
     res.setHeader(
       "Content-Security-Policy",
       `${csp}${process.env.NODE_ENV === "production" ? "; upgrade-insecure-requests" : ""}`,
@@ -1630,12 +1695,12 @@ async function startServer() {
     res.setHeader("Content-Type", "application/javascript; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const envData = {
-      VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY || "AIzaSyBTsN8lR4KmWHwH9LM1xvMxh13mn3LvUws",
-      VITE_FIREBASE_AUTH_DOMAIN: process.env.VITE_FIREBASE_AUTH_DOMAIN || "tebyan-clean-2026-5f13b.firebaseapp.com",
-      VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID || "tebyan-clean-2026-5f13b",
-      VITE_FIREBASE_STORAGE_BUCKET: process.env.VITE_FIREBASE_STORAGE_BUCKET || "tebyan-clean-2026-5f13b.firebasestorage.app",
-      VITE_FIREBASE_MESSAGING_SENDER_ID: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "522016905178",
-      VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || "1:522016905178:web:c5fe247cc7d44a045c52e3",
+      VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY || "",
+      VITE_FIREBASE_AUTH_DOMAIN: process.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+      VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID || "",
+      VITE_FIREBASE_STORAGE_BUCKET: process.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+      VITE_FIREBASE_MESSAGING_SENDER_ID: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+      VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || "",
       VITE_FIREBASE_APPCHECK_SITE_KEY: process.env.VITE_FIREBASE_APPCHECK_SITE_KEY || "",
     };
     res.send(`window.__ENV__ = ${JSON.stringify(envData, null, 2)};`);
@@ -2199,11 +2264,11 @@ async function startServer() {
         },
         {
           key: "paci-mobile-id",
-          name: "PACI / Kuwait Mobile ID",
+          name: "Regional Digital Identity Adapter",
           category: "identity",
           mode: "contract",
           description:
-            "طبقة الهوية الكويتية مجهزة تعاقديًا؛ التفعيل بعد اعتماد PACI وتوفير بيانات الربط.",
+            "Optional country-specific digital identity adapter. It appears only when its regional credentials are provisioned.",
           setupKeys: [
             "PACI_IDENTITY_BASE_URL",
             "PACI_CLIENT_ID",
@@ -2227,12 +2292,12 @@ async function startServer() {
           env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
         },
         {
-          key: "tap-knet",
-          name: "Tap · KNET",
+          key: "tap-payments",
+          name: "Tap Payments",
           category: "billing",
           mode: "server",
           description:
-            "بوابة دفع مستضافة جاهزة لـKNET بعد إدخال مفاتيح التاجر.",
+            "Optional hosted regional payment adapter with configurable local currency and payment methods.",
           setupKeys: [
             "TAP_SECRET_KEY",
             "TAP_MERCHANT_ID",
@@ -2433,12 +2498,12 @@ async function startServer() {
           env: ["VIRUS_SCAN_URL", "VIRUS_SCAN_TOKEN"],
         },
       ];
-      const integrations: IntegrationStatusRecord[] = specs.map(
-        ({ env, ...x }) => ({
+      const integrations: IntegrationStatusRecord[] = specs
+        .filter((spec) => spec.key !== "paci-mobile-id" || spec.env.some((k) => Boolean(process.env[k])))
+        .map(({ env, ...x }) => ({
           ...x,
           configured: env.every((k) => Boolean(process.env[k])),
-        }),
-      );
+        }));
       res.json({ success: true, integrations });
     },
   );
@@ -4149,6 +4214,99 @@ async function startServer() {
     },
   );
   app.post(
+    "/api/learn/intake",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const body = req.body || {};
+        const files = (Array.isArray(body.files) ? body.files : []) as IncomingFile[];
+        const note = cleanField(body.note, 2000) || "";
+        if (!files.length && !note.trim())
+          return res.status(400).json({ error: "Provide study material or a note", code: "STUDY_MATERIAL_REQUIRED" });
+        if (files.length > MAX_ASSIGNMENT_FILES)
+          return res.status(413).json({ error: `A maximum of ${MAX_ASSIGNMENT_FILES} files can be studied together`, code: "TOO_MANY_FILES" });
+        files.forEach(validateFile);
+        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+        if (totalBytes > MAX_TOTAL_FILE_BYTES)
+          return res.status(413).json({ error: "Combined study files are too large", code: "TOTAL_FILES_TOO_LARGE" });
+        if (files.length) {
+          if (process.env.REQUIRE_VIRUS_SCAN === "true" && !externalServices.virusScan.configured())
+            return res.status(503).json({ error: "Malware scanning is required but not configured", code: "VIRUS_SCAN_REQUIRED" });
+          if (externalServices.virusScan.configured()) {
+            for (const file of files) {
+              const result: any = await externalServices.virusScan.run({
+                name: file.name,
+                mimeType: file.mimeType,
+                size: file.size,
+                sha256: createHash("sha256").update(Buffer.from(file.base64, "base64")).digest("hex"),
+                base64: file.base64,
+              });
+              if (result?.clean !== true)
+                throw Object.assign(new Error(`Upload blocked by malware scanner: ${file.name}`), { status: 422, code: "MALWARE_DETECTED" });
+            }
+          }
+        }
+
+        const parts = note.trim() ? [`--- STUDENT NOTE ---\n${note.trim()}`] : [];
+        const warnings: string[] = [];
+        const extractionBudget = createExtractionBudget(MAX_TOTAL_FILE_BYTES, 120_000);
+        for (const file of files) {
+          const extracted = extractFileText(file, extractionBudget);
+          if (extracted.text) parts.push(`--- ${file.name} ---\n${extracted.text}`);
+          if (extracted.multimodal) {
+            const ocr = await runOcr(file);
+            if (ocr?.text) {
+              parts.push(`--- ${file.name} (OCR) ---\n${ocr.text}`);
+              warnings.push(...ocr.extraction.warnings);
+            } else {
+              warnings.push(`${file.name}: يحتاج OCR مهيأ لاستخراج نص الصورة/الملف الممسوح.`);
+            }
+          }
+        }
+        const materialText = parts.join("\n\n").trim();
+        if (!materialText)
+          return res.status(422).json({ error: "Could not extract readable study text. Configure OCR for image-only material.", code: "STUDY_TEXT_NOT_EXTRACTED" });
+
+        let guide = {
+          summary: materialText.slice(0, 900),
+          keyIdeas: materialText.split(/\n+/).map((line) => line.trim()).filter((line) => line.length > 30).slice(0, 6),
+          examPrompts: [] as string[],
+          warnings,
+        };
+        let source: "ai" | "scaffold" = "scaffold";
+        if (aiConfigured({ taskType: "exam_material_intake", complexity: "medium", risk: "low" })) {
+          const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+          try {
+            const result = await getAIProvider({ taskType: "exam_material_intake", complexity: "medium", risk: "low" }).runAcademicTask({
+              taskType: "exam_material_intake",
+              agent: "exam_coach",
+              projectContext: { fileCount: files.length, learnerId: a.userId },
+              artifact: { module: "exam_autopilot", title: "Study material", content: materialText.slice(0, 60_000) },
+              platformInstruction: "Build an exam-prep capsule from the supplied study material only. summary = concise map of the material. findings = the most important examinable ideas. suggestions = challenging practice questions that require understanding, not rote copying. warnings = ambiguities, unreadable areas, or evidence gaps. Do not invent facts outside the material and do not claim certainty where the material is incomplete.",
+              learnerInstruction: note || "Prepare me for an exam from these materials.",
+              policySummary: "Learning and exam preparation only; do not fabricate sources or course policy.",
+            });
+            await firestoreStore.recordAIUsage(result.usage, a, "exam_autopilot");
+            guide = {
+              summary: result.output.summary,
+              keyIdeas: result.output.findings.slice(0, 10),
+              examPrompts: result.output.suggestions.slice(0, 10),
+              warnings: [...warnings, ...result.output.warnings].slice(0, 12),
+            };
+            source = "ai";
+          } finally {
+            await platformStore.releaseAiBudgetReservation(gate.reservation);
+          }
+        }
+        await recordProductEventSafe(a, "exam_material_ingested", { properties: { files: files.length, source, characters: materialText.length } });
+        res.json({ success: true, source, materialText: materialText.slice(0, 24_000), guide });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
     "/api/learn/explain",
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
@@ -4161,7 +4319,7 @@ async function startServer() {
             error: "Provide a topic to explain",
             code: "TOPIC_REQUIRED",
           });
-        const language = cleanField(body.language, 40) || "العربية";
+        const language = cleanField(body.language, 40) || "English";
         const level = cleanField(body.level, 20) || "beginner";
         const context = cleanField(body.context, 600) || undefined;
         if (!aiConfigured({ complexity: "medium", risk: "low" })) {
@@ -4218,7 +4376,7 @@ async function startServer() {
             error: "Provide a problem to solve",
             code: "PROBLEM_REQUIRED",
           });
-        const language = cleanField(body.language, 40) || "العربية";
+        const language = cleanField(body.language, 40) || "English";
         const context = cleanField(body.context, 800) || undefined;
         const courseId = cleanField(body.courseId, 180);
         const assignmentId = cleanField(body.assignmentId, 180);
@@ -4424,6 +4582,92 @@ async function startServer() {
       }
     },
   );
+  app.post(
+    "/api/projects/:id/red-team",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(req.params.id, a.userId, a.tenantId);
+        if (!project) return res.status(404).json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+
+        const categories = ["methodology", "sampling", "generalizability", "theoretical", "requirements", "evidence"] as const;
+        const fallback = [
+          ...(project.riskFlags || []).slice(0, 3).map((risk, index) => ({
+            category: "requirements" as const,
+            challengeTitle: `Project DNA risk ${index + 1}`,
+            critiqueText: cleanField(risk, 700),
+            suggestedDefense: "Verify the requirement against the assignment or course policy, then close it with traceable evidence. Do not claim work, data, or verification that is not recorded.",
+          })),
+          ...(project.rubric || []).filter((item) => item.readiness && item.readiness !== "covered").slice(0, 4).map((item) => ({
+            category: "evidence" as const,
+            challengeTitle: `How will you prove: ${cleanField(item.title, 180)}?`,
+            critiqueText: cleanField(item.description || "This rubric criterion is not fully evidenced in the recorded project state.", 700),
+            suggestedDefense: "Link the criterion to a real artifact, source, or evidence record. If evidence is missing, revise the work instead of inventing a verbal defense.",
+          })),
+        ].slice(0, 6);
+
+        if (!aiConfigured({ taskType: "project_red_team", complexity: project.complexity, risk: "high" })) {
+          return res.json({ success: true, challenges: fallback, provider: "project-dna" });
+        }
+
+        const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+        try {
+          const result = await getAIProvider({ taskType: "project_red_team", complexity: project.complexity, risk: "high" }).runAcademicTask({
+            taskType: "project_red_team",
+            agent: "adversarial_reviewer",
+            projectContext: {
+              project: {
+                id: project.id,
+                title: project.title,
+                course: project.course,
+                projectType: project.projectType,
+                academicDomain: project.academicDomain,
+                learningOutcomes: project.learningOutcomes,
+                requiredActions: project.requiredActions,
+                requirements: project.requirements,
+                deliverables: project.deliverables,
+                rubric: project.rubric,
+                riskFlags: project.riskFlags,
+                sourceRequirements: project.sourceRequirements || [],
+                aiPolicy: project.aiPolicy,
+              },
+            },
+            platformInstruction: "Act as a hostile but fair academic examiner. Identify only weaknesses supported by the supplied Project DNA. Never invent sample sizes, statistical tests, Cronbach alpha, participant characteristics, findings, citations, sources, theories, completed procedures, grades, or institutional rules. If the context is insufficient for a specific criticism, say so. Each finding must be a concise examiner challenge; each suggestion must explain how to close that exact gap using evidence or project revision, not rhetorical bluffing.",
+            learnerInstruction: "Stress-test this project. Prioritize the most consequential methodological, evidence, requirement, theoretical, sampling, or generalizability weaknesses that are actually supported by the recorded project state.",
+            policySummary: `Level ${project.aiPolicy.level}. ${project.aiPolicy.summary || ""}`,
+          });
+          await firestoreStore.recordAIUsage(result.usage, a, project.id);
+          const findings = result.output.findings.slice(0, 8);
+          const suggestions = result.output.suggestions;
+          const challenges = findings.map((finding, index) => {
+            const lower = finding.toLowerCase();
+            const category = lower.includes("sample") || lower.includes("عينة") ? "sampling"
+              : lower.includes("general") || lower.includes("تعميم") ? "generalizability"
+              : lower.includes("theor") || lower.includes("نظر") ? "theoretical"
+              : lower.includes("method") || lower.includes("منهج") ? "methodology"
+              : lower.includes("rubric") || lower.includes("evidence") || lower.includes("دليل") || lower.includes("مصدر") ? "evidence"
+              : "requirements";
+            return {
+              category: (categories as readonly string[]).includes(category) ? category : "requirements",
+              challengeTitle: cleanField(finding, 180),
+              critiqueText: cleanField(finding, 900),
+              suggestedDefense: cleanField(suggestions[index] || suggestions[0] || "Close this gap with recorded evidence or revise the project; do not invent a defense.", 900),
+            };
+          });
+          await firestoreStore.writeAudit(a.tenantId, a.userId, "ai.project_red_team", project.id, undefined, { challengeCount: challenges.length, provider: result.usage.provider });
+          return res.json({ success: true, challenges: challenges.length ? challenges : fallback, provider: result.usage.provider });
+        } catch (error) {
+          return res.json({ success: true, challenges: fallback, provider: "project-dna", warning: cleanField((error as any)?.message || "AI reviewer unavailable", 180) });
+        } finally {
+          await platformStore.releaseAiBudgetReservation(gate.reservation);
+        }
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+
   app.get(
     "/api/courses",
     authenticate,
@@ -4465,6 +4709,55 @@ async function startServer() {
           success: true,
           brief: buildFacultyAutomation(courses, assignments),
         });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/faculty/copilot",
+    authenticate,
+    requireRoles(...FACULTY_ROLES),
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        await assertFeature(a.tenantId, "ProfessorOS");
+        const query = cleanField(req.body?.query, 1200);
+        if (!query) return res.status(400).json({ error: "Ask the faculty copilot a question", code: "FACULTY_QUERY_REQUIRED" });
+        const allCourses = await firestoreStore.listCourses(a.tenantId);
+        const courses = COURSE_ADMIN_ROLES.has(a.role) ? allCourses : allCourses.filter((course) => course.ownerId === a.userId);
+        const courseIds = new Set(courses.map((course) => course.id));
+        const assignments = (await firestoreStore.listTenantAssignments(a.tenantId)).filter((assignment) => courseIds.has(assignment.courseId));
+        const brief = buildFacultyAutomation(courses, assignments);
+        if (!aiConfigured({ taskType: "faculty_copilot", complexity: "medium", risk: "medium" })) {
+          return res.json({
+            success: true,
+            source: "scaffold",
+            answer: brief.actions[0]?.detail || "لا توجد إشارة كافية بعد. افتح أحد المقررات وأضف تكليفاً أو rubric حتى تصبح التوصية أدق.",
+            suggestions: brief.actions.slice(0, 5).map((action) => action.title),
+            warnings: [],
+          });
+        }
+        const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
+        try {
+          const result = await getAIProvider({ taskType: "faculty_copilot", complexity: "medium", risk: "medium" }).runAcademicTask({
+            taskType: "faculty_copilot",
+            agent: "faculty_copilot",
+            projectContext: {
+              courses: courses.map((course) => ({ id: course.id, code: course.code, title: course.title, outcomes: course.outcomes, aiPolicy: course.aiPolicy })),
+              assignments: assignments.map((assignment) => ({ id: assignment.id, courseId: assignment.courseId, title: assignment.title, status: assignment.status, deadline: assignment.deadline, outcomes: assignment.outcomes, rubric: assignment.rubric })),
+              pulse: brief,
+            },
+            artifact: { module: "faculty", title: "Teacher request", content: query },
+            platformInstruction: "Act as a teacher copilot. Use only the supplied course/assignment context. Give concrete pedagogical actions, identify missing alignment or policy details, and prefer questions requiring understanding over rote recall. Never invent student performance data, grades, sources, or submissions. If the requested evidence is not present, state that clearly.",
+            learnerInstruction: query,
+            policySummary: "Faculty planning and course-design assistance. No invented student analytics.",
+          });
+          await firestoreStore.recordAIUsage(result.usage, a, "faculty_copilot");
+          res.json({ success: true, source: "ai", answer: result.output.summary, suggestions: [...result.output.findings, ...result.output.suggestions].slice(0, 8), warnings: result.output.warnings.slice(0, 6) });
+        } finally {
+          await platformStore.releaseAiBudgetReservation(gate.reservation);
+        }
       } catch (e) {
         next(e);
       }
@@ -5729,12 +6022,9 @@ async function startServer() {
           email: a.email || current.email,
           displayName:
             cleanString(body.displayName, 120) || current.displayName,
-          language:
-            body.language === "en"
-              ? "en"
-              : body.language === "ar"
-                ? "ar"
-                : current.language,
+          language: ["ar", "en", "tr", "zh", "hi", "es", "fr", "ur"].includes(String(body.language || ""))
+            ? (body.language as UserProfile["language"])
+            : current.language,
           country: cleanString(body.country, 80) ?? current.country,
           university: cleanString(body.university, 160) ?? current.university,
           specialization:
@@ -5866,9 +6156,11 @@ async function startServer() {
           project.id,
           a.tenantId,
         );
-        const brandRecord = (
-          await platformStore.list("brandConfig", a.tenantId, { limit: 20 })
-        ).find((x) => x.status === "active" && !x.deletedAt);
+        const [brandRecords, profile] = await Promise.all([
+          platformStore.list("brandConfig", a.tenantId, { limit: 20 }),
+          firestoreStore.getProfile(a.userId, a.tenantId, { displayName: a.displayName, email: a.email }),
+        ]);
+        const brandRecord = brandRecords.find((x) => x.status === "active" && !x.deletedAt);
         const branding = {
           institutionName:
             cleanField(
@@ -5876,6 +6168,7 @@ async function startServer() {
               160,
             ) || undefined,
           footer: cleanField(brandRecord?.data?.footer, 500) || undefined,
+          locale: cleanField(project.language || profile?.language || "en", 24) || "en",
         };
         if (format === "pdf") {
           if (!externalServices.pdf.configured())
@@ -6780,6 +7073,8 @@ async function startServer() {
       let reservation:
         | { id: string; counterId: string; reservedUsd: number }
         | undefined;
+      let fairUseReservation: FairUseReservation | undefined;
+      let fairUseConsumed = false;
       try {
         const a = req.actor!;
         const project = await firestoreStore.getProject(
@@ -6810,6 +7105,20 @@ async function startServer() {
             code: generation.code,
             access,
           });
+        if (generation.preview) {
+          const fairUse = await reserveFreeBenefit(req, a, "project_preview");
+          if (!fairUse.assessment.allowed) {
+            const needsVerification = fairUse.assessment.reasonCodes.includes("EMAIL_NOT_VERIFIED");
+            return res.status(needsVerification ? 403 : 429).json({
+              error: needsVerification
+                ? "Verify your email before using the free project preview."
+                : "The free preview has already been used for this device/account window. Paid projects remain available.",
+              code: needsVerification ? "FREE_PREVIEW_EMAIL_VERIFICATION_REQUIRED" : "FREE_PREVIEW_FAIR_USE_LIMIT",
+              fairUse: { decision: fairUse.assessment.decision, reasonCodes: fairUse.assessment.reasonCodes, windowDays: fairUse.assessment.windowDays },
+            });
+          }
+          fairUseReservation = fairUse.reservation;
+        }
         const mode = cleanField(req.body?.mode, 20) as ProjectWriterRequest["mode"];
         const assistanceMode = cleanField(
           req.body?.assistanceMode,
@@ -6836,7 +7145,7 @@ async function startServer() {
         const request: ProjectWriterRequest = {
           mode,
           assistanceMode,
-          language: cleanField(req.body?.language, 80) || "العربية",
+          language: cleanField(req.body?.language, 80) || "English",
           desiredPages: generation.preview ? PREVIEW_PAGE_LIMIT : targetPages,
           academicTone: new Set(["clear", "formal", "advanced"]).has(
             String(req.body?.academicTone),
@@ -6934,8 +7243,13 @@ async function startServer() {
           targetPages,
         };
         const persisted = await persistProjectDocument(a, project, document);
+        if (generation.preview && fairUseReservation) {
+          await finalizeFreeBenefit(fairUseReservation, true);
+          fairUseConsumed = true;
+        }
         const updatedProject: ProjectDNA = {
           ...project,
+          language: request.language || project.language,
           workspaceModules: project.workspaceModules.includes("writing")
             ? project.workspaceModules
             : ["writing", ...project.workspaceModules],
@@ -6993,6 +7307,8 @@ async function startServer() {
           await platformStore
             .releaseAiBudgetReservation(reservation)
             .catch(() => undefined);
+        if (fairUseReservation && !fairUseConsumed)
+          await finalizeFreeBenefit(fairUseReservation, false).catch(() => undefined);
       }
     },
   );
@@ -7994,6 +8310,42 @@ async function startServer() {
     },
   );
   app.get(
+    "/api/research/sources/search",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const query = cleanField(req.query?.q, 300);
+        if (query.length < 2)
+          return res.status(400).json({ error: "Search query is required", code: "RESEARCH_QUERY_REQUIRED" });
+        const payload = await crossrefJson("/works", new URLSearchParams({
+          "query.bibliographic": query,
+          rows: "8",
+        }));
+        const sources = Array.isArray(payload?.message?.items)
+          ? payload.message.items.map(crossrefSourceFromWork).filter(Boolean)
+          : [];
+        res.setHeader("Cache-Control", "private, max-age=300");
+        res.json({ success: true, provider: "crossref", sources });
+      } catch (e) { next(e); }
+    },
+  );
+  app.get(
+    "/api/research/sources/doi",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const raw = cleanField(req.query?.doi, 500).replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "").replace(/^doi:\s*/i, "").trim();
+        if (!/^10\.\d{4,9}\/.+/i.test(raw))
+          return res.status(400).json({ error: "A valid DOI is required", code: "DOI_INVALID" });
+        const payload = await crossrefJson(`/works/${encodeURIComponent(raw)}`);
+        const source = crossrefSourceFromWork(payload?.message || {});
+        if (!source) return res.status(404).json({ error: "DOI was not found in Crossref", code: "DOI_NOT_FOUND" });
+        res.setHeader("Cache-Control", "private, max-age=3600");
+        res.json({ success: true, provider: "crossref", source });
+      } catch (e) { next(e); }
+    },
+  );
+  app.get(
     "/api/projects/:id/evidence",
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
@@ -8820,7 +9172,7 @@ async function startServer() {
     },
   );
   app.post(
-    "/api/projects/:id/detect-ai",
+    ["/api/projects/:id/style-integrity", "/api/projects/:id/detect-ai"],
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
       try {
@@ -8846,17 +9198,18 @@ async function startServer() {
             .map((art) => art.content)
             .join("\n\n");
         }
-        const report = runDeepAIDetection(targetText);
+        const report = runStyleIntegrityAnalysis(targetText, String(req.body?.locale || project.language || "en"));
         await firestoreStore.writeAudit(
           a.tenantId,
           a.userId,
-          "ai.deep_detection_run",
+          "integrity.style_analysis_run",
           project.id,
           undefined,
           {
-            score: report.overallAIScore,
+            styleRiskScore: report.styleRiskScore,
             verdict: report.verdict,
-            hallmarksCount: report.metrics.aiHallmarkPhrasesCount,
+            clichéCount: report.metrics.clichéCount,
+            citationVerificationFlags: report.metrics.citationVerificationFlags,
           },
         );
         res.json({ success: true, report });
@@ -8866,7 +9219,7 @@ async function startServer() {
     },
   );
   app.post(
-    "/api/projects/:id/humanize",
+    ["/api/projects/:id/improve-style", "/api/projects/:id/humanize"],
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
       try {
@@ -8884,16 +9237,22 @@ async function startServer() {
         if (!text)
           return res.status(400).json({ error: "Text required" });
 
-        const result = humanizeScholarlyText(text);
+        const result = improveScholarlyStyle(text, String(req.body?.locale || project.language || "en"));
         await firestoreStore.writeAudit(
           a.tenantId,
           a.userId,
-          "ai.humanize_scholarly_text",
+          "integrity.style_improved",
           project.id,
           undefined,
           { originalLength: text.length, improvements: result.improvementsMade.length },
         );
-        res.json({ success: true, ...result });
+        res.json({
+          success: true,
+          improvedText: result.improvedText,
+          // Backward-compatible key for older clients. This is style improvement, not detector evasion.
+          humanizedText: result.improvedText,
+          improvementsMade: result.improvementsMade,
+        });
       } catch (e) {
         next(e);
       }
@@ -8940,8 +9299,8 @@ async function startServer() {
         };
         zip.file("academic_dossier.json", JSON.stringify(dossierData, null, 2));
 
-        const forensicReport = runDeepAIDetection(combinedMarkdown);
-        zip.file("ai_forensic_report.json", JSON.stringify(forensicReport, null, 2));
+        const styleIntegrityReport = runStyleIntegrityAnalysis(combinedMarkdown);
+        zip.file("style_integrity_report.json", JSON.stringify(styleIntegrityReport, null, 2));
 
         const bibText = evidence
           .map((e: any, idx: number) => `@article{ref${idx+1},\n  title = {${e.title || "Reference " + (idx+1)}},\n  url = {${e.url || ""}},\n  note = {${e.snippet || ""}}\n}`)
@@ -9065,6 +9424,18 @@ async function startServer() {
           maintenance: process.env.MAINTENANCE_MODE === "true",
         };
         res.json({ success: true, control });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.get(
+    "/api/admin/fair-use",
+    authenticate,
+    requireRoles("trust_safety_admin", "university_admin", "admin", "superadmin", "root_owner"),
+    async (_req: AuthenticatedRequest, res, next) => {
+      try {
+        res.json({ success: true, fairUse: await fairUseMetrics() });
       } catch (e) {
         next(e);
       }
@@ -9449,7 +9820,7 @@ async function startServer() {
           projectId: project.id,
           idempotencyKey,
           planId: selectedPlan.id,
-          amountKwd: selectedPlan.amountKwd,
+          amountUsd: selectedPlan.amountUsd,
           description: `AcademicOS — ${selectedPlan.name} — ${project.title}`,
           webhookUrl: `${appUrl}/api/billing/webhook/${provider.id}`,
           successUrl: `${appUrl}/app/plans?billing=success&plan=${selectedPlan.id}&project=${encodeURIComponent(project.id)}`,
@@ -9461,7 +9832,7 @@ async function startServer() {
           "billing.checkout.create",
           a.userId,
           undefined,
-          { planId: selectedPlan.id, amountKwd: selectedPlan.amountKwd, projectId: project.id },
+          { planId: selectedPlan.id, amountUsd: selectedPlan.amountUsd, projectId: project.id },
         );
         res.json({ success: true, ...result });
       } catch (e) {

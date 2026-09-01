@@ -12,6 +12,7 @@ SECURITY / TRUST BOUNDARY:
 
 GROUNDING RULES:
 - Extract only facts supported by the supplied assignment material.
+- Set language to the dominant language of the assignment using an ISO 639-1 code when possible (for example en, ar, es, fr, tr, zh, hi, ur). Do not translate extracted titles, requirements, or rubric text unless the source itself is multilingual.
 - Never invent deadlines, word counts, policies, references, authors, statistics, software requirements, rubric criteria, or deliverables.
 - When a detail is uncertain, represent it with confidence=needs_confirmation and use "Needs confirmation" where a string is required.
 - If the AI policy is not explicit, set aiPolicy.needsConfirmation=true rather than assuming permission.

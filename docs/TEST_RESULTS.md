@@ -15,7 +15,7 @@ The environment-limited checks flagged on 2026-08-11 were **executed for real** 
 
 **Frontier engines added 2026-08-20** (see `FRONTIER_ENGINES.md`): 6 new product capabilities in `src/server/frontier.ts`, wired as real API routes in `server.ts`, covered by `tests/frontier.test.ts` → **6/6 pass**. Full suite now **27/27 pass**, `typecheck` 0 errors, `npm run build` succeeds (server bundle 553.8kb).
 
-**Still pending → the 7 external launch gates.** These require deployment credentials, provider contracts, deployed infrastructure, and manual human testing (screen reader, PACI). None can be marked PASS from a local/emulator environment. See `GO_LIVE_RUNBOOK.md` for the concrete, executable steps and acceptance criteria for each gate.
+**Still pending → the 7 external launch gates.** These require deployment credentials, provider contracts, deployed infrastructure, and manual human testing (screen reader, payment/provider sandboxes, and any enabled regional identity adapter). None can be marked PASS from a local/emulator environment. See `GO_LIVE_RUNBOOK.md` for the concrete, executable steps and acceptance criteria for each gate.
 
 ---
 

@@ -91,13 +91,51 @@ export const platformStore = {
   async versions(resource:PlatformResourceKey,id:string,tenantId:string){const snap=await db().collection(VERSIONS).where('tenantId','==',tenantId).where('resource','==',resource).where('recordId','==',id).limit(100).get();return snap.docs.map(d=>d.data() as PlatformRecordVersion).sort((a,b)=>b.version-a.version);},
   async recordEvent(event:Omit<ProductEventRecord,'id'|'createdAt'>){const ref=db().collection(EVENTS).doc();const item:ProductEventRecord={...event,provenance:event.provenance||'server',id:ref.id,createdAt:now()};await ref.set(item);return item;},
   async metrics(tenantId:string):Promise<PlatformMetrics>{
-    const [events,ai]=await Promise.all([db().collection(EVENTS).where('tenantId','==',tenantId).limit(5000).get(),db().collection('aiRuns').where('tenantId','==',tenantId).limit(5000).get()]);
-    const authoritative=events.docs.filter(d=>d.data().provenance!=='client');
-    const counts:Record<string,number>={};for(const d of authoritative){const n=String(d.data().name||'unknown');counts[n]=(counts[n]||0)+1;}
-    const users=new Set(authoritative.map(d=>String(d.data().userId||'')).filter(Boolean));const secondProjectUsers=new Set<string>();const projectCreates=new Map<string,number>();
-    for(const d of authoritative){const x=d.data();if(x.name==='project_started'||x.name==='workspace_created'){const u=String(x.userId||'');projectCreates.set(u,(projectCreates.get(u)||0)+1);if((projectCreates.get(u)||0)>=2)secondProjectUsers.add(u);}}
-    const totalUsers=Math.max(1,users.size);const aiFailures=ai.docs.filter(d=>Boolean(d.data().error||d.data().failed)).length;const aiCost=ai.docs.reduce((s,d)=>s+Number(d.data().estimatedCostUsd||0),0);
-    return {activation:Number(((counts.signup_completed||0)/totalUsers).toFixed(3)),firstAssignmentSuccess:Number(((counts.assignment_parsed||0)/Math.max(1,counts.assignment_uploaded||0)).toFixed(3)),secondProjectRetention:Number((secondProjectUsers.size/totalUsers).toFixed(3)),projectCompletion:Number(((counts.project_completed||0)/Math.max(1,counts.project_started||0)).toFixed(3)),paidConversion:Number(((counts.subscription_started||0)/totalUsers).toFixed(3)),submissionAuditUsage:Number(((counts.audit_run||0)/totalUsers).toFixed(3)),vivaUsage:Number(((counts.viva_completed||0)/totalUsers).toFixed(3)),eventCounts:counts,ai:{runs:ai.size,costUsd:Number(aiCost.toFixed(4)),failures:aiFailures}};
+    const [events,ai]=await Promise.all([
+      db().collection(EVENTS).where('tenantId','==',tenantId).limit(5000).get(),
+      db().collection('aiRuns').where('tenantId','==',tenantId).limit(5000).get(),
+    ]);
+    const authoritative=events.docs.map(d=>d.data()).filter(x=>x.provenance!=='client');
+    const counts:Record<string,number>={};
+    for(const x of authoritative){const n=String(x.name||'unknown');counts[n]=(counts[n]||0)+1;}
+    const users=new Set(authoritative.map(x=>String(x.userId||'')).filter(Boolean));
+    const usersFor=(names:string[])=>new Set(authoritative.filter(x=>names.includes(String(x.name||''))).map(x=>String(x.userId||'')).filter(Boolean));
+    const activatedUsers=usersFor(['assignment_uploaded','workspace_created','tutor_explained','exam_material_ingested']);
+    const uploadedUsers=usersFor(['assignment_uploaded']);
+    const parsedUsers=usersFor(['assignment_parsed']);
+    const paidUsers=usersFor(['subscription_started']);
+    const auditUsers=usersFor(['audit_run']);
+    const vivaUsers=usersFor(['viva_completed']);
+    const secondProjectUsers=new Set<string>();
+    const projectsByUser=new Map<string,Set<string>>();
+    const startedProjects=new Set<string>();
+    const completedProjects=new Set<string>();
+    for(const x of authoritative){
+      const u=String(x.userId||'');
+      const projectId=String(x.projectId||'');
+      if(x.name==='project_started' && u){
+        const set=projectsByUser.get(u)||new Set<string>();
+        set.add(projectId||`event:${u}:${set.size}`);
+        projectsByUser.set(u,set);
+        if(set.size>=2)secondProjectUsers.add(u);
+        if(projectId)startedProjects.add(projectId);
+      }
+      if(x.name==='project_completed' && projectId)completedProjects.add(projectId);
+    }
+    const totalUsers=Math.max(1,users.size);
+    const aiFailures=ai.docs.filter(d=>Boolean(d.data().error||d.data().failed)).length;
+    const aiCost=ai.docs.reduce((sum,d)=>sum+Number(d.data().estimatedCostUsd||0),0);
+    return {
+      activation:Number((activatedUsers.size/totalUsers).toFixed(3)),
+      firstAssignmentSuccess:Number((parsedUsers.size/Math.max(1,uploadedUsers.size)).toFixed(3)),
+      secondProjectRetention:Number((secondProjectUsers.size/totalUsers).toFixed(3)),
+      projectCompletion:Number((completedProjects.size/Math.max(1,startedProjects.size)).toFixed(3)),
+      paidConversion:Number((paidUsers.size/totalUsers).toFixed(3)),
+      submissionAuditUsage:Number((auditUsers.size/totalUsers).toFixed(3)),
+      vivaUsage:Number((vivaUsers.size/totalUsers).toFixed(3)),
+      eventCounts:counts,
+      ai:{runs:ai.size,costUsd:Number(aiCost.toFixed(4)),failures:aiFailures},
+    };
   },
   async aiBudgetStatus(tenantId:string,userId?:string){
     const [budgets,runs]=await Promise.all([this.list('aiBudgets',tenantId,{limit:50,status:'active'}),db().collection('aiRuns').where('tenantId','==',tenantId).limit(5000).get()]);

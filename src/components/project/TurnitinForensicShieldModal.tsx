@@ -1,25 +1,21 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  ShieldAlert,
-  ShieldCheck,
-  Zap,
-  Activity,
-  FileSearch,
-  Sparkles,
   AlertTriangle,
-  CheckCircle2,
-  HelpCircle,
-  Copy,
+  BarChart3,
   Check,
-  RefreshCw,
-  Eye,
-  Sliders,
-  Cpu,
-  Layers,
+  CheckCircle2,
+  Copy,
+  FileSearch,
   Fingerprint,
+  LoaderCircle,
+  Quote,
+  ShieldCheck,
+  Sparkles,
+  X,
 } from "lucide-react";
 import type { DeepAIDetectionReport, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
+import { useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
 
 export function TurnitinForensicShieldModal({
@@ -29,451 +25,200 @@ export function TurnitinForensicShieldModal({
   project: ProjectDNA;
   onClose: () => void;
 }) {
+  const { locale, t } = useI18n();
   const [customText, setCustomText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [improving, setImproving] = useState(false);
   const [report, setReport] = useState<DeepAIDetectionReport | null>(null);
+  const [improved, setImproved] = useState<{ text: string; notes: string[] } | null>(null);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "sentences" | "cliches" | "signals">("overview");
+  const [tab, setTab] = useState<"overview" | "sentences" | "patterns">("overview");
+  const sourceText = useMemo(
+    () => customText.trim() || report?.sentenceBreakdown.map((sentence) => sentence.text).join(" ") || "",
+    [customText, report],
+  );
 
-  const [humanizing, setHumanizing] = useState(false);
-  const [humanizedResult, setHumanizedResult] = useState<{ humanizedText: string; improvementsMade: string[] } | null>(null);
-
-  async function handleAnalyze() {
+  async function analyze() {
     setLoading(true);
+    setImproved(null);
     try {
-      const res = await api.detectAI(project.id, customText || undefined);
-      setReport(res.report);
-      setHumanizedResult(null);
-    } catch (e: any) {
-      alert(e.message || "حدث خطأ أثناء فحص البصمة الجنائية.");
+      const result = await api.styleIntegrity(project.id, customText.trim() || undefined, locale);
+      setReport(result.report);
+    } catch (error: any) {
+      alert(error?.message || t("integrity.errorAnalyze"));
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleHumanize() {
-    setHumanizing(true);
+  async function improve() {
+    if (!sourceText) {
+      alert(t("integrity.needText"));
+      return;
+    }
+    setImproving(true);
     try {
-      const textToHumanize = customText || (report ? report.sentenceBreakdown.map(s => s.text).join(" ") : "");
-      if (!textToHumanize) {
-        alert("يرجى كتابة نص أو فحص المشروع أولاً.");
-        return;
-      }
-      const res = await api.humanize(project.id, textToHumanize);
-      setHumanizedResult({ humanizedText: res.humanizedText, improvementsMade: res.improvementsMade });
-    } catch (e: any) {
-      alert(e.message || "حدث خطأ أثناء معالجة النص وبناء الطابع البشري.");
+      const result = await api.improveStyle(project.id, sourceText, locale);
+      setImproved({ text: result.improvedText, notes: result.improvementsMade });
+    } catch (error: any) {
+      alert(error?.message || t("integrity.errorImprove"));
     } finally {
-      setHumanizing(false);
+      setImproving(false);
     }
   }
 
+  const riskTone = report
+    ? report.styleRiskScore >= 60
+      ? "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/25"
+      : report.styleRiskScore >= 30
+        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+        : "brand-soft-bg brand-text border-[var(--brand)]/20"
+    : "";
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 text-slate-100 border border-slate-700/80 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-              <Fingerprint size={22} />
-            </div>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+      <button className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onClose} aria-label={t("common.close")} />
+      <div className="relative panel w-full max-w-5xl max-h-[92vh] rounded-[28px] overflow-hidden shadow-2xl">
+        <header className="p-5 md:p-6 border-b hairline flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center shrink-0"><Fingerprint size={21} /></span>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-tight">
-                  الدرع الجنائي للكشف عن الذكاء الاصطناعي (Turnitin & LLM Forensic Radar)
-                </h2>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  Ultra-Forensic v4.2
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                فحص عميق متعدد الطبقات: الـ Perplexity، والـ Burstiness، وبصمات الـ N-Gram لكشف النماذج التوليدية (GPT-4o, Claude 3.5, Gemini 1.5/2.0).
-              </p>
+              <div className="eyebrow">Style & Integrity Guardian</div>
+              <h2 className="text-xl md:text-2xl font-bold mt-1">{t("integrity.title")}</h2>
+              <p className="body-copy mt-2 max-w-3xl">{t("integrity.description")}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition"
-          >
-            ✕
-          </button>
-        </div>
+          <Button size="icon" variant="ghost" onClick={onClose} aria-label={t("common.close")}><X size={18} /></Button>
+        </header>
 
-        {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          {/* Custom Text or Project Run */}
-          <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <span className="font-semibold flex items-center gap-1.5 text-emerald-400">
-                <FileSearch size={14} /> فحص نص مسودة المشروع أو لصق نص خارجي:
-              </span>
-              <span className="text-slate-500">
-                اترك الحقل فارغاً لفحص كامل نصوص وأقسام المشروع التلقائية
-              </span>
+        <div className="p-5 md:p-6 overflow-y-auto max-h-[calc(92vh-104px)] space-y-5">
+          <section className="rounded-2xl border hairline p-4 md:p-5 bg-[var(--bg)]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold flex items-center gap-2"><FileSearch size={15} className="brand-text" /> {t("integrity.scopeTitle")}</div>
+                <p className="text-[10px] muted mt-1">{t("integrity.scopeHint")}</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" onClick={improve} disabled={improving || (!sourceText && !report)}>
+                  {improving ? <LoaderCircle size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                  {t("integrity.improve")}
+                </Button>
+                <Button onClick={analyze} disabled={loading}>
+                  {loading ? <LoaderCircle size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                  {t("integrity.analyze")}
+                </Button>
+              </div>
             </div>
             <textarea
-              rows={3}
               value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="الصق نص الفقرة أو المقال هنا للمعاينة الفورية، أو اضغط الزر مباشرة لفحص كامل مسودة المشروع..."
-              className="w-full bg-slate-900 border border-slate-700/70 rounded-lg p-3 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition"
+              onChange={(event) => setCustomText(event.target.value)}
+              rows={4}
+              className="field mt-4 resize-y"
+              placeholder={t("integrity.placeholder")}
             />
-            <div className="flex items-center justify-between">
-              <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                <Sliders size={13} className="text-cyan-400" />
-                معيار الحساسية: <strong className="text-slate-200">أعلى دقة جنائية (Multi-Vector Stylometry)</strong>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={handleHumanize}
-                  disabled={humanizing}
-                  variant="outline"
-                  className="border-cyan-500/40 text-cyan-400 bg-cyan-950/20 hover:bg-cyan-950/40 font-medium text-xs px-4"
-                >
-                  {humanizing ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin mr-1.5" />
-                      جاري المعالجة البشرية...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={14} className="mr-1.5" />
-                      إضفاء الطابع البشري المنهجي (1-Click Humanizer)
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs px-5 shadow-lg shadow-emerald-900/30"
-                >
-                  {loading ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin mr-1.5" />
-                      جاري التشريح الجنائي...
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={14} className="mr-1.5" />
-                      تشغيل الفحص الجنائي الشامل
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
+          </section>
 
-          {/* Humanized Result Display if available */}
-          {humanizedResult && (
-            <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-4 space-y-3 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                  <Sparkles size={14} /> نتيجة محرك إضفاء الطابع البشري المنهجي (Scholarly Humanized Text)
-                </h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(humanizedResult.humanizedText);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="text-xs text-cyan-300 border-cyan-500/40 bg-cyan-950/50"
-                >
-                  {copied ? <Check size={13} className="mr-1" /> : <Copy size={13} className="mr-1" />}
-                  {copied ? "تم النسخ" : "نسخ النص المعالج"}
-                </Button>
+          {improved && (
+            <section className="rounded-2xl border border-[var(--brand)]/25 brand-soft-bg p-4 md:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div><div className="eyebrow">{t("integrity.transparentImprove")}</div><h3 className="section-title mt-1">{t("integrity.sameMeaning")}</h3></div>
+                <Button variant="outline" size="sm" onClick={() => {
+                  navigator.clipboard.writeText(improved.text).then(() => {
+                    setCopied(true); window.setTimeout(() => setCopied(false), 1600);
+                  });
+                }}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? t("common.copied") : t("common.copy")}</Button>
               </div>
-              <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 leading-relaxed font-sans max-h-60 overflow-y-auto">
-                {humanizedResult.humanizedText}
-              </div>
-              <div className="text-[11px] text-cyan-400 flex flex-wrap gap-2 pt-1">
-                {humanizedResult.improvementsMade.map((imp, i) => (
-                  <span key={i} className="bg-cyan-900/50 px-2 py-0.5 rounded text-cyan-200">
-                    ✓ {imp}
-                  </span>
-                ))}
-              </div>
-            </div>
+              <div className="mt-4 rounded-xl bg-[var(--panel)] border hairline p-4 text-sm leading-7 whitespace-pre-wrap">{improved.text}</div>
+              <div className="mt-3 flex flex-wrap gap-2">{improved.notes.map((note) => <span key={note} className="rounded-full bg-[var(--panel)] border hairline px-3 py-1 text-[10px]">{note}</span>)}</div>
+            </section>
           )}
 
-          {/* Results Area */}
           {report && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              {/* Primary Metric Hero */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div
-                  className={`p-4 rounded-xl border flex flex-col justify-between ${
-                    report.overallAIScore < 25
-                      ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-300"
-                      : report.overallAIScore < 50
-                        ? "bg-amber-950/30 border-amber-500/40 text-amber-300"
-                        : "bg-red-950/30 border-red-500/40 text-red-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      مؤشر الـ AI التراكمي
-                    </span>
-                    {report.overallAIScore < 25 ? (
-                      <ShieldCheck size={18} className="text-emerald-400" />
-                    ) : (
-                      <ShieldAlert size={18} className="text-red-400" />
-                    )}
+            <>
+              <section className={`rounded-2xl border p-5 ${riskTone}`}>
+                <div className="grid md:grid-cols-[1fr_auto] gap-5 items-center">
+                  <div>
+                    <div className="text-[10px] font-semibold opacity-70">{t("integrity.riskNotAi")}</div>
+                    <div className="text-2xl md:text-3xl font-bold mt-2">{report.verdictLabel}</div>
+                    <p className="text-xs leading-6 mt-3 opacity-80">{report.disclaimer}</p>
                   </div>
-                  <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-4xl font-extrabold tracking-tight">
-                      {report.overallAIScore}%
-                    </span>
-                    <span className="text-xs text-slate-400">احتمالية التوليد</span>
-                  </div>
-                  <div className="mt-2 text-[11px] font-medium leading-tight">
-                    {report.verdictLabel}
+                  <div className="text-center md:min-w-36">
+                    <div className="text-5xl font-black mono-number">{report.styleRiskScore}</div>
+                    <div className="text-[10px] mt-1">{t("integrity.lowerBetter")}</div>
                   </div>
                 </div>
+              </section>
 
-                {/* Perplexity */}
-                <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs">
-                    <span>معدل الحيرة (Perplexity)</span>
-                    <Activity size={16} className="text-cyan-400" />
-                  </div>
-                  <div className="mt-2 text-2xl font-bold text-white">
-                    {report.metrics.perplexityScore}/100
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {report.metrics.perplexityScore > 70
-                      ? "ارتفاع التعقيد والمفردات الطبيعية (سلوك بشري أصيل)."
-                      : "تنبؤية لغوية عالية تطابق توليد الـ LLM."}
-                  </p>
-                </div>
-
-                {/* Burstiness */}
-                <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs">
-                    <span>التدفق النبضي (Burstiness)</span>
-                    <Layers size={16} className="text-indigo-400" />
-                  </div>
-                  <div className="mt-2 text-2xl font-bold text-white">
-                    {report.metrics.burstinessScore}/100
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {report.metrics.burstinessScore > 60
-                      ? "تنوع عضوي متوازن في طول وهيكل الجمل."
-                      : "رتابة هيكلية ميكانيكية بين 16-24 كلمة."}
-                  </p>
-                </div>
-
-                {/* Clichés Count */}
-                <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs">
-                    <span>بصمات الكليشيهات</span>
-                    <Cpu size={16} className="text-pink-400" />
-                  </div>
-                  <div className="mt-2 text-2xl font-bold text-white">
-                    {report.metrics.aiHallmarkPhrasesCount}
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {report.metrics.aiHallmarkPhrasesCount === 0
-                      ? "خلو تام من العبارات النمطية للذكاء الاصطناعي."
-                      : "تم رصد تعبيرات شائعة في المخرجات التوليدية."}
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <Metric icon={BarChart3} label={t("integrity.metricRhythm")} value={`${report.metrics.sentenceRhythmVariety}%`} />
+                <Metric icon={Quote} label={t("integrity.metricCliches")} value={report.metrics.clichéCount} />
+                <Metric icon={FileSearch} label={t("integrity.metricCitations")} value={report.metrics.citationVerificationFlags} />
+                <Metric icon={AlertTriangle} label={t("integrity.metricUnsupported")} value={report.metrics.unsupportedQuantitativeClaims} />
               </div>
 
-              {/* Tabs Navigation */}
-              <div className="flex border-b border-slate-800 gap-4 text-xs font-semibold">
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className={`pb-2 transition ${
-                    activeTab === "overview"
-                      ? "text-emerald-400 border-b-2 border-emerald-400"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  الملخص والإشارات الجنائية ({report.forensicSignals.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab("sentences")}
-                  className={`pb-2 transition ${
-                    activeTab === "sentences"
-                      ? "text-emerald-400 border-b-2 border-emerald-400"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  التشريح الجملي (Sentence Breakdown - {report.sentenceBreakdown.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab("cliches")}
-                  className={`pb-2 transition ${
-                    activeTab === "cliches"
-                      ? "text-emerald-400 border-b-2 border-emerald-400"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  الكليشيهات المرصودة ({report.detectedClichés.length})
-                </button>
-              </div>
+              <nav className="flex gap-2 overflow-x-auto border-b hairline pb-2">
+                {([
+                  ["overview", t("integrity.tabOverview")],
+                  ["sentences", `${t("integrity.tabSentences")} (${report.sentenceBreakdown.length})`],
+                  ["patterns", `${t("integrity.tabPatterns")} (${report.detectedClichés.length})`],
+                ] as const).map(([key, label]) => (
+                  <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-xl px-3 py-2 text-xs font-semibold whitespace-nowrap ${tab === key ? "brand-soft-bg" : "muted"}`}>{label}</button>
+                ))}
+              </nav>
 
-              {/* Tab 1: Overview & Forensic Signals */}
-              {activeTab === "overview" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      الإشارات الجنائية المكتشفة (Forensic Flags)
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {report.forensicSignals.map((signal, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-lg border text-xs ${
-                            signal.severity === "critical"
-                              ? "bg-red-950/30 border-red-500/40 text-red-200"
-                              : signal.severity === "high"
-                                ? "bg-amber-950/30 border-amber-500/40 text-amber-200"
-                                : signal.severity === "medium"
-                                  ? "bg-yellow-950/20 border-yellow-500/30 text-yellow-200"
-                                  : "bg-emerald-950/20 border-emerald-500/30 text-emerald-200"
-                          }`}
-                        >
-                          <div className="font-bold flex items-center gap-1.5">
-                            {signal.severity === "critical" || signal.severity === "high" ? (
-                              <AlertTriangle size={14} className="text-red-400 shrink-0" />
-                            ) : (
-                              <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                            )}
-                            {signal.title}
-                          </div>
-                          <p className="mt-1 text-[11px] text-slate-400 leading-relaxed">
-                            {signal.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Humanization Recommendations */}
-                  <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
-                    <h3 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                      <Sparkles size={14} /> توصيات إضفاء الطابع البشري والرصانة (Humanization & Rigor Protocol)
-                    </h3>
-                    <ul className="space-y-1.5 text-xs text-slate-300">
-                      {report.humanizationRecommendations.map((rec, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-emerald-400 font-bold">•</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 2: Sentence Breakdown */}
-              {activeTab === "sentences" && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>تشريح كل جملة على حدة مع بيان نسبة الشك والأسباب:</span>
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> عالي الشبه (AI)</span>
-                      <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> متوسط الشبه</span>
-                      <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> بشري أصيل</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                    {report.sentenceBreakdown.map((s, idx) => (
-                      <div
-                        key={idx}
-                        className={`p-3 rounded-lg border text-xs transition ${
-                          s.highlightColor === "red"
-                            ? "bg-red-950/20 border-red-500/30 text-red-100"
-                            : s.highlightColor === "orange" || s.highlightColor === "yellow"
-                              ? "bg-amber-950/20 border-amber-500/30 text-amber-100"
-                              : "bg-slate-950/30 border-slate-800 text-slate-200"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <p className="leading-relaxed font-sans">{s.text}</p>
-                          <div className="shrink-0 text-right">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                s.aiProbability >= 70
-                                  ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                                  : s.aiProbability >= 40
-                                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
-                                    : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                              }`}
-                            >
-                              AI: {s.aiProbability}%
-                            </span>
-                          </div>
-                        </div>
-                        {s.reasons.length > 0 && (
-                          <div className="mt-1.5 pt-1.5 border-t border-slate-800/60 text-[10px] text-slate-400 flex flex-wrap gap-2">
-                            {s.reasons.map((r, ri) => (
-                              <span key={ri} className="bg-slate-900/80 px-2 py-0.5 rounded text-slate-300">
-                                ⚠ {r}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+              {tab === "overview" && (
+                <div className="grid lg:grid-cols-2 gap-4">
+                  <section className="space-y-2">
+                    <div className="eyebrow">{t("integrity.signals")}</div>
+                    {report.signals.map((signal, index) => (
+                      <div key={`${signal.title}-${index}`} className="rounded-xl border hairline p-4 flex gap-3">
+                        <span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${signal.severity === "high" || signal.severity === "critical" ? "bg-amber-500/10 text-[var(--warning)]" : "brand-soft-bg brand-text"}`}>
+                          {signal.severity === "low" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                        </span>
+                        <div><strong className="text-sm">{signal.title}</strong><p className="text-xs muted leading-6 mt-1">{signal.description}</p></div>
                       </div>
                     ))}
-                  </div>
+                  </section>
+                  <section className="rounded-2xl soft-bg p-4">
+                    <div className="eyebrow">{t("integrity.whatFix")}</div>
+                    <div className="space-y-2 mt-3">{report.recommendations.map((item, index) => <div key={item} className="rounded-xl bg-[var(--panel)] border hairline p-3 text-xs leading-6 flex gap-2"><span className="brand-text font-bold">{index + 1}</span><span>{item}</span></div>)}</div>
+                  </section>
                 </div>
               )}
 
-              {/* Tab 3: Clichés */}
-              {activeTab === "cliches" && (
-                <div className="space-y-3">
-                  {report.detectedClichés.length === 0 ? (
-                    <div className="text-center py-8 bg-slate-950/30 border border-slate-800 rounded-xl">
-                      <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-2" />
-                      <div className="text-xs font-bold text-slate-200">لم يتم رصد أي كليشيهات أو مصطلحات آلية</div>
-                      <div className="text-[11px] text-slate-400 mt-1">النص نظيف تماماً من التعبيرات الشائعة لنماذج الذكاء الاصطناعي.</div>
+              {tab === "sentences" && (
+                <div className="space-y-2 max-h-[46vh] overflow-auto pe-1">
+                  {report.sentenceBreakdown.map((sentence, index) => (
+                    <div key={index} className={`rounded-xl border p-3 ${sentence.highlightColor === "red" ? "border-red-500/25 bg-red-500/5" : sentence.highlightColor === "orange" ? "border-amber-500/25 bg-amber-500/5" : "hairline"}`}>
+                      <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-[9px] font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
+                      <div className="flex flex-wrap gap-1.5 mt-2">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-[9px] muted">{reason}</span>)}</div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {report.detectedClichés.map((c, i) => (
-                        <div key={i} className="bg-slate-950/40 border border-slate-800 p-3 rounded-lg flex items-center justify-between text-xs">
-                          <div>
-                            <div className="font-bold text-pink-400 font-mono">"{c.phrase}"</div>
-                            <div className="text-[10px] text-slate-400 mt-0.5">
-                              تصنيف: {c.category === "ai_hallmark" ? "بصمة LLM شائعة" : c.category === "hedging" ? "تحوط تعميمي" : "رابط ميكانيكي"}
-                            </div>
-                          </div>
-                          <span className="bg-pink-500/10 text-pink-300 border border-pink-500/30 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                            {c.occurrences} تكرار
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  ))}
                 </div>
               )}
+
+              {tab === "patterns" && (
+                <div className="grid md:grid-cols-2 gap-3">
+                  {report.detectedClichés.map((item) => <div key={item.phrase} className="rounded-xl border hairline p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{item.phrase}</strong><span className="text-[10px] muted">×{item.occurrences}</span></div><div className="text-[10px] muted mt-2">{t(`integrity.category.${item.category}`)}</div></div>)}
+                  {!report.detectedClichés.length && <div className="md:col-span-2 rounded-xl brand-soft-bg p-5 text-sm font-semibold flex items-center gap-2"><CheckCircle2 size={17} /> {t("integrity.noCliches")}</div>}
+                </div>
+              )}
+            </>
+          )}
+
+          {!report && !loading && (
+            <div className="rounded-2xl border border-dashed hairline p-10 text-center">
+              <ShieldCheck size={28} className="mx-auto brand-text" />
+              <h3 className="font-bold mt-3">{t("integrity.trustFirst")}</h3>
+              <p className="text-xs muted leading-6 mt-2 max-w-xl mx-auto">{t("integrity.trustDescription")}</p>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <a
-              href={api.exportBundleUrl(project.id)}
-              download
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow transition"
-            >
-              📥 تنزيل حزمة التسليم الأكاديمية الكاملة (.ZIP)
-            </a>
-            <span className="text-slate-400 hidden md:inline">
-              تشمل البحث، التقرير الجنائي، ملف النزاهة والمراجع (.bib).
-            </span>
-          </div>
-          <Button variant="outline" onClick={onClose} className="text-xs text-slate-300 border-slate-700">
-            إغلاق
-          </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function Metric({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
+  return <div className="rounded-2xl border hairline p-4 bg-[var(--panel)]"><div className="flex items-center justify-between gap-2"><span className="text-[10px] muted">{label}</span><Icon size={14} className="brand-text" /></div><div className="text-2xl font-bold mt-3 mono-number">{value}</div></div>;
 }

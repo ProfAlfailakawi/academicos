@@ -62,15 +62,15 @@ The following are intentionally disabled until their HTTPS endpoint/token/provid
 
 A configured state must correspond to real credentials. Never replace these gates with success placeholders.
 
-## 5. Billing and Kuwait gateways
+## 5. Global billing and optional regional gateways
 
-Billing stays disabled until merchant onboarding is complete. Select exactly one server-side provider with `BILLING_PROVIDER=disabled|stripe|tap|myfatoorah`; the implementation already supports Stripe Checkout, Tap hosted KNET charges, and MyFatoorah Execute Payment. Configure only that provider's credentials from `.env.example`, register its HTTPS webhook route, and exercise a signed sandbox payment/refund/cancellation cycle before enabling paid access.
+Billing stays disabled until merchant onboarding is complete. Select exactly one server-side provider with `BILLING_PROVIDER=disabled|stripe|tap|myfatoorah`; the implementation already supports Stripe Checkout, Tap hosted regional charges, and MyFatoorah Execute Payment. Configure only that provider's credentials from `.env.example`, register its HTTPS webhook route, and exercise a signed sandbox payment/refund/cancellation cycle before enabling paid access.
 
 The public application URL must be HTTPS in production. Provider event IDs are claimed atomically and only verified paid events can activate an entitlement.
 
-## 6. PACI / Kuwait Mobile ID readiness
+## 6. Optional regional digital-identity adapters
 
-The integration contract and readiness state are prepared, but identity remains disabled until PACI onboarding supplies the base URL, client credentials and callback secret. Add the values under `PACI_*`, register the exact HTTPS callback with PACI, and complete signed-callback, replay, tenant-binding and failure-path tests before exposing the option to users.
+The product defaults to Firebase Authentication globally. Country-specific identity adapters remain hidden and disabled unless their regional credentials are explicitly provisioned. For the optional PACI adapter, configure `PACI_*` only for deployments that require it, then complete signed-callback, replay, tenant-binding and failure-path tests before exposing that adapter.
 
 ## 7. Initial Platform Owner
 

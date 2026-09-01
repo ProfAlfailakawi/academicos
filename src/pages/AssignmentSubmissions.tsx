@@ -169,7 +169,7 @@ export function AssignmentSubmissions() {
                   </div>
                   <div className="text-[10px] muted mt-2">
                     {t("subm.attempt")} {item.attempt} ·{" "}
-                    {new Date(item.submittedAt).toLocaleString("ar-KW")}
+                    {new Date(item.submittedAt).toLocaleString(document.documentElement.lang || undefined)}
                   </div>
                   <div
                     dir="ltr"

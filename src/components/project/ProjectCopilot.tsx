@@ -4,6 +4,7 @@ import { api } from "../../lib/api";
 import type { CopilotMode, CopilotResponse, ProjectDNA } from "../../types";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { useI18n } from "../../lib/i18n";
 
 const modes: Array<{ id: CopilotMode; label: string; icon: React.ElementType }> = [
   { id: "file_search", label: "File Search", icon: FileSearch },
@@ -15,17 +16,18 @@ const modes: Array<{ id: CopilotMode; label: string; icon: React.ElementType }> 
 ];
 
 export function ProjectCopilot({ project }: { project: ProjectDNA }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<CopilotMode>("file_search");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<CopilotResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const placeholder = useMemo(() => {
-    if (mode === "research") return "ما المصادر التي أحتاج التحقق منها؟";
-    if (mode === "tutor") return "اشرح لي المفهوم الذي أحتاج فهمه لهذا المعيار";
-    if (mode === "viva_live") return "اختبرني بسؤال دفاع عن الدليل";
-    return "ابحث داخل المشروع أو اربط فكرة بالـ Rubric";
-  }, [mode]);
+    if (mode === "research") return t("copilot.phResearch");
+    if (mode === "tutor") return t("copilot.phTutor");
+    if (mode === "viva_live") return t("copilot.phViva");
+    return t("copilot.phDefault");
+  }, [mode, t]);
   async function run() {
     setBusy(true);
     setError("");
@@ -46,7 +48,7 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
             <ShieldCheck size={17} className="brand-text" />
             <h2 className="section-title">Project Copilot</h2>
           </div>
-          <p className="body-copy mt-2">AI يوجه الفهم، الأدلة، وRubric داخل ذاكرة المشروع فقط عند البحث المحلي.</p>
+          <p className="body-copy mt-2">{t("copilot.description")}</p>
           <div className="grid grid-cols-2 gap-2 mt-5">
             {modes.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setMode(id)} className={`focus-ring rounded-xl border hairline p-3 text-xs font-semibold flex items-center gap-2 ${mode === id ? "brand-soft-bg" : "hover:bg-[var(--panel-2)]"}`}>
@@ -58,13 +60,13 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
           <textarea value={query} onChange={(event) => setQuery(event.target.value)} placeholder={placeholder} className="focus-ring mt-5 w-full min-h-32 rounded-xl border hairline bg-[var(--bg)] p-3 text-sm leading-7" />
           <Button onClick={run} disabled={busy} className="mt-3">
             {busy ? <LoaderCircle size={16} className="animate-spin" /> : <Sparkles size={16} />}
-            شغّل Copilot
+            {t("copilot.run")}
           </Button>
           {error && <p className="text-xs text-[var(--danger)] mt-3">{error}</p>}
         </CardContent>
       </Card>
       <div className="space-y-5">
-        {result ? <CopilotResult result={result} /> : <Card><CardContent className="py-14 text-center"><Sparkles className="mx-auto brand-text" /><p className="body-copy mt-3">اختر وضعًا واكتب سؤالًا. كل نتيجة ستظهر مع citations وRubric/Evidence links.</p></CardContent></Card>}
+        {result ? <CopilotResult result={result} /> : <Card><CardContent className="py-14 text-center"><Sparkles className="mx-auto brand-text" /><p className="body-copy mt-3">{t("copilot.empty")}</p></CardContent></Card>}
       </div>
     </div>
   );

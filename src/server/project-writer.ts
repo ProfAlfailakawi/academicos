@@ -52,7 +52,7 @@ const EXPLANATION_STYLES = [
   "direct student voice with disciplined academic wording",
 ];
 const EXAMPLE_LENSES = [
-  "local Kuwait or Gulf context where genuinely relevant",
+  "locally relevant context where genuinely supported by the assignment or student input",
   "small realistic case comparison",
   "process and decision-making example",
   "stakeholder impact example",
@@ -90,8 +90,8 @@ export function buildVariationProfile(
 }
 
 function normalizeLanguage(value?: string) {
-  const language = String(value || "العربية").trim().slice(0, 80);
-  return language || "العربية";
+  const language = String(value || "English").trim().slice(0, 80);
+  return language || "English";
 }
 
 function words(value: string) {

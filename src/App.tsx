@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -9,7 +9,6 @@ import {
 import { Layout } from "./components/Layout";
 import { useI18n } from "./lib/i18n";
 import { useAuth } from "./contexts/AuthContext";
-import { api } from "./lib/api";
 const PublicHome = lazy(() =>
   import("./pages/PublicHome").then((m) => ({ default: m.PublicHome })),
 );
@@ -78,6 +77,24 @@ const MissionControl = lazy(() =>
 const RoleHome = lazy(() =>
   import("./pages/RoleHome").then((m) => ({ default: m.RoleHome })),
 );
+const ControlPlane = lazy(() =>
+  import("./pages/ControlPlane").then((m) => ({ default: m.ControlPlane })),
+);
+const PlatformHub = lazy(() =>
+  import("./pages/PlatformHub").then((m) => ({ default: m.PlatformHub })),
+);
+const Integrations = lazy(() =>
+  import("./pages/Integrations").then((m) => ({ default: m.Integrations })),
+);
+const UserManagement = lazy(() =>
+  import("./pages/UserManagement").then((m) => ({ default: m.UserManagement })),
+);
+const CurriculumTwin = lazy(() =>
+  import("./pages/CurriculumTwin").then((m) => ({ default: m.CurriculumTwin })),
+);
+const SupportConsole = lazy(() =>
+  import("./pages/SupportConsole").then((m) => ({ default: m.SupportConsole })),
+);
 
 const FACULTY_ROLES = new Set([
   "professor",
@@ -90,58 +107,73 @@ const FACULTY_ROLES = new Set([
   "root_owner",
 ]);
 
+const CONTROL_ROLES = new Set([
+  "department_admin",
+  "college_admin",
+  "university_admin",
+  "ai_governance_officer",
+  "accreditation_officer",
+  "national_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+const PLATFORM_ADMIN_ROLES = new Set([
+  "university_admin",
+  "national_admin",
+  "finance_admin",
+  "trust_safety_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+const USER_ADMIN_ROLES = new Set([
+  "university_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+const SUPPORT_ROLES = new Set([
+  "support_agent",
+  "trust_safety_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+
 function ProtectedLayout() {
-  const { user, loading, configured } = useAuth();
+  const { user, loading } = useAuth();
   const { t } = useI18n();
   const location = useLocation();
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  useEffect(() => {
-    if (
-      !user ||
-      !["student", "student_group_leader"].includes(user.role)
-    ) {
-      setNeedsOnboarding(false);
-      return;
-    }
-    let active = true;
-    setProfileLoading(true);
-    api
-      .profile()
-      .then((r) => {
-        if (active) setNeedsOnboarding(!r.profile.onboardingCompleted);
-      })
-      .catch(() => {
-        if (active) setNeedsOnboarding(false);
-      })
-      .finally(() => {
-        if (active) setProfileLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [user?.id, user?.role]);
-  if (loading || profileLoading)
+  if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
         <div className="eyebrow">{t("app.initializing")}</div>
       </div>
     );
-  if (!user) {
-    if (!configured)
-      return (
-        <Navigate to="/login" state={{ from: location.pathname }} replace />
-      );
+  if (!user)
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
-  if (needsOnboarding && location.pathname !== "/app/onboarding")
-    return <Navigate to="/app/onboarding" replace />;
   return <Layout />;
 }
 
 function FacultyGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   return user && FACULTY_ROLES.has(user.role) ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/app" replace />
+  );
+}
+
+function RoleGuard({
+  roles,
+  children,
+}: {
+  roles: ReadonlySet<string>;
+  children: React.ReactNode;
+}) {
+  const { user } = useAuth();
+  return user && roles.has(user.role) ? (
     <>{children}</>
   ) : (
     <Navigate to="/app" replace />
@@ -213,19 +245,37 @@ export default function App() {
             <Route path="plans" element={<Plans />} />
             <Route path="settings" element={<Settings />} />
             <Route path="semester" element={<Navigate to="/app" replace />} />
-            <Route path="curriculum-twin" element={<Navigate to="/app" replace />} />
+            <Route
+              path="curriculum-twin"
+              element={<RoleGuard roles={CONTROL_ROLES}><CurriculumTwin /></RoleGuard>}
+            />
             <Route path="invitations" element={<Navigate to="/app" replace />} />
-            <Route path="support-console" element={<Navigate to="/app" replace />} />
+            <Route
+              path="support-console"
+              element={<RoleGuard roles={SUPPORT_ROLES}><SupportConsole /></RoleGuard>}
+            />
             <Route path="calendar" element={<Navigate to="/app" replace />} />
             <Route path="notifications" element={<Navigate to="/app" replace />} />
             <Route path="skills" element={<Navigate to="/app" replace />} />
             <Route path="passport" element={<Navigate to="/app" replace />} />
             <Route path="archive" element={<Navigate to="/app" replace />} />
             <Route path="jobs" element={<Navigate to="/app" replace />} />
-            <Route path="control" element={<Navigate to="/app" replace />} />
-            <Route path="platform" element={<Navigate to="/app" replace />} />
-            <Route path="integrations" element={<Navigate to="/app" replace />} />
-            <Route path="users" element={<Navigate to="/app" replace />} />
+            <Route
+              path="control"
+              element={<RoleGuard roles={CONTROL_ROLES}><ControlPlane /></RoleGuard>}
+            />
+            <Route
+              path="platform"
+              element={<RoleGuard roles={PLATFORM_ADMIN_ROLES}><PlatformHub /></RoleGuard>}
+            />
+            <Route
+              path="integrations"
+              element={<RoleGuard roles={PLATFORM_ADMIN_ROLES}><Integrations /></RoleGuard>}
+            />
+            <Route
+              path="users"
+              element={<RoleGuard roles={USER_ADMIN_ROLES}><UserManagement /></RoleGuard>}
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

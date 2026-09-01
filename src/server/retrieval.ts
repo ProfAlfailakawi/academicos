@@ -32,7 +32,7 @@ function httpsEndpoint(value: string, key: string) {
 /** True when a semantic embedding provider (self-hosted gateway OR Gemini) is available. */
 export function embeddingsConfigured(env: NodeJS.ProcessEnv = process.env) {
   const selfHosted = Boolean(env.EMBEDDING_GATEWAY_URL && env.EMBEDDING_GATEWAY_TOKEN);
-  const gemini = Boolean(env.GEMINI_API_KEY && (env.EMBEDDING_MODEL || "text-embedding-004"));
+  const gemini = Boolean(env.GEMINI_API_KEY && (env.EMBEDDING_MODEL || "gemini-embedding-2"));
   return selfHosted || gemini;
 }
 
@@ -246,7 +246,7 @@ async function embedViaSelfHosted(texts: string[]): Promise<EmbedResult> {
 
 async function embedViaGemini(texts: string[]): Promise<EmbedResult> {
   const apiKey = String(process.env.GEMINI_API_KEY || "");
-  const model = String(process.env.EMBEDDING_MODEL || "text-embedding-004");
+  const model = String(process.env.EMBEDDING_MODEL || "gemini-embedding-2");
   if (!apiKey) throw Object.assign(new Error("Gemini embeddings are not configured"), { code: "AI_NOT_CONFIGURED" });
   const apiBase = process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com/v1beta";
   const modelPath = `models/${model.replace(/^models\//, "")}`;
@@ -273,7 +273,7 @@ async function embedViaGemini(texts: string[]): Promise<EmbedResult> {
 /** Embed a batch of texts through the configured backend. Empty input short-circuits. */
 export async function embedTexts(texts: string[]): Promise<EmbedResult> {
   const clean = texts.map((t) => clip(t, 8000)).filter(Boolean);
-  if (!clean.length) return { embeddings: [], backend: embeddingBackend() === "self_hosted" ? "self_hosted" : "gemini", model: String(process.env.EMBEDDING_MODEL || "text-embedding-004"), dim: 0 };
+  if (!clean.length) return { embeddings: [], backend: embeddingBackend() === "self_hosted" ? "self_hosted" : "gemini", model: String(process.env.EMBEDDING_MODEL || "gemini-embedding-2"), dim: 0 };
   const backend = embeddingBackend();
   if (backend === "self_hosted") return embedViaSelfHosted(clean);
   if (backend === "gemini") return embedViaGemini(clean);

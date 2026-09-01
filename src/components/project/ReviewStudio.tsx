@@ -328,7 +328,7 @@ function SnapshotMetric({ label, value }: { label: string; value: string }) {
 }
 function formatDate(value: string) {
   try {
-    return new Intl.DateTimeFormat("ar-KW", {
+    return new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(value));

@@ -29,7 +29,7 @@ export function buildSolveVariation(userId:string,problem:string,secret=process.
     id:d.toString('hex').slice(0,12),
     approach:pick(['principle-first','example-first','reverse verification','comparison-led','diagram-described-in-words'],0),
     explanation:pick(['compact numbered steps','question-and-answer checkpoints','concept then calculation','mistake-aware walkthrough','units-and-assumptions first'],7),
-    example:pick(['Kuwait-relevant when applicable','minimal numeric analogy','everyday decision analogy','counterexample check','alternate method comparison'],13),
+    example:pick(['locally relevant when genuinely applicable','minimal numeric analogy','everyday decision analogy','counterexample check','alternate method comparison'],13),
   };
 }
 
@@ -70,7 +70,7 @@ export function solverPlatformInstruction(mode: SolveMode, language: string): st
 }
 
 export function buildSolveRequest(input: { problem: string; language?: string; mode: SolveMode; context?: string; variation?:SolveVariation }): AcademicTaskInput {
-  const language = clip(input.language, 40) || 'العربية';
+  const language = clip(input.language, 40) || 'English';
   const problem = clip(input.problem, 4000);
   return {
     taskType: input.mode === 'worked' ? 'worked_solution' : 'guided_solution',
@@ -106,14 +106,14 @@ export function toSolveResult(mode: SolveMode, language: string, output: Academi
   const practiceQuestion = practice?.replace(/^PRACTICE\s*:\s*/i, '').trim();
   const verify = suggestions.filter(x => x !== practice).slice(0, 10);
   const caveats = (output.warnings || []).map(x => clip(x, 600)).filter(Boolean).slice(0, 10);
-  const lang = clip(language, 40) || 'العربية';
+  const lang = clip(language, 40) || 'English';
   if (mode === 'worked')
     return { mode, language: lang, finalAnswer: clip(output.summary, 4000), steps, verify, practiceQuestion, caveats, disclosure: DISCLOSURE_WORKED, source: 'ai' };
   return { mode, language: lang, strategy: clip(output.summary, 4000), steps, verify, practiceQuestion, caveats, disclosure: DISCLOSURE_GUIDED, source: 'ai' };
 }
 
 export function nativeSolveScaffold(mode: SolveMode, language?: string): SolveResult {
-  const lang = clip(language, 40) || 'العربية';
+  const lang = clip(language, 40) || 'English';
   const base = {
     mode, language: lang, steps: [
       'حدّد المطلوب والمعطيات بدقة.',

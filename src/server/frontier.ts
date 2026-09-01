@@ -231,7 +231,7 @@ export interface IntegrityLintResult {
 
 const RECALL_VERBS=['اذكر','عرّف','عدد','لخّص','اكتب تعريف','define','list','summarize','describe','state','recall'];
 const AUTHENTIC_MARKERS=['حلل','قارن','قيّم','صمم','برهن','ناقش','طبّق على','بيانات','دراسة حالة','مشروع','analyze','evaluate','design','critique','apply','dataset','case study'];
-const LOCAL_MARKERS=['الكويت','جامعتك','مجتمعك','بيئتك المحلية','بياناتك','local','your community','your data','your institution'];
+const LOCAL_MARKERS=['جامعتك','مجتمعك','بيئتك المحلية','بياناتك','local','your community','your data','your institution','local context','regional context'];
 
 export function lintAssignmentIntegrity(assignment:CourseAssignmentRecord):IntegrityLintResult{
   const text=`${assignment.title} ${assignment.instructions}`; const key=normalize(text);
@@ -256,7 +256,7 @@ export function lintAssignmentIntegrity(assignment:CourseAssignmentRecord):Integ
   const band:IntegrityLintResult['band']=score>=75?'authentic':score>=50?'moderate':'at_risk';
   const recommendations=signals.filter(s=>!s.present).map(s=>({
     authentic_task:'أضف مطلبًا لتحليل/تصميم/تطبيق بدل الاسترجاع.',
-    local_context:'اربط التكليف ببيانات الطالب أو سياق محلي (مثال: حالة من الكويت/جامعتك).',
+    local_context:'اربط التكليف ببيانات الطالب أو المؤسسة أو بسياق محلي/إقليمي ذي صلة، من دون افتراض دولة بعينها.',
     process_evidence:'اطلب مسودة أو تأملًا أو فعّل Viva قصيرة كدليل تأليف.',
     rubric_process:'أضف معيار Rubric يكافئ منهج التفكير والأصالة.',
     recall_heavy:'أعد صياغة الأفعال الاسترجاعية إلى أفعال عليا (حلل/قيّم/صمم).',

@@ -179,7 +179,7 @@ export function Support() {
                         </h3>
                       </div>
                       <time className="text-[9px] muted shrink-0">
-                        {new Date(ticket.updatedAt).toLocaleDateString("ar-KW")}
+                        {new Date(ticket.updatedAt).toLocaleDateString(document.documentElement.lang || undefined)}
                       </time>
                     </div>
                     <p className="text-xs leading-6 muted mt-3 whitespace-pre-wrap">

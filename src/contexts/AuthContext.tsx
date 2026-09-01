@@ -9,6 +9,7 @@ import {
   createUserWithEmailAndPassword,
   getIdTokenResult,
   onAuthStateChanged,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
@@ -32,7 +33,9 @@ interface AuthState {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendVerification: () => Promise<void>;
 }
+
 const Context = createContext<AuthState | null>(null);
 const allowedRoles: UserRole[] = [
   "student",
@@ -54,12 +57,13 @@ const allowedRoles: UserRole[] = [
   "superadmin",
   "root_owner",
 ];
+
 async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
-  const token = await getIdTokenResult(user),
-    rawRole = String(token.claims.role || "student"),
-    role: UserRole = allowedRoles.includes(rawRole as UserRole)
-      ? (rawRole as UserRole)
-      : "student";
+  const token = await getIdTokenResult(user, true);
+  const rawRole = String(token.claims.role || "student");
+  const role: UserRole = allowedRoles.includes(rawRole as UserRole)
+    ? (rawRole as UserRole)
+    : "student";
   return {
     id: user.uid,
     email: user.email || "",
@@ -67,6 +71,7 @@ async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
       user.displayName || user.email?.split("@")[0] || "AcademicOS user",
     role,
     tenantId: String(token.claims.tenantId || `individual_${user.uid}`),
+    emailVerified: Boolean(user.emailVerified),
     impersonation: token.claims.impersonatorId
       ? {
           actorId: String(token.claims.impersonatorId),
@@ -78,52 +83,49 @@ async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
       : undefined,
   };
 }
+
+function requireFirebase() {
+  if (!firebaseAuth || !firebaseClientConfigured) {
+    const error = new Error(
+      "Firebase Authentication is not configured for this environment. No local fallback session is available in launch mode.",
+    ) as Error & { code?: string };
+    error.code = "auth/not-configured";
+    throw error;
+  }
+  return firebaseAuth;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(false),
-    [user, setUser] = useState<User | null>(() => {
-      try {
-        const saved = localStorage.getItem("academicos_local_user");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-      return null;
-    });
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!firebaseAuth) {
-      setLoading(false);
-      setApiTokenProvider(async () => null);
-      setApiAppCheckTokenProvider(async () =>
-        firebaseAppCheck
-          ? (await getAppCheckToken(firebaseAppCheck, false)).token
-          : null,
-      );
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (current) => {
-      try {
-        if (current) {
-          const mapped = await mapFirebaseUser(current);
-          setUser(mapped);
-          localStorage.setItem("academicos_local_user", JSON.stringify(mapped));
-        } else {
-          // If no firebase user, check if we have local fallback user
-          const saved = localStorage.getItem("academicos_local_user");
-          if (!saved) {
-            setUser(null);
-          }
-        }
-      } finally {
-        setLoading(false);
-      }
-    });
     setApiTokenProvider(async () =>
-      firebaseAuth.currentUser ? firebaseAuth.currentUser.getIdToken() : null,
+      firebaseAuth?.currentUser ? firebaseAuth.currentUser.getIdToken() : null,
     );
     setApiAppCheckTokenProvider(async () =>
       firebaseAppCheck
         ? (await getAppCheckToken(firebaseAppCheck, false)).token
         : null,
     );
+
+    if (!firebaseAuth) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (current) => {
+      try {
+        setUser(current ? await mapFirebaseUser(current) : null);
+      } catch (error) {
+        console.error("Failed to map authenticated Firebase user", error);
+        setUser(null);
+        await signOut(firebaseAuth).catch(() => undefined);
+      } finally {
+        setLoading(false);
+      }
+    });
     return unsubscribe;
   }, []);
 
@@ -133,83 +135,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       configured: firebaseClientConfigured,
       login: async (email, password) => {
-        const cleanEmail = email.trim().toLowerCase();
-        const isAdmin = cleanEmail === "dr.ahmad.alfailakawi@gmail.com";
-        const role: UserRole = isAdmin ? "root_owner" : "student";
-        
-        try {
-          if (firebaseAuth) {
-            await signInWithEmailAndPassword(firebaseAuth, email, password);
-            return;
-          }
-        } catch (err: any) {
-          // If operation-not-allowed or any auth error, gracefully fallback to professional local session
-          console.warn("Firebase Auth fallback engaged:", err?.message || err);
-        }
-
-        // Professional seamless local session fallback so user is never blocked
-        const localUser: User = {
-          id: `local_${btoa(cleanEmail).replace(/=/g, "")}`,
-          email: cleanEmail,
-          displayName: cleanEmail.split("@")[0] || "AcademicOS User",
-          role,
-          tenantId: `individual_${cleanEmail}`,
-        };
-        setUser(localUser);
-        localStorage.setItem("academicos_local_user", JSON.stringify(localUser));
+        const auth = requireFirebase();
+        await signInWithEmailAndPassword(auth, email.trim(), password);
       },
       signup: async (name, email, password) => {
-        const cleanEmail = email.trim().toLowerCase();
-        const isAdmin = cleanEmail === "dr.ahmad.alfailakawi@gmail.com";
-        const role: UserRole = isAdmin ? "root_owner" : "student";
-
-        try {
-          if (firebaseAuth) {
-            const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-            await updateProfile(result.user, { displayName: name.trim() || cleanEmail.split("@")[0] });
-            const mapped = await mapFirebaseUser(result.user);
-            setUser(mapped);
-            localStorage.setItem("academicos_local_user", JSON.stringify(mapped));
-            return;
-          }
-        } catch (err: any) {
-          console.warn("Firebase Signup fallback engaged:", err?.message || err);
-        }
-
-        // Professional seamless local session fallback
-        const localUser: User = {
-          id: `local_${btoa(cleanEmail).replace(/=/g, "")}`,
-          email: cleanEmail,
-          displayName: name.trim() || cleanEmail.split("@")[0],
-          role,
-          tenantId: `individual_${cleanEmail}`,
-        };
-        setUser(localUser);
-        localStorage.setItem("academicos_local_user", JSON.stringify(localUser));
+        const auth = requireFirebase();
+        const result = await createUserWithEmailAndPassword(
+          auth,
+          email.trim().toLowerCase(),
+          password,
+        );
+        await updateProfile(result.user, {
+          displayName:
+            name.trim() || result.user.email?.split("@")[0] || "AcademicOS learner",
+        });
+        await sendEmailVerification(result.user).catch(() => undefined);
+        await result.user.getIdToken(true);
+        setUser(await mapFirebaseUser(result.user));
       },
       logout: async () => {
-        try {
-          if (firebaseAuth) await signOut(firebaseAuth);
-        } catch {}
+        if (firebaseAuth) await signOut(firebaseAuth);
         setUser(null);
-        localStorage.removeItem("academicos_local_user");
       },
       resetPassword: async (email) => {
-        try {
-          if (firebaseAuth) {
-            await sendPasswordResetEmail(firebaseAuth, email);
-            return;
-          }
-        } catch (err: any) {
-          console.warn("Password reset fallback:", err);
-        }
-        // Always succeed professionally for the user
+        const auth = requireFirebase();
+        await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+      },
+      resendVerification: async () => {
+        const auth = requireFirebase();
+        if (!auth.currentUser) throw new Error("Authentication required");
+        if (!auth.currentUser.emailVerified) await sendEmailVerification(auth.currentUser);
       },
     }),
     [user, loading],
   );
+
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
+
 export function useAuth() {
   const ctx = useContext(Context);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");

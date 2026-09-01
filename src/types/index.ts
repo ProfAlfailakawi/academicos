@@ -24,8 +24,9 @@ export interface User {
   displayName: string;
   role: UserRole;
   tenantId: string;
-  locale?: "ar" | "en";
+  locale?: "ar" | "en" | "tr" | "zh" | "hi" | "es" | "fr" | "ur";
   createdAt?: string;
+  emailVerified?: boolean;
   impersonation?: { actorId: string; readOnly: true; expiresAt: string };
 }
 
@@ -145,6 +146,7 @@ export interface ProjectDNA {
   instructor?: string;
   projectType: string;
   academicDomain: string;
+  language?: string;
   complexity: "low" | "medium" | "high";
   collaborationMode: "individual" | "group";
   requiredSkills: string[];
@@ -515,6 +517,21 @@ export interface ProjectXRayReport {
   professorQuestions: string[];
 }
 
+export interface AcademicSourceRecord {
+  doi: string;
+  title: string;
+  authors: string[];
+  year?: number;
+  containerTitle?: string;
+  citedByCount?: number;
+  issn?: string[];
+  url: string;
+  type?: string;
+  licenseUrls?: string[];
+  provider: "crossref";
+  metadataVerifiedAt: string;
+}
+
 export interface ProjectEvidence {
   id: string;
   projectId: string;
@@ -558,7 +575,7 @@ export interface UserProfile {
   tenantId: string;
   displayName: string;
   email: string;
-  language?: "ar" | "en";
+  language?: "ar" | "en" | "tr" | "zh" | "hi" | "es" | "fr" | "ur";
   country?: string;
   university?: string;
   specialization?: string;
@@ -1470,38 +1487,39 @@ export interface PublicPlatformShare {
 
 export interface SentenceAnalysis {
   text: string;
-  aiProbability: number;
-  burstinessScore: number;
-  perplexityIndicator: "very_low" | "low" | "medium" | "high" | "human_like";
+  styleRiskScore: number;
+  rhythmDeviation: number;
   reasons: string[];
   highlightColor: "red" | "orange" | "yellow" | "green";
 }
 
-export interface DeepAIDetectionReport {
-  overallAIScore: number;
-  verdict: "authentic_human" | "human_ai_collaborative" | "likely_ai_generated" | "heavily_synthetic_ai";
+export interface StyleIntegrityReport {
+  styleRiskScore: number;
+  verdict: "clear" | "review_recommended" | "attention_required";
   verdictLabel: string;
-  confidenceScore: number;
+  analysisConfidence: number;
+  disclaimer: string;
   metrics: {
-    perplexityScore: number;
-    burstinessScore: number;
     vocabularyDiversity: number;
+    sentenceRhythmVariety: number;
     syntacticUniformity: number;
-    aiHallmarkPhrasesCount: number;
-    ghostCitationCount: number;
-    passiveOveruseScore: number;
+    clichéCount: number;
+    citationVerificationFlags: number;
+    unsupportedQuantitativeClaims: number;
+    transitionOveruseScore: number;
   };
   sentenceBreakdown: SentenceAnalysis[];
   detectedClichés: Array<{
     phrase: string;
-    category: "ai_hallmark" | "hedging" | "fake_elaboration" | "robotic_transition";
+    category: "formulaic" | "hedging" | "empty_elaboration" | "robotic_transition";
     occurrences: number;
   }>;
-  forensicSignals: Array<{
+  signals: Array<{
     title: string;
     description: string;
     severity: "low" | "medium" | "high" | "critical";
   }>;
-  humanizationRecommendations: string[];
+  recommendations: string[];
 }
 
+export type DeepAIDetectionReport = StyleIntegrityReport;

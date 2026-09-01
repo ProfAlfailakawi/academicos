@@ -53,6 +53,7 @@ function validateAcademicTaskOutput(value:unknown):AcademicTaskOutput{if(!value|
 export const ASSIGNMENT_OUTPUT_SCHEMA = {
   type: 'OBJECT',
   properties: {
+    language: { type: 'STRING' },
     title: { type: 'STRING' }, course: { type: 'STRING' }, instructor: { type: 'STRING' }, projectType: { type: 'STRING' }, academicDomain: { type: 'STRING' },
     complexity: { type: 'STRING', enum: ['low', 'medium', 'high'] }, collaborationMode: { type: 'STRING', enum: ['individual', 'group'] },
     requiredSkills: { type: 'ARRAY', items: { type: 'STRING' } }, learningOutcomes: { type: 'ARRAY', items: { type: 'STRING' } }, requiredActions: { type: 'ARRAY', items: { type: 'STRING' } },

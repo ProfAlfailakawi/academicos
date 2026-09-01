@@ -43,7 +43,7 @@ export function tutorPlatformInstruction(language: string, level: string): strin
 
 // يبني طلب المهمة (نقي/حتمي) لبوابة الـAI.
 export function buildTutorRequest(input: { topic: string; language?: string; level?: string; context?: string }): AcademicTaskInput {
-  const language = clip(input.language, 40) || 'العربية';
+  const language = clip(input.language, 40) || 'English';
   const level = normLevel(input.level);
   const topic = clip(input.topic, 600);
   return {
@@ -60,7 +60,7 @@ export function buildTutorRequest(input: { topic: string; language?: string; lev
 export function toLesson(topic: string, language: string, level: string, output: AcademicTaskOutput): TutorLesson {
   return {
     topic: clip(topic, 300),
-    language: clip(language, 40) || 'العربية',
+    language: clip(language, 40) || 'English',
     level: normLevel(level),
     intuition: clip(output.summary, 4000),
     buildingBlocks: (output.findings || []).map(x => clip(x, 800)).filter(Boolean).slice(0, 20),
@@ -76,7 +76,7 @@ export function nativeTutorScaffold(topic: string, language?: string, level?: st
   const t = clip(topic, 300) || 'الموضوع';
   return {
     topic: t,
-    language: clip(language, 40) || 'العربية',
+    language: clip(language, 40) || 'English',
     level: normLevel(level),
     intuition: `لا يوجد معلّم ذكاء اصطناعي مُهيّأ حاليًا، لذا لا يمكن توليد شرح كامل لـ«${t}». هذا هيكل تعلّم لتبدأ به يدويًا.`,
     buildingBlocks: [

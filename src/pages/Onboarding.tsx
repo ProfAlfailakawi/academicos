@@ -11,12 +11,12 @@ import { useNavigate } from "react-router";
 import { api } from "../lib/api";
 import type { UserProfile } from "../types";
 import { Button } from "../components/ui/button";
-import { useI18n } from "../lib/i18n";
+import { LOCALES, type LocaleCode, useI18n } from "../lib/i18n";
 
 const steps = [
   {
     key: "language",
-    options: [["ar"], ["en"]] as const,
+    options: LOCALES.map((item) => [item.code] as const),
   },
   { key: "country" },
   { key: "university" },
@@ -29,11 +29,11 @@ const steps = [
 type StepKey = (typeof steps)[number]["key"];
 
 export function Onboarding() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
-    language: "ar",
+    language: locale,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [saving, setSaving] = useState(false);
@@ -52,7 +52,8 @@ export function Onboarding() {
         : String(profile[current.key as keyof UserProfile] || ""),
     [current.key, profile],
   );
-  const setValue = (v: string) =>
+  const setValue = (v: string) => {
+    if (current.key === "language" && LOCALES.some((item) => item.code === v)) setLocale(v as LocaleCode);
     setProfile((p) => ({
       ...p,
       [current.key]:
@@ -63,6 +64,7 @@ export function Onboarding() {
               .filter(Boolean)
           : v,
     }));
+  };
 
   async function finish() {
     setSaving(true);
@@ -127,7 +129,7 @@ export function Onboarding() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">
-                        {v === "en" ? "English" : t(`onboard.langOpt.${v}`)}
+                        {LOCALES.find((item) => item.code === v)?.name || v}
                       </span>
                       {value === v && (
                         <Check size={18} className="brand-text" />

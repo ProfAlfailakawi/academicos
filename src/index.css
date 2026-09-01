@@ -583,3 +583,10 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
   .plan-card { min-height: 350px; }
   .plan-card.is-popular { transform: none; }
 }
+
+.language-switcher{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--line);border-radius:.85rem;padding:.1rem .6rem;background:var(--panel);color:var(--ink)}
+.language-switcher select{color:inherit;max-width:9rem}
+.language-switcher--compact{padding-inline:.45rem}
+html[dir="ltr"] .rtl-only{display:none!important}
+html[dir="rtl"] .ltr-only{display:none!important}
+.directional-icon{transition:transform .15s ease}html[dir="rtl"] .directional-icon{transform:rotate(180deg)}

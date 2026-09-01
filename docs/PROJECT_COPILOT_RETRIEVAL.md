@@ -19,7 +19,7 @@
   مفصولة بصرامة بـ `scopeKey = tenant__project__id`. **لا تُرفع ملفات الطلاب الخام إلى أي مخزن File Search مُدار من طرف ثالث.**
 - **مزوّد embeddings قابل للتبديل** (الأسبقية للذاتي):
   1. نقطة ذاتية الاستضافة عبر `EMBEDDING_GATEWAY_URL`/`_TOKEN` — للمؤسسات التي تريد إبقاء كل شيء داخليًا.
-  2. Gemini embeddings (`EMBEDDING_MODEL`, افتراضي `text-embedding-004`) — يُرسل نص المقاطع **مؤقتًا** فقط، ولا تخزّنه Google.
+  2. Gemini embeddings (`EMBEDDING_MODEL`, افتراضي `gemini-embedding-2`) — يُرسل نص المقاطع **مؤقتًا** فقط، ولا تخزّنه Google.
 - هذا متسق مع فلسفة الـ**Federated Academic Graph** (تكافؤ عبر hashes فقط) في [FRONTIER_ENGINES](FRONTIER_ENGINES.md).
 
 ## المسارات (API)
@@ -47,7 +47,7 @@
 ```
 # File Search — أحد الخيارين:
 EMBEDDING_GATEWAY_URL=...      EMBEDDING_GATEWAY_TOKEN=...   # (أ) ذاتي الاستضافة
-EMBEDDING_MODEL=text-embedding-004                          # (ب) Gemini (يستخدم GEMINI_API_KEY)
+EMBEDDING_MODEL=gemini-embedding-2                          # (ب) Gemini (يستخدم GEMINI_API_KEY)
 
 # Grounding — أحد الخيارين + تفعيل الـflag ResearchStudioGrounding:
 GOOGLE_SEARCH_GROUNDING_ENDPOINT=... GOOGLE_SEARCH_GROUNDING_TOKEN=...  # (أ) بوابة مؤسسية

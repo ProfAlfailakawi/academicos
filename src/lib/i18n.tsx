@@ -24,7 +24,27 @@ export const LOCALES: LocaleMeta[] = [
 ];
 
 export function localeMeta(code: LocaleCode): LocaleMeta {
-  return LOCALES.find((l) => l.code === code) || LOCALES[0];
+  return LOCALES.find((l) => l.code === code) || LOCALES.find((l) => l.code === "en") || LOCALES[0];
+}
+
+export function localeIntlTag(code: LocaleCode): string {
+  return localeMeta(code).speech;
+}
+
+export function formatDateTime(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(localeIntlTag(locale), options || { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+export function formatDate(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(localeIntlTag(locale), options || { dateStyle: "medium" }).format(date);
+}
+
+export function formatMoney(amount: number, currency: string, locale: LocaleCode) {
+  return new Intl.NumberFormat(localeIntlTag(locale), { style: "currency", currency, maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
 }
 
 type Dict = Record<string, string>;
@@ -94,8 +114,16 @@ function initialLocale(): LocaleCode {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as LocaleCode | null;
     if (saved && LOCALES.some((l) => l.code === saved)) return saved;
+    const candidates = Array.isArray(navigator.languages) && navigator.languages.length ? navigator.languages : [navigator.language];
+    for (const candidate of candidates) {
+      const normalized = String(candidate || "").toLowerCase();
+      const exact = LOCALES.find((l) => normalized === l.code || normalized.startsWith(`${l.code}-`));
+      if (exact) return exact.code;
+      if (normalized.startsWith("zh")) return "zh";
+      if (normalized.startsWith("ur")) return "ur";
+    }
   } catch {}
-  return "ar";
+  return "en";
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {

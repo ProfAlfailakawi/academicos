@@ -2,17 +2,8 @@ import { initializeApp, getApps } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
-const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBTsN8lR4KmWHwH9LM1xvMxh13mn3LvUws",
-  authDomain: "tebyan-clean-2026-5f13b.firebaseapp.com",
-  projectId: "tebyan-clean-2026-5f13b",
-  storageBucket: "tebyan-clean-2026-5f13b.firebasestorage.app",
-  messagingSenderId: "522016905178",
-  appId: "1:522016905178:web:c5fe247cc7d44a045c52e3",
-};
-
 // يقرأ الإعداد أولًا من window.__ENV__ (حقن وقت التشغيل عبر public/env-config.js)
-// ثم يعود لمتغيرات البناء (import.meta.env)، ثم إلى التكوين الافتراضي للمشروع.
+// ثم يعود لمتغيرات البناء (import.meta.env). لا يوجد أي مشروع Firebase افتراضي مخفي.
 const runtimeEnv: Record<string, string | undefined> =
   (typeof window !== 'undefined' && (window as any).__ENV__) || {};
 
@@ -25,12 +16,12 @@ function envValue(key: string, fallback?: string): string | undefined {
 }
 
 const config = {
-  apiKey: envValue('VITE_FIREBASE_API_KEY', DEFAULT_FIREBASE_CONFIG.apiKey),
-  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN', DEFAULT_FIREBASE_CONFIG.authDomain),
-  projectId: envValue('VITE_FIREBASE_PROJECT_ID', DEFAULT_FIREBASE_CONFIG.projectId),
-  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET', DEFAULT_FIREBASE_CONFIG.storageBucket),
-  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID', DEFAULT_FIREBASE_CONFIG.messagingSenderId),
-  appId: envValue('VITE_FIREBASE_APP_ID', DEFAULT_FIREBASE_CONFIG.appId),
+  apiKey: envValue('VITE_FIREBASE_API_KEY'),
+  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN'),
+  projectId: envValue('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: envValue('VITE_FIREBASE_APP_ID'),
 };
 
 export const firebaseClientConfigured = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);

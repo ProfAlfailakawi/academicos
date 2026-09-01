@@ -1,193 +1,104 @@
-import React, { useState } from "react";
-import {
-  ListChecks,
-  CheckCircle2,
-  AlertCircle,
-  FileSearch,
-  Sparkles,
-  Layers,
-  ArrowRight,
-  TrendingUp,
-  SlidersHorizontal,
-} from "lucide-react";
-import type { ProjectDNA } from "../../types";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-
-interface DecomposedRequirement {
-  id: string;
-  category: "formatting" | "methodology" | "sources" | "rubric_target";
-  title: string;
-  exactSpecification: string;
-  complianceLevel: "fulfilled" | "partial" | "missing";
-  detectedConfidence: number;
-  mappedSection: string;
-}
+import React, { useMemo, useState } from "react";
+import { ListChecks, CheckCircle2, AlertCircle, HelpCircle, Target, FileSearch } from "lucide-react";
+import type { ProjectDNA, Requirement } from "../../types";
+import { useI18n } from "../../lib/i18n";
 
 export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
-  const [filter, setFilter] = useState<string>("all");
-
-  const [specs, setSpecs] = useState<DecomposedRequirement[]>([
-    {
-      id: "req-1",
-      category: "formatting",
-      title: "التنسيق الأكاديمي والخطوط (APA 7)",
-      exactSpecification: "حجم الخط 12، تباعد الأسطر 1.5، وهوامش 2.54 سم من كافة الجهات مع ترقيم الصفحات أعلى اليسار.",
-      complianceLevel: "fulfilled",
-      detectedConfidence: 99,
-      mappedSection: "General Formatting",
-    },
-    {
-      id: "req-2",
-      category: "sources",
-      title: "الحد الأدنى لعدد المراجع وفترة النشر",
-      exactSpecification: "لا يقل عن 8 أبحاث محكمة ومنشورة بعد عام 2020 ذات صلة مباشرة بعنوان التكليف.",
-      complianceLevel: "fulfilled",
-      detectedConfidence: 95,
-      mappedSection: "References & Bibliography",
-    },
-    {
-      id: "req-3",
-      category: "methodology",
-      title: "توضيح إجراءات الصدق والثبات (Validity & Reliability)",
-      exactSpecification: "ذكر أدوات جمع البيانات، حجم العينة الدقيق، ومعامل ألفا كرونباخ أو خطوات التثليث المنهجي.",
-      complianceLevel: "fulfilled",
-      detectedConfidence: 92,
-      mappedSection: "Chapter 3: Methodology",
-    },
-    {
-      id: "req-4",
-      category: "rubric_target",
-      title: "توصيات قابلة للتطبيق العملي (Practical Implications)",
-      exactSpecification: "تقديم 3 توصيات موجهة لصناع القرار مبنية رقمياً على نتائج الفصل الرابع.",
-      complianceLevel: "partial",
-      detectedConfidence: 80,
-      mappedSection: "Conclusion & Recommendations",
-    },
-  ]);
-
-  const fulfilledCount = specs.filter((s) => s.complianceLevel === "fulfilled").length;
-  const overallPercentage = Math.round((fulfilledCount / specs.length) * 100);
+  const { t } = useI18n();
+  const categoryLabel = (category: Requirement["category"]) => t(`req.category.${category}`);
+  const confidenceLabel = (confidence: Requirement["confidence"]) => t(`req.confidence.${confidence}`);
+  const [filter, setFilter] = useState<"all" | Requirement["category"] | "rubric">("all");
+  const requirements = project.requirements || [];
+  const rubric = project.rubric || [];
+  const rubricCovered = rubric.filter((item) => item.readiness === "covered").length;
+  const rubricPartial = rubric.filter((item) => item.readiness === "partial" || item.readiness === "needs_revision").length;
+  const rubricUnknown = rubric.filter((item) => !item.readiness || item.readiness === "not_evidenced").length;
+  const visibleRequirements = useMemo(
+    () => requirements.filter((item) => filter === "all" || (filter !== "rubric" && item.category === filter)),
+    [filter, requirements],
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
       <div className="rounded-2xl border hairline bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 grid place-items-center shrink-0">
-            <ListChecks size={22} />
-          </div>
+          <div className="h-11 w-11 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 grid place-items-center shrink-0"><ListChecks size={22} /></div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-violet-600 dark:text-violet-400">
-                Reverse Engineering Matrix
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-violet-500/15 text-violet-700 dark:text-violet-300 font-semibold border border-violet-500/20">
-                تفكيك شروط التكليف الصريحة والضمنية
-              </span>
-            </div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">
-              مصفوفة تفكيك ومطابقة متطلبات التكليف (100% Rubric Match)
-            </h2>
+            <div className="text-[10px] font-bold tracking-wider uppercase text-violet-600 dark:text-violet-400">Requirement Truth Matrix</div>
+            <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("req.title")}</h2>
+            <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">{t("req.description")}</p>
           </div>
         </div>
-
-        <div className="flex items-center gap-3 bg-[var(--panel)] p-3 rounded-xl border hairline">
-          <div className="text-right">
-            <div className="text-[10px] text-muted-foreground font-semibold">نسبة استيفاء شروط التكليف</div>
-            <div className="text-lg font-bold font-mono text-violet-600 dark:text-violet-400">
-              {overallPercentage}% مكتمل
-            </div>
-          </div>
-          <div className="h-9 w-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 grid place-items-center font-mono font-bold text-xs">
-            {fulfilledCount}/{specs.length}
-          </div>
+        <div className="grid grid-cols-2 gap-2 min-w-[220px]">
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[10px] text-muted-foreground">{t("req.extracted")}</div><div className="text-xl font-bold font-mono text-violet-600">{requirements.length}</div></div>
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[10px] text-muted-foreground">{t("req.rubricCriteria")}</div><div className="text-xl font-bold font-mono text-violet-600">{rubric.length}</div></div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex gap-2 text-xs flex-wrap">
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${filter === "all" ? "bg-violet-600 text-white border-violet-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}
-        >
-          كل الشروط ({specs.length})
-        </button>
-        <button
-          onClick={() => setFilter("formatting")}
-          className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${filter === "formatting" ? "bg-violet-600 text-white border-violet-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}
-        >
-          الشروط الشكلية والتنسيق
-        </button>
-        <button
-          onClick={() => setFilter("methodology")}
-          className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${filter === "methodology" ? "bg-violet-600 text-white border-violet-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}
-        >
-          الشروط المنهجية
-        </button>
-        <button
-          onClick={() => setFilter("sources")}
-          className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${filter === "sources" ? "bg-violet-600 text-white border-violet-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}
-        >
-          شروط المراجع والتوثيق
-        </button>
+        <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>{t("req.all")} ({requirements.length})</FilterButton>
+        {(["format", "content", "source", "deadline", "submission", "policy"] as Requirement["category"][]).map((category) => {
+          const count = requirements.filter((item) => item.category === category).length;
+          return count ? <FilterButton key={category} active={filter === category} onClick={() => setFilter(category)}>{categoryLabel(category)} ({count})</FilterButton> : null;
+        })}
+        <FilterButton active={filter === "rubric"} onClick={() => setFilter("rubric")}>Rubric ({rubric.length})</FilterButton>
       </div>
 
-      {/* Specification Checklist Cards */}
-      <div className="space-y-3.5">
-        {specs
-          .filter((s) => filter === "all" || s.category === filter)
-          .map((spec) => (
-            <div
-              key={spec.id}
-              className="rounded-2xl border hairline bg-[var(--panel)] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-violet-500/40 transition-colors"
-            >
-              <div className="space-y-1.5 flex-1">
+      {filter !== "rubric" && (
+        <div className="space-y-3.5">
+          {visibleRequirements.length ? visibleRequirements.map((item) => (
+            <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="h-6 w-6 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 grid place-items-center text-xs font-bold shrink-0">
-                    <CheckCircle2 size={15} />
-                  </span>
-                  <h3 className="text-sm font-bold text-foreground">{spec.title}</h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-muted text-muted-foreground">
-                    {spec.mappedSection}
-                  </span>
+                  <span className="h-6 w-6 rounded-lg bg-violet-500/10 text-violet-600 grid place-items-center"><FileSearch size={14} /></span>
+                  <h3 className="text-sm font-bold">{item.label}</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground">{categoryLabel(item.category)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed pr-8">
-                  {spec.exactSpecification}
-                </p>
+                <p className="text-xs text-muted-foreground leading-6 md:pr-8 whitespace-pre-wrap">{item.value || t("req.noDetail")}</p>
+                {item.source && <p className="text-[10px] text-muted-foreground">{t("req.source")}: {item.source}</p>}
               </div>
-
-              <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
-                <div className="text-right font-mono text-[11px]">
-                  <div className="text-[10px] text-muted-foreground">دقة الكشف</div>
-                  <span className="font-bold text-violet-600 dark:text-violet-400">
-                    {spec.detectedConfidence}%
-                  </span>
-                </div>
-
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${
-                    spec.complianceLevel === "fulfilled"
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                  }`}
-                >
-                  {spec.complianceLevel === "fulfilled" ? (
-                    <>
-                      <CheckCircle2 size={13} />
-                      مستوفى بالكامل
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle size={13} />
-                      مستوفى جزئياً
-                    </>
-                  )}
-                </span>
-              </div>
+              <Confidence confidence={item.confidence} label={confidenceLabel(item.confidence)} />
             </div>
-          ))}
-      </div>
+          )) : (
+            <Empty text={requirements.length ? t("req.emptyCategory") : t("req.emptyAll")} />
+          )}
+        </div>
+      )}
+
+      {filter === "rubric" && (
+        <div className="space-y-4">
+          {rubric.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <Metric label={t("req.covered")} value={rubricCovered} />
+              <Metric label={t("req.partial")} value={rubricPartial} />
+              <Metric label={t("req.unknown")} value={rubricUnknown} />
+            </div>
+          )}
+          {rubric.length ? rubric.map((item) => {
+            const state = item.readiness || "not_evidenced";
+            return (
+              <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5 flex flex-col md:flex-row items-start justify-between gap-4">
+                <div className="min-w-0"><div className="flex items-center gap-2"><Target size={15} className="text-violet-600"/><h3 className="text-sm font-bold">{item.title}</h3>{item.weighting > 0 && <span className="text-[10px] text-muted-foreground">{item.weighting}%</span>}</div><p className="text-xs text-muted-foreground leading-6 mt-2">{item.description || t("req.noRubricDescription")}</p></div>
+                <RubricState value={state} label={state === "covered" ? t("req.covered") : state === "partial" ? t("req.partialCoverage") : state === "needs_revision" ? t("req.needsReview") : t("req.unknown")} />
+              </div>
+            );
+          }) : <Empty text={t("req.noRubric")} />}
+        </div>
+      )}
     </div>
   );
 }
+
+function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return <button onClick={onClick} className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${active ? "bg-violet-600 text-white border-violet-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}>{children}</button>;
+}
+function Confidence({ confidence, label }: { confidence: Requirement["confidence"]; label: string }) {
+  const strong = confidence === "high", uncertain = confidence === "needs_confirmation";
+  return <span className={`px-3 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1.5 shrink-0 ${strong ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : uncertain ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-violet-500/10 text-violet-600 border-violet-500/20"}`}>{strong ? <CheckCircle2 size={13}/> : uncertain ? <HelpCircle size={13}/> : <AlertCircle size={13}/>} {label}</span>;
+}
+function RubricState({ value, label }: { value: string; label: string }) {
+  const good = value === "covered";
+  return <span className={`px-3 py-1 rounded-full text-[11px] font-semibold border shrink-0 ${good ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"}`}>{label}</span>;
+}
+function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="font-bold text-lg">{value}</div><div className="text-[10px] text-muted-foreground mt-1">{label}</div></div>; }
+function Empty({ text }: { text: string }) { return <div className="rounded-2xl border hairline bg-[var(--panel)] p-8 text-center text-xs text-muted-foreground leading-6">{text}</div>; }

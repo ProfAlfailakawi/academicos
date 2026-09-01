@@ -1,225 +1,76 @@
 import React, { useState } from "react";
-import {
-  FileCode,
-  Sparkles,
-  CheckCircle2,
-  Copy,
-  Check,
-  ArrowRightLeft,
-  BookMarked,
-  Layers,
-  Settings2,
-  RefreshCw,
-} from "lucide-react";
-import type { ProjectDNA } from "../../types";
+import { ArrowRightLeft, Check, Copy, RefreshCw, ShieldCheck, AlertTriangle, BookMarked } from "lucide-react";
+import type { AcademicSourceRecord, ProjectDNA } from "../../types";
+import { api, ApiError } from "../../lib/api";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { useI18n } from "../../lib/i18n";
 
 type AcademicStyle = "apa7" | "harvard" | "ieee" | "mla9" | "chicago";
+const STYLE_NAME: Record<AcademicStyle, string> = { apa7: "APA 7", harvard: "Harvard", ieee: "IEEE", mla9: "MLA 9", chicago: "Chicago" };
 
-interface StyleDefinition {
-  id: AcademicStyle;
-  name: string;
-  discipline: string;
-  inTextExample: string;
-  referenceExample: string;
-  characteristics: string[];
+function surname(name: string) { const parts = name.trim().split(/\s+/); return parts[parts.length - 1] || name; }
+function authorsPlain(source: AcademicSourceRecord) { return source.authors.length ? source.authors.join(", ") : "Author unavailable"; }
+function year(source: AcademicSourceRecord) { return source.year || "n.d."; }
+function container(source: AcademicSourceRecord) { return source.containerTitle || ""; }
+function formatted(source: AcademicSourceRecord, style: AcademicStyle) {
+  const authors = authorsPlain(source), y = year(source), journal = container(source), doi = `https://doi.org/${source.doi}`;
+  if (style === "apa7") return `${authors} (${y}). ${source.title}.${journal ? ` ${journal}.` : ""} ${doi}`;
+  if (style === "harvard") return `${authors} (${y}) ‘${source.title}’${journal ? `, ${journal}` : ""}. Available at: ${doi}.`;
+  if (style === "ieee") return `${authors}, “${source.title},”${journal ? ` ${journal},` : ""} ${y}, doi: ${source.doi}.`;
+  if (style === "mla9") return `${authors}. “${source.title}.”${journal ? ` ${journal},` : ""} ${y}. ${doi}.`;
+  return `${authors}. “${source.title}.”${journal ? ` ${journal}.` : ""} ${y}. ${doi}.`;
+}
+function inText(source: AcademicSourceRecord, style: AcademicStyle) {
+  const lead = source.authors[0] ? surname(source.authors[0]) : "Author", y = year(source);
+  if (style === "ieee") return "[1]";
+  if (style === "mla9") return `(${lead})`;
+  if (style === "chicago") return `${lead}, “${source.title}.”¹`;
+  return `(${lead}, ${y})`;
 }
 
 export function CrossStyleFormatter({ project }: { project: ProjectDNA }) {
-  const [selectedStyle, setSelectedStyle] = useState<AcademicStyle>("apa7");
+  const { t } = useI18n();
+  const [selectedStyle, setSelectedStyle] = useState<AcademicStyle>((project.citationStyle?.toLowerCase().includes("ieee") ? "ieee" : project.citationStyle?.toLowerCase().includes("mla") ? "mla9" : project.citationStyle?.toLowerCase().includes("chicago") ? "chicago" : project.citationStyle?.toLowerCase().includes("harvard") ? "harvard" : "apa7"));
+  const [doi, setDoi] = useState("");
+  const [source, setSource] = useState<AcademicSourceRecord | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
-  const [formatting, setFormatting] = useState(false);
 
-  const styles: Record<AcademicStyle, StyleDefinition> = {
-    apa7: {
-      id: "apa7",
-      name: "APA 7th Edition",
-      discipline: "العلوم الاجتماعية، التربية، علم النفس، الإدارة",
-      inTextExample: "(الفيلكاوي وآخرون، 2024، ص. 45) / (Al-Failakawi et al., 2024)",
-      referenceExample:
-        "الفيلكاوي، أ.، ومحمود، س. (2024). تطبيقات الذكاء الاصطناعي في التعليم العالي. مجلة دراسات الخليج، 48(2)، 112-135. https://doi.org/10.1016/j.compedu.2023.104820",
-      characteristics: ["ترتيب المراجع هجائياً", "استخدام المسافة البادئة المعلقة (Hanging Indent)", "ذكر الاسم الأخير وسنة النشر داخل المتن"],
-    },
-    harvard: {
-      id: "harvard",
-      name: "Harvard Referencing",
-      discipline: "العلوم الإنسانية، الاقتصاد، وإدارة الأعمال البريطانية والأسترالية",
-      inTextExample: "(Al-Failakawi & Mahmoud 2024: 45)",
-      referenceExample:
-        "Al-Failakawi, A. and Mahmoud, S. 2024. 'Generative AI in Higher Education', Journal of Higher Education Studies, vol. 48, no. 2, pp. 112-135.",
-      characteristics: ["عدم استخدام فاصلة بين اسم المؤلف وسنة النشر داخل المتن", "عناوين المقالات بين علامتي تنصيص مفردتين", "ذكر رقم الصفحة بنقطتين رأسيتين"],
-    },
-    ieee: {
-      id: "ieee",
-      name: "IEEE Citation Style",
-      discipline: "الهندسة، علوم الحاسب، ونظم المعلومات والتقنية",
-      inTextExample: "[1] / كما أوضح الباحثون في [1]-[3]...",
-      referenceExample:
-        "[1] A. Al-Failakawi and S. Mahmoud, 'Generative AI in Higher Education,' IEEE Trans. Learn. Technol., vol. 17, no. 2, pp. 112-135, 2024, doi: 10.1016/j.compedu.2023.104820.",
-      characteristics: ["نظام الأرقام المتسلسلة بين قوسين معقوفين [1]", "ترتيب المراجع حسب ظهورها في البحث وليس هجائياً", "اختصار أسماء المجلات المعتمدة"],
-    },
-    mla9: {
-      id: "mla9",
-      name: "MLA 9th Edition",
-      discipline: "اللغات، الأدب، الفنون، والعلوم الثقافية",
-      inTextExample: "(الفيلكاوي 45) / (Al-Failakawi 45)",
-      referenceExample:
-        "الفيلكاوي، أحمد، وسامي محمود. 'تطبيقات الذكاء الاصطناعي في التعليم العالي'. مجلة دراسات الخليج، المجلد 48، العدد 2، 2024، ص 112-135.",
-      characteristics: ["ذكر اسم المؤلف ورقم الصفحة فقط بدون سنة النشر", "كتابة الاسم الأول كاملاً في قائمة المراجع (Works Cited)", "تنسيق مخصص للحاويات والمجلدات"],
-    },
-    chicago: {
-      id: "chicago",
-      name: "Chicago (Notes & Bibliography)",
-      discipline: "التاريخ، العلوم السياسية، والدراسات الإنسانية المعمقة",
-      inTextExample: "تظهر البيانات أهمية التدخل الأكاديمي.¹ (هوامش سفلية Footnotes)",
-      referenceExample:
-        "1. أحمد الفيلكاوي وسامي محمود، 'تطبيقات الذكاء الاصطناعي في التعليم العالي'، مجلة دراسات الخليج 48، رقم 2 (2024): 115.",
-      characteristics: ["نظام الحواشي السفلية المرقمة في أسفل كل صفحة", "مرونة عالية في التوثيق الأرشيفي والوثائق التاريخية", "قائمة مراجع نهائية شاملة"],
-    },
-  };
-
-  const current = styles[selectedStyle];
-
-  const handleConvert = () => {
-    setFormatting(true);
-    setTimeout(() => {
-      setFormatting(false);
-    }, 500);
-  };
-
-  const copyRef = () => {
-    navigator.clipboard.writeText(current.referenceExample);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  async function verifyAndFormat() {
+    if (!doi.trim()) return;
+    setLoading(true); setError(""); setSource(null);
+    try { const response = await api.researchSourceDoi(doi.trim()); setSource(response.source); }
+    catch (e) { setError(e instanceof ApiError && e.code === "DOI_NOT_FOUND" ? t("formatter.notFound") : e instanceof Error ? e.message : t("formatter.verifyError")); }
+    finally { setLoading(false); }
+  }
+  async function copyRef() {
+    if (!source) return;
+    await navigator.clipboard.writeText(formatted(source, selectedStyle)); setCopied(true); window.setTimeout(() => setCopied(false), 1800);
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-fuchsia-500/10 via-pink-500/5 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 grid place-items-center shrink-0">
-            <ArrowRightLeft size={22} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-fuchsia-600 dark:text-fuchsia-400">
-                Cross-Style One-Click Engine
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 font-semibold border border-fuchsia-500/20">
-                تحويل شامل وفوري للأنماط
-              </span>
-            </div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">
-              مُحوِّل أنظمة التوثيق والتنسيق الأكاديمي الفوري
-            </h2>
-          </div>
+      <div className="rounded-2xl border hairline bg-gradient-to-r from-fuchsia-500/10 via-pink-500/5 to-transparent p-5 md:p-6 flex items-start gap-3.5">
+        <div className="h-11 w-11 rounded-2xl bg-fuchsia-500/20 text-fuchsia-600 grid place-items-center shrink-0"><ArrowRightLeft size={22}/></div>
+        <div><div className="text-[10px] font-bold tracking-wider uppercase text-fuchsia-600">Verified-metadata formatter</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("formatter.title")}</h2><p className="text-[11px] text-muted-foreground mt-1 leading-5 max-w-2xl">{t("formatter.description")}</p></div>
+      </div>
+
+      <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3">
+        <label className="text-xs font-semibold">{t("formatter.realDoi")}</label>
+        <div className="flex flex-col sm:flex-row gap-2"><input value={doi} onChange={(e) => setDoi(e.target.value)} onKeyDown={(e) => e.key === "Enter" && verifyAndFormat()} placeholder={t("formatter.doiPh")} className="field flex-1 font-mono ltr"/><Button onClick={verifyAndFormat} disabled={loading || !doi.trim()}>{loading ? <RefreshCw size={14} className="animate-spin"/> : <ShieldCheck size={14}/>}{t("formatter.verifyFormat")}</Button></div>
+        {error && <div className="text-[11px] text-amber-600 flex gap-2 items-start"><AlertTriangle size={14} className="shrink-0 mt-0.5"/>{error}</div>}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">{(Object.keys(STYLE_NAME) as AcademicStyle[]).map((key) => <button key={key} onClick={() => setSelectedStyle(key)} className={`p-3.5 rounded-2xl border text-center transition-all ${selectedStyle === key ? "bg-fuchsia-600 text-white border-fuchsia-600 shadow-md" : "bg-[var(--panel)] hairline"}`}><div className="font-bold text-xs">{STYLE_NAME[key]}</div></button>)}</div>
+
+      {source ? (
+        <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-5">
+          <div className="flex items-start justify-between gap-3"><div><div className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold"><Check size={12}/>Crossref metadata matched</div><h3 className="text-sm font-bold mt-1">{source.title}</h3><p className="text-[11px] text-muted-foreground mt-1">{authorsPlain(source)}{source.year ? ` · ${source.year}` : ""}{source.containerTitle ? ` · ${source.containerTitle}` : ""}</p></div><span className="font-mono text-[10px] text-muted-foreground ltr break-all max-w-[35%]">{source.doi}</span></div>
+          <div className="grid md:grid-cols-2 gap-3"><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="flex items-center gap-2 text-[11px] font-semibold"><BookMarked size={14} className="text-fuchsia-600"/>{t("formatter.inText")} · {STYLE_NAME[selectedStyle]}</div><div className="mt-3 text-sm font-medium ltr">{inText(source, selectedStyle)}</div></div><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-[11px] font-semibold">{t("formatter.references")} · {STYLE_NAME[selectedStyle]}</div><p className="mt-3 text-xs leading-6 ltr">{formatted(source, selectedStyle)}</p></div></div>
+          <Button variant="outline" onClick={copyRef}>{copied ? <Check size={14} className="text-emerald-500"/> : <Copy size={14}/>} {copied ? t("formatter.copied") : t("formatter.copyStyle").replace("{style}", STYLE_NAME[selectedStyle])}</Button>
         </div>
-
-        <Button
-          onClick={handleConvert}
-          disabled={formatting}
-          className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-xs gap-1.5 shrink-0"
-        >
-          {formatting ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
-          تطبيق التحويل على كامل البحث
-        </Button>
-      </div>
-
-      {/* Style Selector Chips */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-        {(Object.keys(styles) as AcademicStyle[]).map((key) => {
-          const s = styles[key];
-          const active = selectedStyle === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setSelectedStyle(key)}
-              className={`p-3.5 rounded-2xl border text-right transition-all space-y-1 ${
-                active
-                  ? "bg-fuchsia-600 text-white border-fuchsia-600 shadow-md scale-[1.02]"
-                  : "bg-[var(--panel)] border-hairline text-foreground hover:border-fuchsia-500/40"
-              }`}
-            >
-              <div className="font-bold text-xs">{s.name}</div>
-              <div className={`text-[10px] truncate ${active ? "text-fuchsia-100" : "text-muted-foreground"}`}>
-                {s.discipline.split("،")[0]}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Style Rules and Visual Comparison */}
-      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
-        {/* Live Transformation Preview */}
-        <Card className="rounded-3xl border hairline bg-[var(--panel)]">
-          <CardContent className="p-6 md:p-7 space-y-5">
-            <div className="flex items-center justify-between border-b hairline pb-4">
-              <div className="flex items-center gap-2 text-fuchsia-600 dark:text-fuchsia-400 text-xs font-bold uppercase tracking-wider">
-                <BookMarked size={15} />
-                معاينة التنسيق لنمط: {current.name}
-              </div>
-              <span className="text-[11px] font-mono text-muted-foreground">التخصص: {current.discipline}</span>
-            </div>
-
-            {/* In-Text Citation Box */}
-            <div className="space-y-2">
-              <div className="text-xs font-bold text-foreground">1. شكل الاقتباس داخل متن النص (In-Text Citation):</div>
-              <div className="p-3.5 rounded-xl border hairline bg-[var(--bg)] font-mono text-xs text-foreground/90 ltr">
-                {current.inTextExample}
-              </div>
-            </div>
-
-            {/* Reference List Box */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-foreground">2. شكل التوثيق في قائمة المراجع النهائية (Bibliography):</div>
-                <Button size="sm" variant="ghost" className="h-6 text-[11px] px-2" onClick={copyRef}>
-                  {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                  نسخ المرجع
-                </Button>
-              </div>
-              <div className="p-4 rounded-xl border hairline bg-[var(--bg)] font-mono text-xs text-foreground/90 leading-relaxed ltr">
-                {current.referenceExample}
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-between text-xs text-muted-foreground">
-              <span>يتم إعادة ضبط الهوامش تلقائياً عند التصدير لـ Word / PDF</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">مطابق للإصدار الأخير</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Style Guidelines & Criteria Checklist */}
-        <Card className="rounded-3xl border hairline bg-[var(--panel)]">
-          <CardContent className="p-6 md:p-7 space-y-4">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              <Settings2 size={15} className="text-fuchsia-500" />
-              أهم قواعد ومعايير نمط {current.name}:
-            </div>
-
-            <div className="space-y-2.5">
-              {current.characteristics.map((char, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-2.5 p-3 rounded-xl border hairline bg-[var(--bg)] text-xs leading-relaxed"
-                >
-                  <CheckCircle2 size={15} className="text-fuchsia-500 mt-0.5 shrink-0" />
-                  <span>{char}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-4 rounded-2xl bg-fuchsia-50/40 dark:bg-fuchsia-950/20 border border-fuchsia-100 dark:border-fuchsia-900/30 text-xs text-fuchsia-950 dark:text-fuchsia-200 leading-relaxed">
-              <span className="font-bold block mb-1">ملاحظة أستاذ المساق:</span>
-              يُطبق هذا النمط على كل من: صلب التقرير، الجداول والأشكال التوضيحية، الهوامش السفلية، وقائمة المراجع لضمان الحصول على الدرجة الكاملة في معيار التنسيق الأكاديمي.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      ) : <div className="rounded-2xl border hairline p-7 text-center text-xs text-muted-foreground">{t("formatter.empty")}</div>}
     </div>
   );
 }

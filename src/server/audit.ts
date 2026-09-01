@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { runDeepAIDetection } from "./deep-ai-detector";
+import { runStyleIntegrityAnalysis } from "./deep-ai-detector";
 import type {
   AuditCheck,
   ProjectDNA,
@@ -185,20 +185,19 @@ export function runSubmissionAudit(
   }
   const allContent = artifacts.map((x) => x.content || "").join("\n\n");
   if (allContent.length > 80) {
-    const aiForensic = runDeepAIDetection(allContent);
-    const isAiRisky = aiForensic.overallAIScore >= 65;
-    const isAiModerate = aiForensic.overallAIScore >= 35;
+    const integrity = runStyleIntegrityAnalysis(allContent);
+    const needsReview = integrity.verdict !== "clear" || integrity.metrics.citationVerificationFlags > 0 || integrity.metrics.unsupportedQuantitativeClaims > 0;
     checks.push(
       check({
-        label: "رادار فحص النزاهة الجنائية (Turnitin & AI Detection Radar)",
-        status: isAiRisky ? "critical" : isAiModerate ? "warning" : "pass",
-        detail: `احتمالية الذكاء الاصطناعي الجنائية: ${aiForensic.overallAIScore}% (${aiForensic.verdictLabel}). الحيرة (Perplexity): ${aiForensic.metrics.perplexityScore}/100، النبضية (Burstiness): ${aiForensic.metrics.burstinessScore}/100.`,
+        label: "فاحص الأسلوب والنزاهة",
+        status: needsReview ? "warning" : "pass",
+        detail: needsReview
+          ? `مؤشر مراجعة الأسلوب ${integrity.styleRiskScore}/100 (ليس احتمال AI). توجد ${integrity.metrics.citationVerificationFlags} إشارات مراجع تحتاج تحقق و${integrity.metrics.unsupportedQuantitativeClaims} ادعاءات كمية تحتاج سنداً.`
+          : "لم تظهر إشارات أسلوب أو أدلة بارزة ضمن الفحص الحالي. هذا لا يثبت هوية الكاتب ولا يحل محل مراجعة المصادر وسياسة المقرر.",
         category: "integrity",
-        action: isAiRisky
-          ? "افتح نافذة 'رادار كشف AI' وطبق بروتوكول إضفاء الطابع البشري وتوثيق المراجع الحية."
-          : isAiModerate
-            ? "راجع الكليشيهات المرصودة ونوّع في أطوال الجمل لضمان خلو النص من أي اشتباه."
-            : undefined,
+        action: needsReview
+          ? "افتح فاحص الأسلوب والنزاهة وراجع الادعاءات والمراجع والصياغات المشار إليها؛ لا تستخدم النتيجة للحكم على من كتب النص."
+          : undefined,
       }),
     );
   }

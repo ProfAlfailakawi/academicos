@@ -19,10 +19,11 @@ import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 export function Settings() {
   const location = useLocation();
-  const { t } = useI18n();
+  const { t, meta } = useI18n();
   const { theme, setTheme, accessibility, setAccessibility } =
     useAppPreferences();
   const [h, setH] = useState<any>(null);
@@ -42,9 +43,9 @@ export function Settings() {
     const invitedCode = new URLSearchParams(location.hash.replace(/^#/, "")).get("join");
     if (invitedCode) {
       setJoinCode(invitedCode.toUpperCase());
-      setJoinMessage("راجع رمز المقرر ثم اضغط «انضم».");
+      setJoinMessage(t("settings.reviewJoin"));
     }
-  }, [location.hash]);
+  }, [location.hash, t]);
   useEffect(() => {
     api
       .health()
@@ -212,9 +213,9 @@ export function Settings() {
               <Languages size={17} className="brand-text" />
               <h2 className="section-title">{t("settings.language")}</h2>
             </div>
-            <div className="mt-4 min-h-11 rounded-xl border hairline brand-soft-bg px-4 flex items-center justify-between text-xs font-semibold">
-              <span>{t("settings.arabicLabel")}</span>
-              <span dir="ltr">RTL · ar-KW</span>
+            <div className="mt-4 rounded-xl border hairline brand-soft-bg px-3 py-2 flex items-center justify-between gap-3 text-xs font-semibold">
+              <LanguageSwitcher />
+              <span dir="ltr">{meta.dir.toUpperCase()} · {meta.speech}</span>
             </div>
             <p className="body-copy mt-3">{t("settings.languageNote")}</p>
           </CardContent>
@@ -311,28 +312,28 @@ export function Settings() {
           <CardContent>
             <div className="flex items-center gap-2">
               <CreditCard size={17} className="brand-text" />
-              <h2 className="section-title">الباقات والدفع لكل مشروع</h2>
+              <h2 className="section-title">{t("settings.projectBilling")}</h2>
             </div>
             <div className="mt-4 rounded-xl bg-[var(--bg)] border hairline p-3 flex items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-semibold">
                   {{
                     stripe: "Stripe",
-                    tap: "Tap · KNET",
+                    tap: "Tap Payments",
                     myfatoorah: "MyFatoorah",
                   }[h?.billing?.provider as string] || t("settings.paymentGateway")}
                 </div>
                 <div className="text-[10px] muted mt-1">
                   {h?.billing?.configured
                     ? t("settings.configuredServer")
-                    : "جاهز لربط مفاتيح بوابة الدفع"}
+                    : t("settings.billingAwaiting")}
                 </div>
               </div>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${h?.billing?.configured ? "bg-emerald-500" : "bg-amber-500"}`}
               />
             </div>
-            <Button className="mt-4" asChild><Link to="/app/plans">شاهد باقات المشاريع</Link></Button>
+            <Button className="mt-4" asChild><Link to="/app/plans">{t("settings.viewPlans")}</Link></Button>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">

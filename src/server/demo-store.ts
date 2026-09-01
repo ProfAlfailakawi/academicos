@@ -46,7 +46,7 @@ function makeDemoProjects(): ProjectDNA[] {
       { title: 'التواصل', description: 'وضوح التقرير والعرض', weighting: 30 },
     ],
     deadline: days(5),
-    deadlineTimezone: 'Asia/Kuwait',
+    deadlineTimezone: 'UTC',
     citationStyle: 'APA 7',
     aiPolicy: { level: 3, summary: 'AI مسموح للتخطيط والمراجعة، وليس لكتابة الانعكاس الشخصي.', allowed: ['planning','feedback','source organization'], prohibited: ['final reflection generation'], disclosureRequired: true },
     estimatedWorkloadHours: 12,

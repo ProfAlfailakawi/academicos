@@ -35,15 +35,36 @@ export function TurnitinForensicShieldModal({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "sentences" | "cliches" | "signals">("overview");
 
+  const [humanizing, setHumanizing] = useState(false);
+  const [humanizedResult, setHumanizedResult] = useState<{ humanizedText: string; improvementsMade: string[] } | null>(null);
+
   async function handleAnalyze() {
     setLoading(true);
     try {
       const res = await api.detectAI(project.id, customText || undefined);
       setReport(res.report);
+      setHumanizedResult(null);
     } catch (e: any) {
       alert(e.message || "حدث خطأ أثناء فحص البصمة الجنائية.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleHumanize() {
+    setHumanizing(true);
+    try {
+      const textToHumanize = customText || (report ? report.sentenceBreakdown.map(s => s.text).join(" ") : "");
+      if (!textToHumanize) {
+        alert("يرجى كتابة نص أو فحص المشروع أولاً.");
+        return;
+      }
+      const res = await api.humanize(project.id, textToHumanize);
+      setHumanizedResult({ humanizedText: res.humanizedText, improvementsMade: res.improvementsMade });
+    } catch (e: any) {
+      alert(e.message || "حدث خطأ أثناء معالجة النص وبناء الطابع البشري.");
+    } finally {
+      setHumanizing(false);
     }
   }
 
@@ -102,25 +123,79 @@ export function TurnitinForensicShieldModal({
                 <Sliders size={13} className="text-cyan-400" />
                 معيار الحساسية: <strong className="text-slate-200">أعلى دقة جنائية (Multi-Vector Stylometry)</strong>
               </div>
-              <Button
-                onClick={handleAnalyze}
-                disabled={loading}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs px-5 shadow-lg shadow-emerald-900/30"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin mr-1.5" />
-                    جاري التشريح الجنائي...
-                  </>
-                ) : (
-                  <>
-                    <Zap size={14} className="mr-1.5" />
-                    تشغيل الفحص الجنائي الشامل
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleHumanize}
+                  disabled={humanizing}
+                  variant="outline"
+                  className="border-cyan-500/40 text-cyan-400 bg-cyan-950/20 hover:bg-cyan-950/40 font-medium text-xs px-4"
+                >
+                  {humanizing ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin mr-1.5" />
+                      جاري المعالجة البشرية...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} className="mr-1.5" />
+                      إضفاء الطابع البشري المنهجي (1-Click Humanizer)
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs px-5 shadow-lg shadow-emerald-900/30"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin mr-1.5" />
+                      جاري التشريح الجنائي...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={14} className="mr-1.5" />
+                      تشغيل الفحص الجنائي الشامل
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
+
+          {/* Humanized Result Display if available */}
+          {humanizedResult && (
+            <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-4 space-y-3 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                  <Sparkles size={14} /> نتيجة محرك إضفاء الطابع البشري المنهجي (Scholarly Humanized Text)
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(humanizedResult.humanizedText);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="text-xs text-cyan-300 border-cyan-500/40 bg-cyan-950/50"
+                >
+                  {copied ? <Check size={13} className="mr-1" /> : <Copy size={13} className="mr-1" />}
+                  {copied ? "تم النسخ" : "نسخ النص المعالج"}
+                </Button>
+              </div>
+              <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 leading-relaxed font-sans max-h-60 overflow-y-auto">
+                {humanizedResult.humanizedText}
+              </div>
+              <div className="text-[11px] text-cyan-400 flex flex-wrap gap-2 pt-1">
+                {humanizedResult.improvementsMade.map((imp, i) => (
+                  <span key={i} className="bg-cyan-900/50 px-2 py-0.5 rounded text-cyan-200">
+                    ✓ {imp}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Results Area */}
           {report && (
@@ -381,9 +456,18 @@ export function TurnitinForensicShieldModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs text-slate-400">
-          <div>
-            نظام التحقق الجنائي مصمم لحماية الباحث من تهم التوليد العشوائي ودعم الرصانة المنهجية.
+        <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <a
+              href={api.exportBundleUrl(project.id)}
+              download
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow transition"
+            >
+              📥 تنزيل حزمة التسليم الأكاديمية الكاملة (.ZIP)
+            </a>
+            <span className="text-slate-400 hidden md:inline">
+              تشمل البحث، التقرير الجنائي، ملف النزاهة والمراجع (.bib).
+            </span>
           </div>
           <Button variant="outline" onClick={onClose} className="text-xs text-slate-300 border-slate-700">
             إغلاق

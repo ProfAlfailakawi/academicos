@@ -989,6 +989,13 @@ export const api = {
       `/api/projects/${encodeURIComponent(projectId)}/detect-ai`,
       { method: "POST", body: JSON.stringify({ text }) },
     ),
+  humanize: (projectId: string, text: string) =>
+    request<{ success: true; humanizedText: string; improvementsMade: string[] }>(
+      `/api/projects/${encodeURIComponent(projectId)}/humanize`,
+      { method: "POST", body: JSON.stringify({ text }) },
+    ),
+  exportBundleUrl: (projectId: string) =>
+    `/api/projects/${encodeURIComponent(projectId)}/export-bundle`,
   passport: () =>
     request<{ success: true; passport: PassportData }>("/api/passport"),
   skills: () =>

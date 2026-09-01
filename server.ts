@@ -50,8 +50,9 @@ import {
   buildSkills,
   firestoreStore,
 } from "./src/server/db";
+import JSZip from "jszip";
 import { runSubmissionAudit } from "./src/server/audit";
-import { runDeepAIDetection } from "./src/server/deep-ai-detector";
+import { runDeepAIDetection, humanizeScholarlyText } from "./src/server/deep-ai-detector";
 import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
 import {
   exportCitations,
@@ -8847,6 +8848,100 @@ async function startServer() {
           },
         );
         res.json({ success: true, report });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.post(
+    "/api/projects/:id/humanize",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+        const text = String(req.body?.text || "").trim();
+        if (!text)
+          return res.status(400).json({ error: "Text required" });
+
+        const result = humanizeScholarlyText(text);
+        await firestoreStore.writeAudit(
+          a.tenantId,
+          a.userId,
+          "ai.humanize_scholarly_text",
+          project.id,
+          undefined,
+          { originalLength: text.length, improvements: result.improvementsMade.length },
+        );
+        res.json({ success: true, ...result });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  app.get(
+    "/api/projects/:id/export-bundle",
+    authenticate,
+    async (req: AuthenticatedRequest, res, next) => {
+      try {
+        const a = req.actor!;
+        const project = await firestoreStore.getProject(
+          req.params.id,
+          a.userId,
+          a.tenantId,
+        );
+        if (!project)
+          return res
+            .status(404)
+            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
+
+        const [artifacts, evidence] = await Promise.all([
+          firestoreStore.listWorkspaceArtifacts(project.id, a.tenantId),
+          firestoreStore.listProjectEvidence(project.id, a.userId, a.tenantId),
+        ]);
+        const audit = runSubmissionAudit(project, { artifacts, evidence });
+
+        const zip = new JSZip();
+        
+        const combinedMarkdown = artifacts
+          .filter(art => !art.deletedAt)
+          .map(art => `# ${art.title}\n\n${art.content || ""}\n\n---\n`)
+          .join("\n");
+        zip.file("research_paper.md", combinedMarkdown || `# ${project.title}\n\n`);
+
+        const dossierData = {
+          projectId: project.id,
+          title: project.title,
+          student: a.displayName || a.email,
+          createdAt: project.createdAt,
+          hash: createHash("sha256").update(combinedMarkdown + project.id).digest("hex"),
+          auditStatus: audit.status,
+          score: audit.score,
+        };
+        zip.file("academic_dossier.json", JSON.stringify(dossierData, null, 2));
+
+        const forensicReport = runDeepAIDetection(combinedMarkdown);
+        zip.file("ai_forensic_report.json", JSON.stringify(forensicReport, null, 2));
+
+        const bibText = evidence
+          .map((e: any, idx: number) => `@article{ref${idx+1},\n  title = {${e.title || "Reference " + (idx+1)}},\n  url = {${e.url || ""}},\n  note = {${e.snippet || ""}}\n}`)
+          .join("\n\n");
+        zip.file("references.bib", bibText || "% No references recorded yet");
+
+        zip.file("submission_audit.json", JSON.stringify(audit, null, 2));
+
+        const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+        res.setHeader("Content-Type", "application/zip");
+        res.setHeader("Content-Disposition", `attachment; filename="AcademicOS_Turnkey_Bundle_${project.id}.zip"`);
+        res.send(zipBuffer);
       } catch (e) {
         next(e);
       }

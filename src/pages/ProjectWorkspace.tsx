@@ -255,6 +255,13 @@ export function ProjectWorkspace() {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <a
+              href={api.exportBundleUrl(project.id)}
+              download
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-teal-500/40 text-teal-700 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-950/40 transition"
+            >
+              📥 حزمة التسليم (.ZIP)
+            </a>
             <Button
               variant="outline"
               onClick={() => setShowForensicRadar(true)}

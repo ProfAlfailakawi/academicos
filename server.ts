@@ -20,6 +20,7 @@ import {
 } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getAppCheck } from "firebase-admin/app-check";
+import appletConfig from "./firebase-applet-config.json";
 import { aiConfigured, aiProviderStatus, getAIProvider } from "./src/server/ai";
 import {
   createExtractionBudget,
@@ -345,9 +346,11 @@ function initFirebase() {
   }
   try {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || appletConfig.projectId;
     initializeApp({
+      projectId,
       credential: raw ? cert(JSON.parse(raw)) : applicationDefault(),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || appletConfig.storageBucket,
     });
     firebaseInitialized = true;
   } catch (error) {
@@ -417,7 +420,7 @@ async function authenticate(
   }
 
   try {
-    const decoded = await getAuth().verifyIdToken(token, true);
+    const decoded = await getAuth().verifyIdToken(token);
     const rawRole = String(decoded.role || "student");
     const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
       ? (rawRole as UserRole)

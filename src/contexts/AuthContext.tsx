@@ -123,10 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    setApiTokenProvider(async () => {
+    setApiTokenProvider(async (forceRefresh = false) => {
       if (!firebaseAuth?.currentUser) return null;
       try {
-        return await firebaseAuth.currentUser.getIdToken();
+        return await firebaseAuth.currentUser.getIdToken(forceRefresh);
       } catch {
         return null;
       }

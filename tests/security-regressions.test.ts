@@ -58,3 +58,20 @@ test('demoStore enforces cross-tenant boundaries for project access', async () =
   const maliciousList = await demoStore.listProjects("user-attacker", "tenant-evil");
   assert.ok(!maliciousList.some(p => p.id === "project-adversarial"));
 });
+
+test('server token verification keeps signature validation mandatory while revocation check is deployment-configurable', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  assert.match(server, /getAuth\(\)\.verifyIdToken\(token, checkRevoked\)/);
+  assert.match(server, /CHECK_REVOKED_ID_TOKENS/);
+  assert.doesNotMatch(server, /return\s+\{[\s\S]{0,700}uid:\s*String\(p\.user_id/);
+});
+
+test('API auth retry forces one fresh Firebase token and preserves write idempotency key', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const apiSource = await readFile(new URL('../src/lib/api.ts', import.meta.url), 'utf8');
+  assert.match(apiSource, /shouldRetryWithFreshIdToken/);
+  assert.match(apiSource, /perform\(true\)/);
+  assert.match(apiSource, /const baseHeaders = new Headers/);
+  assert.match(apiSource, /X-Idempotency-Key/);
+});

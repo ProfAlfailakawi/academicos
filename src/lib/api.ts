@@ -57,7 +57,7 @@ import type {
 } from "../types";
 import { deviceTrustHeaders } from "./device-trust";
 
-type TokenProvider = () => Promise<string | null>;
+type TokenProvider = (forceRefresh?: boolean) => Promise<string | null>;
 let tokenProvider: TokenProvider = async () => null;
 let appCheckTokenProvider: TokenProvider = async () => null;
 
@@ -85,10 +85,10 @@ export class ApiError extends Error {
   }
 }
 
-async function authHeaders(init?: HeadersInit) {
+async function authHeaders(init?: HeadersInit, forceRefresh = false) {
   const [token, appCheckToken] = await Promise.all([
-    tokenProvider(),
-    appCheckTokenProvider(),
+    tokenProvider(forceRefresh),
+    appCheckTokenProvider(forceRefresh),
   ]);
   const headers = new Headers(init || {});
   const trustHeaders = await deviceTrustHeaders();
@@ -98,26 +98,49 @@ async function authHeaders(init?: HeadersInit) {
   return headers;
 }
 
+function shouldRetryWithFreshIdToken(status: number, code?: string) {
+  return (
+    status === 401 &&
+    ["AUTH_INVALID", "AUTH_EXPIRED"].includes(String(code || ""))
+  );
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = await authHeaders(init.headers);
-  if (!headers.has("Content-Type") && init.body)
-    headers.set("Content-Type", "application/json");
+  // Keep the same idempotency key if a write is retried after refreshing the
+  // Firebase ID token. This prevents an auth refresh from duplicating writes.
+  const baseHeaders = new Headers(init.headers || {});
+  if (!baseHeaders.has("Content-Type") && init.body)
+    baseHeaders.set("Content-Type", "application/json");
   if (
     init.method &&
     ["POST", "PUT", "PATCH", "DELETE"].includes(init.method.toUpperCase()) &&
-    !headers.has("X-Idempotency-Key")
+    !baseHeaders.has("X-Idempotency-Key")
   )
-    headers.set("X-Idempotency-Key", crypto.randomUUID());
-  const response = await fetch(path, { ...init, headers });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok)
+    baseHeaders.set("X-Idempotency-Key", crypto.randomUUID());
+
+  const perform = async (forceRefresh = false) => {
+    const headers = await authHeaders(baseHeaders, forceRefresh);
+    const response = await fetch(path, { ...init, headers });
+    const payload = await response.json().catch(() => ({}));
+    return { response, payload };
+  };
+
+  let result = await perform(false);
+  if (
+    !result.response.ok &&
+    shouldRetryWithFreshIdToken(result.response.status, result.payload?.code)
+  ) {
+    result = await perform(true);
+  }
+
+  if (!result.response.ok)
     throw new ApiError(
-      payload.error || "تعذر إكمال الطلب",
-      response.status,
-      payload.code,
-      payload.errorId,
+      result.payload.error || "تعذر إكمال الطلب",
+      result.response.status,
+      result.payload.code,
+      result.payload.errorId,
     );
-  return payload as T;
+  return result.payload as T;
 }
 
 async function download(path: string) {

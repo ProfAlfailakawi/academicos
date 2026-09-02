@@ -34,8 +34,9 @@ const uiCorpus=uiFiles.join('\n');
 
 
 expect('Missing bearer token fails closed',/if \(!token\)[\s\S]{0,220}AUTH_REQUIRED/.test(server),'authenticate() must return 401 without token');
-expect('Invalid token fails closed',/verifyIdToken\(token, true\)[\s\S]{0,2600}AUTH_INVALID/.test(server),'no root-owner fallback after verify failure');
-expect('Unsigned JWT payloads are never trusted',!server.includes('Buffer.from(parts[1]')&&!server.includes('token.split(".")'),'all bearer tokens must be verified by Firebase Admin');
+expect('Firebase token uses Admin SDK verification',server.includes('return getAuth().verifyIdToken(token, checkRevoked)')&&server.includes('const decoded: any = await verifyFirebaseIdToken(token)'),'token acceptance requires Firebase Admin verification');
+expect('No unsigned JWT authentication fallback',!/Buffer\.from\(parts\[1\][\s\S]{0,1200}return \{[\s\S]{0,900}uid:/.test(server),'decoded JWT metadata must never become an authenticated actor');
+expect('Unsigned JWT payloads are never trusted',server.includes('Diagnostic only')&&server.includes('acceptance still requires Firebase Admin signature validation')&&!server.includes('safeVerifyToken'),'unverified JWT payload may only be used for diagnostics, never authentication');
 expect('Named Firestore database is explicit',firebaseServices.includes('appletConfig.firestoreDatabaseId')&&firebaseServices.includes('getFirestore(databaseId)'),'backend must use the configured named Firestore database instead of silently targeting (default)');
 expect('Storage uses configured Firebase bucket fallback',storage.includes('firebaseStorageBucketName()')&&!storage.includes('process.env.FIREBASE_STORAGE_BUCKET'),'uploads must use the applet-config bucket when no duplicate server env is present');
 expect('MFA is not a global read blocker',!server.includes('Multi-factor authentication is required for this administrative role')&&server.includes('MFA is required for this sensitive action'),'privileged users must reach read-only admin pages while sensitive writes still require MFA');

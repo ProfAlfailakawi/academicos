@@ -1,15 +1,16 @@
-AcademicOS Firebase/Auth root-fix patch
+AcademicOS Firebase/Auth token root-fix patch v2
 Generated: 2026-09-02
 
-4f853a7b19c9513840ddfdf8028cc30ef06ea9c2688e89787b80282d38b4ac4c  ./.env.example
-4aa3fe1853b88f7316e4320ff9daca6acc84a273a8b4dbf333abb6dfe0b093a8  ./PATCH_NOTES_AR.md
+526307a1c5995fa6120c57c792b65f1640f7fe494c744e1d13e284b1b1834156  ./.env.example
+aaed9351879291c00180a034ee818f264f7db12dd1a013f17ecc7a4f09bb3883  ./PATCH_NOTES_AR.md
 d8ae3322b473ce552692168f66f2a9a8a04ea4500fcff0605839aebcf658dcf0  ./firebase.json
 28e0776296d63b146ca9bb9589e657ee75a2e6223add1d48088c0503eb268769  ./public/env-config.js
 47bbfd45a30cf5c88047c1024c099ada62d7987db3257f8714ccc0a276e26fbd  ./scripts/bootstrap-root.mjs
-1631a5f59a6da3542e093c230d781621a643e329c3f03a642385d2cd9370cffb  ./scripts/static-release-audit.mjs
-c345d6a395585843b93dd5099310a9f1db18e8c4b90fc36d8f737b8120e1d843  ./server.ts
+d81e09df7977e8c69a619365e94ce84bba0cd00761f041778b24c2e15750031f  ./scripts/static-release-audit.mjs
+8998834774c158dee1d23b42c8bea832ae7c7e1180ae649e0f8821022ea26ec6  ./server.ts
 e99c1a3571a4f68d52603ec266ed7aed4f99245c7dbb25d2902d5a729cec06af  ./src/App.tsx
-b10d0a0660cfb78ad79393a1770751509f6aacaa34c0c758d87a1def15f1d6df  ./src/contexts/AuthContext.tsx
+cd96b469597b786d61d831efeed9ceb1ee727af010563110fab90c11f59697a1  ./src/contexts/AuthContext.tsx
+9e2bd8509237eb436eccb7da82df2056e4384cd24fd904bb5a4b4d0886c02b87  ./src/lib/api.ts
 440eaeca1d75b34abde16acca5f60f890a08216c73f7b88e4c69a9a2939ee8c8  ./src/lib/firebase.ts
 6a563c6f5ddfc98c9ce114bf80368b99b7a00c6aea2b1133a0789d668db2fdb0  ./src/lib/i18n-messages.ts
 a510475613c3c54e8aa8d2dd1d027c1c98569e88af59cd4eba757b9eca49b5ff  ./src/pages/Login.tsx
@@ -21,4 +22,4 @@ eb5d6b73d67fb2fb70996ee204f64f660033ec78394a195e75ecbac76536ea70  ./src/server/a
 f7759a6b90b58b2d5305ae52e213fff8011050b34b2830382a6b8fa6a3e00855  ./src/server/platform-store.ts
 0916c2f3a076694c056bd4fb395e7d429d7c6492e0a06ef0851718715e2ae3b7  ./src/server/storage.ts
 f7f2aac095b1c409b5bec53c027c56ad6db42eebf504c2b9b264420d06bbe005  ./src/types/index.ts
-687b4000da6f1a8216ac74ff7fab133e5253d65680c564c587d6ec39a0e082a1  ./tests/security-regressions.test.ts
+ad8e9d3669e16203fb7ace787f414c2b61f643f73cad190f30ccdab81ac5cd3d  ./tests/security-regressions.test.ts

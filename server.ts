@@ -418,6 +418,76 @@ async function verifyAppCheck(req: Request, res: Response, next: NextFunction) {
     });
   }
 }
+type FirebaseTokenMetadata = {
+  aud?: string;
+  iss?: string;
+  exp?: number;
+};
+
+function readUnverifiedTokenMetadata(token: string): FirebaseTokenMetadata {
+  // Diagnostic only. This data is NEVER used to authenticate or authorize a
+  // request; acceptance still requires Firebase Admin signature validation.
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return {};
+    const payload = JSON.parse(
+      Buffer.from(parts[1], "base64url").toString("utf8"),
+    );
+    return {
+      aud: typeof payload?.aud === "string" ? payload.aud : undefined,
+      iss: typeof payload?.iss === "string" ? payload.iss : undefined,
+      exp: Number.isFinite(Number(payload?.exp)) ? Number(payload.exp) : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function firebaseAuthErrorResponse(error: any, token: string) {
+  const code = String(error?.code || "");
+  const expectedProjectId = String(
+    process.env.VITE_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID ||
+      appletConfig.projectId ||
+      "",
+  ).trim();
+  const metadata = readUnverifiedTokenMetadata(token);
+
+  if (code.includes("id-token-revoked"))
+    return { status: 401, error: "Session has been revoked", code: "AUTH_REVOKED" };
+  if (code.includes("id-token-expired") || (metadata.exp && metadata.exp <= Date.now() / 1000))
+    return { status: 401, error: "Authentication token has expired", code: "AUTH_EXPIRED" };
+  if (code.includes("user-disabled"))
+    return { status: 401, error: "This user account is disabled", code: "AUTH_USER_DISABLED" };
+  if (code.includes("insufficient-permission"))
+    return {
+      status: 503,
+      error: "Firebase Admin credentials cannot perform the configured authentication check",
+      code: "AUTH_ADMIN_PERMISSION",
+    };
+  if (expectedProjectId && metadata.aud && metadata.aud !== expectedProjectId)
+    return {
+      status: 401,
+      error: "Authentication token belongs to a different Firebase project",
+      code: "AUTH_PROJECT_MISMATCH",
+    };
+  return {
+    status: 401,
+    error: "Invalid authentication token",
+    code: "AUTH_INVALID",
+  };
+}
+
+async function verifyFirebaseIdToken(token: string) {
+  // Signature, issuer, audience and expiry are always verified locally by the
+  // Admin SDK. Revocation checking is optional because Firebase documents that
+  // checkRevoked=true performs an extra Authentication-backend round trip.
+  // Cloud Run deployments whose runtime service account lacks that extra Auth
+  // permission must not misclassify every otherwise-valid user token as invalid.
+  const checkRevoked = process.env.CHECK_REVOKED_ID_TOKENS === "true";
+  return getAuth().verifyIdToken(token, checkRevoked);
+}
+
 async function authenticate(
   req: AuthenticatedRequest,
   res: Response,
@@ -440,7 +510,7 @@ async function authenticate(
   }
 
   try {
-    const decoded: any = await getAuth().verifyIdToken(token, true);
+    const decoded: any = await verifyFirebaseIdToken(token);
 
     const emailLower = String(decoded.email || "").toLowerCase();
     const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
@@ -485,10 +555,14 @@ async function authenticate(
     if (!enforceIdentityRateLimit(req, res, req.actor)) return;
     return next();
   } catch (error: any) {
-    const revoked = String(error?.code || "").includes("id-token-revoked");
-    return res.status(401).json({
-      error: revoked ? "Session has been revoked" : "Invalid or expired authentication token",
-      code: revoked ? "AUTH_REVOKED" : "AUTH_INVALID",
+    const failure = firebaseAuthErrorResponse(error, token);
+    console.warn("Firebase ID token verification failed", {
+      firebaseCode: String(error?.code || "unknown"),
+      responseCode: failure.code,
+    });
+    return res.status(failure.status).json({
+      error: failure.error,
+      code: failure.code,
     });
   }
 }

@@ -1,40 +1,36 @@
-# AcademicOS — إصلاح جذري للدخول وFirebase
+# AcademicOS — Firebase/Auth Root Fix v2
 
-هذه الحزمة **Patch فقط** وليست المشروع كاملًا. تُفك فوق جذر آخر نسخة من AcademicOS مع استبدال الملفات الموجودة وإضافة الملفين الجديدين.
+هذه الحزمة **Patch فقط** وليست المشروع كاملًا. لم يتم نشر أو رفع أي شيء إلى Firebase أو Cloud Run أو GitHub.
 
-## ما تم إصلاحه
+## سبب رسالة `Invalid or expired authentication token`
 
-1. **Firestore كان يتصل بقاعدة خاطئة**: إعداد المشروع يستخدم قاعدة Firestore مسماة:
-   `ai-studio-academicos-fbe5103a-df9c-4b49-a3c4-52b205a3c818`
-   بينما الخادم كان يستدعي `getFirestore()` بلا Database ID، فيذهب تلقائيًا إلى `(default)`. تم توحيد كل وصول الخادم إلى قاعدة المشروع الصحيحة مع إبقاء المحاكي على `(default)`.
+المشكلة الجديدة كانت في التحقق من Bearer token على الخادم بعد الإصلاح السابق: تم استخدام
+`verifyIdToken(token, true)` لكل طلب API. قيمة `true` لا تتحقق من صحة JWT فقط؛ بل تضيف فحص revocation عبر Firebase Authentication backend. إذا كانت هوية تشغيل Cloud Run لا تملك صلاحية Auth الإضافية، أو كان فحص backend غير متاح، يُرمى استثناء وتظهر كل حسابات الطالب/المعلم/الأدمن وكأن token غير صالح رغم أن تسجيل الدخول نفسه نجح.
 
-2. **رفع ملفات الطالب كان يشترط متغيرًا مكررًا بلا داعٍ**: Storage كان يرفض الرفع إذا لم يوجد `FIREBASE_STORAGE_BUCKET` حتى مع وجود bucket صحيح داخل `firebase-applet-config.json`. أصبح الآن يستخدم متغير البيئة إن وُجد، وإلا يستخدم إعداد Firebase الحقيقي تلقائيًا.
+## الإصلاح الجذري في v2
 
-3. **MFA كان يمنع لوحة الأدمن بالكامل**: Middleware المصادقة كان يمنع كل طلب API للأدوار الإدارية قبل فتح حتى صفحات القراءة. أزيل الحظر العام، وبقي MFA إلزاميًا على العمليات الحساسة فقط عبر `requireRecentPrivilegedAuth`.
+1. كل token ما زال **ملزمًا بالتحقق الحقيقي من Firebase Admin SDK**: التوقيع، issuer، audience/project، ووقت الانتهاء. لا يوجد أي fallback يقبل JWT غير موثق.
+2. فحص revocation الشبكي أصبح اختياريًا عبر `CHECK_REVOKED_ID_TOKENS=true`. الافتراضي `false` حتى لا تتحول مشكلة IAM في Cloud Run إلى منع دخول لجميع المستخدمين. عند تفعيله يجب أن تملك هوية الخادم صلاحيات Firebase Authentication اللازمة.
+3. أضيف تصنيف دقيق للأخطاء بدل دمجها كلها في `Invalid or expired`:
+   - `AUTH_EXPIRED`
+   - `AUTH_REVOKED`
+   - `AUTH_PROJECT_MISMATCH`
+   - `AUTH_ADMIN_PERMISSION`
+   - `AUTH_USER_DISABLED`
+   - `AUTH_INVALID`
+4. العميل إذا استلم `AUTH_EXPIRED` أو `AUTH_INVALID` يجبر Firebase على إصدار ID token جديد ثم يعيد الطلب **مرة واحدة فقط**.
+5. في طلبات الكتابة، إعادة المحاولة تحتفظ بنفس `X-Idempotency-Key` حتى لا يتكرر POST/PATCH بسبب تحديث التوكن.
+6. قراءة payload غير الموثق موجودة فقط لتشخيص `aud/exp` بعد فشل التحقق، ولا تستخدم مطلقًا لإنشاء actor أو منح صلاحية.
+7. كل إصلاحات الحزمة السابقة محفوظة: قاعدة Firestore المسماة، Storage bucket، MFA enrollment/challenge، تطبيع الأدوار، وقواعد Firebase.
 
-4. **تمت إضافة دورة MFA كاملة بدل رسالة المنع**:
-   - شاشة تسجيل TOTP للأدوار الإدارية.
-   - تسجيل العامل الثاني داخل Firebase فعليًا.
-   - تسجيل خروج ثم دخول جديد لضمان وجود إثبات العامل الثاني في ID Token.
-   - دعم تحدي TOTP عند الدخول.
-   - دعم تحدي SMS للحسابات التي لديها Phone MFA مسبقًا.
+## التحقق المحلي
 
-5. **إغلاق ثغرة مصادقة خطيرة**: حُذف fallback كان يقرأ Payload من JWT غير موثّق عند فشل Firebase Admin verification. الآن Bearer token لا يُقبل إلا بعد `verifyIdToken(token, true)` من Firebase Admin.
+- Release security audit: **28/28 PASS**
+- TypeScript syntax audit: **109 files / 0 errors**
+- Global UI audit: **24/24 PASS**
 
-6. **تطبيع الأدوار الشائعة**: claims مثل `teacher`, `instructor`, `faculty`, `lecturer` تُفهم كـ `professor`، و`administrator` كـ `admin` بدل سقوطها بصمت إلى student.
+لم يتم تنفيذ اتصال حي بحساب Firebase الإنتاجي أو نشر الحزمة؛ لذلك لا أدّعي اختبار IAM الخاص ببيئة Cloud Run الفعلية.
 
-7. **تشخيص أوضح**: `/api/health` يعرض قاعدة Firestore المستخدمة وحالة Storage الفعلية، كما أصبحت أخطاء إعداد Storage/Firestore المعروفة أوضح بدل الرسالة العامة فقط.
+## الدمج
 
-8. **firebase.json** أصبح يربط القواعد والفهارس صراحة بقاعدة Firestore المسماة الموجودة في المشروع.
-
-## التحقق المحلي المنفذ
-
-- `node scripts/static-release-audit.mjs` → **27/27 PASS**
-- `node scripts/ts-syntax-audit.cjs` → **109 files, 0 syntax errors**
-- `node scripts/global-ui-audit.cjs` → **24/24 PASS**
-
-لم يتم تنفيذ build كامل لأن تثبيت npm dependencies غير متاح في بيئة العمل الحالية (npm registry غير متاح/لا توجد cache كاملة). لم يتم رفع أو نشر أي ملف إلى Firebase أو Cloud Run أو GitHub أو أي خدمة خارجية.
-
-## طريقة الدمج
-
-فك محتويات ZIP فوق **جذر نفس نسخة المشروع التي أرسلتها** ثم اسمح باستبدال الملفات. لا تنسخ المجلد كطبقة إضافية؛ المسارات داخل ZIP تبدأ من جذر المشروع (`server.ts`, `src/...`, `firebase.json`).
+فك ZIP فوق جذر نفس نسخة AcademicOS واستبدل الملفات الموجودة. يمكن تطبيق v2 مباشرة فوق المشروع الأصلي أو فوق Patch السابق؛ الحزمة تحتوي فقط الملفات التي تغيرت عن النسخة التي أرسلتها، وليست المشروع كاملًا.

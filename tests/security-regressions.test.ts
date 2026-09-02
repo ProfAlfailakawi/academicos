@@ -75,3 +75,19 @@ test('API auth retry forces one fresh Firebase token and preserves write idempot
   assert.match(apiSource, /const baseHeaders = new Headers/);
   assert.match(apiSource, /X-Idempotency-Key/);
 });
+
+test('Cloud Run deployment pins Firebase project and provisions required runtime IAM', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const deploy = await readFile(new URL('../scripts/deploy-cloud-run.sh', import.meta.url), 'utf8');
+  const iam = await readFile(new URL('../scripts/configure-firebase-runtime-iam.sh', import.meta.url), 'utf8');
+  assert.match(deploy, /Refusing an accidental cross-project deployment/);
+  assert.match(deploy, /--service-account "\$RUNTIME_SERVICE_ACCOUNT"/);
+  assert.match(deploy, /--remove-env-vars "FIREBASE_SERVICE_ACCOUNT"/);
+  for (const role of [
+    'roles/datastore.user',
+    'roles/firebaseauth.admin',
+    'roles/firebaseappcheck.tokenVerifier',
+    'roles/storage.objectUser',
+    'roles/iam.serviceAccountTokenCreator',
+  ]) assert.match(iam, new RegExp(role.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+});

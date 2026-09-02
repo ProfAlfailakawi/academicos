@@ -55,7 +55,12 @@ import JSZip from "jszip";
 import { runSubmissionAudit } from "./src/server/audit";
 import { runStyleIntegrityAnalysis, improveScholarlyStyle } from "./src/server/deep-ai-detector";
 import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
-import { firebaseStorageBucketName, firestoreDatabaseId } from "./src/server/firebase-services";
+import {
+  assertFirebaseCredentialAlignment,
+  firebaseProjectId,
+  firebaseStorageBucketName,
+  firestoreDatabaseId,
+} from "./src/server/firebase-services";
 import {
   exportCitations,
   exportCourseArchive,
@@ -366,7 +371,13 @@ function initFirebase() {
   }
   try {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || appletConfig.projectId;
+    assertFirebaseCredentialAlignment(raw);
+    const projectId = firebaseProjectId();
+    if (!projectId)
+      throw Object.assign(new Error("Firebase project id is not configured"), {
+        code: "FIREBASE_PROJECT_NOT_CONFIGURED",
+        status: 503,
+      });
     initializeApp({
       projectId,
       credential: raw ? cert(JSON.parse(raw)) : applicationDefault(),
@@ -2138,6 +2149,7 @@ async function startServer() {
       status: "ok",
       mode: "production",
       firebase: firebaseInitialized,
+      firebaseProject: firebaseProjectId(),
       firestoreDatabase: firestoreDatabaseId(),
       aiConfigured: aiConfigured(),
       storageConfigured: Boolean(firebaseStorageBucketName()),
@@ -9958,11 +9970,26 @@ async function startServer() {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const id = randomUUID();
     console.error(`[${id}]`, err);
+    const rawCode = String(err?.code || "");
+    const firebaseInfrastructureCode =
+      rawCode === "7"
+        ? "FIRESTORE_IAM_PERMISSION_DENIED"
+        : rawCode === "5"
+          ? "FIRESTORE_DATABASE_UNAVAILABLE"
+          : rawCode;
     const status = Number(
       err?.status ||
-        (err?.code === "AI_NOT_CONFIGURED" ||
-        err?.code === "STORAGE_NOT_CONFIGURED" ||
-        err?.code === "BILLING_NOT_CONFIGURED"
+        ([
+          "AI_NOT_CONFIGURED",
+          "STORAGE_NOT_CONFIGURED",
+          "BILLING_NOT_CONFIGURED",
+          "FIRESTORE_IAM_PERMISSION_DENIED",
+          "FIRESTORE_DATABASE_UNAVAILABLE",
+          "FIREBASE_CREDENTIAL_PROJECT_MISMATCH",
+          "FIREBASE_RUNTIME_PROJECT_MISMATCH",
+          "FIREBASE_SERVICE_ACCOUNT_INVALID",
+          "FIREBASE_PROJECT_NOT_CONFIGURED",
+        ].includes(firebaseInfrastructureCode)
           ? 503
           : 500),
     );
@@ -9970,17 +9997,35 @@ async function startServer() {
       AI_NOT_CONFIGURED: "خدمة الذكاء الاصطناعي غير مهيأة على الخادم.",
       STORAGE_NOT_CONFIGURED: "تخزين Firebase غير مهيأ لهذا النشر.",
       BILLING_NOT_CONFIGURED: "خدمة الدفع غير مهيأة لهذا النشر.",
-      "5": "قاعدة Firestore المحددة غير موجودة أو لا يمكن الوصول إليها من هذا المشروع.",
-      "7": "حساب خدمة Firebase لا يملك الصلاحيات اللازمة للوصول إلى المورد المطلوب.",
+      FIRESTORE_DATABASE_UNAVAILABLE:
+        "قاعدة Firestore المحددة غير موجودة أو لا يمكن الوصول إليها من مشروع Firebase الحالي.",
+      FIRESTORE_IAM_PERMISSION_DENIED:
+        "هوية تشغيل الخادم لا تملك صلاحية Firestore على قاعدة AcademicOS. استخدم حساب التشغيل المخصص وأدوار IAM المرفقة مع حزمة الإصلاح.",
+      FIREBASE_CREDENTIAL_PROJECT_MISMATCH:
+        "حساب خدمة Firebase المضاف للخادم تابع لمشروع مختلف عن مشروع AcademicOS.",
+      FIREBASE_RUNTIME_PROJECT_MISMATCH:
+        "خدمة Cloud Run تعمل في مشروع مختلف عن مشروع Firebase المستهدف.",
+      FIREBASE_SERVICE_ACCOUNT_INVALID:
+        "قيمة FIREBASE_SERVICE_ACCOUNT غير صالحة.",
+      FIREBASE_PROJECT_NOT_CONFIGURED:
+        "معرّف مشروع Firebase غير مهيأ على الخادم.",
     };
-    const safeInfrastructureMessage = infrastructureMessages[String(err?.code || "")];
+    const safeInfrastructureMessage = infrastructureMessages[firebaseInfrastructureCode];
     res.status(status).json({
       error:
         status >= 500
           ? safeInfrastructureMessage || "تعذر إكمال العملية. حاول مرة أخرى، وإن استمرت المشكلة استخدم رقم الخطأ للمراجعة."
           : err?.message,
-      code: String(err?.code || "INTERNAL_ERROR"),
+      code: firebaseInfrastructureCode || "INTERNAL_ERROR",
       errorId: id,
+      ...(firebaseInfrastructureCode.startsWith("FIRESTORE_")
+        ? {
+            firebaseTarget: {
+              projectId: firebaseProjectId(),
+              databaseId: firestoreDatabaseId(),
+            },
+          }
+        : {}),
     });
   });
   if (process.env.NODE_ENV !== "production") {

@@ -12,6 +12,15 @@ const required = [
 const errors = [];
 const warnings = [];
 const env = process.env;
+
+const firebaseProject = String(env.FIREBASE_PROJECT_ID || env.VITE_FIREBASE_PROJECT_ID || "").trim();
+const runtimeProject = String(env.GOOGLE_CLOUD_PROJECT || env.GCLOUD_PROJECT || "").trim();
+if (runtimeProject && firebaseProject && runtimeProject !== firebaseProject && env.ALLOW_CROSS_PROJECT_FIREBASE !== "true")
+  errors.push(`Runtime project ${runtimeProject} does not match Firebase project ${firebaseProject}`);
+if (env.FIREBASE_SERVICE_ACCOUNT && (env.K_SERVICE || env.K_REVISION))
+  errors.push("Cloud Run must use its attached service identity; remove FIREBASE_SERVICE_ACCOUNT to avoid stale/cross-project credentials");
+if (!String(env.FIREBASE_FIRESTORE_DATABASE_ID || "").trim())
+  warnings.push("FIREBASE_FIRESTORE_DATABASE_ID is not explicit; backend will fall back to firebase-applet-config.json");
 for (const key of required) if (!String(env[key] || "").trim()) errors.push(`${key} is required`);
 if (env.NODE_ENV !== "production") errors.push("NODE_ENV must be production");
 for (const key of ["APP_URL", ...String(env.ALLOWED_ORIGINS || "").split(",").map(() => "ALLOWED_ORIGINS")]) {

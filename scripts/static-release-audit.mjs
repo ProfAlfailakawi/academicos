@@ -20,6 +20,8 @@ const exports=read('src/server/export.ts');
 const firebaseServices=read('src/server/firebase-services.ts');
 const storage=read('src/server/storage.ts');
 const mfaSetup=read('src/pages/MfaSetup.tsx');
+const deployCloudRun=read('scripts/deploy-cloud-run.sh');
+const runtimeIam=read('scripts/configure-firebase-runtime-iam.sh');
 
 const i18n=read('src/lib/i18n.tsx');
 const onboarding=read('src/pages/Onboarding.tsx');
@@ -39,6 +41,10 @@ expect('No unsigned JWT authentication fallback',!/Buffer\.from\(parts\[1\][\s\S
 expect('Unsigned JWT payloads are never trusted',server.includes('Diagnostic only')&&server.includes('acceptance still requires Firebase Admin signature validation')&&!server.includes('safeVerifyToken'),'unverified JWT payload may only be used for diagnostics, never authentication');
 expect('Named Firestore database is explicit',firebaseServices.includes('appletConfig.firestoreDatabaseId')&&firebaseServices.includes('getFirestore(databaseId)'),'backend must use the configured named Firestore database instead of silently targeting (default)');
 expect('Storage uses configured Firebase bucket fallback',storage.includes('firebaseStorageBucketName()')&&!storage.includes('process.env.FIREBASE_STORAGE_BUCKET'),'uploads must use the applet-config bucket when no duplicate server env is present');
+expect('Cloud Run deploy is pinned to Firebase project',deployCloudRun.includes('PROJECT_ID="${CLOUD_RUN_PROJECT_ID:-$FIREBASE_PROJECT_ID}"')&&deployCloudRun.includes('Refusing an accidental cross-project deployment'),'deployment must not silently use an unrelated current gcloud project');
+expect('Cloud Run uses dedicated runtime identity',deployCloudRun.includes('--service-account "$RUNTIME_SERVICE_ACCOUNT"')&&deployCloudRun.includes('--remove-env-vars "FIREBASE_SERVICE_ACCOUNT"'),'production must use ADC from one attached service identity instead of a stale JSON credential');
+expect('Firebase runtime IAM is least privilege and complete',runtimeIam.includes('roles/datastore.user')&&runtimeIam.includes('roles/firebaseauth.admin')&&runtimeIam.includes('roles/firebaseappcheck.tokenVerifier')&&runtimeIam.includes('roles/storage.objectUser')&&runtimeIam.includes('roles/iam.serviceAccountTokenCreator'),'runtime identity needs Firestore, Auth, App Check, Storage, and self-signing capabilities');
+expect('Credential project mismatch fails closed',firebaseServices.includes('FIREBASE_CREDENTIAL_PROJECT_MISMATCH')&&firebaseServices.includes('FIREBASE_RUNTIME_PROJECT_MISMATCH'),'cross-project credential mistakes must be explicit instead of surfacing as Firestore code 7');
 expect('MFA is not a global read blocker',!server.includes('Multi-factor authentication is required for this administrative role')&&server.includes('MFA is required for this sensitive action'),'privileged users must reach read-only admin pages while sensitive writes still require MFA');
 expect('MFA enrollment and challenge are implemented',mfaSetup.includes('TotpMultiFactorGenerator.generateSecret')&&login.includes('getMultiFactorResolver')&&login.includes('resolveSignIn'),'Firebase MFA must have a complete enrollment and sign-in path');
 expect('No local auth fallback',!auth.includes('localStorage') && !auth.includes('localUser'),'AuthContext must never fabricate a signed-in user');

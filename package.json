@@ -43,6 +43,7 @@
     "test:retrieval": "tsx --test tests/retrieval.test.ts",
     "test:ci": "npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
+    "firebase:iam": "bash scripts/configure-firebase-runtime-iam.sh",
     "emulators:showcase:seed": "FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=academicos-local node scripts/seed-showcase.mjs",
     "verify:production": "node scripts/verify-production-env.mjs",
     "audit:release": "node scripts/static-release-audit.mjs",

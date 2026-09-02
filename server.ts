@@ -10000,7 +10000,7 @@ async function startServer() {
       FIRESTORE_DATABASE_UNAVAILABLE:
         "قاعدة Firestore المحددة غير موجودة أو لا يمكن الوصول إليها من مشروع Firebase الحالي.",
       FIRESTORE_IAM_PERMISSION_DENIED:
-        "هوية تشغيل الخادم لا تملك صلاحية Firestore على قاعدة AcademicOS. استخدم حساب التشغيل المخصص وأدوار IAM المرفقة مع حزمة الإصلاح.",
+        "هوية Cloud Run الحالية لا تملك صلاحية الوصول إلى قاعدة Firestore المحددة. لا تغيّر هوية الخدمة؛ امنح الهوية الحالية صلاحية Firestore على قاعدة AcademicOS.",
       FIREBASE_CREDENTIAL_PROJECT_MISMATCH:
         "حساب خدمة Firebase المضاف للخادم تابع لمشروع مختلف عن مشروع AcademicOS.",
       FIREBASE_RUNTIME_PROJECT_MISMATCH:

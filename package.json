@@ -48,7 +48,8 @@
     "verify:production": "node scripts/verify-production-env.mjs",
     "audit:release": "node scripts/static-release-audit.mjs",
     "audit:global-ui": "node scripts/global-ui-audit.cjs",
-    "audit:launch": "node scripts/static-release-audit.mjs && node scripts/global-ui-audit.cjs && node scripts/ts-syntax-audit.cjs"
+    "audit:launch": "node scripts/static-release-audit.mjs && node scripts/global-ui-audit.cjs && node scripts/ts-syntax-audit.cjs",
+    "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh"
   },
   "dependencies": {
     "cors": "^2.8.6",

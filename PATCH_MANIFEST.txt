@@ -1,58 +1,10 @@
-AcademicOS Firebase Runtime IAM Root Fix v3 — cumulative patch
-Generated: 2026-09-02
-
-Files:
 .env.example
-firebase.json
 package.json
-public/env-config.js
-scripts/bootstrap-root.mjs
+server.ts
 scripts/configure-firebase-runtime-iam.sh
 scripts/deploy-cloud-run.sh
+scripts/repair-cloud-run-firebase-access.sh
 scripts/static-release-audit.mjs
-scripts/verify-production-env.mjs
-server.ts
-src/App.tsx
-src/contexts/AuthContext.tsx
-src/lib/api.ts
-src/lib/firebase.ts
-src/lib/i18n-messages.ts
-src/pages/Login.tsx
-src/pages/MfaSetup.tsx
-src/server/abuse-guard.ts
-src/server/db.ts
-src/server/firebase-services.ts
-src/server/notifications.ts
-src/server/platform-store.ts
-src/server/storage.ts
-src/types/index.ts
 tests/security-regressions.test.ts
 PATCH_NOTES_AR.md
-
-SHA256:
-42beeb432a32af171b2b702cec26f4d5aee5eb6e0f733ff45f208ffd197a921c  ./.env.example
-9ee9aac2db8b69b3e43264dec19a26978e08e8fefcf64926a677b5d2cca4ad80  ./PATCH_NOTES_AR.md
-d8ae3322b473ce552692168f66f2a9a8a04ea4500fcff0605839aebcf658dcf0  ./firebase.json
-eb02a0d148c20a74a9fa2232cb5f04090ed6430a47a73525b2894412dfde6f7b  ./package.json
-28e0776296d63b146ca9bb9589e657ee75a2e6223add1d48088c0503eb268769  ./public/env-config.js
-47bbfd45a30cf5c88047c1024c099ada62d7987db3257f8714ccc0a276e26fbd  ./scripts/bootstrap-root.mjs
-9cc189594018f8995f05921ed5ee602f0c852a036a3a0fd9b400d931be08e692  ./scripts/configure-firebase-runtime-iam.sh
-0a52235402ca249bc26fb824e130264912454eee46911ca8b02f55d9160b6260  ./scripts/deploy-cloud-run.sh
-d22a6606aae1d47a7470d3da8f0bd4bdd0691cb7c048f1e6ff12259e58110803  ./scripts/static-release-audit.mjs
-58c44f2d979c4e5c63073012656607f6adabd4c5df7624609a7a25baa3d01722  ./scripts/verify-production-env.mjs
-15375328107b9a8681fcfdf34f9cea7a705127a494dd1807b8531863acc6ba64  ./server.ts
-e99c1a3571a4f68d52603ec266ed7aed4f99245c7dbb25d2902d5a729cec06af  ./src/App.tsx
-cd96b469597b786d61d831efeed9ceb1ee727af010563110fab90c11f59697a1  ./src/contexts/AuthContext.tsx
-9e2bd8509237eb436eccb7da82df2056e4384cd24fd904bb5a4b4d0886c02b87  ./src/lib/api.ts
-440eaeca1d75b34abde16acca5f60f890a08216c73f7b88e4c69a9a2939ee8c8  ./src/lib/firebase.ts
-6a563c6f5ddfc98c9ce114bf80368b99b7a00c6aea2b1133a0789d668db2fdb0  ./src/lib/i18n-messages.ts
-a510475613c3c54e8aa8d2dd1d027c1c98569e88af59cd4eba757b9eca49b5ff  ./src/pages/Login.tsx
-00d6b37c31f4e54f862ca2632bab69e80334b964f9e0cf08dd5f5a413e654c96  ./src/pages/MfaSetup.tsx
-eb5d6b73d67fb2fb70996ee204f64f660033ec78394a195e75ecbac76536ea70  ./src/server/abuse-guard.ts
-196fd0483045a5019e70e0002e4ccbdf66cccde9ea3fed099b0d70b2d5fed2cb  ./src/server/db.ts
-63c8133b06e8cee7e2c196a91cbdaef38601be1aee1761a061fb17d97460073f  ./src/server/firebase-services.ts
-3150faa66fbb2be34f305fc20af70e74cb9ee7616e4224b603a6b437efdd9b61  ./src/server/notifications.ts
-f7759a6b90b58b2d5305ae52e213fff8011050b34b2830382a6b8fa6a3e00855  ./src/server/platform-store.ts
-0916c2f3a076694c056bd4fb395e7d429d7c6492e0a06ef0851718715e2ae3b7  ./src/server/storage.ts
-f7f2aac095b1c409b5bec53c027c56ad6db42eebf504c2b9b264420d06bbe005  ./src/types/index.ts
-bf5c84e8c810070b9f0f03723995c713939205afc6d42694063c57a448e75423  ./tests/security-regressions.test.ts
+PATCH_MANIFEST.txt

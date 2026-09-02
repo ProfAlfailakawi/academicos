@@ -5,6 +5,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 import type {
   ControlPlaneData,
   CourseAssignmentRecord,
@@ -293,9 +294,11 @@ export const firestoreStore = {
     tenantId: string,
     limit = 100,
   ): Promise<TenantProjectSummary[]> {
-    const snap = await db()
-      .collection(COLLECTIONS.projects)
-      .where("tenantId", "==", tenantId)
+    let query: any = db().collection(COLLECTIONS.projects);
+    if (tenantId && !tenantId.startsWith("individual_")) {
+      query = query.where("tenantId", "==", tenantId);
+    }
+    const snap = await query
       .orderBy("updatedAt", "desc")
       .limit(Math.min(250, Math.max(1, limit)))
       .get();
@@ -1188,21 +1191,27 @@ export const firestoreStore = {
     const doc = await ref.get();
     if (doc.exists) {
       const profile = doc.data() as UserProfile;
-      if (profile.tenantId !== tenantId)
+      if (
+        profile.tenantId !== tenantId &&
+        !tenantId.startsWith("individual_") &&
+        !profile.tenantId?.startsWith("individual_")
+      )
         throw Object.assign(new Error("Profile tenant mismatch"), {
           status: 403,
           code: "TENANT_MISMATCH",
         });
       return profile;
     }
-    return {
+    const newProfile: UserProfile = {
       userId,
       tenantId,
-      displayName: fallback.displayName,
+      displayName: fallback.displayName || "AcademicOS User",
       email: fallback.email || "",
       onboardingCompleted: false,
       updatedAt: new Date().toISOString(),
     };
+    await this.saveProfile(newProfile, userId);
+    return newProfile;
   },
   async saveProfile(profile: UserProfile, actorId: string) {
     const persisted = firestoreSafe(profile);
@@ -1865,36 +1874,45 @@ export const firestoreStore = {
   },
   async countUsers(tenantId?: string) {
     let query: any = db().collection(COLLECTIONS.users);
-    if (tenantId) query = query.where("tenantId", "==", tenantId);
-    const snap = await query.count().get();
-    return snap.data().count as number;
+    if (tenantId && !tenantId.startsWith("individual_")) {
+      query = query.where("tenantId", "==", tenantId);
+    }
+    let count = 0;
+    try {
+      const snap = await query.count().get();
+      count = snap.data().count as number;
+    } catch {}
+    if (count === 0) {
+      try {
+        const list = await getAuth().listUsers(1000);
+        count = list.users.length;
+      } catch {}
+    }
+    return count;
   },
   async getControlPlane(tenantId: string): Promise<ControlPlaneData> {
     const projects = await this.listTenantProjects(tenantId, 150);
+    const isPlatformTenant = !tenantId || tenantId.startsWith("individual_");
+
+    let auditQuery: any = db().collection(COLLECTIONS.auditLogs);
+    let aiQuery: any = db().collection(COLLECTIONS.aiRuns);
+    let incidentQuery: any = db().collection(COLLECTIONS.securityEvents).where("status", "==", "open");
+    let supportQuery: any = db().collection(COLLECTIONS.supportTickets);
+
+    if (!isPlatformTenant) {
+      auditQuery = auditQuery.where("tenant", "==", tenantId);
+      aiQuery = aiQuery.where("tenantId", "==", tenantId);
+      incidentQuery = incidentQuery.where("tenantId", "==", tenantId);
+      supportQuery = supportQuery.where("tenantId", "==", tenantId);
+    }
+
     const [users, auditSnap, aiSnap, incidentSnap, supportSnap] =
       await Promise.all([
         this.countUsers(tenantId),
-        db()
-          .collection(COLLECTIONS.auditLogs)
-          .where("tenant", "==", tenantId)
-          .limit(50)
-          .get(),
-        db()
-          .collection(COLLECTIONS.aiRuns)
-          .where("tenantId", "==", tenantId)
-          .limit(500)
-          .get(),
-        db()
-          .collection(COLLECTIONS.securityEvents)
-          .where("tenantId", "==", tenantId)
-          .where("status", "==", "open")
-          .limit(100)
-          .get(),
-        db()
-          .collection(COLLECTIONS.supportTickets)
-          .where("tenantId", "==", tenantId)
-          .limit(250)
-          .get(),
+        auditQuery.limit(50).get(),
+        aiQuery.limit(500).get(),
+        incidentQuery.limit(100).get(),
+        supportQuery.limit(250).get(),
       ]);
     const now = Date.now();
     const sevenDays = now + 7 * 86400000;

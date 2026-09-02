@@ -142,7 +142,7 @@ export function AppDialog({
 
           <Button
             type="button"
-            variant={danger ? "destructive" : "default"}
+            variant={danger ? "danger" : "default"}
             onClick={() => void onConfirm()}
             disabled={busy}
           >

@@ -127,18 +127,30 @@ export function Settings() {
       setStudyBusy(false);
     }
   }
-  async function requestDeletion() {
+  function requestDeletion() {
     setDeletionReason("");
+    setDeletionMessage("");
     setDeletionDialogOpen(true);
-    return;
+  }
+
+  async function submitDeletionRequest() {
+    const reason = deletionReason.trim();
+    if (!reason || deletionBusy) return;
+
     setDeletionBusy(true);
     setDeletionMessage("");
     try {
-      const r = await api.requestDeletion(reason, true);
+      const result = await api.requestDeletion(reason, true);
       setDeletionMessage(
-        t("settings.deletionLogged").replace("{status}", String(r.request.status)),
+        t("settings.deletionLogged").replace(
+          "{status}",
+          String(result.request.status),
+        ),
       );
-    } catch (e: any) {
+      setDeletionDialogOpen(false);
+      setDeletionReason("");
+    } catch (e) {
+      console.error("Account deletion request failed", e);
       setDeletionMessage(localizedUiError(e, t, "settings.deletionError"));
     } finally {
       setDeletionBusy(false);
@@ -503,6 +515,23 @@ export function Settings() {
           </CardContent>
         </Card>
       </div>
+
+      <AppDialog
+        open={deletionDialogOpen}
+        title={t("settings.deleteAccount")}
+        description={t("settings.deletionPrompt")}
+        inputMode="textarea"
+        value={deletionReason}
+        onValueChange={setDeletionReason}
+        danger
+        busy={deletionBusy}
+        onCancel={() => {
+          if (deletionBusy) return;
+          setDeletionDialogOpen(false);
+          setDeletionReason("");
+        }}
+        onConfirm={submitDeletionRequest}
+      />
     </div>
   );
 }
@@ -530,25 +559,6 @@ function Preference({
 }) {
   const { t } = useI18n();
 
-  async function submitDeletionRequest() {
-    const reason = deletionReason.trim();
-    if (!reason) return;
-
-    setDeletionDialogOpen(false);
-
-    try {
-      const result = await api.requestAccountDeletion(reason);
-      setDeletionMessage(
-        t("settings.deletionLogged").replace("{status}", result.status),
-      );
-    } catch (e) {
-      console.error("Account deletion request failed", e);
-      setDeletionMessage(
-        localizedUiError(e, t, "settings.deletionError"),
-      );
-    }
-  }
-
 
   return (
     <button
@@ -562,21 +572,7 @@ function Preference({
         {active ? t("settings.on") : t("settings.off")}
       </span>
     
-      <AppDialog
-        open={deletionDialogOpen}
-        title={t("settings.deleteAccount")}
-        description={t("settings.deletionPrompt")}
-        inputMode="textarea"
-        value={deletionReason}
-        onValueChange={setDeletionReason}
-        danger
-        busy={false}
-        onCancel={() => {
-          setDeletionDialogOpen(false);
-          setDeletionReason("");
-        }}
-        onConfirm={submitDeletionRequest}
-      />
+
 </button>
   );
 }

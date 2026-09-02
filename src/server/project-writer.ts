@@ -374,7 +374,10 @@ groundedResearchQueries.length
           .join("\n\n"),
       });
     }
-    const content = output?.summary?.trim();
+    const generatedContent = output?.summary?.trim();
+    const content = input.generateSection
+      ? generatedContent
+      : nativeSection(project, item.title, item.purpose, false, variation);
 
     if (!content) {
       throw new Error(

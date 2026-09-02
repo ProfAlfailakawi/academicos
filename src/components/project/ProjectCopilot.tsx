@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useMemo, useState } from "react";
 import { BookOpen, FileSearch, FlaskConical, GraduationCap, LoaderCircle, Network, ShieldCheck, Sparkles } from "lucide-react";
 import { api } from "../../lib/api";
@@ -35,7 +36,8 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
       const response = await api.projectCopilot(project.id, { mode, query });
       setResult(response.copilot);
     } catch (e: any) {
-      setError(e.message || "Copilot failed");
+      console.error("Project Copilot failed", e);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setBusy(false);
     }

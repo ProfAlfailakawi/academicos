@@ -323,10 +323,10 @@ export const firestoreStore = {
     return member.empty ? null : project;
   },
   async saveProject(project: ProjectDNA) {
-    const persisted: ProjectDNA = {
+    const persisted = firestoreSafe({
       ...project,
       revision: Math.max(1, Number(project.revision || 1)),
-    };
+    }) as ProjectDNA;
     const batch = db().batch();
     batch.set(
       db().collection(COLLECTIONS.projects).doc(persisted.id),

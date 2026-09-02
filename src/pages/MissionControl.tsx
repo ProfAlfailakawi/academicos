@@ -1,3 +1,4 @@
+import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ArrowRight, Award, Bell, BookOpenCheck, BrainCircuit, CalendarDays, Camera, CheckCircle2, Clock3, FileHeart, FilePenLine, FileText, FolderOpen, GraduationCap, LoaderCircle, Mic2, Paperclip, ScanSearch, ShieldCheck, Sparkles, Target, WandSparkles, X, Zap } from "lucide-react";
@@ -58,12 +59,51 @@ export function MissionControl() {
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
-    Promise.allSettled([api.projects(), api.missionControl(), api.profile()]).then(([projectsResult, missionResult, profileResult]) => {
-      if (projectsResult.status === "fulfilled") setProjects(projectsResult.value.projects);
-      if (missionResult.status === "fulfilled") { setMission(missionResult.value.mission); setBrain(missionResult.value.brain); }
-      if (profileResult.status === "fulfilled") setProfile(profileResult.value.profile);
+    let active = true;
+
+    Promise.allSettled([
+      api.projects(),
+      api.missionControl(),
+      api.profile(),
+    ]).then(([projectsResult, missionResult, profileResult]) => {
+      if (!active) return;
+
+      if (projectsResult.status === "fulfilled") {
+        setProjects(projectsResult.value.projects);
+      }
+
+      if (missionResult.status === "fulfilled") {
+        setMission(missionResult.value.mission);
+        setBrain(missionResult.value.brain);
+      }
+
+      if (profileResult.status === "fulfilled") {
+        setProfile(profileResult.value.profile);
+      }
+
+      const failed =
+        projectsResult.status === "rejected" ||
+        missionResult.status === "rejected" ||
+        profileResult.status === "rejected";
+
+      if (failed) {
+        console.error("Mission Control bootstrap failed", {
+          projects: projectsResult.status === "rejected" ? projectsResult.reason : undefined,
+          mission: missionResult.status === "rejected" ? missionResult.reason : undefined,
+          profile: profileResult.status === "rejected" ? profileResult.reason : undefined,
+        });
+        setError(t("mission.error"));
+      }
+    }).catch((caught) => {
+      if (!active) return;
+      console.error("Mission Control bootstrap failed", caught);
+      setError(t("mission.error"));
     });
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [t]);
 
   const latest = useMemo(() => [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3), [projects]);
   const firstName = user?.displayName?.trim().split(/\s+/)[0] || t("mission.student");
@@ -92,16 +132,57 @@ export function MissionControl() {
         compileSummary: t(selectedIntent === "rescue" ? "mission.compiledRescue" : "mission.compiledWrite"),
         writerRequest: { mode: selectedIntent === "rescue" ? "rescue" : "write", assistanceMode: "practice", language: meta.aiName, academicTone: "clear", topicNotes: text.trim() },
       }});
-    } catch (caught: any) { setError(caught?.message || t("mission.error")); }
+    } catch (caught: any) { setError(localizedUiError(caught, t, "mission.error")); }
     finally { setBusy(false); }
   }
 
   function voiceInput() {
-    const Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!Recognition) { setError(t("mission.voiceUnsupported")); return; }
-    const recognition = new Recognition(); recognition.lang = meta.speech; recognition.interimResults = false; recognition.continuous = false; setListening(true);
-    recognition.onresult = (event: any) => { const transcript = String(event.results?.[0]?.[0]?.transcript || "").trim(); if (transcript) setText((current) => current ? `${current}\n${transcript}` : transcript); };
-    recognition.onerror = () => setError(t("mission.voiceError")); recognition.onend = () => setListening(false); recognition.start();
+    if (listening) return;
+
+    const Recognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!Recognition) {
+      setError(t("mission.voiceUnsupported"));
+      return;
+    }
+
+    setError("");
+
+    try {
+      const recognition = new Recognition();
+      recognition.lang = meta.speech;
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
+      recognition.onresult = (event: any) => {
+        const transcript = String(
+          event.results?.[0]?.[0]?.transcript || "",
+        ).trim();
+
+        if (transcript) {
+          setText((current) =>
+            current ? `${current}\n${transcript}` : transcript,
+          );
+        }
+      };
+
+      recognition.onerror = () => {
+        setError(t("mission.voiceError"));
+        setListening(false);
+      };
+
+      recognition.onend = () => {
+        setListening(false);
+      };
+
+      setListening(true);
+      recognition.start();
+    } catch {
+      setListening(false);
+      setError(t("mission.voiceError"));
+    }
   }
 
   const minuteUnit = t("mission.minuteShort");
@@ -115,9 +196,9 @@ export function MissionControl() {
           <textarea value={text} onChange={(e)=>setText(e.target.value)} className="w-full min-h-28 bg-transparent resize-none outline-none px-2 pt-2 text-sm md:text-base leading-7" placeholder={t("mission.placeholder")} aria-label={t("mission.whatToday")}/>
           {!!files.length && <div className="flex flex-wrap gap-2 px-2 pb-2">{files.map((file,index)=><span key={`${file.name}-${index}`} className="inline-flex items-center gap-2 rounded-full soft-bg px-3 py-1.5 text-[10px]"><FileText size={12}/><span className="max-w-48 truncate">{file.name}</span><button aria-label={`${t("mission.remove")} ${file.name}`} onClick={()=>setFiles((current)=>current.filter((_,i)=>i!==index))}><X size={11}/></button></span>)}</div>}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-t hairline pt-3 px-1"><div className="flex items-center gap-1.5 flex-wrap">
-            <input ref={fileInput} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(e)=>setFiles(Array.from(e.target.files||[]).slice(0,5))}/>
-            <input ref={cameraInput} type="file" className="hidden" accept="image/*" capture="environment" onChange={(e)=>setFiles(Array.from(e.target.files||[]).slice(0,1))}/>
-            <ToolButton icon={Paperclip} label={t("mission.upload")} onClick={()=>fileInput.current?.click()}/><ToolButton icon={Camera} label={t("mission.camera")} onClick={()=>cameraInput.current?.click()}/><ToolButton icon={listening?LoaderCircle:Mic2} label={listening?t("mission.listening"):t("mission.speak")} onClick={voiceInput} spin={listening}/>
+            <input ref={fileInput} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(e)=>{const selected=Array.from(e.target.files||[]).slice(0,5);setFiles(selected);e.currentTarget.value="";}}/>
+            <input ref={cameraInput} type="file" className="hidden" accept="image/*" capture="environment" onChange={(e)=>{const selected=Array.from(e.target.files||[]).slice(0,1);setFiles(selected);e.currentTarget.value="";}}/>
+            <ToolButton icon={Paperclip} label={t("mission.upload")} onClick={()=>fileInput.current?.click()}/><ToolButton icon={Camera} label={t("mission.camera")} onClick={()=>cameraInput.current?.click()}/><ToolButton icon={listening?LoaderCircle:Mic2} label={listening?t("mission.listening"):t("mission.speak")} onClick={voiceInput} spin={listening} disabled={listening}/>
           </div><Button onClick={launch} disabled={!canGo||busy} className="min-w-40">{busy?<LoaderCircle size={16} className="animate-spin"/>:<WandSparkles size={16}/>} {busy?t("mission.processing"):t("mission.start")}<ArrowRight size={15} className="directional-icon"/></Button></div>
         </div>
         <div className="flex gap-2 flex-wrap mt-3" aria-label={t("mission.optionalRouting")}>{(["auto","write","rescue","exam"] as Intent[]).map((value)=><button key={value} onClick={()=>setIntent(value)} className={`focus-ring rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all ${intent===value?"bg-[var(--brand)] text-white border-[var(--brand)] shadow-xs":"bg-[var(--panel)] text-[var(--ink)] border-[var(--line-strong)] hover:bg-[var(--panel-2)]"}`}>{t(`mission.intent.${value}`)}{value==="auto"&&canGo?` · ${t("mission.routesTo")} ${intentLabel(resolvedIntent)}`:""}</button>)}</div>
@@ -149,5 +230,5 @@ export function MissionControl() {
   </div>;
 }
 
-function ToolButton({icon:Icon,label,onClick,spin=false}:{icon:React.ElementType;label:string;onClick:()=>void;spin?:boolean}){return <button type="button" onClick={onClick} className="focus-ring min-h-10 rounded-xl bg-[var(--panel-2)] hover:bg-[var(--panel-3)] border hairline text-[var(--ink)] px-3.5 inline-flex items-center gap-1.5 text-xs font-semibold transition-colors"><Icon size={14} className={spin?"animate-spin":""}/>{label}</button>}
+function ToolButton({icon:Icon,label,onClick,spin=false,disabled=false}:{icon:React.ElementType;label:string;onClick:()=>void;spin?:boolean;disabled?:boolean}){return <button type="button" onClick={onClick} disabled={disabled} aria-label={label} className="focus-ring min-h-10 rounded-xl bg-[var(--panel-2)] hover:bg-[var(--panel-3)] border hairline text-[var(--ink)] px-3.5 inline-flex items-center gap-1.5 text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"><Icon size={14} className={spin?"animate-spin":""}/>{label}</button>}
 function BrainStat({label,value}:{label:string;value:number}){return <div className="rounded-xl bg-white/55 p-3 text-center"><div className="text-lg font-bold mono-number">{value}</div><div className="text-[9px] mt-1 opacity-70">{label}</div></div>}

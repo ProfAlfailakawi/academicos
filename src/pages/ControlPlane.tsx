@@ -21,6 +21,7 @@ import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { formatDateTime, useI18n } from "../lib/i18n";
+import { localizedUiError } from "../lib/ui-error";
 
 export function ControlPlane() {
   const { t, locale } = useI18n();
@@ -36,14 +37,34 @@ export function ControlPlane() {
     api
       .controlPlane()
       .then((r) => setData(r.control))
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(localizedUiError(e, t, "ui.loadError")));
     api
       .featureFlags()
       .then((r) => setFlags(r.flags))
-      .catch(() => undefined);
-    api.institutionCommandCenter().then((r) => setCommand(r.command)).catch(() => undefined);
-    api.productMetrics().then((r) => setProduct(r.metrics)).catch(() => undefined);
-    api.fairUseMetrics().then((r) => setFairUse(r.fairUse)).catch(() => undefined);
+      .catch((e) => {
+        console.error("Failed to load feature flags", e);
+        setError((current) => current || localizedUiError(e, t, "ui.loadError"));
+      });
+    api.institutionCommandCenter()
+      .then((r) => setCommand(r.command))
+      .catch((e) => {
+        console.error("Failed to load institution command center", e);
+        setError((current) => current || localizedUiError(e, t, "ui.loadError"));
+      });
+
+    api.productMetrics()
+      .then((r) => setProduct(r.metrics))
+      .catch((e) => {
+        console.error("Failed to load product metrics", e);
+        setError((current) => current || localizedUiError(e, t, "ui.loadError"));
+      });
+
+    api.fairUseMetrics()
+      .then((r) => setFairUse(r.fairUse))
+      .catch((e) => {
+        console.error("Failed to load fair-use metrics", e);
+        setError((current) => current || localizedUiError(e, t, "ui.loadError"));
+      });
   }, []);
   const canFlags = Boolean(
     user &&
@@ -62,7 +83,7 @@ export function ControlPlane() {
       const r = await api.updateFeatureFlag(flag.key, !flag.enabled);
       setFlags((v) => v.map((x) => (x.key === flag.key ? r.flag : x)));
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.loadError"));
     } finally {
       setFlagBusy("");
     }

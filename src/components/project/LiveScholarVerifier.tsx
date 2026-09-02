@@ -90,10 +90,16 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
 
   async function copyCitation(source: AcademicSourceRecord, format: "apa" | "bibtex") {
     const text = format === "apa" ? apaCitation(source, t("source.unknownAuthor")) : bibtexCitation(source);
-    await navigator.clipboard.writeText(text);
-    const key = `${source.doi}-${format}`;
-    setCopied(key);
-    window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1800);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard is unavailable");
+      await navigator.clipboard.writeText(text);
+      const key = `${source.doi}-${format}`;
+      setCopied(key);
+      window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1800);
+    } catch (e) {
+      console.error("Failed to copy citation", e);
+      setError(errorMessage(e, t));
+    }
   }
 
   async function addToProject(source: AcademicSourceRecord) {

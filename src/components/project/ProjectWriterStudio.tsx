@@ -32,6 +32,7 @@ import type {
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
+import { localizedUiError } from "../../lib/ui-error";
 
 type SectionAction =
   | "explain"
@@ -102,7 +103,7 @@ export function ProjectWriterStudio({
         }
       })
       .catch((caught) => {
-        if (active) setError(caught.message || t("writer.openError"));
+        if (active) setError(localizedUiError(caught, t, "writer.openError"));
       });
     return () => {
       active = false;
@@ -130,7 +131,7 @@ export function ProjectWriterStudio({
       );
       onProjectChange?.(response.project);
     } catch (caught: any) {
-      setError(caught.message || t("writer.buildError"));
+      setError(localizedUiError(caught, t, "writer.buildError"));
     } finally {
       setBusy(false);
     }
@@ -147,7 +148,7 @@ export function ProjectWriterStudio({
       updateSection(section.id, response.artifact.content);
       setNotice(t("writer.savedNotice"));
     } catch (caught: any) {
-      setError(caught.message || t("writer.saveError"));
+      setError(localizedUiError(caught, t, "writer.saveError"));
     } finally {
       setActionBusy("");
     }
@@ -205,7 +206,7 @@ export function ProjectWriterStudio({
         });
       }
     } catch (caught: any) {
-      setError(caught.message || t("writer.actionError"));
+      setError(localizedUiError(caught, t, "writer.actionError"));
     } finally {
       setActionBusy("");
     }
@@ -222,7 +223,7 @@ export function ProjectWriterStudio({
       const response = await api.projectXRay(project.id, fullDraft);
       setXray(response.report);
     } catch (caught: any) {
-      setError(caught.message || t("writer.xrayError"));
+      setError(localizedUiError(caught, t, "writer.xrayError"));
     } finally {
       setActionBusy("");
     }
@@ -252,7 +253,7 @@ export function ProjectWriterStudio({
       setShowFeedback(false);
       setNotice(t("writer.feedbackApplied"));
     } catch (caught: any) {
-      setError(caught.message || t("writer.feedbackError"));
+      setError(localizedUiError(caught, t, "writer.feedbackError"));
     } finally {
       setActionBusy("");
     }
@@ -268,7 +269,7 @@ export function ProjectWriterStudio({
       if (section && draft !== section.content) await saveSection();
       await api.exportProject(project.id, "docx");
     } catch (caught: any) {
-      setError(caught.message || t("writer.exportError"));
+      setError(localizedUiError(caught, t, "writer.exportError"));
     } finally {
       setActionBusy("");
     }

@@ -1,3 +1,5 @@
+import { AppDialog } from "../components/AppDialog";
+import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useState } from "react";
 import {
   Clock3,
@@ -24,11 +26,15 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 export function Settings() {
   const location = useLocation();
   const { t, meta } = useI18n();
+  const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
+  const [deletionReason, setDeletionReason] = useState("");
   const { theme, setTheme, accessibility, setAccessibility } =
     useAppPreferences();
   const [h, setH] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [exportBusy, setExportBusy] = useState(false);
+  const [exportMessage, setExportMessage] = useState("");
+  const [profileLoadError, setProfileLoadError] = useState("");
   const [deletionMessage, setDeletionMessage] = useState("");
   const [deletionBusy, setDeletionBusy] = useState(false);
   const [joinCode, setJoinCode] = useState("");
@@ -56,13 +62,22 @@ export function Settings() {
       .then((r) => {
         setProfile(r.profile);
         setStudyMinutes(Number(r.profile.dailyStudyMinutes || 150));
+        setProfileLoadError("");
       })
-      .catch(() => undefined);
+      .catch((e: any) => {
+        console.error("Settings profile load failed", e);
+        setProfileLoadError(localizedUiError(e, t, "settings.profileLoadError"));
+      });
   }, []);
   async function exportData() {
     setExportBusy(true);
+    setExportMessage("");
     try {
       await api.exportMyData();
+      setExportMessage(t("settings.exportSuccess"));
+    } catch (e: any) {
+      console.error("Settings data export failed", e);
+      setExportMessage(localizedUiError(e, t, "settings.exportError"));
     } finally {
       setExportBusy(false);
     }
@@ -76,7 +91,7 @@ export function Settings() {
       setJoinMessage(t("settings.joinSuccess"));
       setJoinCode("");
     } catch (e: any) {
-      setJoinMessage(e.message || t("settings.joinError"));
+      setJoinMessage(localizedUiError(e, t, "settings.joinError"));
     } finally {
       setJoinBusy(false);
     }
@@ -88,7 +103,7 @@ export function Settings() {
       await api.revokeSessions();
       setSessionMessage(t("settings.revokeSuccess"));
     } catch (e: any) {
-      setSessionMessage(e.message || t("settings.revokeError"));
+      setSessionMessage(localizedUiError(e, t, "settings.revokeError"));
     } finally {
       setSessionBusy(false);
     }
@@ -107,14 +122,15 @@ export function Settings() {
       setStudyMinutes(Number(r.profile.dailyStudyMinutes || 150));
       setStudyMessage(t("settings.studySaved"));
     } catch (e: any) {
-      setStudyMessage(e.message || t("settings.studyError"));
+      setStudyMessage(localizedUiError(e, t, "settings.studyError"));
     } finally {
       setStudyBusy(false);
     }
   }
   async function requestDeletion() {
-    const reason = window.prompt(t("settings.deletionPrompt"));
-    if (!reason) return;
+    setDeletionReason("");
+    setDeletionDialogOpen(true);
+    return;
     setDeletionBusy(true);
     setDeletionMessage("");
     try {
@@ -123,7 +139,7 @@ export function Settings() {
         t("settings.deletionLogged").replace("{status}", String(r.request.status)),
       );
     } catch (e: any) {
-      setDeletionMessage(e.message || t("settings.deletionError"));
+      setDeletionMessage(localizedUiError(e, t, "settings.deletionError"));
     } finally {
       setDeletionBusy(false);
     }
@@ -278,6 +294,10 @@ export function Settings() {
                   <Link to="/app/onboarding">{t("settings.updateProfile")}</Link>
                 </Button>
               </div>
+            ) : profileLoadError ? (
+              <div className="mt-4 rounded-xl border hairline bg-[var(--bg)] p-4">
+                <p className="text-xs text-rose-600">{profileLoadError}</p>
+              </div>
             ) : (
               <div className="h-24 soft-bg rounded-xl mt-4 animate-pulse" />
             )}
@@ -428,6 +448,9 @@ export function Settings() {
             >
               {exportBusy ? t("settings.preparing") : t("ui.downloadMyData")}
             </Button>
+            {exportMessage && (
+              <p className="text-xs muted mt-3">{exportMessage}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -506,6 +529,27 @@ function Preference({
   onClick: () => void;
 }) {
   const { t } = useI18n();
+
+  async function submitDeletionRequest() {
+    const reason = deletionReason.trim();
+    if (!reason) return;
+
+    setDeletionDialogOpen(false);
+
+    try {
+      const result = await api.requestAccountDeletion(reason);
+      setDeletionMessage(
+        t("settings.deletionLogged").replace("{status}", result.status),
+      );
+    } catch (e) {
+      console.error("Account deletion request failed", e);
+      setDeletionMessage(
+        localizedUiError(e, t, "settings.deletionError"),
+      );
+    }
+  }
+
+
   return (
     <button
       type="button"
@@ -517,6 +561,22 @@ function Preference({
       <span className="block text-[9px] muted mt-1">
         {active ? t("settings.on") : t("settings.off")}
       </span>
-    </button>
+    
+      <AppDialog
+        open={deletionDialogOpen}
+        title={t("settings.deleteAccount")}
+        description={t("settings.deletionPrompt")}
+        inputMode="textarea"
+        value={deletionReason}
+        onValueChange={setDeletionReason}
+        danger
+        busy={false}
+        onCancel={() => {
+          setDeletionDialogOpen(false);
+          setDeletionReason("");
+        }}
+        onConfirm={submitDeletionRequest}
+      />
+</button>
   );
 }

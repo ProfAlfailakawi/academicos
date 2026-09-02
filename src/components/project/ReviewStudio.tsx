@@ -1,3 +1,5 @@
+import { AppDialog } from "../AppDialog";
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useState } from "react";
 import {
   Clock3,
@@ -28,6 +30,8 @@ export function ReviewStudio({
 }) {
   const { t, locale } = useI18n();
   const [comments, setComments] = useState<ProjectComment[]>([]);
+  const [restoreCandidate, setRestoreCandidate] =
+    useState<ProjectVersionRecord | null>(null);
   const [versions, setVersions] = useState<ProjectVersionRecord[]>([]);
   const [activity, setActivity] = useState<ProjectActivityRecord[]>([]);
   const [body, setBody] = useState("");
@@ -49,7 +53,7 @@ export function ReviewStudio({
       setVersions(v.versions);
       setActivity(a.activity);
     } catch (e: any) {
-      setError(e.message || t("review.loadError"));
+      setError(localizedUiError(e, t, "review.loadError"));
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ export function ReviewStudio({
       const a = await api.activity(project.id);
       setActivity(a.activity);
     } catch (e: any) {
-      setError(e.message || t("review.saveCommentError"));
+      setError(localizedUiError(e, t, "review.saveCommentError"));
     } finally {
       setPosting(false);
     }
@@ -84,29 +88,33 @@ export function ReviewStudio({
       const a = await api.activity(project.id);
       setActivity(a.activity);
     } catch (e: any) {
-      setError(e.message || t("review.deleteCommentError"));
+      setError(localizedUiError(e, t, "review.deleteCommentError"));
     }
   }
   async function restore(version: ProjectVersionRecord) {
     if (restoring) return;
-    if (
-      !window.confirm(
-        `${t("review.restoreConfirmPrefix")} ${version.versionNumber}${t("review.restoreConfirmSuffix")}`,
-      )
-    )
-      return;
+    setRestoreCandidate(version);
+  }
+
+  async function confirmRestore() {
+    const version = restoreCandidate;
+    if (!version || restoring) return;
+
+    setRestoreCandidate(null);
     setRestoring(version.id);
     setError("");
+
     try {
       const r = await api.restoreVersion(project.id, version.id);
       onRestored(r.project);
       await refresh();
-    } catch (e: any) {
-      setError(e.message || t("review.restoreError"));
+    } catch (e) {
+      setError(localizedUiError(e, t, "review.restoreError"));
     } finally {
       setRestoring("");
     }
   }
+
 
   if (loading)
     return (
@@ -314,6 +322,19 @@ export function ReviewStudio({
           {error}
         </div>
       )}
+
+      <AppDialog
+        open={Boolean(restoreCandidate)}
+        title={t("review.restore")}
+        description={
+          restoreCandidate
+            ? `${t("review.restoreConfirmPrefix")} ${restoreCandidate.versionNumber}${t("review.restoreConfirmSuffix")}`
+            : ""
+        }
+        busy={Boolean(restoring)}
+        onCancel={() => setRestoreCandidate(null)}
+        onConfirm={confirmRestore}
+      />
     </div>
   );
 }
@@ -323,7 +344,9 @@ function SnapshotMetric({ label, value }: { label: string; value: string }) {
     <div className="soft-bg rounded-lg p-2">
       <div className="text-[9px] muted">{label}</div>
       <div className="text-xs font-semibold mt-1 mono-number">{value}</div>
-    </div>
+    
+
+</div>
   );
 }
 function shortActor(value: string) {

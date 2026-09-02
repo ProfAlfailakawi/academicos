@@ -30,6 +30,7 @@ import type {
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
+import { localizedUiError } from "../lib/ui-error";
 
 type DraftDeliverable = { title: string; format: string };
 type DraftRubric = { title: string; description: string; weighting: number };
@@ -80,7 +81,7 @@ export function CourseOS() {
     setLoading(true);
     Promise.all([
       api.course(id),
-      api.joinCodes(id).catch(() => ({ success: true as const, codes: [] })),
+      api.joinCodes(id),
     ])
       .then(([r, j]) => {
         setCourse(r.course);
@@ -88,7 +89,7 @@ export function CourseOS() {
         setJoinCodes(j.codes);
         setForm((v) => ({ ...v, policyLevel: r.course.aiPolicy.level }));
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(localizedUiError(e, t, "ui.actionError")))
       .finally(() => setLoading(false));
   }
   useEffect(load, [id]);
@@ -120,7 +121,7 @@ export function CourseOS() {
     try {
       await api.exportCourseArchive(id, locale);
     } catch (e: any) {
-      setError(e.message || t("course.exportError"));
+      setError(localizedUiError(e, t, "course.exportError"));
     }
   }
   async function cloneCourse() {
@@ -131,7 +132,7 @@ export function CourseOS() {
       const r = await api.cloneCourse(course.id);
       navigate(`/app/course/${r.course.id}`);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setCloning("");
     }
@@ -144,7 +145,7 @@ export function CourseOS() {
       const r = await api.cloneCourseAssignment(course.id, a.id);
       setAssignments((v) => [r.assignment, ...v]);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setCloning("");
     }
@@ -156,7 +157,7 @@ export function CourseOS() {
       const r = await api.assignmentQuality(course.id, a.id);
       setQuality((v) => ({ ...v, [a.id]: r.quality }));
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     }
   }
   async function issueJoinCode() {
@@ -168,7 +169,7 @@ export function CourseOS() {
       setJoinCodes((v) => [r.code, ...v]);
       setJoinSecret(r.secret);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setJoinBusy("");
     }
@@ -187,7 +188,7 @@ export function CourseOS() {
       ]);
       setJoinSecret(r.secret);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setJoinBusy("");
     }
@@ -204,7 +205,7 @@ export function CourseOS() {
         ),
       );
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setJoinBusy("");
     }
@@ -255,7 +256,7 @@ export function CourseOS() {
         rubric: [{ title: t("course.workQuality"), description: "", weighting: 100 }],
       }));
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setSaving(false);
     }
@@ -423,7 +424,16 @@ export function CourseOS() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => navigator.clipboard?.writeText(joinSecret)}
+                      onClick={async () => {
+                        try {
+                          if (!navigator.clipboard?.writeText) {
+                            throw new Error("Clipboard is unavailable");
+                          }
+                          await navigator.clipboard.writeText(joinSecret);
+                        } catch (e) {
+                          console.error("Failed to copy course join code", e);
+                        }
+                      }}
                     >
                       <Copy size={13} />
                       {t("course.copy")}

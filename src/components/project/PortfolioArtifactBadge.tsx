@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useState } from "react";
 import { Award, Share2, Briefcase, Copy, Check, ShieldCheck, LoaderCircle, ExternalLink, AlertTriangle } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
@@ -16,11 +17,33 @@ export function PortfolioArtifactBadge({ project }: { project: ProjectDNA }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { let active = true; api.evidenceCapsule(project.id).then((r) => { if (active) setCapsule(r.capsule); }).catch((e) => { if (active) setError(e instanceof Error ? e.message : t("portfolio.loadError")); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [project.id]);
+  useEffect(() => { let active = true; api.evidenceCapsule(project.id).then((r) => { if (active) setCapsule(r.capsule); }).catch((e) => { if (active) setError(localizedUiError(e, t, "portfolio.loadError")); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [project.id]);
   async function createShare() {
     setSharing(true); setError("");
-    try { const r = await api.createShare({ kind: "project", targetId: project.id, label: `${t("ui.portfolioProof")} · ${project.title}`, watermark: `AcademicOS · ${t("ui.portfolioProof")}` }); const url = new URL(r.url, window.location.origin).toString(); setShareUrl(url); await navigator.clipboard.writeText(url); setCopied(true); window.setTimeout(() => setCopied(false), 1800); }
-    catch (e) { setError(e instanceof Error ? e.message : t("portfolio.shareError")); }
+    try {
+      const r = await api.createShare({
+        kind: "project",
+        targetId: project.id,
+        label: `${t("ui.portfolioProof")} · ${project.title}`,
+        watermark: `AcademicOS · ${t("ui.portfolioProof")}`,
+      });
+
+      const url = new URL(r.url, window.location.origin).toString();
+      setShareUrl(url);
+
+      if (!navigator.clipboard?.writeText) {
+        setError(t("portfolio.shareError"));
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    }
+    catch (e) {
+      console.error("Failed to create/copy portfolio share", e);
+      setError(localizedUiError(e, t, "portfolio.shareError"));
+    }
     finally { setSharing(false); }
   }
   const skills = [...new Set([...(project.requiredSkills || []), ...(capsule?.skills.map((s) => s.skill) || [])])].filter(Boolean).slice(0, 8);
@@ -41,7 +64,16 @@ export function PortfolioArtifactBadge({ project }: { project: ProjectDNA }) {
             <div><div className="text-xs font-bold flex items-center gap-1.5"><Briefcase size={14} className="text-cyan-500"/>{t("portfolio.skills")}</div><div className="grid gap-2 mt-3">{skills.length ? skills.map((skill) => <div key={skill} className="flex items-center gap-2 p-2.5 rounded-xl border hairline bg-[var(--panel)] text-xs"><Check size={14} className="text-cyan-500 shrink-0"/><span>{skill}</span></div>) : <div className="text-[11px] text-muted-foreground">{t("portfolio.noSkills")}</div>}</div></div>
             {capsule && <div className="rounded-xl border hairline bg-[var(--panel)] p-3 text-[10px] leading-5"><div className="flex items-center gap-1.5 font-semibold text-cyan-600"><ShieldCheck size={13}/>{t("portfolio.integrity")}</div><div className="mt-1 text-muted-foreground">{t("ui.evidenceCapsuleSha")}: <span className="font-mono break-all ltr">{capsule.integrity.hash}</span></div></div>}
           </div>
-          <Card className="rounded-3xl border hairline bg-[var(--panel)]"><CardContent className="p-6 md:p-7 space-y-5"><div><h4 className="text-sm font-bold">{t("portfolio.responsibleShare")}</h4><p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t("portfolio.shareDesc")}</p></div><div className="space-y-3 text-xs"><Info title={t("ui.cvLinkedIn")} text={t("portfolio.cvInfo")}/><Info title={t("portfolio.gradTitle")} text={t("portfolio.gradInfo")}/><Info title={t("portfolio.privacyTitle")} text={t("portfolio.privacyInfo")}/></div>{shareUrl ? <div className="space-y-2"><div className="rounded-lg border hairline p-2 text-[10px] break-all ltr">{shareUrl}</div><Button variant="outline" className="w-full" onClick={async () => { await navigator.clipboard.writeText(shareUrl); setCopied(true); window.setTimeout(() => setCopied(false), 1800); }}>{copied ? <Check size={14} className="text-emerald-500"/> : <Copy size={14}/>} {copied ? t("portfolio.copied") : t("portfolio.copyLink")}</Button><Button asChild variant="ghost" className="w-full"><a href={shareUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>{t("portfolio.openLink")}</a></Button></div> : <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white" onClick={createShare} disabled={sharing}><Share2 size={14}/>{t("portfolio.createShare")}</Button>}</CardContent></Card>
+          <Card className="rounded-3xl border hairline bg-[var(--panel)]"><CardContent className="p-6 md:p-7 space-y-5"><div><h4 className="text-sm font-bold">{t("portfolio.responsibleShare")}</h4><p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t("portfolio.shareDesc")}</p></div><div className="space-y-3 text-xs"><Info title={t("ui.cvLinkedIn")} text={t("portfolio.cvInfo")}/><Info title={t("portfolio.gradTitle")} text={t("portfolio.gradInfo")}/><Info title={t("portfolio.privacyTitle")} text={t("portfolio.privacyInfo")}/></div>{shareUrl ? <div className="space-y-2"><div className="rounded-lg border hairline p-2 text-[10px] break-all ltr">{shareUrl}</div><Button variant="outline" className="w-full" onClick={async () => {
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard is unavailable");
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  } catch (e) {
+    setError(localizedUiError(e, t, "portfolio.shareError"));
+  }
+}}>{copied ? <Check size={14} className="text-emerald-500"/> : <Copy size={14}/>} {copied ? t("portfolio.copied") : t("portfolio.copyLink")}</Button><Button asChild variant="ghost" className="w-full"><a href={shareUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>{t("portfolio.openLink")}</a></Button></div> : <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white" onClick={createShare} disabled={sharing}><Share2 size={14}/>{t("portfolio.createShare")}</Button>}</CardContent></Card>
         </div>
       )}
     </div>

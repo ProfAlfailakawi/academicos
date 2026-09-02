@@ -34,12 +34,28 @@ export function AutoPresentationStudio({ project }: { project: ProjectDNA }) {
 
   const currentSlide = slides[Math.min(currentSlideIndex, slides.length - 1)];
   const totalMinutes = Math.ceil(slides.reduce((acc, s) => acc + s.allocatedTimeSeconds, 0) / 60);
-  const copyScript = async () => { await navigator.clipboard.writeText(currentSlide.speakerScript); setCopied(true); window.setTimeout(() => setCopied(false), 1600); };
+  const copyScript = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard is unavailable");
+      await navigator.clipboard.writeText(currentSlide.speakerScript);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch (e) {
+      console.error("Failed to copy presentation script", e);
+    }
+  };
 
   const exportDeck = () => {
     const sections = slides.map(s => `<section class="slide"><div class="eyebrow">${escapeHtml(project.course || project.academicDomain || "AcademicOS")}</div><h1>${escapeHtml(s.title)}</h1><h2>${escapeHtml(s.subtitle)}</h2><ul>${s.bulletPoints.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul><div class="notes"><strong>${escapeHtml(t("pres.presenterNotes"))} · ${s.allocatedTimeSeconds}s</strong><p>${escapeHtml(s.speakerScript)}</p></div></section>`).join("");
     const html = `<!doctype html><html lang="${locale}" dir="${meta.dir}"><meta charset="utf-8"><title>${escapeHtml(project.title)} · ${escapeHtml(t("pres.title"))}</title><style>@page{size:16in 9in;margin:0}body{margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;text-align:start}.slide{box-sizing:border-box;width:100vw;min-height:100vh;padding:8vh 8vw;page-break-after:always;background:linear-gradient(135deg,#09090b,#18181b)}.eyebrow{color:#f59e0b;font-weight:700;letter-spacing:.08em}.slide h1{font-size:3.2rem;margin:2rem 0 .5rem}.slide h2{color:#fcd34d;font-size:1.2rem}.slide li{font-size:1.45rem;line-height:1.8;margin:.6rem 0}.notes{margin-top:3rem;padding:1rem;border:1px solid #3f3f46;border-radius:16px;color:#d4d4d8;font-size:.95rem}@media print{.notes{display:none}.slide{height:100vh}}</style><body>${sections}</body></html>`;
-    const url = URL.createObjectURL(new Blob([html], {type:"text/html;charset=utf-8"})); const a=document.createElement("a"); a.href=url; a.download=`${project.title || "academicos"}-presentation.html`; a.click(); URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(new Blob([html], {type:"text/html;charset=utf-8"}));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.title || "academicos"}-presentation.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return <div className="space-y-6">

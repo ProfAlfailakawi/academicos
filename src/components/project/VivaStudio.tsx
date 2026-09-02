@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
@@ -50,7 +51,12 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    api.learningEvidence(project.id).then((r) => setEvidence(r.evidence)).catch(() => undefined);
+    api.learningEvidence(project.id)
+      .then((r) => setEvidence(r.evidence))
+      .catch((e) => {
+        console.error("Failed to load viva learning evidence", e);
+        setError(localizedUiError(e, t, "ui.loadError"));
+      });
     return () => {
       try { recognitionRef.current?.stop?.(); } catch {}
       try { window.speechSynthesis?.cancel(); } catch {}
@@ -79,7 +85,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
       setAnswers({});
       setCurrentIndex(0);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setBusy(false);
     }
@@ -93,7 +99,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
       const response = await api.saveVivaResponse(project.id, session.id, questionId, answer);
       setSession(response.session);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     }
   }
 
@@ -118,7 +124,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
       try { window.speechSynthesis?.cancel(); } catch {}
       setSpeaking(false);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -32,6 +33,7 @@ export function TurnitinForensicShieldModal({
   const [report, setReport] = useState<DeepAIDetectionReport | null>(null);
   const [improved, setImproved] = useState<{ text: string; notes: string[] } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [tab, setTab] = useState<"overview" | "sentences" | "patterns">("overview");
   const sourceText = useMemo(
     () => customText.trim() || report?.sentenceBreakdown.map((sentence) => sentence.text).join(" ") || "",
@@ -39,29 +41,44 @@ export function TurnitinForensicShieldModal({
   );
 
   async function analyze() {
+    setActionError("");
     setLoading(true);
     setImproved(null);
+
     try {
-      const result = await api.styleIntegrity(project.id, customText.trim() || undefined, locale);
+      const result = await api.styleIntegrity(
+        project.id,
+        customText.trim() || undefined,
+        locale,
+      );
       setReport(result.report);
-    } catch (error: any) {
-      alert(error?.message || t("integrity.errorAnalyze"));
+    } catch (error) {
+      console.error("Style integrity analysis failed", error);
+      setActionError(t("integrity.errorAnalyze"));
     } finally {
       setLoading(false);
     }
   }
 
   async function improve() {
+    setActionError("");
+
     if (!sourceText) {
-      alert(t("integrity.needText"));
+      setActionError(t("integrity.needText"));
       return;
     }
+
     setImproving(true);
+
     try {
       const result = await api.improveStyle(project.id, sourceText, locale);
-      setImproved({ text: result.improvedText, notes: result.improvementsMade });
-    } catch (error: any) {
-      alert(error?.message || t("integrity.errorImprove"));
+      setImproved({
+        text: result.improvedText,
+        notes: result.improvementsMade,
+      });
+    } catch (error) {
+      console.error("Style improvement failed", error);
+      setActionError(t("integrity.errorImprove"));
     } finally {
       setImproving(false);
     }
@@ -92,6 +109,15 @@ export function TurnitinForensicShieldModal({
         </header>
 
         <div className="p-5 md:p-6 overflow-y-auto max-h-[calc(92vh-104px)] space-y-5">
+          {actionError && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+            >
+              {actionError}
+            </div>
+          )}
           <section className="rounded-2xl border hairline p-4 md:p-5 bg-[var(--bg)]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
@@ -122,12 +148,33 @@ export function TurnitinForensicShieldModal({
             <section className="rounded-2xl border border-[var(--brand)]/25 brand-soft-bg p-4 md:p-5">
               <div className="flex items-center justify-between gap-3">
                 <div><div className="eyebrow">{t("integrity.transparentImprove")}</div><h3 className="section-title mt-1">{t("integrity.sameMeaning")}</h3></div>
-                <Button variant="outline" size="sm" onClick={() => {
-                  navigator.clipboard.writeText(improved.text).then(() => {
-                    setCopied(true); window.setTimeout(() => setCopied(false), 1600);
-                  });
-                }}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? t("common.copied") : t("common.copy")}</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    setActionError("");
+                    try {
+                      if (!navigator.clipboard?.writeText) {
+                        throw new Error(t("integrity.copyError"));
+                      }
+                      await navigator.clipboard.writeText(improved.text);
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1600);
+                    } catch (e: any) {
+                      setCopied(false);
+                      setActionError(localizedUiError(e, t, "integrity.copyError"));
+                    }
+                  }}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? t("common.copied") : t("common.copy")}
+                </Button>
               </div>
+              {actionError && (
+                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-600">
+                  {actionError}
+                </div>
+              )}
               <div className="mt-4 rounded-xl bg-[var(--panel)] border hairline p-4 text-sm leading-7 whitespace-pre-wrap">{improved.text}</div>
               <div className="mt-3 flex flex-wrap gap-2">{improved.notes.map((note) => <span key={note} className="rounded-full bg-[var(--panel)] border hairline px-3 py-1 text-[10px]">{note}</span>)}</div>
             </section>

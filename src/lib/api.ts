@@ -135,7 +135,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (!result.response.ok)
     throw new ApiError(
-      result.payload.error || "تعذر إكمال الطلب",
+      result.payload.error || "REQUEST_FAILED",
       result.response.status,
       result.payload.code,
       result.payload.errorId,
@@ -149,7 +149,7 @@ async function download(path: string) {
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new ApiError(
-      payload.error || "تعذر إنشاء الملف",
+      payload.error || "EXPORT_FAILED",
       response.status,
       payload.code,
       payload.errorId,

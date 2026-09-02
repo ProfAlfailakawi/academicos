@@ -46,6 +46,7 @@ import { AutoPresentationStudio } from "../components/project/AutoPresentationSt
 import { PortfolioArtifactBadge } from "../components/project/PortfolioArtifactBadge";
 import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
 import { formatDate, useI18n } from "../lib/i18n";
+import { localizedUiError } from "../lib/ui-error";
 import {
   Fingerprint,
   Search,
@@ -111,7 +112,7 @@ export function ProjectWorkspace() {
     api
       .project(id)
       .then((r) => setProject(r.project))
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(localizedUiError(e, t, "ui.actionError")));
     api
       .featureFlags()
       .then((r) =>
@@ -119,7 +120,10 @@ export function ProjectWorkspace() {
           Object.fromEntries(r.flags.map((f) => [f.key, f.enabled])),
         ),
       )
-      .catch(() => undefined);
+      .catch((e) => {
+        console.error("Failed to load project feature flags", e);
+        setError((current) => current || localizedUiError(e, t, "ui.loadError"));
+      });
   }, [id]);
   useEffect(() => {
     const focus = new URLSearchParams(location.search).get("focus");
@@ -156,8 +160,10 @@ export function ProjectWorkspace() {
     });
     try {
       setProject((await api.updateTask(old.id, task.id, status)).project);
-    } catch {
+      setError("");
+    } catch (e: any) {
       setProject(old);
+      setError(localizedUiError(e, t, "pw.updateError"));
     }
   }
   async function setDeliverableStatus(deliverableId: string, status: string) {
@@ -172,8 +178,10 @@ export function ProjectWorkspace() {
       setProject(
         (await api.updateDeliverable(old.id, deliverableId, status)).project,
       );
-    } catch {
+      setError("");
+    } catch (e: any) {
       setProject(old);
+      setError(localizedUiError(e, t, "pw.updateError"));
     }
   }
   async function setRubricStatus(criterionId: string, readiness: string) {
@@ -188,8 +196,10 @@ export function ProjectWorkspace() {
       setProject(
         (await api.updateRubric(old.id, criterionId, readiness)).project,
       );
-    } catch {
+      setError("");
+    } catch (e: any) {
       setProject(old);
+      setError(localizedUiError(e, t, "pw.updateError"));
     }
   }
   async function openOriginal() {
@@ -206,8 +216,12 @@ export function ProjectWorkspace() {
   }
   async function runAudit() {
     setAuditing(true);
+    setError("");
     try {
       setAudit((await api.audit(project!.id)).audit);
+    } catch (e: any) {
+      setAudit(null);
+      setError(localizedUiError(e, t, "pw.auditError"));
     } finally {
       setAuditing(false);
     }
@@ -219,7 +233,7 @@ export function ProjectWorkspace() {
       const r = await api.rescuePlan(project!.id, minutes);
       setRescue(r.plan);
     } catch (e: any) {
-      setError(e?.message || t("pw.rescueError"));
+      setError(localizedUiError(e, t, "pw.rescueError"));
     } finally {
       setRescueLoading(false);
     }

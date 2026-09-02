@@ -11,6 +11,13 @@ import type {
 } from "../types";
 import type { AcademicTaskOutput } from "./ai";
 
+export interface GroundedSourceInput {
+  title: string;
+  url?: string;
+  snippet?: string;
+  provider?: string;
+}
+
 export interface VerifiedSourceInput {
   title: string;
   detail?: string;
@@ -258,6 +265,9 @@ export async function composeProjectDocument(input: {
   request: ProjectWriterRequest;
   userId: string;
   verifiedSources?: VerifiedSourceInput[];
+  groundedSources?: GroundedSourceInput[];
+  groundedResearchSummary?: string;
+  groundedResearchQueries?: string[];
   generateSection?: ProjectWriterGenerator;
   variationSecret?: string;
 }): Promise<ProjectDocument> {
@@ -273,7 +283,38 @@ export async function composeProjectDocument(input: {
       source.verification === "user_verified" ||
       source.verification === "institution_verified",
   );
+
+  const groundedSources = (input.groundedSources || [])
+    .filter((source) => source?.title || source?.url)
+    .slice(0, 20);
+
+  const groundedResearchSummary = String(
+    input.groundedResearchSummary || "",
+  ).trim();
+
+  const groundedResearchQueries = (input.groundedResearchQueries || [])
+    .map((query) => String(query || "").trim())
+    .filter(Boolean)
+    .slice(0, 12);
+
   const sections: ProjectDocumentSection[] = [];
+
+  const rawTopicNotes = (request.topicNotes || "").trim();
+  const rawProjectTitle = (project.title || "").trim();
+
+  const invalidProjectTitle =
+    !rawProjectTitle ||
+    /EXISTING DRAFT|NEW ASSIGNMENT|TITLE NEEDS CONFIRMATION/i.test(rawProjectTitle);
+
+  const primaryTopic =
+    rawTopicNotes ||
+    (!invalidProjectTitle ? rawProjectTitle : "");
+
+  if (!primaryTopic) {
+    throw new Error(
+      "PROJECT_TOPIC_REQUIRED: A clear project topic is required before academic writing can begin.",
+    );
+  }
 
   for (let index = 0; index < plan.length; index += 1) {
     const item = plan[index];
@@ -288,8 +329,24 @@ export async function composeProjectDocument(input: {
         previousMemory: compactMemory(sections),
         prompt: [
           `Write section ${index + 1} of ${plan.length} in ${language}.`,
-          `Project: ${project.title}. Course: ${project.course}. Domain: ${project.academicDomain}.`,
-          `Purpose: ${item.purpose}. Target approximately ${item.targetWords} words.`,
+          `PRIMARY PROJECT TOPIC — this is the controlling subject for the entire response: ${primaryTopic}`,
+          `Project title metadata: ${invalidProjectTitle ? "not reliably identified" : project.title}. Course: ${project.course}. Domain: ${project.academicDomain}.`,
+          `Purpose of this section: ${item.purpose}. Target approximately ${item.targetWords} words.`,
+          "Every paragraph must directly advance the PRIMARY PROJECT TOPIC. Do not write generic academic filler that could apply to another topic.",
+          "Use the precise concepts, population, setting, variables, technologies, theories, or problems explicitly present in the student's topic whenever applicable.",
+          "Begin with substantive content about the topic itself. Never begin with meta-writing such as 'this section discusses', 'this is a preliminary section', 'the purpose of this section is', or instructions to a future writer.",
+          "Do not expose internal workflow labels, scaffolding instructions, system terminology, EXISTING DRAFT markers, provider names, or implementation details to the learner.",
+          "Distinguish verified evidence from explanation. Never pretend that a source was researched or verified when it was not.",
+"Grounded web sources are research-grounded references, not automatically peer-reviewed or bibliographically verified. Never describe them as verified academic sources unless they also appear in VERIFIED ACADEMIC SOURCES.",
+groundedResearchSummary
+  ? `GROUNDED RESEARCH FINDINGS:\n${groundedResearchSummary.slice(0, 12000)}`
+  : "GROUNDED RESEARCH FINDINGS: none available.",
+groundedSources.length
+  ? `GROUNDED WEB SOURCES:\n${groundedSources.map((source, index) => `${index + 1}. ${source.title}${source.url ? ` — ${source.url}` : ""}${source.snippet ? `\n   Evidence snippet: ${source.snippet}` : ""}`).join("\n")}`
+  : "GROUNDED WEB SOURCES: none available.",
+groundedResearchQueries.length
+  ? `SEARCH QUERIES USED:\n${groundedResearchQueries.join("\n")}`
+  : "",
           `Student-specific variation ID: ${variation.id}. Use ${variation.argumentShape}; ${variation.structureRhythm}; ${variation.explanationStyle}; example lens: ${variation.exampleLens}.`,
           "This variation is a deliberate anti-duplication constraint. Do not reuse stock introductions, generic paragraph templates, or identical example sequences across learners.",
           access.fullDraft
@@ -299,7 +356,7 @@ export async function composeProjectDocument(input: {
           verifiedSources.length
             ? `Only the following sources may be described as verified: ${verifiedSources.map((source) => `${source.title}${source.sourceUrl ? ` (${source.sourceUrl})` : ""}`).join("; ")}.`
             : "No verified sources were supplied. Use explicit [مصدر مطلوب] markers wherever evidence is needed.",
-          request.topicNotes ? `Student decisions and topic notes: ${request.topicNotes.slice(0, 5000)}` : "",
+          `Student topic/context: ${primaryTopic.slice(0, 5000)}`,
           request.learnerVoiceSample
             ? `Preserve the student's transparent writing preferences without attempting to evade AI detection. Voice sample: ${request.learnerVoiceSample.slice(0, 1800)}`
             : "",
@@ -317,9 +374,13 @@ export async function composeProjectDocument(input: {
           .join("\n\n"),
       });
     }
-    const content =
-      output?.summary?.trim() ||
-      nativeSection(project, item.title, item.purpose, access.fullDraft, variation);
+    const content = output?.summary?.trim();
+
+    if (!content) {
+      throw new Error(
+        `AI_WRITER_NO_CONTENT: The AI writer did not return usable content for section "${item.title}". Refusing to expose a generic fallback as finished academic writing.`,
+      );
+    }
     const rubricIds = project.rubric
       .filter((_, rubricIndex) => rubricIndex % plan.length === index)
       .map((criterion) => criterion.id);

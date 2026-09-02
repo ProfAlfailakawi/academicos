@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useMemo, useState } from "react";
 import { Fingerprint, Download, ShieldCheck, FileCheck2, BrainCircuit, Copy, Check, LoaderCircle, ExternalLink, AlertTriangle, History } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
@@ -21,6 +22,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
   const [error, setError] = useState("");
   const [shareUrl, setShareUrl] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
         const checked = await api.verifyEvidenceCapsule(response.capsule);
         if (active) { setCapsule(response.capsule); setVerification(checked.verification); }
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : t("dossier.errorBuild"));
+        if (active) setError(localizedUiError(e, t, "dossier.errorBuild"));
       } finally { if (active) setLoading(false); }
     })();
     return () => { active = false; };
@@ -47,14 +49,35 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
       await navigator.clipboard.writeText(url);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
-    } catch (e) { setError(e instanceof Error ? e.message : t("dossier.errorShare")); }
+    } catch (e) { setError(localizedUiError(e, t, "dossier.errorShare")); }
     finally { setSharing(false); }
   }
 
   async function copyHash() {
     if (!capsule) return;
-    await navigator.clipboard.writeText(capsule.integrity.hash);
-    setCopied(true); window.setTimeout(() => setCopied(false), 1800);
+    setError("");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error(t("dossier.clipboardUnavailable"));
+      }
+      await navigator.clipboard.writeText(capsule.integrity.hash);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      setError(localizedUiError(e, t, "dossier.errorCopy"));
+    }
+  }
+
+  async function exportCapsule() {
+    setExporting(true);
+    setError("");
+    try {
+      await api.exportEvidenceCapsule(project.id);
+    } catch (e) {
+      setError(localizedUiError(e, t, "dossier.errorDownload"));
+    } finally {
+      setExporting(false);
+    }
   }
 
   const verifyLabel = useMemo(() => verification?.status === "signed_trusted"
@@ -103,7 +126,10 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
 
               <div className="rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 p-4 space-y-3">
                 <div><div className="text-xs font-bold text-indigo-950 dark:text-indigo-200">{t("dossier.reviewLink")}</div><p className="text-[11px] text-indigo-700 dark:text-indigo-300 mt-1">{t("dossier.reviewLinkDesc")}</p></div>
-                <div className="flex flex-col sm:flex-row gap-2"><Button size="sm" onClick={createReviewLink} disabled={sharing}>{sharing ? <LoaderCircle size={14} className="animate-spin"/> : <ExternalLink size={14}/>} {t("dossier.createReviewLink")}</Button><Button size="sm" variant="outline" onClick={() => api.exportEvidenceCapsule(project.id)}><Download size={14}/> {t("dossier.download")}</Button></div>
+                <div className="flex flex-col sm:flex-row gap-2"><Button size="sm" onClick={createReviewLink} disabled={sharing}>{sharing ? <LoaderCircle size={14} className="animate-spin"/> : <ExternalLink size={14}/>} {t("dossier.createReviewLink")}</Button><Button size="sm" variant="outline" onClick={exportCapsule} disabled={exporting}>
+  {exporting ? <LoaderCircle size={14} className="animate-spin"/> : <Download size={14}/>}
+  {t("dossier.download")}
+</Button></div>
                 {shareUrl && <div className="rounded-lg bg-white/70 dark:bg-black/20 p-2 text-[10px] break-all ltr flex gap-2 items-center"><span className="flex-1">{shareUrl}</span>{copied && <Check size={13} className="text-emerald-500 shrink-0"/>}</div>}
               </div>
             </div>

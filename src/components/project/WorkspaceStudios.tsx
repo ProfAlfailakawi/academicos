@@ -1,3 +1,4 @@
+import { AppDialog } from "../AppDialog";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -33,6 +34,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { localizedUiError } from "../../lib/ui-error";
 
 const configs: Record<
   WorkspaceModule,
@@ -191,6 +193,17 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
   const [selected, setSelected] = useState<WorkspaceModule>(
     modules[0] || "writing",
   );
+  const [twinConfirm, setTwinConfirm] = useState<{
+    open: boolean;
+    message: string;
+    ids: string[];
+  }>({ open: false, message: "", ids: [] });
+
+  const [pendingTwinSave, setPendingTwinSave] = useState<{
+    editingId: string;
+    body: any;
+    baseRevision?: number;
+  } | null>(null);
   const [items, setItems] = useState<WorkspaceArtifact[]>([]);
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -212,7 +225,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
     api
       .artifacts(project.id, showDeleted)
       .then((r) => setItems(r.artifacts))
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(localizedUiError(e, t, "ui.actionError")))
       .finally(() => setLoading(false));
   }, [project.id, showDeleted]);
   useEffect(() => {
@@ -280,7 +293,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
       api
         .artifactVersions(project.id, item.id)
         .then((r) => setVersions(r.versions))
-        .catch((e) => setError(e.message))
+        .catch((e) => setError(localizedUiError(e, t, "ui.actionError")))
         .finally(() => setHistoryLoading(false));
     }
   }
@@ -294,8 +307,10 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
   }
   async function save() {
     if (!form.title.trim() || saving) return;
+
     setSaving(true);
     setError("");
+
     try {
       const body = {
         module: selected,
@@ -307,9 +322,10 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
         rubricIds: form.rubricIds,
         isCanonical: form.isCanonical,
       };
+
       if (editing && editing !== "new") {
-        let propagateArtifactIds: string[] = [];
         const current = items.find((x) => x.id === editing);
+
         if (
           current?.isCanonical &&
           form.isCanonical &&
@@ -320,23 +336,40 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
             editing,
             form.content,
           );
+
           const exact = preview.impact.filter((x) => x.exactReplacePossible);
-          if (
-            exact.length &&
-            window.confirm(
-              t("studio.twinImpactConfirm")
-                .replace("{count}", String(preview.impact.length))
-                .replace("{exact}", String(exact.length)),
-            )
-          )
-            propagateArtifactIds = exact.map((x) => x.id);
+
+          if (exact.length) {
+            const message = t("studio.twinImpactConfirm")
+              .replace("{count}", String(preview.impact.length))
+              .replace("{exact}", String(exact.length));
+
+            setPendingTwinSave({
+              editingId: editing,
+              body: {
+                ...body,
+                deliverableId: form.deliverableId || null,
+              },
+              baseRevision: current?.revision,
+            });
+
+            setTwinConfirm({
+              open: true,
+              message,
+              ids: exact.map((x) => x.id),
+            });
+
+            return;
+          }
         }
+
         const r = await api.updateArtifact(project.id, editing, {
           ...body,
           deliverableId: form.deliverableId || null,
-          propagateArtifactIds,
+          propagateArtifactIds: [],
           baseRevision: current?.revision,
         });
+
         setItems((v) =>
           v.map((x) => (x.id === r.artifact.id ? r.artifact : x)),
         );
@@ -344,22 +377,66 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
         const r = await api.createArtifact(project.id, body);
         setItems((v) => [r.artifact, ...v]);
       }
+
       try {
         if (editing) localStorage.removeItem(draftKey(editing));
       } catch {}
+
       setEditing(null);
       setForm(empty);
       setAutosaveState("saved");
     } catch (e: any) {
-      setError(
-        e.code === "ARTIFACT_REVISION_CONFLICT"
-          ? `${e.message} ${t("studio.revisionConflictSuffix")}`
-          : e.message,
-      );
+      if (e?.code === "ARTIFACT_REVISION_CONFLICT") {
+        setError(t("studio.revisionConflictSuffix"));
+      } else {
+        setError(localizedUiError(e, t, "ui.actionError"));
+      }
     } finally {
       setSaving(false);
     }
   }
+
+  async function confirmTwinSave() {
+    if (!pendingTwinSave || saving) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const r = await api.updateArtifact(
+        project.id,
+        pendingTwinSave.editingId,
+        {
+          ...pendingTwinSave.body,
+          propagateArtifactIds: twinConfirm.ids,
+          baseRevision: pendingTwinSave.baseRevision,
+        },
+      );
+
+      setItems((v) =>
+        v.map((x) => (x.id === r.artifact.id ? r.artifact : x)),
+      );
+
+      try {
+        localStorage.removeItem(draftKey(pendingTwinSave.editingId));
+      } catch {}
+
+      setTwinConfirm({ open: false, message: "", ids: [] });
+      setPendingTwinSave(null);
+      setEditing(null);
+      setForm(empty);
+      setAutosaveState("saved");
+    } catch (e: any) {
+      if (e?.code === "ARTIFACT_REVISION_CONFLICT") {
+        setError(t("studio.revisionConflictSuffix"));
+      } else {
+        setError(localizedUiError(e, t, "ui.actionError"));
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function remove(item: WorkspaceArtifact) {
     if (saving || confirmDelete !== item.id) {
       setConfirmDelete(item.id);
@@ -377,7 +454,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
         setVersions([]);
       }
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setSaving(false);
     }
@@ -391,7 +468,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
       setItems((v) => v.filter((x) => x.id !== item.id));
       if (showDeleted && r.artifact) setError("");
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setSaving(false);
     }
@@ -418,7 +495,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
       const h = await api.artifactVersions(project.id, editing);
       setVersions(h.versions);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setSaving(false);
     }
@@ -437,7 +514,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
       });
       setFaculty(r.faculty);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     } finally {
       setFacultyBusy(false);
     }
@@ -450,7 +527,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
       await api.aiFeedback(faculty.runId, verdict);
       setFacultyFeedback(verdict);
     } catch (e: any) {
-      setError(e.message);
+      setError(localizedUiError(e, t, "ui.actionError"));
     }
   }
   if (!modules.length)
@@ -969,6 +1046,18 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
           </div>
         )}
       </section>
-    </div>
+    
+      <AppDialog
+        open={twinConfirm.open}
+        title={t("ui.confirm")}
+        description={twinConfirm.message}
+        onCancel={() =>
+          setTwinConfirm({ open: false, message: "", ids: [] })
+        }
+        onConfirm={() => {
+          setTwinConfirm({ open: false, message: "", ids: [] });
+        }}
+      />
+</div>
   );
 }

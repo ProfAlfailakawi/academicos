@@ -1,3 +1,4 @@
+import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -42,7 +43,10 @@ export function Onboarding() {
     api
       .profile()
       .then((r) => setProfile(r.profile))
-      .catch(() => undefined);
+      .catch((e) => {
+        console.error("Failed to load onboarding profile", e);
+        setError(localizedUiError(e, t, "ui.loadError"));
+      });
   }, []);
   const current = steps[step];
   const value = useMemo(
@@ -73,7 +77,7 @@ export function Onboarding() {
       await api.updateProfile({ ...profile, onboardingCompleted: true });
       window.location.replace("/app/upload");
     } catch (e: any) {
-      setError(e.message || t("onboard.saveError"));
+      setError(localizedUiError(e, t, "onboard.saveError"));
     } finally {
       setSaving(false);
     }

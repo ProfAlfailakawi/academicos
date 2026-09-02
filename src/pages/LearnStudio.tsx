@@ -1,3 +1,4 @@
+import { localizedUiError } from "../lib/ui-error";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { CheckCircle2, GraduationCap, Lightbulb, ListChecks, AlertTriangle, Play, Square, Sparkles, ShieldCheck, UploadCloud, BrainCircuit, Clock3, FileText, LoaderCircle, Target } from "lucide-react";
@@ -60,7 +61,12 @@ export function LearnStudio() {
   const speakBcp = localeMeta(locale).speech;
 
   useEffect(() => {
-    api.learningBrain().then((response) => setBrain(response.brain)).catch(() => undefined);
+    api.learningBrain()
+      .then((response) => setBrain(response.brain))
+      .catch((e) => {
+        console.error("Failed to load learning brain", e);
+        setError(localizedUiError(e, t, "ui.loadError"));
+      });
     const state = location.state as { seedProblem?: string; openSolve?: boolean; examIntake?: ExamIntake } | null;
     if (state?.seedProblem) setProblem(state.seedProblem);
     if (state?.openSolve) setTab("solve");
@@ -84,7 +90,7 @@ export function LearnStudio() {
       setExamIntake(response);
       if (!topic.trim() && response.guide.keyIdeas[0]) setTopic(response.guide.keyIdeas[0].slice(0, 550));
     } catch (caught: any) {
-      setError(caught?.message || t("learn.intakeError"));
+      setError(localizedUiError(caught, t, "learn.intakeError"));
     } finally {
       setIntakeBusy(false);
       if (studyFileRef.current) studyFileRef.current.value = "";

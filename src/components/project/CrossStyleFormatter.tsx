@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React, { useState } from "react";
 import { ArrowRightLeft, Check, Copy, RefreshCw, ShieldCheck, AlertTriangle, BookMarked } from "lucide-react";
 import type { AcademicSourceRecord, ProjectDNA } from "../../types";
@@ -41,12 +42,23 @@ export function CrossStyleFormatter({ project }: { project: ProjectDNA }) {
     if (!doi.trim()) return;
     setLoading(true); setError(""); setSource(null);
     try { const response = await api.researchSourceDoi(doi.trim()); setSource(response.source); }
-    catch (e) { setError(e instanceof ApiError && e.code === "DOI_NOT_FOUND" ? t("formatter.notFound") : e instanceof Error ? e.message : t("formatter.verifyError")); }
+    catch (e) { setError(e instanceof ApiError && e.code === "DOI_NOT_FOUND" ? t("formatter.notFound") : localizedUiError(e, t, "formatter.verifyError")); }
     finally { setLoading(false); }
   }
   async function copyRef() {
     if (!source) return;
-    await navigator.clipboard.writeText(formatted(source, selectedStyle)); setCopied(true); window.setTimeout(() => setCopied(false), 1800);
+    setError("");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error(t("formatter.copyError"));
+      }
+      await navigator.clipboard.writeText(formatted(source, selectedStyle));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      setCopied(false);
+      setError(localizedUiError(e, t, "formatter.copyError"));
+    }
   }
 
   return (

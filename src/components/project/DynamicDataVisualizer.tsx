@@ -67,10 +67,25 @@ export function DynamicDataVisualizer({ project }: { project: ProjectDNA }) {
     }).join("");
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="white"/><text x="${meta.dir === "rtl" ? 1040 : 40}" y="48" text-anchor="${meta.dir === "rtl" ? "end" : "start"}" font-size="28" font-weight="700" font-family="Arial" direction="${meta.dir}">${escapeXml(project.title)}</text><text x="${meta.dir === "rtl" ? 1040 : 40}" y="76" text-anchor="${meta.dir === "rtl" ? "end" : "start"}" font-size="15" fill="#6b7280" font-family="Arial" direction="${meta.dir}">${escapeXml(t("visual.svgNote"))}</text>${body}</svg>`;
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
-    const anchor = document.createElement("a"); anchor.href = url; anchor.download = `${project.title || "academicos-project"}-visual.svg`; anchor.click(); URL.revokeObjectURL(url);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${project.title || "academicos-project"}-visual.svg`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const copyMermaid = async () => { await navigator.clipboard.writeText(mermaid); setCopied(true); window.setTimeout(() => setCopied(false), 1500); };
+  const copyMermaid = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard is unavailable");
+      await navigator.clipboard.writeText(mermaid);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      console.error("Failed to copy Mermaid diagram", e);
+    }
+  };
 
   return <div className="space-y-6">
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border hairline bg-[var(--panel)]">

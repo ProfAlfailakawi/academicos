@@ -1,3 +1,4 @@
+import { localizedUiError } from "../../lib/ui-error";
 import React,{useEffect,useState}from'react';
 import{BookOpen,ExternalLink,FileCheck2,GitBranch,LoaderCircle,Plus,Trash2}from'lucide-react';
 import{api}from'../../lib/api';
@@ -11,8 +12,8 @@ export function EvidenceStudio({project}:{project:ProjectDNA}){
  const{t,locale}=useI18n();
  const[items,setItems]=useState<ProjectEvidence[]>([]);const[artifacts,setArtifacts]=useState<WorkspaceArtifact[]>([]);const[loading,setLoading]=useState(true);const[saving,setSaving]=useState(false);const[error,setError]=useState('');
  const[type,setType]=useState<ProjectEvidence['type']>('source');const[title,setTitle]=useState('');const[detail,setDetail]=useState('');const[sourceUrl,setSourceUrl]=useState('');const[relatedId,setRelatedId]=useState('');const[artifactId,setArtifactId]=useState('');const[deliverableId,setDeliverableId]=useState('');const[rubricId,setRubricId]=useState('');
- useEffect(()=>{Promise.all([api.evidence(project.id),api.artifacts(project.id).catch(()=>({artifacts:[]}))]).then(([e,a])=>{setItems(e.evidence);setArtifacts(a.artifacts)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[project.id]);
- async function add(){if(!title.trim()||!detail.trim())return;setSaving(true);setError('');try{const r=await api.addEvidence(project.id,{type,title:title.trim(),detail:detail.trim(),sourceUrl:sourceUrl.trim()||undefined,relatedEvidenceIds:relatedId?[relatedId]:undefined,artifactId:artifactId||undefined,deliverableId:deliverableId||undefined,rubricIds:rubricId?[rubricId]:undefined});setItems(v=>[r.evidence,...v]);setTitle('');setDetail('');setSourceUrl('');setRelatedId('');setArtifactId('');setDeliverableId('');setRubricId('')}catch(e:any){setError(e.message)}finally{setSaving(false)}}
+ useEffect(()=>{Promise.all([api.evidence(project.id),api.artifacts(project.id)]).then(([e,a])=>{setItems(e.evidence);setArtifacts(a.artifacts)}).catch(e=>setError(localizedUiError(e, t, "ui.actionError"))).finally(()=>setLoading(false))},[project.id]);
+ async function add(){if(!title.trim()||!detail.trim())return;setSaving(true);setError('');try{const r=await api.addEvidence(project.id,{type,title:title.trim(),detail:detail.trim(),sourceUrl:sourceUrl.trim()||undefined,relatedEvidenceIds:relatedId?[relatedId]:undefined,artifactId:artifactId||undefined,deliverableId:deliverableId||undefined,rubricIds:rubricId?[rubricId]:undefined});setItems(v=>[r.evidence,...v]);setTitle('');setDetail('');setSourceUrl('');setRelatedId('');setArtifactId('');setDeliverableId('');setRubricId('')}catch(e:any){setError(localizedUiError(e, t, "ui.actionError"))}finally{setSaving(false)}}
  async function remove(id:string){const old=items;setItems(v=>v.filter(x=>x.id!==id));try{await api.deleteEvidence(project.id,id)}catch{setItems(old)}}
  return <div className="grid xl:grid-cols-[.8fr_1.2fr] gap-5 items-start">
   <Card><CardContent><div className="eyebrow">{t("ui.evidenceInbox")}</div><h2 className="section-title mt-1">{t('evid.addTitle')}</h2><p className="body-copy mt-2">{t('evid.addDesc')}</p>

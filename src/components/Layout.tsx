@@ -74,6 +74,7 @@ export function Layout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({
     ProfessorOS: true,
   });
@@ -107,7 +108,9 @@ export function Layout() {
             maintenance: h.maintenance,
           }),
         )
-        .catch(() => undefined);
+        .catch((error) => {
+          console.error("Failed to load service health", error);
+        });
       api
         .featureFlags()
         .then((r) =>
@@ -115,7 +118,9 @@ export function Layout() {
             Object.fromEntries(r.flags.map((f) => [f.key, f.enabled])),
           ),
         )
-        .catch(() => undefined);
+        .catch((error) => {
+          console.error("Failed to load feature flags", error);
+        });
       api
         .branding()
         .then((r) => setBranding(r.branding))
@@ -578,9 +583,24 @@ export function Layout() {
           <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center justify-between gap-2">
               <span className="leading-relaxed"><strong className="font-bold">{t("layout.verifyEmailTitle")}</strong> {t("layout.verifyEmailDesc")}</span>
-              <button type="button" className="focus-ring shrink-0 rounded-lg px-3 py-1 text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white dark:bg-amber-400 dark:hover:bg-amber-300 dark:text-amber-950 transition-colors shadow-xs" onClick={async()=>{ await resendVerification().catch(()=>undefined); setVerificationSent(true); }}>
+              <button type="button" className="focus-ring shrink-0 rounded-lg px-3 py-1 text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white dark:bg-amber-400 dark:hover:bg-amber-300 dark:text-amber-950 transition-colors shadow-xs" onClick={async()=>{
+  setVerificationError("");
+  try {
+    await resendVerification();
+    setVerificationSent(true);
+  } catch (e) {
+    console.error("Failed to resend verification email", e);
+    setVerificationSent(false);
+    setVerificationError(t("layout.verificationSendFailed"));
+  }
+}}>
                 {verificationSent ? t("layout.verificationSent") : t("layout.resendVerification")}
               </button>
+              {verificationError && (
+                <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+                  {verificationError}
+                </span>
+              )}
             </div>
           </div>
         )}

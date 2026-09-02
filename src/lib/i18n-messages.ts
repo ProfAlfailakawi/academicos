@@ -1977,6 +1977,16 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "layout.verifyEmailDesc": { ar:"يمكنك استكشاف المنصة الآن، لكن الامتيازات المجانية المكلفة بالذكاء الاصطناعي تُفتح بعد التحقق لحماية الاستخدام العادل.", en:"You can explore now, but costly free AI benefits unlock after verification to protect fair use.", tr:"Şimdi platformu keşfedebilirsiniz; maliyetli ücretsiz AI hakları adil kullanımı korumak için doğrulamadan sonra açılır.", zh:"你现在可以浏览平台，但高成本的免费 AI 权益会在邮箱验证后解锁，以保护公平使用。", hi:"आप अभी प्लेटफ़ॉर्म देख सकते हैं, लेकिन निष्पक्ष उपयोग की सुरक्षा के लिए महंगे मुफ़्त AI लाभ सत्यापन के बाद खुलते हैं।", es:"Puedes explorar ahora, pero los beneficios gratuitos de IA de mayor coste se activan tras verificar el correo para proteger el uso justo.", fr:"Vous pouvez explorer la plateforme maintenant, mais les avantages IA gratuits coûteux s’activent après vérification afin de protéger l’usage équitable.", ur:"آپ ابھی پلیٹ فارم دیکھ سکتے ہیں، مگر مہنگے مفت AI فوائد منصفانہ استعمال کے تحفظ کے لیے تصدیق کے بعد کھلتے ہیں۔" },
   "layout.resendVerification": { ar:"أرسل رابط التحقق", en:"Send verification link", tr:"Doğrulama bağlantısı gönder", zh:"发送验证链接", hi:"सत्यापन लिंक भेजें", es:"Enviar enlace de verificación", fr:"Envoyer le lien de vérification", ur:"تصدیقی لنک بھیجیں" },
   "layout.verificationSent": { ar:"تم الإرسال", en:"Sent", tr:"Gönderildi", zh:"已发送", hi:"भेजा गया", es:"Enviado", fr:"Envoyé", ur:"بھیج دیا" },
+  "layout.verificationSendFailed": {
+    ar:"تعذر إرسال رابط التحقق. حاول مرة أخرى.",
+    en:"Could not send the verification link. Please try again.",
+    tr:"Doğrulama bağlantısı gönderilemedi. Lütfen tekrar deneyin.",
+    zh:"无法发送验证链接。请重试。",
+    hi:"सत्यापन लिंक नहीं भेजा जा सका। कृपया पुनः प्रयास करें।",
+    es:"No se pudo enviar el enlace de verificación. Inténtalo de nuevo.",
+    fr:"Impossible d’envoyer le lien de vérification. Veuillez réessayer.",
+    ur:"تصدیقی لنک نہیں بھیجا جا سکا۔ براہِ کرم دوبارہ کوشش کریں۔"
+  },
 
   // ---- Requirement Truth Matrix ----
   "req.title": { ar:"مصفوفة ما طلبه التكليف فعلًا", en:"What the assignment actually asks", tr:"Ödevin gerçekten istediği şey", zh:"作业真正要求什么", hi:"असाइनमेंट वास्तव में क्या मांगता है", es:"Lo que realmente pide la tarea", fr:"Ce que le devoir demande réellement", ur:"اسائنمنٹ حقیقت میں کیا مانگتا ہے" },
@@ -2395,6 +2405,146 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "ui.createRecord": UI("إنشاء سجل","Create record","Kayıt oluştur","创建记录","रिकॉर्ड बनाएँ","Crear registro","Créer un enregistrement","ریکارڈ بنائیں"),
   "ui.flag": UI("الإشارة","Flag","İşaret","标记","फ़्लैग","Indicador","Indicateur","فلیگ"),
   "ui.grounded": UI("مؤسَّس على الأدلة","Grounded","Dayanaklı","有依据","आधारित","Fundamentado","Ancré","شواہد پر مبنی"),
+    "ui.cancel": UI(
+    "إلغاء",
+    "Cancel",
+    "İptal",
+    "取消",
+    "रद्द करें",
+    "Cancelar",
+    "Annuler",
+    "منسوخ کریں"
+  ),
+  "ui.confirm": UI(
+    "تأكيد",
+    "Confirm",
+    "Onayla",
+    "确认",
+    "पुष्टि करें",
+    "Confirmar",
+    "Confirmer",
+    "تصدیق کریں"
+  ),
+  "ui.close": UI(
+    "إغلاق",
+    "Close",
+    "Kapat",
+    "关闭",
+    "बंद करें",
+    "Cerrar",
+    "Fermer",
+    "بند کریں"
+  ),
+  "ui.working": UI(
+    "جارٍ التنفيذ…",
+    "Working…",
+    "İşleniyor…",
+    "处理中…",
+    "प्रक्रिया जारी है…",
+    "Procesando…",
+    "Traitement…",
+    "عمل جاری ہے…"
+  ),
+"ui.loadError": UI(
+    "تعذر تحميل البيانات. حاول مرة أخرى.",
+    "Could not load the data. Please try again.",
+    "Veriler yüklenemedi. Lütfen tekrar deneyin.",
+    "无法加载数据。请重试。",
+    "डेटा लोड नहीं हो सका। कृपया पुनः प्रयास करें।",
+    "No se pudieron cargar los datos. Inténtalo de nuevo.",
+    "Impossible de charger les données. Veuillez réessayer.",
+    "ڈیٹا لوڈ نہیں ہو سکا۔ براہِ کرم دوبارہ کوشش کریں۔"
+  ),
+  "ui.error.sessionExpired": UI(
+    "انتهت جلستك. سجّل الدخول مرة أخرى للمتابعة.",
+    "Your session has expired. Sign in again to continue.",
+    "Oturumunuz sona erdi. Devam etmek için tekrar giriş yapın.",
+    "您的会话已过期。请重新登录以继续。",
+    "आपका सत्र समाप्त हो गया है। जारी रखने के लिए फिर से साइन इन करें।",
+    "Tu sesión ha caducado. Vuelve a iniciar sesión para continuar.",
+    "Votre session a expiré. Reconnectez-vous pour continuer.",
+    "آپ کا سیشن ختم ہو گیا ہے۔ جاری رکھنے کے لیے دوبارہ سائن اِن کریں۔"
+  ),
+  "ui.error.permission": UI(
+    "ليست لديك صلاحية لإكمال هذه العملية.",
+    "You do not have permission to complete this action.",
+    "Bu işlemi tamamlamak için yetkiniz yok.",
+    "您没有完成此操作的权限。",
+    "आपके पास यह कार्रवाई पूरी करने की अनुमति नहीं है।",
+    "No tienes permiso para completar esta acción.",
+    "Vous n’avez pas l’autorisation d’effectuer cette action.",
+    "آپ کو یہ عمل مکمل کرنے کی اجازت نہیں ہے۔"
+  ),
+  "ui.error.rateLimit": UI(
+    "تم الوصول إلى الحد المؤقت للاستخدام. حاول مرة أخرى بعد قليل.",
+    "The temporary usage limit has been reached. Please try again shortly.",
+    "Geçici kullanım sınırına ulaşıldı. Lütfen biraz sonra tekrar deneyin.",
+    "已达到临时使用限制。请稍后重试。",
+    "अस्थायी उपयोग सीमा पूरी हो गई है। कृपया थोड़ी देर बाद फिर प्रयास करें।",
+    "Se alcanzó el límite temporal de uso. Inténtalo de nuevo en unos momentos.",
+    "La limite temporaire d’utilisation a été atteinte. Réessayez dans quelques instants.",
+    "عارضی استعمال کی حد پوری ہو گئی ہے۔ براہِ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
+  ),
+  "ui.error.notFound": UI(
+    "تعذر العثور على العنصر المطلوب.",
+    "The requested item could not be found.",
+    "İstenen öğe bulunamadı.",
+    "找不到请求的项目。",
+    "अनुरोधित आइटम नहीं मिला।",
+    "No se pudo encontrar el elemento solicitado.",
+    "L’élément demandé est introuvable.",
+    "مطلوبہ آئٹم نہیں مل سکا۔"
+  ),
+  "ui.error.timeout": UI(
+    "استغرقت العملية وقتًا أطول من المتوقع. حاول مرة أخرى.",
+    "The action took longer than expected. Please try again.",
+    "İşlem beklenenden uzun sürdü. Lütfen tekrar deneyin.",
+    "操作耗时超过预期。请重试。",
+    "कार्रवाई में अपेक्षा से अधिक समय लगा। कृपया फिर प्रयास करें।",
+    "La operación tardó más de lo esperado. Inténtalo de nuevo.",
+    "L’opération a pris plus de temps que prévu. Veuillez réessayer.",
+    "عمل میں توقع سے زیادہ وقت لگا۔ براہِ کرم دوبارہ کوشش کریں۔"
+  ),
+  "ui.error.service": UI(
+    "الخدمة غير متاحة مؤقتًا. حاول مرة أخرى بعد قليل.",
+    "The service is temporarily unavailable. Please try again shortly.",
+    "Hizmet geçici olarak kullanılamıyor. Lütfen biraz sonra tekrar deneyin.",
+    "服务暂时不可用。请稍后重试。",
+    "सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद फिर प्रयास करें।",
+    "El servicio no está disponible temporalmente. Inténtalo de nuevo en unos momentos.",
+    "Le service est temporairement indisponible. Réessayez dans quelques instants.",
+    "سروس عارضی طور پر دستیاب نہیں ہے۔ براہِ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
+  ),
+  "ui.error.network": UI(
+    "تعذر الاتصال بالخدمة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
+    "Could not connect to the service. Check your internet connection and try again.",
+    "Hizmete bağlanılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
+    "无法连接到服务。请检查网络连接后重试。",
+    "सेवा से कनेक्ट नहीं हो सका। अपना इंटरनेट कनेक्शन जाँचें और फिर प्रयास करें।",
+    "No se pudo conectar con el servicio. Comprueba tu conexión a Internet e inténtalo de nuevo.",
+    "Impossible de se connecter au service. Vérifiez votre connexion Internet et réessayez.",
+    "سروس سے رابطہ نہیں ہو سکا۔ اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
+  ),
+  "ui.actionError": UI(
+    "تعذر إكمال العملية. حاول مرة أخرى.",
+    "Could not complete the action. Please try again.",
+    "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
+    "无法完成操作。请重试。",
+    "कार्रवाई पूरी नहीं हो सकी। कृपया पुनः प्रयास करें।",
+    "No se pudo completar la acción. Inténtalo de nuevo.",
+    "Impossible de terminer l’action. Veuillez réessayer.",
+    "عمل مکمل نہیں ہو سکا۔ براہِ کرم دوبارہ کوشش کریں۔"
+  ),
+  "ui.retry": UI(
+    "إعادة المحاولة",
+    "Try again",
+    "Tekrar dene",
+    "重试",
+    "पुनः प्रयास करें",
+    "Reintentar",
+    "Réessayer",
+    "دوبارہ کوشش کریں"
+  ),
   "ui.yes": UI("نعم","Yes","Evet","是","हाँ","Sí","Oui","ہاں"),
   "ui.no": UI("لا","No","Hayır","否","नहीं","No","Non","نہیں"),
   "ui.online": UI("متصل","online","çevrimiçi","在线","ऑनलाइन","en línea","en ligne","آن لائن"),
@@ -2453,4 +2603,44 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "mfaSetup.alreadyConfigured": UI("التحقق بخطوتين مسجل بالفعل","Two-step verification is already enrolled","İki adımlı doğrulama zaten kayıtlı","两步验证已注册","दो-चरणीय सत्यापन पहले से पंजीकृत है","La verificación en dos pasos ya está registrada","La vérification en deux étapes est déjà enregistrée","دو مرحلہ تصدیق پہلے سے رجسٹرڈ ہے"),
   "mfaSetup.signInAgainDesc": UI("هذه الجلسة لم تبدأ بالعامل الثاني. سجّل الدخول من جديد ليطلب Firebase الرمز ويصدر جلسة إدارية صحيحة.","This session did not start with the second factor. Sign in again so Firebase requests it and issues a valid privileged session.","Bu oturum ikinci faktörle başlamadı. Firebase’in kodu istemesi ve geçerli ayrıcalıklı oturum vermesi için tekrar giriş yapın.","此会话未使用第二因素启动。请重新登录，让 Firebase 请求验证码并签发有效的特权会话。","यह सत्र दूसरे कारक से शुरू नहीं हुआ। फिर से साइन इन करें ताकि Firebase कोड माँगे और वैध विशेषाधिकार प्राप्त सत्र जारी करे।","Esta sesión no comenzó con el segundo factor. Vuelve a iniciar sesión para que Firebase lo solicite y emita una sesión privilegiada válida.","Cette session n’a pas commencé avec le second facteur. Reconnectez-vous afin que Firebase le demande et émette une session privilégiée valide.","یہ سیشن دوسرے عامل کے ساتھ شروع نہیں ہوا۔ دوبارہ سائن اِن کریں تاکہ Firebase کوڈ مانگے اور درست مراعاتی سیشن جاری کرے۔"),
   "mfaSetup.signInAgain": UI("تسجيل الدخول من جديد","Sign in again","Tekrar giriş yap","重新登录","फिर से साइन इन करें","Volver a iniciar sesión","Se reconnecter","دوبارہ سائن اِن کریں"),
+
+  "app.language": { ar:"اللغة", en:"Language", tr:"Dil", zh:"语言", hi:"भाषा", es:"Idioma", fr:"Langue", ur:"زبان" },
+
+  "dossier.clipboardUnavailable": { ar:"تعذر النسخ إلى الحافظة.", en:"Could not copy to the clipboard.", tr:"Panoya kopyalanamadı.", zh:"无法复制到剪贴板。", hi:"क्लिपबोर्ड पर कॉपी नहीं किया जा सका।", es:"No se pudo copiar al portapapeles.", fr:"Impossible de copier dans le presse-papiers.", ur:"کلپ بورڈ پر کاپی نہیں ہو سکا۔" },
+
+  "formatter.copyError": { ar:"تعذر نسخ المرجع.", en:"Could not copy the citation.", tr:"Atıf kopyalanamadı.", zh:"无法复制引用。", hi:"संदर्भ कॉपी नहीं किया जा सका।", es:"No se pudo copiar la cita.", fr:"Impossible de copier la citation.", ur:"حوالہ کاپی نہیں ہو سکا۔" },
+
+  "integrity.copyError": { ar:"تعذر نسخ النتيجة.", en:"Could not copy the result.", tr:"Sonuç kopyalanamadı.", zh:"无法复制结果。", hi:"परिणाम कॉपी नहीं किया जा सका।", es:"No se pudo copiar el resultado.", fr:"Impossible de copier le résultat.", ur:"نتیجہ کاپی نہیں ہو سکا۔" },
+
+  "learn.buildingBlocks": { ar:"لبنات الفكرة", en:"Building blocks", tr:"Yapı taşları", zh:"知识构成", hi:"मूल घटक", es:"Bloques fundamentales", fr:"Éléments fondamentaux", ur:"بنیادی اجزا" },
+  "learn.caveats": { ar:"تنبيهات مهمة", en:"Important caveats", tr:"Önemli uyarılar", zh:"重要注意事项", hi:"महत्वपूर्ण सावधानियाँ", es:"Advertencias importantes", fr:"Points d’attention", ur:"اہم احتیاطیں" },
+  "learn.checkYourself": { ar:"اختبر فهمك", en:"Check your understanding", tr:"Kendini test et", zh:"检查你的理解", hi:"अपनी समझ जाँचें", es:"Comprueba tu comprensión", fr:"Vérifiez votre compréhension", ur:"اپنی سمجھ جانچیں" },
+  "learn.empty": { ar:"لا توجد نتيجة بعد.", en:"No result yet.", tr:"Henüz sonuç yok.", zh:"暂无结果。", hi:"अभी कोई परिणाम नहीं।", es:"Aún no hay resultado.", fr:"Aucun résultat pour le moment.", ur:"ابھی کوئی نتیجہ نہیں۔" },
+  "learn.error": { ar:"تعذر إكمال جلسة التعلم.", en:"Could not complete the learning session.", tr:"Öğrenme oturumu tamamlanamadı.", zh:"无法完成学习会话。", hi:"अध्ययन सत्र पूरा नहीं हो सका।", es:"No se pudo completar la sesión de aprendizaje.", fr:"Impossible de terminer la session d’apprentissage.", ur:"تعلیمی سیشن مکمل نہیں ہو سکا۔" },
+  "learn.finalAnswer": { ar:"الإجابة النهائية", en:"Final answer", tr:"Nihai cevap", zh:"最终答案", hi:"अंतिम उत्तर", es:"Respuesta final", fr:"Réponse finale", ur:"حتمی جواب" },
+  "learn.go": { ar:"ابدأ", en:"Start", tr:"Başla", zh:"开始", hi:"शुरू करें", es:"Empezar", fr:"Commencer", ur:"شروع کریں" },
+  "learn.guidedNote": { ar:"سأقودك خطوة بخطوة بدل إعطائك الإجابة مباشرة.", en:"I’ll guide you step by step instead of giving the answer immediately.", tr:"Cevabı hemen vermek yerine adım adım yönlendireceğim.", zh:"我会逐步引导你，而不是直接给出答案。", hi:"मैं सीधे उत्तर देने के बजाय आपको चरण-दर-चरण मार्गदर्शन दूँगा।", es:"Te guiaré paso a paso en lugar de darte la respuesta de inmediato.", fr:"Je vous guiderai étape par étape plutôt que de donner immédiatement la réponse.", ur:"میں فوراً جواب دینے کے بجائے مرحلہ وار رہنمائی کروں گا۔" },
+  "learn.intuition": { ar:"الفكرة ببساطة", en:"Intuition", tr:"Sezgisel fikir", zh:"直观理解", hi:"सहज समझ", es:"Intuición", fr:"Intuition", ur:"سادہ فہم" },
+  "learn.listen": { ar:"استمع", en:"Listen", tr:"Dinle", zh:"收听", hi:"सुनें", es:"Escuchar", fr:"Écouter", ur:"سنیں" },
+  "learn.loading": { ar:"جارٍ إعداد الشرح…", en:"Preparing the explanation…", tr:"Açıklama hazırlanıyor…", zh:"正在准备讲解…", hi:"व्याख्या तैयार की जा रही है…", es:"Preparando la explicación…", fr:"Préparation de l’explication…", ur:"وضاحت تیار کی جا رہی ہے…" },
+  "learn.mistakes": { ar:"أخطاء شائعة", en:"Common mistakes", tr:"Yaygın hatalar", zh:"常见错误", hi:"सामान्य गलतियाँ", es:"Errores comunes", fr:"Erreurs fréquentes", ur:"عام غلطیاں" },
+  "learn.problem": { ar:"السؤال أو المسألة", en:"Question or problem", tr:"Soru veya problem", zh:"问题或题目", hi:"प्रश्न या समस्या", es:"Pregunta o problema", fr:"Question ou problème", ur:"سوال یا مسئلہ" },
+  "learn.problemPh": { ar:"الصق السؤال أو المسألة هنا…", en:"Paste the question or problem here…", tr:"Soruyu veya problemi buraya yapıştırın…", zh:"在此粘贴问题或题目…", hi:"प्रश्न या समस्या यहाँ पेस्ट करें…", es:"Pega aquí la pregunta o el problema…", fr:"Collez ici la question ou le problème…", ur:"سوال یا مسئلہ یہاں چسپاں کریں…" },
+  "learn.sourceCache": { ar:"مصادر داعمة", en:"Supporting sources", tr:"Destekleyici kaynaklar", zh:"支持来源", hi:"सहायक स्रोत", es:"Fuentes de apoyo", fr:"Sources d’appui", ur:"معاون ذرائع" },
+  "learn.steps": { ar:"خطوات الحل", en:"Solution steps", tr:"Çözüm adımları", zh:"解题步骤", hi:"समाधान के चरण", es:"Pasos de solución", fr:"Étapes de résolution", ur:"حل کے مراحل" },
+  "learn.stop": { ar:"إيقاف", en:"Stop", tr:"Durdur", zh:"停止", hi:"रोकें", es:"Detener", fr:"Arrêter", ur:"روکیں" },
+  "learn.strategy": { ar:"استراتيجية الحل", en:"Solution strategy", tr:"Çözüm stratejisi", zh:"解题策略", hi:"समाधान रणनीति", es:"Estrategia de solución", fr:"Stratégie de résolution", ur:"حل کی حکمتِ عملی" },
+  "learn.topic": { ar:"الموضوع", en:"Topic", tr:"Konu", zh:"主题", hi:"विषय", es:"Tema", fr:"Sujet", ur:"موضوع" },
+  "learn.topicPh": { ar:"اكتب الموضوع الذي تريد فهمه…", en:"Enter the topic you want to understand…", tr:"Anlamak istediğiniz konuyu yazın…", zh:"输入你想理解的主题…", hi:"वह विषय लिखें जिसे आप समझना चाहते हैं…", es:"Escribe el tema que quieres comprender…", fr:"Saisissez le sujet que vous souhaitez comprendre…", ur:"وہ موضوع لکھیں جسے آپ سمجھنا چاہتے ہیں…" },
+  "learn.verify": { ar:"تحقق", en:"Verify", tr:"Doğrula", zh:"验证", hi:"सत्यापित करें", es:"Verificar", fr:"Vérifier", ur:"تصدیق کریں" },
+  "learn.workedNote": { ar:"حل نموذجي مع تفسير كل خطوة.", en:"A worked solution with each step explained.", tr:"Her adımı açıklanan örnek çözüm.", zh:"逐步解释的完整示例解答。", hi:"हर चरण की व्याख्या के साथ हल किया गया उदाहरण।", es:"Una solución desarrollada con explicación de cada paso.", fr:"Une solution détaillée avec explication de chaque étape.", ur:"ہر مرحلے کی وضاحت کے ساتھ مکمل حل۔" },
+
+  "level.advanced": { ar:"متقدم", en:"Advanced", tr:"İleri", zh:"高级", hi:"उन्नत", es:"Avanzado", fr:"Avancé", ur:"اعلیٰ" },
+  "level.beginner": { ar:"مبتدئ", en:"Beginner", tr:"Başlangıç", zh:"初级", hi:"शुरुआती", es:"Principiante", fr:"Débutant", ur:"ابتدائی" },
+  "level.intermediate": { ar:"متوسط", en:"Intermediate", tr:"Orta", zh:"中级", hi:"मध्यम", es:"Intermedio", fr:"Intermédiaire", ur:"درمیانی" },
+
+  "mfaSetup.copyError": { ar:"تعذر نسخ رمز الإعداد.", en:"Could not copy the setup code.", tr:"Kurulum kodu kopyalanamadı.", zh:"无法复制设置代码。", hi:"सेटअप कोड कॉपी नहीं किया जा सका।", es:"No se pudo copiar el código de configuración.", fr:"Impossible de copier le code de configuration.", ur:"سیٹ اپ کوڈ کاپی نہیں ہو سکا۔" },
+
+  "settings.exportSuccess": { ar:"تم إنشاء ملف التصدير بنجاح.", en:"Export file created successfully.", tr:"Dışa aktarma dosyası başarıyla oluşturuldu.", zh:"导出文件已成功创建。", hi:"निर्यात फ़ाइल सफलतापूर्वक बनाई गई।", es:"El archivo de exportación se creó correctamente.", fr:"Le fichier d’export a été créé avec succès.", ur:"ایکسپورٹ فائل کامیابی سے بن گئی۔" },
+
 };

@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import appletConfig from '../../firebase-applet-config.json';
 
 // يقرأ الإعداد أولًا من window.__ENV__ (حقن وقت التشغيل عبر public/env-config.js)
 // ثم يعود لمتغيرات البناء (import.meta.env). لا يوجد أي مشروع Firebase افتراضي مخفي.
@@ -16,12 +17,12 @@ function envValue(key: string, fallback?: string): string | undefined {
 }
 
 const config = {
-  apiKey: envValue('VITE_FIREBASE_API_KEY'),
-  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: envValue('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: envValue('VITE_FIREBASE_APP_ID'),
+  apiKey: envValue('VITE_FIREBASE_API_KEY', appletConfig.apiKey),
+  authDomain: envValue('VITE_FIREBASE_AUTH_DOMAIN', appletConfig.authDomain),
+  projectId: envValue('VITE_FIREBASE_PROJECT_ID', appletConfig.projectId),
+  storageBucket: envValue('VITE_FIREBASE_STORAGE_BUCKET', appletConfig.storageBucket),
+  messagingSenderId: envValue('VITE_FIREBASE_MESSAGING_SENDER_ID', appletConfig.messagingSenderId),
+  appId: envValue('VITE_FIREBASE_APP_ID', appletConfig.appId),
 };
 
 export const firebaseClientConfigured = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);

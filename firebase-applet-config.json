@@ -1,12 +1,12 @@
 {
-  "projectId": "",
-  "appId": "",
-  "apiKey": "",
-  "authDomain": "",
-  "firestoreDatabaseId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
+  "projectId": "academicos-3991f",
+  "appId": "1:264807023815:web:2f4737d198a61707f12ae2",
+  "apiKey": "AIzaSyCKkJ_bXKQtreuFoLb-GL6N_SLjBl-1-A0",
+  "authDomain": "academicos-3991f.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-academicos-fbe5103a-df9c-4b49-a3c4-52b205a3c818",
+  "storageBucket": "academicos-3991f.firebasestorage.app",
+  "messagingSenderId": "264807023815",
   "measurementId": "",
-  "oAuthClientId": "",
+  "oAuthClientId": "264807023815-noehdq9kfojlruaoeirrrp666lu7st0c.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

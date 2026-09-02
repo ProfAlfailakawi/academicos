@@ -420,7 +420,7 @@ async function authenticate(
   }
 
   try {
-    const decoded = await getAuth().verifyIdToken(token);
+    const decoded = await getAuth().verifyIdToken(token, true);
     const rawRole = String(decoded.role || "student");
     const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
       ? (rawRole as UserRole)

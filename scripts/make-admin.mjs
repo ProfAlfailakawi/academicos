@@ -1,14 +1,14 @@
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { readFile } from 'fs/promises';
 
 async function run() {
-  const serviceAccount = JSON.parse(
+  const config = JSON.parse(
     await readFile('./firebase-applet-config.json', 'utf8')
   );
 
   initializeApp({
-    credential: cert(serviceAccount)
+    projectId: config.projectId,
   });
 
   const email = process.argv[2];

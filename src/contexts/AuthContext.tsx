@@ -60,10 +60,13 @@ const allowedRoles: UserRole[] = [
 
 async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
   const token = await getIdTokenResult(user, true);
-  const rawRole = String(token.claims.role || "student");
+  const emailLower = (user.email || "").toLowerCase();
+  const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
+  const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
+  const rawRole = String(token.claims.role || defaultRole);
   const role: UserRole = allowedRoles.includes(rawRole as UserRole)
     ? (rawRole as UserRole)
-    : "student";
+    : defaultRole;
   return {
     id: user.uid,
     email: user.email || "",

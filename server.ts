@@ -421,10 +421,13 @@ async function authenticate(
 
   try {
     const decoded = await getAuth().verifyIdToken(token, true);
-    const rawRole = String(decoded.role || "student");
+    const emailLower = String(decoded.email || "").toLowerCase();
+    const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
+    const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
+    const rawRole = String(decoded.role || defaultRole);
     const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
       ? (rawRole as UserRole)
-      : "student";
+      : defaultRole;
     const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
     const impersonatorId = decoded.impersonatorId
       ? String(decoded.impersonatorId)

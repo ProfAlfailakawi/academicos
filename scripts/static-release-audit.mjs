@@ -17,6 +17,9 @@ const matrix=read('src/components/project/RequirementMatrixStudio.tsx');
 const abuse=read('src/server/abuse-guard.ts');
 const deviceTrust=read('src/lib/device-trust.ts');
 const exports=read('src/server/export.ts');
+const firebaseServices=read('src/server/firebase-services.ts');
+const storage=read('src/server/storage.ts');
+const mfaSetup=read('src/pages/MfaSetup.tsx');
 
 const i18n=read('src/lib/i18n.tsx');
 const onboarding=read('src/pages/Onboarding.tsx');
@@ -32,6 +35,11 @@ const uiCorpus=uiFiles.join('\n');
 
 expect('Missing bearer token fails closed',/if \(!token\)[\s\S]{0,220}AUTH_REQUIRED/.test(server),'authenticate() must return 401 without token');
 expect('Invalid token fails closed',/verifyIdToken\(token, true\)[\s\S]{0,2600}AUTH_INVALID/.test(server),'no root-owner fallback after verify failure');
+expect('Unsigned JWT payloads are never trusted',!server.includes('Buffer.from(parts[1]')&&!server.includes('token.split(".")'),'all bearer tokens must be verified by Firebase Admin');
+expect('Named Firestore database is explicit',firebaseServices.includes('appletConfig.firestoreDatabaseId')&&firebaseServices.includes('getFirestore(databaseId)'),'backend must use the configured named Firestore database instead of silently targeting (default)');
+expect('Storage uses configured Firebase bucket fallback',storage.includes('firebaseStorageBucketName()')&&!storage.includes('process.env.FIREBASE_STORAGE_BUCKET'),'uploads must use the applet-config bucket when no duplicate server env is present');
+expect('MFA is not a global read blocker',!server.includes('Multi-factor authentication is required for this administrative role')&&server.includes('MFA is required for this sensitive action'),'privileged users must reach read-only admin pages while sensitive writes still require MFA');
+expect('MFA enrollment and challenge are implemented',mfaSetup.includes('TotpMultiFactorGenerator.generateSecret')&&login.includes('getMultiFactorResolver')&&login.includes('resolveSignIn'),'Firebase MFA must have a complete enrollment and sign-in path');
 expect('No local auth fallback',!auth.includes('localStorage') && !auth.includes('localUser'),'AuthContext must never fabricate a signed-in user');
 expect('Showcase is emulator-only',/import\.meta\.env\.DEV[\s\S]{0,100}VITE_FIREBASE_AUTH_EMULATOR_URL/.test(login),'demo personas must be invisible in production');
 expect('Detector is not branded as external detector',messages.includes('It does not claim to identify who wrote the text or impersonate any external detector.') && messages.includes('integrity.riskNotAi'),'style analysis must state its boundary in i18n and never present its score as AI probability');

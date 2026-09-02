@@ -13,7 +13,7 @@ const ASSIGNABLE: Partial<Record<UserRole, ReadonlySet<UserRole>>> = {
 };
 
 export function privilegedMfaRequired(role: UserRole, env: NodeJS.ProcessEnv = process.env) {
-  return PRIVILEGED_MFA_ROLES.has(role) && (env.NODE_ENV === 'production' || env.REQUIRE_ADMIN_MFA === 'true');
+  return PRIVILEGED_MFA_ROLES.has(role) && (env.NODE_ENV === 'production' && env.REQUIRE_ADMIN_MFA === 'true');
 }
 
 export function assignableRolesFor(actorRole: UserRole): UserRole[] {

@@ -9,11 +9,15 @@ import {
 import { Layout } from "./components/Layout";
 import { useI18n } from "./lib/i18n";
 import { useAuth } from "./contexts/AuthContext";
+import { adminMfaRequiredByDeployment } from "./lib/firebase";
 const PublicHome = lazy(() =>
   import("./pages/PublicHome").then((m) => ({ default: m.PublicHome })),
 );
 const Login = lazy(() =>
   import("./pages/Login").then((m) => ({ default: m.Login })),
+);
+const MfaSetup = lazy(() =>
+  import("./pages/MfaSetup").then((m) => ({ default: m.MfaSetup })),
 );
 const Projects = lazy(() =>
   import("./pages/Projects").then((m) => ({ default: m.Projects })),
@@ -162,6 +166,19 @@ const SUPPORT_ROLES = new Set([
   "root_owner",
 ]);
 
+const PRIVILEGED_MFA_ROLES = new Set([
+  "support_agent",
+  "university_admin",
+  "ai_governance_officer",
+  "accreditation_officer",
+  "national_admin",
+  "finance_admin",
+  "trust_safety_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+
 function ProtectedLayout() {
   const { user, loading } = useAuth();
   const { t } = useI18n();
@@ -174,6 +191,12 @@ function ProtectedLayout() {
     );
   if (!user)
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  if (
+    adminMfaRequiredByDeployment &&
+    PRIVILEGED_MFA_ROLES.has(user.role) &&
+    !user.mfaSatisfied
+  )
+    return <Navigate to="/mfa-setup" state={{ from: location.pathname }} replace />;
   return <Layout />;
 }
 
@@ -230,6 +253,7 @@ export default function App() {
           <Route path="/p/:slug" element={<PublicPage />} />
           <Route path="/share/:token" element={<PublicShare />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/mfa-setup" element={<MfaSetup />} />
           <Route path="/app" element={<ProtectedLayout />}>
             <Route index element={<HomeRoute />} />
             <Route path="search" element={<SearchWorkspace />} />

@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getAppFirestore } from './firebase-services';
 import type { NotificationPreferences, NotificationRecord, UserRole } from '../types';
 import { platformStore } from './platform-store';
 
 const COLLECTION='notifications';
 const PREFERENCES='notificationPreferences';
 const now=()=>new Date().toISOString();
-const db=()=>getFirestore();
+const db=()=>getAppFirestore();
 
 type CreateNotice=Omit<NotificationRecord,'id'|'createdAt'|'delivery'>;
 

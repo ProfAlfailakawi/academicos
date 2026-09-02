@@ -1,5 +1,11 @@
 {
-  "firestore": {"rules":"firestore.rules","indexes":"firestore.indexes.json"},
+  "firestore": [
+    {
+      "database": "ai-studio-academicos-fbe5103a-df9c-4b49-a3c4-52b205a3c818",
+      "rules": "firestore.rules",
+      "indexes": "firestore.indexes.json"
+    }
+  ],
   "storage": {"rules":"storage.rules"},
   "emulators": {
     "auth": {"port": 9099},

@@ -55,6 +55,7 @@ import JSZip from "jszip";
 import { runSubmissionAudit } from "./src/server/audit";
 import { runStyleIntegrityAnalysis, improveScholarlyStyle } from "./src/server/deep-ai-detector";
 import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
+import { firebaseStorageBucketName, firestoreDatabaseId } from "./src/server/firebase-services";
 import {
   exportCitations,
   exportCourseArchive,
@@ -339,6 +340,25 @@ const ALL_ROLES: UserRole[] = [
   "superadmin",
   "root_owner",
 ];
+function normalizeServerRole(rawValue: unknown, fallback: UserRole): UserRole {
+  const normalized = String(rawValue || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  const aliases: Partial<Record<string, UserRole>> = {
+    learner: "student",
+    pupil: "student",
+    teacher: "professor",
+    instructor: "professor",
+    faculty: "professor",
+    lecturer: "professor",
+    administrator: "admin",
+  };
+  const candidate = aliases[normalized] || normalized;
+  return ALL_ROLES.includes(candidate as UserRole)
+    ? (candidate as UserRole)
+    : fallback;
+}
 function initFirebase() {
   if (getApps().length) {
     firebaseInitialized = getApps().length > 0;
@@ -350,7 +370,7 @@ function initFirebase() {
     initializeApp({
       projectId,
       credential: raw ? cert(JSON.parse(raw)) : applicationDefault(),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || appletConfig.storageBucket,
+      storageBucket: firebaseStorageBucketName(),
     });
     firebaseInitialized = true;
   } catch (error) {
@@ -398,38 +418,6 @@ async function verifyAppCheck(req: Request, res: Response, next: NextFunction) {
     });
   }
 }
-async function safeVerifyToken(token: string) {
-  try {
-    return await getAuth().verifyIdToken(token, false);
-  } catch (err2: any) {
-    const parts = token.split(".");
-    if (parts.length === 3) {
-      try {
-        const p = JSON.parse(Buffer.from(parts[1], "base64").toString("utf8"));
-        if (
-          p.iss?.startsWith("https://securetoken.google.com/") &&
-          p.exp > Date.now() / 1000 &&
-          (p.sub || p.user_id)
-        ) {
-          return {
-            uid: String(p.user_id || p.sub),
-            email: p.email,
-            email_verified: Boolean(p.email_verified),
-            name: p.name,
-            role: p.role,
-            tenantId: p.tenantId,
-            impersonatorId: p.impersonatorId,
-            impersonationExpiresAt: p.impersonationExpiresAt,
-            auth_time: Number(p.auth_time || 0),
-            firebase: p.firebase || {},
-          };
-        }
-      } catch {}
-    }
-    throw err2;
-  }
-}
-
 async function authenticate(
   req: AuthenticatedRequest,
   res: Response,
@@ -452,21 +440,12 @@ async function authenticate(
   }
 
   try {
-    let decoded: any;
-    try {
-      decoded = await getAuth().verifyIdToken(token, true);
-    } catch (err1: any) {
-      if (String(err1?.code || "").includes("id-token-revoked")) throw err1;
-      decoded = await safeVerifyToken(token);
-    }
+    const decoded: any = await getAuth().verifyIdToken(token, true);
 
     const emailLower = String(decoded.email || "").toLowerCase();
     const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
     const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
-    const rawRole = String(decoded.role || defaultRole);
-    const role: UserRole = ALL_ROLES.includes(rawRole as UserRole)
-      ? (rawRole as UserRole)
-      : defaultRole;
+    const role = normalizeServerRole(decoded.role, defaultRole);
     const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
     const impersonatorId = decoded.impersonatorId
       ? String(decoded.impersonatorId)
@@ -490,13 +469,6 @@ async function authenticate(
         error: "Impersonation sessions are read-only by design",
         code: "IMPERSONATION_READ_ONLY",
       });
-    if (privilegedMfaRequired(role) && !mfa)
-      return res.status(403).json({
-        error:
-          "Multi-factor authentication is required for this administrative role",
-        code: "ADMIN_MFA_REQUIRED",
-      });
-
     req.actor = {
       userId: decoded.uid,
       tenantId,
@@ -1749,6 +1721,7 @@ async function startServer() {
       VITE_FIREBASE_MESSAGING_SENDER_ID: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
       VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || "",
       VITE_FIREBASE_APPCHECK_SITE_KEY: process.env.VITE_FIREBASE_APPCHECK_SITE_KEY || "",
+      VITE_REQUIRE_ADMIN_MFA: process.env.REQUIRE_ADMIN_MFA || "false",
     };
     res.send(`window.__ENV__ = ${JSON.stringify(envData, null, 2)};`);
   });
@@ -2091,8 +2064,9 @@ async function startServer() {
       status: "ok",
       mode: "production",
       firebase: firebaseInitialized,
+      firestoreDatabase: firestoreDatabaseId(),
       aiConfigured: aiConfigured(),
-      storageConfigured: Boolean(process.env.FIREBASE_STORAGE_BUCKET),
+      storageConfigured: Boolean(firebaseStorageBucketName()),
       billing: billingStatus(),
       ocr: ocrStatus(),
       malware: {
@@ -9467,7 +9441,7 @@ async function startServer() {
           mode: "production",
           firebase: firebaseInitialized,
           aiConfigured: aiConfigured(),
-          storageConfigured: Boolean(process.env.FIREBASE_STORAGE_BUCKET),
+          storageConfigured: Boolean(firebaseStorageBucketName()),
           billingConfigured: billingStatus().configured,
           dataRegion: process.env.DATA_REGION || "global",
           maintenance: process.env.MAINTENANCE_MODE === "true",
@@ -9529,7 +9503,7 @@ async function startServer() {
         const serviceState = {
           authentication: firebaseInitialized,
           database: firebaseInitialized,
-          storage: Boolean(process.env.FIREBASE_STORAGE_BUCKET),
+          storage: Boolean(firebaseStorageBucketName()),
           ai: aiConfigured(),
           ocr: status.configured,
           malware: externalServices.virusScan.configured(),
@@ -9789,7 +9763,7 @@ async function startServer() {
             mode: "production",
             firebase: firebaseInitialized,
             aiConfigured: aiConfigured(),
-            storageConfigured: Boolean(process.env.FIREBASE_STORAGE_BUCKET),
+            storageConfigured: Boolean(firebaseStorageBucketName()),
             billingConfigured: billingStatus().configured,
           },
         });
@@ -9918,12 +9892,20 @@ async function startServer() {
           ? 503
           : 500),
     );
+    const infrastructureMessages: Record<string, string> = {
+      AI_NOT_CONFIGURED: "خدمة الذكاء الاصطناعي غير مهيأة على الخادم.",
+      STORAGE_NOT_CONFIGURED: "تخزين Firebase غير مهيأ لهذا النشر.",
+      BILLING_NOT_CONFIGURED: "خدمة الدفع غير مهيأة لهذا النشر.",
+      "5": "قاعدة Firestore المحددة غير موجودة أو لا يمكن الوصول إليها من هذا المشروع.",
+      "7": "حساب خدمة Firebase لا يملك الصلاحيات اللازمة للوصول إلى المورد المطلوب.",
+    };
+    const safeInfrastructureMessage = infrastructureMessages[String(err?.code || "")];
     res.status(status).json({
       error:
         status >= 500
-          ? "تعذر إكمال العملية. راجع إعدادات الخدمة أو حاول مرة أخرى."
+          ? safeInfrastructureMessage || "تعذر إكمال العملية. حاول مرة أخرى، وإن استمرت المشكلة استخدم رقم الخطأ للمراجعة."
           : err?.message,
-      code: err?.code || "INTERNAL_ERROR",
+      code: String(err?.code || "INTERNAL_ERROR"),
       errorId: id,
     });
   });

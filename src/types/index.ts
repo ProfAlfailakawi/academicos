@@ -27,6 +27,8 @@ export interface User {
   locale?: "ar" | "en" | "tr" | "zh" | "hi" | "es" | "fr" | "ur";
   createdAt?: string;
   emailVerified?: boolean;
+  mfaEnrolled?: boolean;
+  mfaSatisfied?: boolean;
   impersonation?: { actorId: string; readOnly: true; expiresAt: string };
 }
 

@@ -4,7 +4,7 @@ import {
   randomUUID,
   timingSafeEqual,
 } from "node:crypto";
-import { getFirestore } from "firebase-admin/firestore";
+import { getAppFirestore } from "./firebase-services";
 import { getAuth } from "firebase-admin/auth";
 import type {
   ControlPlaneData,
@@ -93,7 +93,7 @@ export const COLLECTIONS = {
 } as const;
 
 function db() {
-  return getFirestore();
+  return getAppFirestore();
 }
 
 function firestoreSafe<T>(value: T): T {

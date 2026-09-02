@@ -1,9 +1,10 @@
 import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from 'node:crypto';
 import type { IncomingFile } from './file-extract';
+import { firebaseStorageBucketName } from './firebase-services';
 
 export async function storeOriginalFile(file: IncomingFile, tenantId: string, userId: string) {
-  const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
+  const bucketName = firebaseStorageBucketName();
   if (!bucketName) throw Object.assign(new Error('Cloud Storage bucket is not configured'), { code: 'STORAGE_NOT_CONFIGURED' });
   const safeName = file.name.replace(/[^\p{L}\p{N}._ -]+/gu, '_').slice(-180) || 'assignment.bin';
   const path = `tenants/${tenantId}/users/${userId}/assignments/${Date.now()}_${randomUUID()}_${safeName}`;
@@ -20,7 +21,7 @@ export async function storeOriginalFile(file: IncomingFile, tenantId: string, us
 }
 
 export async function getOriginalFileUrl(path: string, tenantId: string, userId: string) {
-  const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
+  const bucketName = firebaseStorageBucketName();
   if (!bucketName) throw Object.assign(new Error('Cloud Storage bucket is not configured'), { code: 'STORAGE_NOT_CONFIGURED' });
   const prefix = `tenants/${tenantId}/users/${userId}/assignments/`;
   if (!path.startsWith(prefix)) throw Object.assign(new Error('File is outside the authenticated scope'), { status: 403, code: 'FORBIDDEN_FILE_SCOPE' });

@@ -8,7 +8,8 @@ import React, {
 import {
   createUserWithEmailAndPassword,
   getIdTokenResult,
-  onAuthStateChanged,
+  multiFactor,
+  onIdTokenChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -58,15 +59,32 @@ const allowedRoles: UserRole[] = [
   "root_owner",
 ];
 
+function normalizeClientRole(rawValue: unknown, fallback: UserRole): UserRole {
+  const normalized = String(rawValue || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  const aliases: Partial<Record<string, UserRole>> = {
+    learner: "student",
+    pupil: "student",
+    teacher: "professor",
+    instructor: "professor",
+    faculty: "professor",
+    lecturer: "professor",
+    administrator: "admin",
+  };
+  const candidate = aliases[normalized] || normalized;
+  return allowedRoles.includes(candidate as UserRole)
+    ? (candidate as UserRole)
+    : fallback;
+}
+
 async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
-  const token = await getIdTokenResult(user, true);
+  const token = await getIdTokenResult(user, false);
   const emailLower = (user.email || "").toLowerCase();
   const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
   const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
-  const rawRole = String(token.claims.role || defaultRole);
-  const role: UserRole = allowedRoles.includes(rawRole as UserRole)
-    ? (rawRole as UserRole)
-    : defaultRole;
+  const role = normalizeClientRole(token.claims.role, defaultRole);
   return {
     id: user.uid,
     email: user.email || "",
@@ -75,6 +93,8 @@ async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
     role,
     tenantId: String(token.claims.tenantId || `individual_${user.uid}`),
     emailVerified: Boolean(user.emailVerified),
+    mfaEnrolled: multiFactor(user).enrolledFactors.length > 0,
+    mfaSatisfied: Boolean(token.signInSecondFactor),
     impersonation: token.claims.impersonatorId
       ? {
           actorId: String(token.claims.impersonatorId),
@@ -124,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (current) => {
+    const unsubscribe = onIdTokenChanged(firebaseAuth, async (current) => {
       try {
         setUser(current ? await mapFirebaseUser(current) : null);
       } catch (error) {

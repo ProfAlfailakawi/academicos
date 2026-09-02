@@ -1,5 +1,6 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
+import { getAppFirestore } from "./firebase-services";
 import type { Request } from "express";
 
 const SIGNALS = "abuseSignalRegistry";
@@ -93,13 +94,13 @@ function activeReservations(value: unknown, at = Date.now()) {
 }
 
 async function recordEvent(data: Record<string, unknown>) {
-  const ref = getFirestore().collection(EVENTS).doc();
+  const ref = getAppFirestore().collection(EVENTS).doc();
   await ref.set({ id: ref.id, createdAt: now(), ...data });
 }
 
 export async function reserveFreeBenefit(req: Request, actor: FairUseActor, benefit = "project_preview"):
   Promise<{ assessment: FairUseAssessment; reservation?: FairUseReservation }> {
-  const db = getFirestore();
+  const db = getAppFirestore();
   const signals = requestSignals(req, actor);
   const { key: win, days: windowDays } = windowKey();
   const reservationId = randomUUID();
@@ -172,7 +173,7 @@ export async function reserveFreeBenefit(req: Request, actor: FairUseActor, bene
 
 export async function finalizeFreeBenefit(reservation: FairUseReservation | undefined, success: boolean) {
   if (!reservation) return;
-  const db = getFirestore(), ref = db.collection(RESERVATIONS).doc(reservation.id);
+  const db = getAppFirestore(), ref = db.collection(RESERVATIONS).doc(reservation.id);
   await db.runTransaction(async (tx) => {
     const doc = await tx.get(ref); if (!doc.exists || doc.data()?.status !== "active") return;
     const counterIds = Array.isArray(doc.data()?.counterIds) ? doc.data()!.counterIds.map(String) : reservation.counterIds;
@@ -193,7 +194,7 @@ export async function finalizeFreeBenefit(reservation: FairUseReservation | unde
 }
 
 export async function fairUseMetrics() {
-  const db = getFirestore();
+  const db = getAppFirestore();
   const [eventsSnap, signalsSnap] = await Promise.all([
     db.collection(EVENTS).orderBy("createdAt", "desc").limit(500).get(),
     db.collection(SIGNALS).limit(1000).get(),

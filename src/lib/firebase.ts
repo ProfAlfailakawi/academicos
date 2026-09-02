@@ -25,6 +25,7 @@ const config = {
   appId: envValue('VITE_FIREBASE_APP_ID', appletConfig.appId),
 };
 
+export const adminMfaRequiredByDeployment = envValue('VITE_REQUIRE_ADMIN_MFA') === 'true';
 export const firebaseClientConfigured = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);
 export const firebaseApp = firebaseClientConfigured ? (getApps()[0] || initializeApp(config)) : null;
 export const firebaseAuth = firebaseApp ? getAuth(firebaseApp) : null;

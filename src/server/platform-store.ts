@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
+import { getAppFirestore } from './firebase-services';
 import type { AIOutputFeedback, ApiKeyRecord, JobRecord, PlatformMetrics, PlatformRecord, PlatformRecordVersion, PlatformResourceKey, ProductEventRecord, PublicShareRecord } from '../types';
 import { isPaidProjectPlan, projectAccessFromEntitlements, type PaidProjectPlanId } from './project-access';
 
@@ -17,7 +18,7 @@ const AI_BUDGET_RESERVATIONS = 'aiBudgetReservations';
 const AI_BUDGET_COUNTERS = 'aiBudgetReservationCounters';
 const EXTERNAL_WEBHOOK_EVENTS = 'externalWebhookEvents';
 
-function db(){ return getFirestore(); }
+function db(){ return getAppFirestore(); }
 function collectionFor(resource:PlatformResourceKey){ return `${COLLECTION_PREFIX}${resource}`; }
 function now(){ return new Date().toISOString(); }
 function hash(value:string){ return createHash('sha256').update(value).digest('hex'); }

@@ -575,17 +575,17 @@ export function Layout() {
         </header>
 
         {user && user.emailVerified === false && (
-          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-100">
+          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center justify-between gap-2">
-              <span><strong>{t("layout.verifyEmailTitle")}</strong> {t("layout.verifyEmailDesc")}</span>
-              <button type="button" className="focus-ring rounded-lg px-2.5 py-1 font-semibold bg-[var(--panel)] border hairline" onClick={async()=>{ await resendVerification().catch(()=>undefined); setVerificationSent(true); }}>
+              <span className="leading-relaxed"><strong className="font-bold">{t("layout.verifyEmailTitle")}</strong> {t("layout.verifyEmailDesc")}</span>
+              <button type="button" className="focus-ring shrink-0 rounded-lg px-3 py-1 text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white dark:bg-amber-400 dark:hover:bg-amber-300 dark:text-amber-950 transition-colors shadow-xs" onClick={async()=>{ await resendVerification().catch(()=>undefined); setVerificationSent(true); }}>
                 {verificationSent ? t("layout.verificationSent") : t("layout.resendVerification")}
               </button>
             </div>
           </div>
         )}
         {user?.impersonation && (
-          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/12 text-amber-900 dark:text-amber-100">
+          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-semibold">
                 {t("layout.readOnlySupportSession")}
@@ -599,7 +599,7 @@ export function Layout() {
         )}
         {(serviceNotice.incident || serviceNotice.maintenance) && (
           <div
-            className={`px-4 md:px-7 py-2.5 text-xs border-b hairline ${serviceNotice.maintenance ? "bg-amber-500/10 text-amber-800 dark:text-amber-200" : "brand-soft-bg"}`}
+            className={`px-4 md:px-7 py-2.5 text-xs border-b hairline ${serviceNotice.maintenance ? "bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium" : "brand-soft-bg"}`}
           >
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-semibold">

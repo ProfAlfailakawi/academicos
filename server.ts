@@ -372,9 +372,7 @@ interface AuthenticatedRequest extends Request {
   };
 }
 async function verifyAppCheck(req: Request, res: Response, next: NextFunction) {
-  const required =
-    process.env.REQUIRE_APP_CHECK === "true" ||
-    (process.env.NODE_ENV === "production" && process.env.REQUIRE_APP_CHECK !== "false");
+  const required = process.env.REQUIRE_APP_CHECK === "true";
   if (!required) return next();
   if (!firebaseInitialized)
     return res.status(503).json({

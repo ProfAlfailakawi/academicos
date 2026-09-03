@@ -226,7 +226,17 @@
 
         var splash = document.getElementById("acos-boot");
         var removed = false;
-        function dismiss() {
+        var pending = false;
+        var startedAt = Date.now();
+        // تسلسل الحركة ينتهي عند ~١٧٦٠ms. التطبيق غالبًا يجهز قبل ذلك بكثير،
+        // فتُحجز مدة دنيا كي تكتمل الحركة ويستقرّ الشعار لحظةً قبل الانصراف.
+        var MIN_VISIBLE = 2300;
+        var reduceMotion = false;
+        try {
+          reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        } catch (e) {}
+
+        function removeNow() {
           if (removed || !splash) return;
           removed = true;
           splash.setAttribute("data-leaving", "1");
@@ -235,9 +245,21 @@
             if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
           }, 520);
         }
+
+        function dismiss() {
+          if (removed || pending) return;
+          var remaining = reduceMotion ? 0 : MIN_VISIBLE - (Date.now() - startedAt);
+          if (remaining > 0) {
+            pending = true;
+            window.setTimeout(removeNow, remaining);
+            return;
+          }
+          removeNow();
+        }
+
         window.__acosBootReady = dismiss;
         // شبكة أمان: لا تُحتجَز الواجهة خلف الشاشة إذا فشل تحميل الحزمة.
-        window.setTimeout(dismiss, 9000);
+        window.setTimeout(removeNow, 9000);
       })();
     </script>
 

@@ -58,9 +58,8 @@ export function AppPreferencesProvider({
     localStorage.setItem("academicos-locale", "ar");
   }, []);
 
-  // اللغة والاتجاه مملوكان لـI18nProvider وحده. كان هذا التأثير يعيد فرض
-  // العربية/RTL عند كل تغيير للسمة أو تفضيلات الوصول، فيقلب واجهة المستخدم
-  // الإنجليزي إلى RTL بمجرد تبديل الوضع الليلي.
+  // السمة فقط. اللغة والاتجاه مملوكان لـI18nProvider، ولا يُكتبان هنا
+  // كي لا ينقلب اتجاه الواجهة عند تبديل السمة أو تفضيلات الوصول.
   useEffect(() => {
     const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: dark)");

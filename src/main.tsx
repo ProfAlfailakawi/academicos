@@ -14,9 +14,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) { window.addEventListe
 
 createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider><AppPreferencesProvider><AuthProvider><App/></AuthProvider></AppPreferencesProvider></I18nProvider></StrictMode>);
 
-// تُسلَّم الشاشة إلى React بعد أول رسم فعلي، فلا يظهر أي وميض بين الاثنين.
-// requestAnimationFrame لا يعمل في تبويب مخفي، لذا نضيف مؤقتًا احتياطيًا:
-// الاستدعاء آمن للتكرار، وAppSplash يطابق شاشة الإقلاع بصريًا فلا يظهر أي قطع.
+// تسليم الشاشة إلى React بعد أول رسم. المؤقّت احتياطٌ للتبويب المخفي
+// حيث لا يعمل requestAnimationFrame؛ والاستدعاء آمن للتكرار.
 const handOff = () => window.__acosBootReady?.();
 requestAnimationFrame(() => requestAnimationFrame(handOff));
 setTimeout(handOff, 400);

@@ -3,8 +3,7 @@ import { cn } from '../lib/utils';
 import { useI18n } from '../lib/i18n';
 import { runtimeEnumLabel } from '../lib/platform-locale';
 
-// كانت كل حالة تحمل زوج ألوان hex خاصًا بها لكل سمة (٢٢ قيمة ثابتة).
-// الآن الحالة تُعلن معناها فقط، واللون يأتي من التوكنز فيصحّ في السمتين.
+// الحالة تُعلن معناها فقط؛ اللون يأتي من التوكنز فيصحّ في السمتين.
 const TONE: Record<string, string> = {
   not_started: 'muted',
   pending: 'muted',

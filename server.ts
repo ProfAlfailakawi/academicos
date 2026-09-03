@@ -357,6 +357,21 @@ const ALL_ROLES: UserRole[] = [
   "superadmin",
   "root_owner",
 ];
+// تُقرأ حسابات الإدارة من البيئة فقط. قائمة مفصولة بفواصل؛
+// إن لم تُضبط لا يُمنح أي حساب دورًا مرتفعًا تلقائيًا.
+const PLATFORM_OWNER_EMAILS: ReadonlySet<string> = new Set(
+  [process.env.ROOT_OWNER_EMAIL, process.env.SUPERADMIN_EMAILS]
+    .filter(Boolean)
+    .join(",")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+function isPlatformOwnerEmail(emailLower: string): boolean {
+  return emailLower.length > 0 && PLATFORM_OWNER_EMAILS.has(emailLower);
+}
+
 function normalizeServerRole(rawValue: unknown, fallback: UserRole): UserRole {
   const normalized = String(rawValue || "")
     .trim()
@@ -536,8 +551,7 @@ async function authenticate(
     const decoded: any = await verifyFirebaseIdToken(token);
 
     const emailLower = String(decoded.email || "").toLowerCase();
-    const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
-    const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
+    const defaultRole = isPlatformOwnerEmail(emailLower) ? "superadmin" : "student";
     const role = normalizeServerRole(decoded.role, defaultRole);
     const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
     const impersonatorId = decoded.impersonatorId
@@ -1122,7 +1136,7 @@ function userTenantId(user: {
 }
 function userRole(user: { email?: string; customClaims?: Record<string, unknown> }): UserRole {
   const emailLower = String(user.email || "").toLowerCase();
-  if (emailLower === "dr.ahmad.alfailakawi@gmail.com") {
+  if (isPlatformOwnerEmail(emailLower)) {
     return "superadmin";
   }
   const role = String(user.customClaims?.role || "student");

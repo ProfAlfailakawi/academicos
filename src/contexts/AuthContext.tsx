@@ -81,10 +81,9 @@ function normalizeClientRole(rawValue: unknown, fallback: UserRole): UserRole {
 
 async function mapFirebaseUser(user: FirebaseUser): Promise<User> {
   const token = await getIdTokenResult(user, false);
-  const emailLower = (user.email || "").toLowerCase();
-  const superAdminEmails = ["dr.ahmad.alfailakawi@gmail.com"];
-  const defaultRole = superAdminEmails.includes(emailLower) ? "superadmin" : "student";
-  const role = normalizeClientRole(token.claims.role, defaultRole);
+  // الدور يأتي حصرًا من مطالبات Firebase التي يضبطها الخادم.
+  // كود العميل يُشحن لكل زائر، فلا يحمل أي قائمة صلاحيات.
+  const role = normalizeClientRole(token.claims.role, "student");
   return {
     id: user.uid,
     email: user.email || "",

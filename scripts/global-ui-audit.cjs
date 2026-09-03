@@ -146,6 +146,12 @@ expect('i18n message keys are unique', duplicateMessageKeys.length===0, duplicat
 expect('Every external message has all 8 launch locales', localeShapeErrors.length===0, localeShapeErrors.slice(0,12).join(' | '));
 expect('Every base DICT S() entry has 8 launch locales', baseLocaleErrors.length===0, baseLocaleErrors.slice(0,12).join(' | '));
 expect('All literal t()/tr() references resolve', missingKeys.length===0, missingKeys.slice(0,20).join(', '));
+// عناصر التنقّل تُمرّر مفاتيحها كخصائص (label/short) لا كنصوص حرفية داخل t()،
+// فلا يلتقطها الفحص أعلاه. تُفحص هنا صراحةً كي لا يتسرّب مفتاح خام إلى الشريط.
+const navKeyMisses=[...layout.matchAll(/(?:label|short):\s*"([a-zA-Z]+\.[a-zA-Z]+)"/g)]
+  .map(m=>m[1]).filter((k,i,a)=>a.indexOf(k)===i)
+  .filter(k=>!allKeys.has(k));
+expect('Navigation labels resolve to real translations', navKeyMisses.length===0, navKeyMisses.join(', '));
 expect('No physical left/right Tailwind utilities in routed UI', physicalClassHits.length===0, physicalClassHits.slice(0,12).join(' | '));
 expect('UI date/time formatting is locale-state driven', directLocaleFormatting.length===0, directLocaleFormatting.join(', '));
 expect('No hard-coded Arabic JSX leaks outside i18n', visibleArabic.length===0, visibleArabic.slice(0,12).join(' | '));

@@ -143,9 +143,9 @@ export function LearnStudio() {
         description={t("learn.heroDescription")}
         action={
           <label className="flex items-center gap-2 text-xs">
-            <span className="muted">{t("app.language")}</span>
+            <span className="muted shrink-0 whitespace-nowrap">{t("app.language")}</span>
             <select
-              className="field rounded-lg px-2 py-1"
+              className="field w-auto min-w-36 rounded-lg px-2 py-1"
               value={locale}
               onChange={(e) => setLocale(e.target.value as any)}
             >

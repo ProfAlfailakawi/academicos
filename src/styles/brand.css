@@ -42,6 +42,24 @@ html[data-locale="ur"] {
 }
 [data-tone] { --tone: var(--brand); }
 
+
+/* --- 7. Typography for connected and stacked scripts -----------------------
+   العناوين مضبوطة بـleading ضيق وtracking سالب يناسبان اللاتينية. العربية خط
+   متّصل بنزلات عميقة، والأردية نستعليق أعمق، والديفاناغاري يحمل علامات فوقية —
+   فتتصادم الأسطر. هذه القواعد خارج الطبقات عمدًا كي تتغلّب على أدوات Tailwind
+   المكتوبة داخل الصفحات. */
+html[data-locale="ar"] :is(h1, h2, h3, h4, .page-title, .onboard-title, .section-title),
+html[data-locale="ur"] :is(h1, h2, h3, h4, .page-title, .onboard-title, .section-title),
+html[data-locale="hi"] :is(h1, h2, h3, h4, .page-title, .onboard-title, .section-title) {
+  letter-spacing: normal;
+}
+html[data-locale="ar"] :is(h1, h2, .page-title, .onboard-title),
+html[data-locale="hi"] :is(h1, h2, .page-title, .onboard-title) { line-height: 1.34; }
+html[data-locale="ar"] :is(h3, h4, .section-title),
+html[data-locale="hi"] :is(h3, h4, .section-title) { line-height: 1.45; }
+html[data-locale="ur"] :is(h1, h2, .page-title, .onboard-title) { line-height: 1.72; }
+html[data-locale="ur"] :is(h3, h4, .section-title) { line-height: 1.85; }
+
 @layer components {
 /* --- 2. Brand marks -------------------------------------------------------- */
 .acos-mark { display: block; flex: 0 0 auto; overflow: visible; }
@@ -460,9 +478,10 @@ a:hover > .acos-lockup .acos-mark__seal,
 .segmented > button:hover { color: var(--ink); border-color: var(--line-strong); transform: translateY(-1px); }
 .suggest-chip.is-active,
 .segmented > button[aria-pressed="true"] {
-  color: color-mix(in srgb, var(--tone, var(--brand)) 78%, var(--ink));
-  background: color-mix(in srgb, var(--tone, var(--brand)) 14%, transparent);
-  border-color: color-mix(in srgb, var(--tone, var(--brand)) 36%, transparent);
+  color: color-mix(in srgb, var(--tone, var(--brand)) 82%, var(--ink));
+  background: color-mix(in srgb, var(--tone, var(--brand)) 19%, transparent);
+  border-color: color-mix(in srgb, var(--tone, var(--brand)) 52%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--brand)) 22%, transparent);
 }
 
 /* Studio header band — the repeated "tool identity + primary action" row. */
@@ -764,4 +783,8 @@ a:hover > .acos-lockup .acos-mark__seal,
     filter: brightness(0.84) contrast(1.03) saturate(0.94);
   }
   :root.dark .journey-illustration { background: color-mix(in srgb, var(--accent) 10%, var(--panel)) !important; }
+
+  /* حارس: وسوم إجراءات ترويسة الصفحة لا تُضغط حتى ينكسر النص العربي داخلها. */
+  .page-header__action label { align-items: center; }
+  .page-header__action label > span { flex: 0 0 auto; white-space: nowrap; }
 }

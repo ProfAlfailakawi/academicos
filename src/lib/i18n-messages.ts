@@ -2727,4 +2727,15 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "onboard.domain.science": UI("علوم أساسية","Basic sciences","Temel bilimler","基础科学","मूल विज्ञान","Ciencias básicas","Sciences fondamentales","بنیادی سائنس"),
   "onboard.domain.arts": UI("آداب وعلوم إنسانية","Arts & humanities","Sanat ve beşerî bilimler","文学与人文","कला एवं मानविकी","Artes y humanidades","Arts et sciences humaines","فنون و انسانیات"),
 
+
+  // ---- Institution navigation ----
+  "layout.navControl": UI("لوحة المؤسسة","Institution control","Kurum kontrolü","机构控制台","संस्थान नियंत्रण","Panel institucional","Contrôle institutionnel","ادارہ کنٹرول"),
+  "layout.navControlShort": UI("المؤسسة","Control","Kontrol","控制台","नियंत्रण","Panel","Contrôle","کنٹرول"),
+  "layout.navCurriculum": UI("توأم المناهج","Curriculum twin","Müfredat ikizi","课程孪生","पाठ्यक्रम ट्विन","Gemelo curricular","Jumeau du curriculum","نصاب ٹوئن"),
+  "layout.navCurriculumShort": UI("المناهج","Curriculum","Müfredat","课程","पाठ्यक्रम","Currículo","Curriculum","نصاب"),
+  "layout.navPlatform": UI("مركز المنصّة","Platform hub","Platform merkezi","平台中心","प्लेटफ़ॉर्म हब","Centro de plataforma","Hub de la plateforme","پلیٹ فارم حب"),
+  "layout.navPlatformShort": UI("المنصّة","Platform","Platform","平台","प्लेटफ़ॉर्म","Plataforma","Plateforme","پلیٹ فارم"),
+  "layout.navIntegrationsShort": UI("التكاملات","Integrations","Entegrasyon","集成","एकीकरण","Integraciones","Intégrations","انضمام"),
+  "layout.navSupportConsole": UI("وحدة الدعم","Support console","Destek konsolu","支持控制台","सहायता कंसोल","Consola de soporte","Console d’assistance","سپورٹ کنسول"),
+
 };

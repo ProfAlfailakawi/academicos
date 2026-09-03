@@ -1226,3 +1226,27 @@ export const api = {
       };
     }>("/api/learn/solve", { method: "POST", body: JSON.stringify(body) }),
 };
+
+// ---------------------------------------------------------------------------
+// Advanced capabilities API (Ghost Cohort, Grade-Loss Map, Reverse Assessment,
+// Clarification Room, Peer Explanation, Learning Black Box). Reuses the same
+// authenticated `request` path as `api` above. See src/server/advanced/*.
+// ---------------------------------------------------------------------------
+export const advancedApi = {
+  ghostCohort: (assignmentId: string, projectId?: string) =>
+    request<any>(`/api/assignments/${encodeURIComponent(assignmentId)}/ghost-cohort${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ""}`),
+  gradeLossMap: (assignmentId: string, projectId?: string) =>
+    request<any>(`/api/assignments/${encodeURIComponent(assignmentId)}/grade-loss-map${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ""}`),
+  reverseAssessmentBrief: (projectId: string) =>
+    request<{ instruction: string; targets: string[] }>(`/api/projects/${encodeURIComponent(projectId)}/reverse-assessment/brief`),
+  reverseAssessment: (projectId: string, questions: unknown[]) =>
+    request<any>(`/api/projects/${encodeURIComponent(projectId)}/reverse-assessment`, { method: "POST", body: JSON.stringify({ questions }) }),
+  answerClarification: (threadId: string, body: { answer: string; addRequirements?: string[]; clarifyDeadline?: string }) =>
+    request<any>(`/api/clarifications/${encodeURIComponent(threadId)}/answer`, { method: "POST", body: JSON.stringify(body) }),
+  submitPeerExplanation: (courseId: string, body: { concept: string; transcript: string; durationSeconds: number; language?: string; referenceMaterial?: string }) =>
+    request<any>(`/api/courses/${encodeURIComponent(courseId)}/peer-explanations`, { method: "POST", body: JSON.stringify(body) }),
+  verifyBlackBox: (projectId: string, chain: unknown, attach = false) =>
+    request<any>(`/api/projects/${encodeURIComponent(projectId)}/black-box/verify`, { method: "POST", body: JSON.stringify({ ...(chain as object), attach }) }),
+  legacyListing: (projectId: string, consent: { granted: boolean; scope?: string; allowContact?: boolean }) =>
+    request<any>(`/api/projects/${encodeURIComponent(projectId)}/legacy-listing`, { method: "POST", body: JSON.stringify({ consent }) }),
+};

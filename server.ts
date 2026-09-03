@@ -72,6 +72,7 @@ import {
   billingPlan,
   billingStatus,
   getBillingProvider,
+  paymentCoversPlan,
   verifyLemonSqueezyWebhook,
   verifyMyFatoorahWebhook,
   verifyTapWebhook,
@@ -138,6 +139,14 @@ import {
   shouldBlockCopilot,
 } from "./src/server/copilot";
 import { embeddingsConfigured, embeddingBackend, groundingConfigured, groundedResearch } from "./src/server/retrieval";
+import {
+  parseAcceptLanguage,
+  resolveServerLocale,
+  tx,
+  txf,
+  type ServerLocale,
+} from "./src/server/server-locale";
+import { SRV, SRV2 } from "./src/server/server-messages";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
 import {
   addConcierge,
@@ -795,7 +804,10 @@ function validatePlatformRecord(
       });
   }
 }
-function normalizeAcademicPolicy(value: any): AIUsagePolicy {
+function normalizeAcademicPolicy(
+  value: any,
+  locale: ServerLocale = "en",
+): AIUsagePolicy {
   const raw = Number(value?.level);
   const level = (
     Number.isFinite(raw) ? Math.min(5, Math.max(0, raw)) : 2
@@ -809,7 +821,9 @@ function normalizeAcademicPolicy(value: any): AIUsagePolicy {
     : undefined;
   return {
     level,
-    summary: cleanField(value?.summary, 600) || `سياسة AI — المستوى ${level}`,
+    summary:
+      cleanField(value?.summary, 600) ||
+      txf(SRV.aiPolicyLevel, locale, { level }),
     allowed: cleanStringList(value?.allowed, 40, 180),
     prohibited: cleanStringList(value?.prohibited, 40, 180),
     disclosureRequired: Boolean(value?.disclosureRequired),
@@ -1032,6 +1046,19 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
           status: 400,
           code: "PAYMENT_METADATA_INVALID",
         });
+      // The plan id arrives as provider metadata. Never unlock a plan the
+      // captured amount does not actually cover.
+      if (
+        paymentCoversPlan({
+          planId: event.planId,
+          amount: event.amount,
+          currency: event.currency,
+        }) === false
+      )
+        throw Object.assign(
+          new Error("Captured amount does not cover the purchased plan"),
+          { status: 400, code: "PAYMENT_AMOUNT_MISMATCH" },
+        );
       await platformStore.grantProjectEntitlement({
         tenantId: event.tenantId,
         userId: event.userId,
@@ -1071,6 +1098,18 @@ async function persistVerifiedPayment(event: VerifiedPaymentEvent) {
     );
     throw error;
   }
+}
+/**
+ * The locale for every generated string in this response. Explicit request
+ * fields win over the Accept-Language header the client sends from the active
+ * UI locale; English is the neutral fallback.
+ */
+function reqLocale(req: { appLocale?: ServerLocale } & Record<string, any>): ServerLocale {
+  return resolveServerLocale(
+    req?.body?.locale,
+    req?.query?.locale,
+    (req as any)?.appLocale,
+  );
 }
 function userTenantId(user: {
   uid: string;
@@ -2132,6 +2171,14 @@ async function startServer() {
       credentials: true,
     }),
   );
+  // Resolve one request locale for every generated string the server returns
+  // (project scaffolding, audits, viva questions, plans, error copy). The client
+  // sends Accept-Language from the active UI locale; an explicit `locale` field
+  // on the request still wins where a route reads one.
+  app.use("/api", (req, _res, next) => {
+    (req as any).appLocale = parseAcceptLanguage(req.header("accept-language")) || "en";
+    next();
+  });
   app.use("/api", apiRateLimit);
   app.use("/api", verifyAppCheck);
   app.use("/api", maintenanceGate);
@@ -3610,8 +3657,10 @@ async function startServer() {
           userId: a.userId,
           type: "system",
           priority: "important",
-          title: "تم تسجيل طلب الحذف",
-          body: `فترة السماح حتى ${graceEndsAt}. قد تمنع سياسة المؤسسة حذف بعض السجلات وتحوّلها إلى anonymized/retained evidence.`,
+          title: tx(SRV.deletionRequestedTitle, reqLocale(req)),
+          body: txf(SRV.deletionRequestedBody, reqLocale(req), {
+            date: graceEndsAt,
+          }),
           targetPath: "/app/settings",
           channels: ["in_app"],
         });
@@ -4003,7 +4052,7 @@ async function startServer() {
         );
         res.json({
           success: true,
-          brain: buildLearningBrain(projects, skills, learning),
+          brain: buildLearningBrain(projects, skills, learning, reqLocale(req)),
         });
       } catch (e) {
         next(e);
@@ -4030,10 +4079,13 @@ async function startServer() {
           a.userId,
           a.tenantId,
         );
-        const brain = buildLearningBrain(projects, skills, learning);
+        const brain = buildLearningBrain(projects, skills, learning, reqLocale(req));
         res.json({
           success: true,
-          mission: addConcierge(buildMissionControl(projects, profile, brain)),
+          mission: addConcierge(
+            buildMissionControl(projects, profile, brain, Date.now(), reqLocale(req)),
+            reqLocale(req),
+          ),
           brain,
         });
       } catch (e) {
@@ -4071,6 +4123,7 @@ async function startServer() {
             programs,
             maps,
             programId,
+            reqLocale(req),
           ),
           programs: programs.map((p) => ({
             id: p.id,
@@ -4131,7 +4184,7 @@ async function startServer() {
           assignments,
           programs,
           maps,
-          input,
+          { ...input, locale: reqLocale(req) },
         );
         await firestoreStore.writeAudit(
           a.tenantId,
@@ -4367,7 +4420,9 @@ async function startServer() {
               parts.push(`--- ${file.name} (OCR) ---\n${ocr.text}`);
               warnings.push(...ocr.extraction.warnings);
             } else {
-              warnings.push(`${file.name}: يحتاج OCR مهيأ لاستخراج نص الصورة/الملف الممسوح.`);
+              warnings.push(
+                txf(SRV.ocrRequired, reqLocale(req), { file: file.name }),
+              );
             }
           }
         }
@@ -4511,7 +4566,7 @@ async function startServer() {
               error: "Active course enrollment is required",
               code: "COURSE_ENROLLMENT_REQUIRED",
             });
-          const pol = normalizeAcademicPolicy(assignment.aiPolicy);
+          const pol = normalizeAcademicPolicy(assignment.aiPolicy, reqLocale(req));
           policyCtx = {
             linkedToAssignment: true,
             policyLevel: pol.level,
@@ -4683,7 +4738,10 @@ async function startServer() {
           720,
           Math.max(30, Number(req.query.minutes || 180)),
         );
-        res.json({ success: true, plan: buildRescuePlan(project, minutes) });
+        res.json({
+          success: true,
+          plan: buildRescuePlan(project, minutes, Date.now(), reqLocale(req)),
+        });
       } catch (e) {
         next(e);
       }
@@ -4814,7 +4872,7 @@ async function startServer() {
           );
         res.json({
           success: true,
-          brief: buildFacultyAutomation(courses, assignments),
+          brief: buildFacultyAutomation(courses, assignments, reqLocale(req)),
         });
       } catch (e) {
         next(e);
@@ -4835,12 +4893,14 @@ async function startServer() {
         const courses = COURSE_ADMIN_ROLES.has(a.role) ? allCourses : allCourses.filter((course) => course.ownerId === a.userId);
         const courseIds = new Set(courses.map((course) => course.id));
         const assignments = (await firestoreStore.listTenantAssignments(a.tenantId)).filter((assignment) => courseIds.has(assignment.courseId));
-        const brief = buildFacultyAutomation(courses, assignments);
+        const brief = buildFacultyAutomation(courses, assignments, reqLocale(req));
         if (!aiConfigured({ taskType: "faculty_copilot", complexity: "medium", risk: "medium" })) {
           return res.json({
             success: true,
             source: "scaffold",
-            answer: brief.actions[0]?.detail || "لا توجد إشارة كافية بعد. افتح أحد المقررات وأضف تكليفاً أو rubric حتى تصبح التوصية أدق.",
+            answer:
+              brief.actions[0]?.detail ||
+              tx(SRV.copilotNoSignal, reqLocale(req)),
             suggestions: brief.actions.slice(0, 5).map((action) => action.title),
             warnings: [],
           });
@@ -4896,7 +4956,7 @@ async function startServer() {
           term: cleanField(body.term, 100) || undefined,
           description: cleanField(body.description, 3000) || undefined,
           outcomes: cleanStringList(body.outcomes, 100, 500),
-          aiPolicy: normalizeAcademicPolicy(body.aiPolicy),
+          aiPolicy: normalizeAcademicPolicy(body.aiPolicy, reqLocale(req)),
           status: ["draft", "active", "archived"].includes(String(body.status))
             ? body.status
             : "draft",
@@ -5243,7 +5303,7 @@ async function startServer() {
             ? cleanStringList(body.outcomes, 100, 500)
             : current.outcomes,
           aiPolicy: body.aiPolicy
-            ? normalizeAcademicPolicy(body.aiPolicy)
+            ? normalizeAcademicPolicy(body.aiPolicy, reqLocale(req))
             : current.aiPolicy,
           status: ["draft", "active", "archived"].includes(String(body.status))
             ? body.status
@@ -5279,7 +5339,8 @@ async function startServer() {
           id: randomUUID(),
           ownerId: a.userId,
           code: cleanField(req.body?.code, 50) || `${source.code}-COPY`,
-          title: cleanField(req.body?.title, 220) || `${source.title} — نسخة`,
+          title: cleanField(req.body?.title, 220) ||
+          txf(SRV.copyOf, reqLocale(req), { title: source.title }),
           term: cleanField(req.body?.term, 100) || undefined,
           status: "draft",
           createdAt: now,
@@ -5409,7 +5470,7 @@ async function startServer() {
           deliverables,
           rubric,
           outcomes: cleanStringList(body.outcomes, 100, 500),
-          aiPolicy: normalizeAcademicPolicy(body.aiPolicy || course.aiPolicy),
+          aiPolicy: normalizeAcademicPolicy(body.aiPolicy || course.aiPolicy, reqLocale(req)),
           groupMode: ["individual", "group", "either"].includes(
             String(body.groupMode),
           )
@@ -5466,7 +5527,8 @@ async function startServer() {
           ...source,
           id: randomUUID(),
           createdBy: a.userId,
-          title: cleanField(req.body?.title, 260) || `${source.title} — نسخة`,
+          title: cleanField(req.body?.title, 260) ||
+          txf(SRV.copyOf, reqLocale(req), { title: source.title }),
           deadline: undefined,
           status: "draft",
           deliverables: source.deliverables.map((d) => ({
@@ -5518,20 +5580,22 @@ async function startServer() {
         const checks = [
           {
             id: "instructions",
-            label: "وضوح التعليمات",
+            label: tx(SRV.qualityClarityLabel, reqLocale(req)),
             status: item.instructions.trim().length >= 120 ? "pass" : "warning",
             detail:
               item.instructions.trim().length >= 120
-                ? "التعليمات تحتوي تفاصيل كافية مبدئيًا."
-                : "التعليمات قصيرة؛ وضّح المطلوب والحدود وطريقة التسليم.",
+                ? tx(SRV.qualityClarityOk, reqLocale(req))
+                : tx(SRV.qualityClarityShort, reqLocale(req)),
           },
           {
             id: "deliverables",
-            label: "المخرجات",
+            label: tx(SRV.qualityDeliverablesLabel, reqLocale(req)),
             status: item.deliverables.length ? "pass" : "critical",
             detail: item.deliverables.length
-              ? `${item.deliverables.length} مخرجات محددة.`
-              : "لا توجد Deliverables محددة.",
+              ? txf(SRV.qualityDeliverablesSome, reqLocale(req), {
+                  count: item.deliverables.length,
+                })
+              : tx(SRV.qualityDeliverablesNone, reqLocale(req)),
           },
           {
             id: "rubric",
@@ -5543,30 +5607,36 @@ async function startServer() {
                   ? "warning"
                   : "critical",
             detail: !item.rubric.length
-              ? "لا يوجد Rubric."
-              : `مجموع الأوزان ${weight}%.`,
+              ? tx(SRV.qualityRubricNone, reqLocale(req))
+              : txf(SRV.qualityRubricWeight, reqLocale(req), { weight }),
           },
           {
             id: "outcomes",
             label: "Outcome mapping",
             status: item.outcomes.length ? "pass" : "warning",
             detail: item.outcomes.length
-              ? `${item.outcomes.length} outcomes مرتبطة.`
-              : "لم تُربط مخرجات تعلم بهذا التكليف.",
+              ? txf(SRV.qualityOutcomesSome, reqLocale(req), {
+                  count: item.outcomes.length,
+                })
+              : tx(SRV.qualityOutcomesNone, reqLocale(req)),
           },
           {
             id: "policy",
             label: "AI Policy",
             status: item.aiPolicy.needsConfirmation ? "warning" : "pass",
             detail: item.aiPolicy.needsConfirmation
-              ? "سياسة AI تحتاج تأكيدًا قبل النشر."
-              : `سياسة AI محددة عند Level ${item.aiPolicy.level}.`,
+              ? tx(SRV.qualityPolicyNeedsConfirm, reqLocale(req))
+              : txf(SRV.qualityPolicySet, reqLocale(req), {
+                  level: item.aiPolicy.level,
+                }),
           },
           {
             id: "deadline",
-            label: "الموعد",
+            label: tx(SRV.qualityDeadlineLabel, reqLocale(req)),
             status: item.deadline ? "pass" : "warning",
-            detail: item.deadline ? "الموعد محدد." : "لم يحدد موعد نهائي بعد.",
+            detail: item.deadline
+              ? tx(SRV.qualityDeadlineSet, reqLocale(req))
+              : tx(SRV.qualityDeadlineMissing, reqLocale(req)),
           },
         ];
         const critical = checks.filter((c) => c.status === "critical").length,
@@ -5619,7 +5689,7 @@ async function startServer() {
             ? cleanStringList(body.outcomes, 100, 500)
             : current.outcomes,
           aiPolicy: body.aiPolicy
-            ? normalizeAcademicPolicy(body.aiPolicy)
+            ? normalizeAcademicPolicy(body.aiPolicy, reqLocale(req))
             : current.aiPolicy,
           groupMode: ["individual", "group", "either"].includes(
             String(body.groupMode),
@@ -5697,7 +5767,7 @@ async function startServer() {
               a.tenantId,
             ),
           ]),
-          audit = runSubmissionAudit(project, { artifacts, evidence });
+          audit = runSubmissionAudit(project, { artifacts, evidence, locale: reqLocale(req) });
         if (audit.blockingIssues)
           return res.status(422).json({
             error: `Submission blocked by ${audit.blockingIssues} critical readiness issue(s)`,
@@ -5747,8 +5817,14 @@ async function startServer() {
           userId: course.ownerId,
           type: "assignment",
           priority: "important",
-          title: `تسليم جديد: ${assignment.title}`,
-          body: `${a.displayName} سلّم المحاولة ${submission.attempt}. إيصال ${submission.receiptHash.slice(0, 12)}.`,
+          title: txf(SRV.notifyNewSubmissionTitle, reqLocale(req), {
+            assignment: assignment.title,
+          }),
+          body: txf(SRV.notifyNewSubmissionBody, reqLocale(req), {
+            name: a.displayName,
+            attempt: submission.attempt,
+            receipt: submission.receiptHash.slice(0, 12),
+          }),
           targetPath: `/app/course/${courseId}/assignment/${assignmentId}/submissions`,
           channels: ["in_app"],
         });
@@ -5925,13 +6001,20 @@ async function startServer() {
             priority: "important",
             title:
               submission.status === "released"
-                ? `تم نشر درجة ${assignment.title}`
-                : `أُعيد ${assignment.title} للمراجعة`,
+                ? txf(SRV.notifyGradePublished, reqLocale(req), {
+                    assignment: assignment.title,
+                  })
+                : txf(SRV.notifyReturned, reqLocale(req), {
+                    assignment: assignment.title,
+                  }),
             body:
               submission.status === "released"
-                ? `درجتك ${submission.totalScore}/${submission.maxScore}. افتح الإيصال والتغذية الراجعة.`
+                ? txf(SRV.notifyGradeBody, reqLocale(req), {
+                    score: submission.totalScore,
+                    max: submission.maxScore,
+                  })
                 : submission.returnedReason ||
-                  "راجع ملاحظات المعلم ثم أعد التسليم.",
+                  tx(SRV.notifyReturnedBody, reqLocale(req)),
             targetPath: `/app/project/${submission.projectId}`,
             channels: ["in_app"],
           });
@@ -6254,7 +6337,7 @@ async function startServer() {
           );
           if (!access.canExport)
             return res.status(402).json({
-              error: "التصدير بصيغة التسليم متاح بعد فتح المشروع الكامل.",
+              error: tx(SRV.exportNeedsUnlock, reqLocale(req)),
               code: "PROJECT_EXPORT_PAYMENT_REQUIRED",
               access,
             });
@@ -6600,21 +6683,23 @@ async function startServer() {
                 { status: 403, code: "COURSE_ENROLLMENT_REQUIRED" },
               );
             parsed.aiPolicy = {
-              ...normalizeAcademicPolicy(assignment.aiPolicy),
+              ...normalizeAcademicPolicy(assignment.aiPolicy, reqLocale(req)),
               needsConfirmation: false,
               provenance: "published_assignment",
               courseId,
               assignmentId,
             };
           } else {
-            const extracted = normalizeAcademicPolicy(parsed.aiPolicy);
+            const extracted = normalizeAcademicPolicy(parsed.aiPolicy, reqLocale(req));
             parsed.aiPolicy = {
               ...extracted,
               level: 0,
               allowed: [],
               needsConfirmation: true,
               provenance: "extracted_unverified",
-              summary: `سياسة غير موثقة بعد — ${extracted.summary}`,
+              summary: txf(SRV.policyUnverifiedSummary, reqLocale(req), {
+                summary: extracted.summary,
+              }),
             };
           }
         }
@@ -6702,7 +6787,7 @@ async function startServer() {
           ...(compiledWithNativeFallback
             ? {
                 notice:
-                  "لا يوجد مزوّد ذكاء اصطناعي مُهيّأ؛ تم التحليل بالمُجمِّع المحلي الحتمي. راجع كل الحقول قبل الاعتماد.",
+                  tx(SRV.nativeCompilerNotice, reqLocale(req)),
               }
             : {}),
         });
@@ -7208,7 +7293,7 @@ async function startServer() {
         if (!generation.allowed)
           return res.status(402).json({
             error:
-              "استخدمت المعاينة المجانية لهذا المشروع. افتح المشروع الكامل للمتابعة والتعديل والتصدير.",
+              tx(SRV.previewUsed, reqLocale(req)),
             code: generation.code,
             access,
           });
@@ -7362,7 +7447,7 @@ async function startServer() {
             : ["writing", ...project.workspaceModules],
           status: project.status === "not_started" ? "in_progress" : project.status,
           progress: Math.max(project.progress, 42),
-          nextAction: "راجع أقسام المشروع، ثبّت المصادر، ثم ابدأ تدريب المناقشة.",
+          nextAction: tx(SRV.writerNextAction, reqLocale(req)),
           updatedAt: new Date().toISOString(),
         };
         await firestoreStore.updateProject(
@@ -7402,10 +7487,13 @@ async function startServer() {
           source: provider ? "ai" : "safe_scaffold",
           access,
           notice: generation.preview
-            ? `هذه معاينة مجانية من ${PREVIEW_PAGE_LIMIT} صفحات. افتح المشروع الكامل لإكمال ${targetPages} صفحة والتعديلات والتصدير.`
+            ? txf(SRV.previewNote, reqLocale(req), {
+                previewPages: PREVIEW_PAGE_LIMIT,
+                targetPages,
+              })
             : provider
               ? undefined
-              : "لا يوجد مزود AI مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
+              : tx(SRV.writerScaffoldNote, reqLocale(req)),
         });
       } catch (e) {
         next(e);
@@ -7486,7 +7574,7 @@ async function startServer() {
         );
         if (!access.canWriteFull)
           return res.status(402).json({
-            error: "تعديلات الأقسام متاحة بعد فتح المشروع الكامل.",
+            error: tx(SRV.sectionEditsNeedUnlock, reqLocale(req)),
             code: "PROJECT_PAYMENT_REQUIRED",
             access,
           });
@@ -7504,16 +7592,22 @@ async function startServer() {
             code: "PROJECT_SECTION_NOT_FOUND",
           });
         const action = cleanField(req.body?.action, 40);
+        // The evidence marker is written in the project language so it never
+        // injects a foreign-script placeholder into the learner's draft.
+        const sourceMarker = tx(
+          SRV.evidenceMarker,
+          resolveServerLocale(project.language, reqLocale(req)),
+        );
         const actions: Record<string, string> = {
           explain: "Explain the section in plain language. Do not rewrite it.",
           simplify: "Rewrite with simpler academic wording while preserving every supported meaning.",
-          expand: "Expand the analysis with deeper reasoning; mark every new evidence need as [مصدر مطلوب].",
+          expand: `Expand the analysis with deeper reasoning; mark every new evidence need as ${sourceMarker}.`,
           shorten: "Shorten substantially without removing the central argument or verified evidence.",
           voice: "Rewrite transparently toward the supplied student voice sample; do not evade AI detection.",
           academic: "Improve formal academic tone, transitions, precision, and qualification.",
           translate: "Translate into the requested language while preserving citations and meaning.",
           challenge: "Challenge the section as a strict professor and return objections and questions, not replacement prose.",
-          source: "Identify exact claims needing sources and add [مصدر مطلوب] markers; never invent a source.",
+          source: `Identify exact claims needing sources and add ${sourceMarker} markers; never invent a source.`,
         };
         if (!actions[action])
           return res.status(400).json({
@@ -7536,7 +7630,7 @@ async function startServer() {
         });
         if (!provider.configured())
           return res.status(503).json({
-            error: "ميزة إعادة الصياغة تحتاج ربط مزود الذكاء الاصطناعي.",
+            error: tx(SRV.rewriteNeedsAi, reqLocale(req)),
             code: "AI_NOT_CONFIGURED",
           });
         const gate = await platformStore.reserveAiBudget(
@@ -8290,6 +8384,7 @@ async function startServer() {
             data.evidence,
             data.learning,
             data.aiRuns,
+            reqLocale(req),
           ),
         });
       } catch (e) {
@@ -8315,6 +8410,7 @@ async function startServer() {
             data.evidence,
             data.learning,
             data.skills,
+            reqLocale(req),
           ),
         });
       } catch (e) {
@@ -8657,7 +8753,7 @@ async function startServer() {
         );
         if (!access.canViva)
           return res.status(402).json({
-            error: "تدريب المناقشة يحتاج باقة المشروع + المناقشة.",
+            error: tx(SRV2.vivaNeedsPlan, reqLocale(req)),
             code: "PROJECT_VIVA_PLAN_REQUIRED",
             access,
           });
@@ -8671,7 +8767,7 @@ async function startServer() {
           project.id,
           a.tenantId,
         );
-        const session = createVivaSession(project, mode, artifacts);
+        const session = createVivaSession(project, mode, artifacts, reqLocale(req));
         await firestoreStore.saveVivaSession(session);
         res.status(201).json({ success: true, session });
       } catch (e) {
@@ -8702,7 +8798,7 @@ async function startServer() {
         );
         if (!access.canViva)
           return res.status(402).json({
-            error: "انتهت صلاحية تدريب المناقشة لهذا المشروع.",
+            error: tx(SRV2.vivaExpired, reqLocale(req)),
             code: "PROJECT_VIVA_PLAN_REQUIRED",
             access,
           });
@@ -8765,7 +8861,7 @@ async function startServer() {
         );
         if (!access.canViva)
           return res.status(402).json({
-            error: "انتهت صلاحية تدريب المناقشة لهذا المشروع.",
+            error: tx(SRV2.vivaExpired, reqLocale(req)),
             code: "PROJECT_VIVA_PLAN_REQUIRED",
             access,
           });
@@ -8779,7 +8875,7 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Viva session not found", code: "VIVA_NOT_FOUND" });
-        const result = completeViva(session);
+        const result = completeViva(session, reqLocale(req));
         {
           await firestoreStore.updateVivaSession(result.session);
           await firestoreStore.saveLearningEvidence(result.evidence);
@@ -9261,7 +9357,7 @@ async function startServer() {
           firestoreStore.listWorkspaceArtifacts(project.id, a.tenantId),
           firestoreStore.listProjectEvidence(project.id, a.userId, a.tenantId),
         ]);
-        const audit = runSubmissionAudit(project, { artifacts, evidence });
+        const audit = runSubmissionAudit(project, { artifacts, evidence, locale: reqLocale(req) });
         {
           await firestoreStore.saveAudit(audit, project, a.userId);
           await recordProductEventSafe(a, "audit_run", {
@@ -9387,7 +9483,7 @@ async function startServer() {
           firestoreStore.listWorkspaceArtifacts(project.id, a.tenantId),
           firestoreStore.listProjectEvidence(project.id, a.userId, a.tenantId),
         ]);
-        const audit = runSubmissionAudit(project, { artifacts, evidence });
+        const audit = runSubmissionAudit(project, { artifacts, evidence, locale: reqLocale(req) });
 
         const zip = new JSZip();
         
@@ -9605,6 +9701,7 @@ async function startServer() {
             assignments,
             submissions,
             serviceState,
+            locale: reqLocale(req),
           }),
         });
       } catch (e) {
@@ -9993,28 +10090,34 @@ async function startServer() {
           ? 503
           : 500),
     );
+    // Deployment/infrastructure faults. These describe server configuration, not
+    // learner content, so they stay in English — the product's neutral operator
+    // language — and the client maps 5xx codes to its own localized copy.
     const infrastructureMessages: Record<string, string> = {
-      AI_NOT_CONFIGURED: "خدمة الذكاء الاصطناعي غير مهيأة على الخادم.",
-      STORAGE_NOT_CONFIGURED: "تخزين Firebase غير مهيأ لهذا النشر.",
-      BILLING_NOT_CONFIGURED: "خدمة الدفع غير مهيأة لهذا النشر.",
+      AI_NOT_CONFIGURED: "The AI service is not configured on this server.",
+      STORAGE_NOT_CONFIGURED:
+        "Firebase Storage is not configured for this deployment.",
+      BILLING_NOT_CONFIGURED:
+        "The payment service is not configured for this deployment.",
       FIRESTORE_DATABASE_UNAVAILABLE:
-        "قاعدة Firestore المحددة غير موجودة أو لا يمكن الوصول إليها من مشروع Firebase الحالي.",
+        "The configured Firestore database does not exist or is unreachable from the current Firebase project.",
       FIRESTORE_IAM_PERMISSION_DENIED:
-        "هوية Cloud Run الحالية لا تملك صلاحية الوصول إلى قاعدة Firestore المحددة. لا تغيّر هوية الخدمة؛ امنح الهوية الحالية صلاحية Firestore على قاعدة AcademicOS.",
+        "The current Cloud Run identity cannot access the configured Firestore database. Do not change the service identity; grant Firestore access on the AcademicOS database to the existing identity.",
       FIREBASE_CREDENTIAL_PROJECT_MISMATCH:
-        "حساب خدمة Firebase المضاف للخادم تابع لمشروع مختلف عن مشروع AcademicOS.",
+        "The Firebase service account supplied to the server belongs to a different project than AcademicOS.",
       FIREBASE_RUNTIME_PROJECT_MISMATCH:
-        "خدمة Cloud Run تعمل في مشروع مختلف عن مشروع Firebase المستهدف.",
+        "The Cloud Run service is running in a different project than the target Firebase project.",
       FIREBASE_SERVICE_ACCOUNT_INVALID:
-        "قيمة FIREBASE_SERVICE_ACCOUNT غير صالحة.",
+        "FIREBASE_SERVICE_ACCOUNT is not a valid value.",
       FIREBASE_PROJECT_NOT_CONFIGURED:
-        "معرّف مشروع Firebase غير مهيأ على الخادم.",
+        "The Firebase project id is not configured on the server.",
     };
     const safeInfrastructureMessage = infrastructureMessages[firebaseInfrastructureCode];
     res.status(status).json({
       error:
         status >= 500
-          ? safeInfrastructureMessage || "تعذر إكمال العملية. حاول مرة أخرى، وإن استمرت المشكلة استخدم رقم الخطأ للمراجعة."
+          ? safeInfrastructureMessage ||
+            tx(SRV.genericFailure, resolveServerLocale((_req as any)?.appLocale))
           : err?.message,
       code: firebaseInfrastructureCode || "INTERNAL_ERROR",
       errorId: id,

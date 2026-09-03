@@ -57,6 +57,26 @@ import type {
 } from "../types";
 import { deviceTrustHeaders } from "./device-trust";
 
+// The server generates academic content, audits, viva questions and plan copy in
+// the learner's language. It reads that language from Accept-Language, so the
+// active UI locale travels with every request instead of defaulting to one language.
+const LOCALE_STORAGE_KEY = "academicos.locale.v1";
+const SUPPORTED_LOCALES = ["ar", "en", "tr", "zh", "hi", "es", "fr", "ur"];
+
+function activeLocale(): string {
+  try {
+    const documentLocale =
+      typeof document !== "undefined"
+        ? document.documentElement.getAttribute("lang")
+        : null;
+    if (documentLocale && SUPPORTED_LOCALES.includes(documentLocale))
+      return documentLocale;
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored && SUPPORTED_LOCALES.includes(stored)) return stored;
+  } catch {}
+  return "en";
+}
+
 type TokenProvider = (forceRefresh?: boolean) => Promise<string | null>;
 let tokenProvider: TokenProvider = async () => null;
 let appCheckTokenProvider: TokenProvider = async () => null;
@@ -91,6 +111,7 @@ async function authHeaders(init?: HeadersInit, forceRefresh = false) {
     appCheckTokenProvider(forceRefresh),
   ]);
   const headers = new Headers(init || {});
+  headers.set("Accept-Language", activeLocale());
   const trustHeaders = await deviceTrustHeaders();
   for (const [key, value] of Object.entries(trustHeaders)) headers.set(key, value);
   if (token) headers.set("Authorization", `Bearer ${token}`);

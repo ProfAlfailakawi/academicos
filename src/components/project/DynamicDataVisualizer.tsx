@@ -57,15 +57,50 @@ export function DynamicDataVisualizer({ project }: { project: ProjectDNA }) {
     return `flowchart TD\n${workflowSteps.map((step, i) => `  N${i}[\"${step.title.replace(/\"/g, "'")}\"]${i < workflowSteps.length - 1 ? ` --> N${i + 1}` : ""}`).join("\n")}`;
   }, [workflowSteps, t]);
 
+  // Export geometry is direction-aware: in RTL the label used to be drawn from the
+  // right edge straight across the bar track. Label, bar and value now occupy
+  // separate rows, so nothing overlaps in either direction, and the font stack
+  // covers Arabic, CJK, Devanagari and Urdu instead of falling back to Arial.
   const downloadSvg = () => {
-    const width = 1080, rowHeight = 74, height = Math.max(240, 130 + Math.max(1, barData.length) * rowHeight);
-    const rows = barData.length ? barData : [{ label: t("visual.noDrawable"), value: 0, status: t("visual.waitingData") }];
-    const body = rows.map((item, i) => {
-      const y = 105 + i * rowHeight;
-      const barWidth = Math.round(Math.max(0, Math.min(100, item.value)) * 7.2);
-      return `<text x="${meta.dir === "rtl" ? 1040 : 40}" y="${y}" text-anchor="${meta.dir === "rtl" ? "end" : "start"}" font-size="19" font-family="Arial" direction="${meta.dir}">${escapeXml(item.label.slice(0, 62))}</text><rect x="300" y="${y - 22}" width="720" height="24" rx="12" fill="#e5e7eb"/><rect x="300" y="${y - 22}" width="${barWidth}" height="24" rx="12" fill="#2563eb"/><text x="${meta.dir === "rtl" ? 40 : 1040}" y="${y - 3}" text-anchor="${meta.dir === "rtl" ? "start" : "end"}" font-size="16" font-family="Arial">${item.value}% · ${escapeXml(item.status)}</text>`;
-    }).join("");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="white"/><text x="${meta.dir === "rtl" ? 1040 : 40}" y="48" text-anchor="${meta.dir === "rtl" ? "end" : "start"}" font-size="28" font-weight="700" font-family="Arial" direction="${meta.dir}">${escapeXml(project.title)}</text><text x="${meta.dir === "rtl" ? 1040 : 40}" y="76" text-anchor="${meta.dir === "rtl" ? "end" : "start"}" font-size="15" fill="#6b7280" font-family="Arial" direction="${meta.dir}">${escapeXml(t("visual.svgNote"))}</text>${body}</svg>`;
+    // Full-width rows: label and value share one baseline above the bar, so the
+    // layout mirrors cleanly under RTL instead of the label overlapping the track.
+    // The font stack carries Arabic, CJK, Devanagari and Urdu fallbacks.
+    const rtl = meta.dir === "rtl";
+    const width = 1080;
+    const pad = 48;
+    const inner = width - pad * 2;
+    const rowHeight = 92;
+    const rows = barData.length
+      ? barData
+      : [{ label: t("visual.noDrawable"), value: 0, status: t("visual.waitingData") }];
+    const height = 150 + rows.length * rowHeight;
+    const startX = rtl ? width - pad : pad;
+    const endX = rtl ? pad : width - pad;
+    const startAnchor = rtl ? "end" : "start";
+    const endAnchor = rtl ? "start" : "end";
+    const font =
+      "Noto Sans, Noto Sans Arabic, Noto Sans SC, Noto Sans Devanagari, Noto Nastaliq Urdu, Helvetica Neue, Arial, sans-serif";
+    const body = rows
+      .map((item, index) => {
+        const top = 132 + index * rowHeight;
+        const clamped = Math.max(0, Math.min(100, item.value));
+        const fillWidth = Math.round((clamped / 100) * inner);
+        const fillX = rtl ? pad + inner - fillWidth : pad;
+        const tone = clamped >= 80 ? "#0c5d49" : clamped >= 40 ? "#a8763c" : "#a63c3c";
+        return `<text x="${startX}" y="${top}" text-anchor="${startAnchor}" font-size="20" font-weight="600" fill="#14201b" direction="${meta.dir}">${escapeXml(item.label.slice(0, 58))}</text>` +
+          `<text x="${endX}" y="${top}" text-anchor="${endAnchor}" font-size="20" font-weight="700" fill="${tone}">${clamped}%</text>` +
+          `<rect x="${pad}" y="${top + 14}" width="${inner}" height="18" rx="9" fill="#e6ebe7"/>` +
+          `<rect x="${fillX}" y="${top + 14}" width="${fillWidth}" height="18" rx="9" fill="${tone}"/>` +
+          `<text x="${startX}" y="${top + 52}" text-anchor="${startAnchor}" font-size="15" fill="#66716b" direction="${meta.dir}">${escapeXml(item.status)}</text>`;
+      })
+      .join("");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="${escapeXml(font)}">` +
+      `<rect width="100%" height="100%" fill="#ffffff"/>` +
+      `<rect x="0" y="0" width="100%" height="6" fill="#0c5d49"/>` +
+      `<text x="${startX}" y="66" text-anchor="${startAnchor}" font-size="30" font-weight="700" fill="#14201b" direction="${meta.dir}">${escapeXml(project.title)}</text>` +
+      `<text x="${startX}" y="96" text-anchor="${startAnchor}" font-size="15" fill="#66716b" direction="${meta.dir}">${escapeXml(t("visual.svgNote"))}</text>` +
+      `<line x1="${pad}" y1="112" x2="${width - pad}" y2="112" stroke="#d9dfda" stroke-width="1"/>` +
+      `${body}</svg>`;
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;

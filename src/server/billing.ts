@@ -120,6 +120,29 @@ export function billingStatus() {
   return { provider: active.id, configured: active.configured(), readiness, currency: 'USD' as const, localProviderCurrency: localBillingCurrency(), plans: BILLING_PLANS };
 }
 
+/**
+ * Defence in depth before an entitlement is granted: the amount the provider
+ * actually captured must cover the plan the webhook metadata claims was bought.
+ * Returns null when the currencies cannot be compared (a provider currency this
+ * deployment is not configured for), so a comparable mismatch is the only thing
+ * that blocks a grant.
+ */
+export function paymentCoversPlan(input: { planId?: string; amount: number; currency: string }) {
+  const plan = billingPlan(String(input.planId || ''));
+  if (!plan || plan.amountUsd <= 0) return null;
+  const currency = String(input.currency || '').toUpperCase();
+  const expected =
+    currency === 'USD'
+      ? plan.amountUsd
+      : currency === localBillingCurrency()
+        ? localAmount(plan.amountUsd)
+        : null;
+  if (expected === null) return null;
+  // Allow provider rounding and small FX drift, never a discounted grant.
+  const tolerance = Math.max(0.05, expected * 0.02);
+  return Number(input.amount || 0) + tolerance >= expected;
+}
+
 export interface VerifiedPaymentEvent {provider:'tap'|'myfatoorah'|'lemonsqueezy';eventId:string;tenantId:string;userId:string;projectId?:string;planId?:string;externalId:string;status:'paid'|'failed'|'pending'|'refunded'|'chargeback';amount:number;currency:string;rawType:string}
 function equalSignature(expected:string,provided:string){const a=Buffer.from(expected),b=Buffer.from(provided);return a.length===b.length&&timingSafeEqual(a,b);}
 

@@ -27,7 +27,10 @@ export function Status() {
     <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-3">
-          <Link to="/" className="font-semibold">
+          <Link
+            to="/"
+            className="min-h-11 inline-flex items-center font-semibold focus-ring rounded-xl"
+          >
             AcademicOS
           </Link>
           <span className="text-[10px] muted">{t("status.publicStatus")}</span>

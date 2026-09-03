@@ -9,7 +9,8 @@ import { runtimeEnumLabel } from "../../lib/platform-locale";
 interface SlideData { id:number; title:string; subtitle:string; bulletPoints:string[]; allocatedTimeSeconds:number; speakerScript:string; keyTakeaway:string; }
 
 const compact = (values: Array<string | undefined>, max = 4) => [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))].slice(0, max);
-const escapeHtml = (value:string) => value.replace(/[<>&\"]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c] || c));
+const escapeHtml = (value: string) =>
+  value.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" })[c] || c);
 
 export function AutoPresentationStudio({ project }: { project: ProjectDNA }) {
   const { t, locale, meta } = useI18n();
@@ -46,9 +47,47 @@ export function AutoPresentationStudio({ project }: { project: ProjectDNA }) {
   };
 
   const exportDeck = () => {
-    const sections = slides.map(s => `<section class="slide"><div class="eyebrow">${escapeHtml(project.course || project.academicDomain || "AcademicOS")}</div><h1>${escapeHtml(s.title)}</h1><h2>${escapeHtml(s.subtitle)}</h2><ul>${s.bulletPoints.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul><div class="notes"><strong>${escapeHtml(t("pres.presenterNotes"))} · ${s.allocatedTimeSeconds}s</strong><p>${escapeHtml(s.speakerScript)}</p></div></section>`).join("");
-    const html = `<!doctype html><html lang="${locale}" dir="${meta.dir}"><meta charset="utf-8"><title>${escapeHtml(project.title)} · ${escapeHtml(t("pres.title"))}</title><style>@page{size:16in 9in;margin:0}body{margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;text-align:start}.slide{box-sizing:border-box;width:100vw;min-height:100vh;padding:8vh 8vw;page-break-after:always;background:linear-gradient(135deg,#09090b,#18181b)}.eyebrow{color:#f59e0b;font-weight:700;letter-spacing:.08em}.slide h1{font-size:3.2rem;margin:2rem 0 .5rem}.slide h2{color:#fcd34d;font-size:1.2rem}.slide li{font-size:1.45rem;line-height:1.8;margin:.6rem 0}.notes{margin-top:3rem;padding:1rem;border:1px solid #3f3f46;border-radius:16px;color:#d4d4d8;font-size:.95rem}@media print{.notes{display:none}.slide{height:100vh}}</style><body>${sections}</body></html>`;
-    const url = URL.createObjectURL(new Blob([html], {type:"text/html;charset=utf-8"}));
+    // Print-ready 16:9 deck. The font stack covers all eight launch scripts
+    // (Arial alone renders Arabic, CJK, Devanagari and Urdu poorly), the palette
+    // follows the product brand, and slide numbers/notes survive the print path.
+    const sections = slides
+      .map(
+        (s, index) =>
+          `<section class="slide"><header><span class="eyebrow">${escapeHtml(project.course || project.academicDomain || "AcademicOS")}</span><span class="page">${index + 1} / ${slides.length}</span></header>` +
+          `<div class="body"><h1>${escapeHtml(s.title)}</h1>${s.subtitle ? `<h2>${escapeHtml(s.subtitle)}</h2>` : ""}<ul>${s.bulletPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul></div>` +
+          `<footer><span>${escapeHtml(project.title)}</span><span>${escapeHtml(s.keyTakeaway)}</span></footer>` +
+          `<div class="notes"><strong>${escapeHtml(t("pres.presenterNotes"))} · ${s.allocatedTimeSeconds}s</strong><p>${escapeHtml(s.speakerScript)}</p></div></section>`,
+      )
+      .join("");
+    const html = `<!doctype html><html lang="${locale}" dir="${meta.dir}"><meta charset="utf-8"><title>${escapeHtml(project.title)} · ${escapeHtml(t("pres.title"))}</title><style>
+@page{size:1600px 900px;margin:0}
+*{box-sizing:border-box}
+body{margin:0;background:#0b1310;color:#f3f7f4;text-align:start;
+  font-family:"Noto Sans","Noto Sans Arabic","Noto Sans SC","Noto Sans Devanagari","Noto Nastaliq Urdu",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+.slide{position:relative;width:100vw;min-height:100vh;padding:7vh 7vw 9vh;page-break-after:always;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:radial-gradient(120vw 80vh at 85% -20%,rgba(12,93,73,.55),transparent 60%),linear-gradient(135deg,#0b1310,#111c17)}
+.slide::after{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:6px;background:linear-gradient(90deg,#79c5a7,#d3a56d)}
+header{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding-bottom:20px;border-bottom:1px solid rgba(243,247,244,.14)}
+.eyebrow{color:#d3a56d;font-weight:700;letter-spacing:.13em;text-transform:uppercase;font-size:.85rem}
+.page{color:rgba(243,247,244,.5);font-size:.85rem;font-variant-numeric:tabular-nums}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;padding-block:4vh}
+h1{font-size:clamp(2.2rem,4.4vw,3.6rem);line-height:1.1;letter-spacing:-.03em;margin:0 0 .6rem;text-wrap:balance}
+h2{color:#79c5a7;font-size:clamp(1rem,1.5vw,1.35rem);font-weight:500;margin:0 0 2.2rem}
+ul{margin:0;padding:0;list-style:none;display:grid;gap:1rem}
+li{position:relative;padding-inline-start:1.9rem;font-size:clamp(1.05rem,1.6vw,1.5rem);line-height:1.6;color:rgba(243,247,244,.92)}
+li::before{content:"";position:absolute;inset-inline-start:0;top:.62em;width:.62rem;height:.62rem;border-radius:50%;background:#79c5a7}
+footer{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding-top:18px;border-top:1px solid rgba(243,247,244,.14);color:rgba(243,247,244,.55);font-size:.85rem}
+.notes{margin-top:2.4rem;padding:1.1rem 1.3rem;border:1px solid rgba(243,247,244,.16);border-radius:18px;
+  color:rgba(243,247,244,.78);font-size:.95rem}
+.notes strong{display:block;margin-bottom:.4rem;color:#d3a56d;letter-spacing:.06em;text-transform:uppercase;font-size:.75rem}
+.notes p{margin:0}
+@media print{body{background:#0b1310}.notes{display:none}.slide{height:100vh;min-height:0}}
+</style><body>${sections}</body></html>`;
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = `${project.title || "academicos"}-presentation.html`;

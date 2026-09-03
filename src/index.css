@@ -640,6 +640,26 @@ html[dir="ltr"] .rtl-only{display:none!important}
 html[dir="rtl"] .ltr-only{display:none!important}
 .directional-icon{transition:transform .15s ease}html[dir="rtl"] .directional-icon{transform:rotate(180deg)}
 
+/* The Button component always emits `inline-flex`. Tailwind display utilities all
+   share the same specificity and `inline-flex` is generated after `hidden`, so
+   `<Button className="hidden sm:inline-flex">` silently stayed visible on phones.
+   These rules restore the behaviour the markup asks for. */
+.ui-button.hidden { display: none; }
+@media (min-width: 640px) {
+  .ui-button.sm\:inline-flex,
+  .ui-button.sm\:flex { display: inline-flex; }
+}
+@media (min-width: 768px) {
+  .ui-button.md\:inline-flex,
+  .ui-button.md\:flex { display: inline-flex; }
+  .ui-button.md\:hidden { display: none; }
+}
+@media (min-width: 1024px) {
+  .ui-button.lg\:inline-flex,
+  .ui-button.lg\:flex { display: inline-flex; }
+  .ui-button.lg\:hidden { display: none; }
+}
+
 /* Global i18n resilience: long translated labels must never push cards off-screen. */
 .ui-button { max-width: 100%; }
 @media (max-width: 767px) {

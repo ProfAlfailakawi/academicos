@@ -6,6 +6,7 @@
 // النموذج (AI) اختياري لإثراء التغذية الراجعة؛ الدرجة الأساسية حتمية ومختبَرة.
 
 import { isoNow, round, clamp, bloomLevel, tokenize, jaccard, unique } from './_shared';
+import { ADV, tA, tAf, bloomLabelFor, type ServerLocale } from './i18n';
 import type { ProjectDNA } from '../../types';
 
 export interface StudentExamQuestion {
@@ -54,24 +55,25 @@ export interface ReverseAssessmentResult {
 
 const MIN_QUESTION_WORDS = 6;
 
-export function evaluateReverseAssessment(input: ReverseAssessmentInput): ReverseAssessmentResult {
+export function evaluateReverseAssessment(input: ReverseAssessmentInput, locale: ServerLocale = 'en'): ReverseAssessmentResult {
   const outcomes = unique([...(input.dna.learningOutcomes || []), ...(input.dna.rubric || []).map(r => r.title)]).filter(Boolean);
   const outcomeTokens = outcomes.map(o => ({ o, t: tokenize(o) }));
 
   const signals: QuestionSignal[] = input.questions.map(q => {
     const bl = bloomLevel(q.prompt);
+    const blLabel = bloomLabelFor(bl.level, locale);
     const words = tokenize(q.prompt).length;
     const qTokens = tokenize(`${q.prompt} ${q.modelAnswer || ''}`);
     // يرتبط بمخرج إذا أعلن targetOutcome أو تجاوز تشابهه مع أحد المخرجات عتبة.
     const linkedOutcome = Boolean(q.targetOutcome) || outcomeTokens.some(x => jaccard(qTokens, x.t) >= 0.18);
     const notes: string[] = [];
-    if (words < MIN_QUESTION_WORDS) notes.push('سؤال قصير جدًا — وسّعه ليقيس فهمًا حقيقيًا.');
-    if (!q.modelAnswer) notes.push('بلا إجابة نموذجية — أضفها لتثبت أنك تعرف الجواب.');
-    if (bl.level <= 2) notes.push('مستوى إدراكي منخفض (تذكّر/فهم) — ارفعه إلى تحليل/تقويم/إبداع.');
-    if (!linkedOutcome) notes.push('لا يبدو مرتبطًا بمخرج تعلم للمشروع.');
+    if (words < MIN_QUESTION_WORDS) notes.push(tA(ADV.raNoteShort, locale));
+    if (!q.modelAnswer) notes.push(tA(ADV.raNoteNoModel, locale));
+    if (bl.level <= 2) notes.push(tA(ADV.raNoteLowBloom, locale));
+    if (!linkedOutcome) notes.push(tA(ADV.raNoteNoLink, locale));
     const qualityBand: QuestionSignal['qualityBand'] = bl.level >= 4 && q.modelAnswer && words >= MIN_QUESTION_WORDS && linkedOutcome ? 'strong'
       : bl.level >= 3 && words >= MIN_QUESTION_WORDS ? 'fair' : 'weak';
-    return { id: q.id, bloomLevel: bl.level, bloomLabel: bl.label, wordCount: words, hasModelAnswer: Boolean(q.modelAnswer), linkedOutcome, qualityBand, notes };
+    return { id: q.id, bloomLevel: bl.level, bloomLabel: blLabel, wordCount: words, hasModelAnswer: Boolean(q.modelAnswer), linkedOutcome, qualityBand, notes };
   });
 
   const n = signals.length || 1;
@@ -99,18 +101,18 @@ export function evaluateReverseAssessment(input: ReverseAssessmentInput): Revers
     dimensions: { depth: round(depth * 100, 0), coverage: round(coverage * 100, 0), discrimination: round(discrimination * 100, 0), rigor: round(rigor * 100, 0) },
     questions: signals, coverageGaps,
     proofOfLearning: {
-      kind: 'reverse_assessment', title: `صياغة امتحان عن: ${input.dna.title}`, makerScore, band,
-      summary: `صمّم الطالب ${signals.length} سؤالًا بمتوسط مستوى بلوم ${round(signals.reduce((s, q) => s + q.bloomLevel, 0) / n, 1)}/6 وتغطية ${round(coverage * 100, 0)}% لمخرجات المشروع. القدرة على توليد أسئلة عالية المستوى دليل إتقان مستقل عن الإجابة.`,
+      kind: 'reverse_assessment', title: tAf(ADV.raPolTitle, locale, { title: input.dna.title }), makerScore, band,
+      summary: tAf(ADV.raPolSummary, locale, { n: signals.length, bloom: round(signals.reduce((s, q) => s + q.bloomLevel, 0) / n, 1), coverage: round(coverage * 100, 0) }),
     },
-    note: 'درجة صانع الامتحان مؤشر إتقان تكويني حتمي مشتق من بنية أسئلة الطالب فقط؛ لا تستبدل تقويم الأستاذ ولا تُعدّل درجة رسمية، لكنها تدخل Proof of Learning كدليل عملية أصيل.',
+    note: tA(ADV.raNote, locale),
   };
 }
 
 // سقالة صادقة لتوجيه الطالب عند بدء المهمة (بلا نموذج).
-export function buildExamBrief(dna: ReverseAssessmentInput['dna']): { instruction: string; targets: string[] } {
+export function buildExamBrief(dna: ReverseAssessmentInput['dna'], locale: ServerLocale = 'en'): { instruction: string; targets: string[] } {
   const targets = unique([...(dna.learningOutcomes || []), ...(dna.rubric || []).map(r => r.title)]).filter(Boolean).slice(0, 8);
   return {
-    instruction: 'صمّم امتحانًا قصيرًا (4–6 أسئلة) يقيس فهم مشروعك. لكل سؤال: صِغه بفعل تحليل/تقويم/تصميم، اربطه بمخرج تعلم، واكتب إجابة نموذجية موجزة. الأسئلة السطحية (اذكر/عرّف) تخفض درجتك.',
+    instruction: tA(ADV.raBrief, locale),
     targets,
   };
 }

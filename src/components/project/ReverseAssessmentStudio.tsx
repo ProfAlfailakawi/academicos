@@ -4,11 +4,13 @@ import { advancedApi } from '../../lib/api';
 import type { ProjectDNA } from '../../types';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
+import { useI18n } from '../../lib/i18n';
 
-// Reverse Assessment — «اصنع الامتحان». الطالب يصمم أسئلة عن مشروعه، والمُقيّم الحتمي يعطي درجة صانع الامتحان.
+// Reverse Assessment — the student designs exam questions about their project; a deterministic evaluator scores the exam-maker.
 interface Q { id: string; prompt: string; modelAnswer: string; targetOutcome?: string }
 
 export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
+  const { t } = useI18n();
   const [brief, setBrief] = useState<{ instruction: string; targets: string[] } | null>(null);
   const [questions, setQuestions] = useState<Q[]>([{ id: 'q1', prompt: '', modelAnswer: '' }]);
   const [result, setResult] = useState<any>(null);
@@ -33,7 +35,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
         <CardContent>
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0" style={{ background: 'linear-gradient(135deg,var(--accent-soft),transparent)' }}><Repeat size={20} style={{ color: 'var(--accent)' }} /></div>
-            <div><div className="eyebrow">إثبات فهم من نوع جديد</div><h2 className="section-title mt-0.5">اصنع الامتحان 🔄</h2></div>
+            <div><div className="eyebrow">{t('adv.ra.eyebrow')}</div><h2 className="section-title mt-0.5">{t('adv.ra.title')}</h2></div>
           </div>
           {brief && <p className="body-copy mt-3">{brief.instruction}</p>}
           {brief?.targets?.length ? <div className="mt-3 flex flex-wrap gap-1.5">{brief.targets.map(t => <span key={t} className="rounded-full soft-bg px-2 py-1 text-[10px] muted">{t}</span>)}</div> : null}
@@ -41,19 +43,19 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
           <div className="mt-5 space-y-4">
             {questions.map((q, i) => (
               <div key={q.id} className="rounded-2xl border hairline bg-[var(--bg)] p-4">
-                <div className="flex items-center justify-between"><span className="text-[11px] font-bold brand-text">سؤال {i + 1}</span>{questions.length > 1 && <Button size="icon" variant="ghost" onClick={() => del(q.id)}><Trash2 size={14} /></Button>}</div>
-                <textarea value={q.prompt} onChange={e => upd(q.id, { prompt: e.target.value })} placeholder="صِغ سؤالًا تحليليًا/تقويميًا عن مشروعك…" className="focus-ring w-full min-h-16 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
-                <textarea value={q.modelAnswer} onChange={e => upd(q.id, { modelAnswer: e.target.value })} placeholder="إجابة نموذجية موجزة (تثبت أنك تعرف الجواب)…" className="focus-ring w-full min-h-14 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
+                <div className="flex items-center justify-between"><span className="text-[11px] font-bold brand-text">{t('adv.ra.question').replace('{n}', String(i + 1))}</span>{questions.length > 1 && <Button size="icon" variant="ghost" onClick={() => del(q.id)}><Trash2 size={14} /></Button>}</div>
+                <textarea value={q.prompt} onChange={e => upd(q.id, { prompt: e.target.value })} placeholder={t('adv.ra.promptPh')} className="focus-ring w-full min-h-16 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
+                <textarea value={q.modelAnswer} onChange={e => upd(q.id, { modelAnswer: e.target.value })} placeholder={t('adv.ra.modelPh')} className="focus-ring w-full min-h-14 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
                 <select value={q.targetOutcome || ''} onChange={e => upd(q.id, { targetOutcome: e.target.value || undefined })} className="focus-ring w-full rounded-xl border hairline bg-[var(--panel)] px-3 py-2.5 text-sm mt-2">
-                  <option value="">اربطه بمخرج تعلم (اختياري)…</option>
+                  <option value="">{t('adv.ra.linkOutcome')}</option>
                   {(brief?.targets || []).map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             ))}
           </div>
           <div className="mt-4 flex gap-2">
-            <Button variant="ghost" onClick={add}><Plus size={16} />سؤال آخر</Button>
-            <Button className="flex-1" onClick={evaluate} disabled={busy || !questions.some(q => q.prompt.trim())}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Award size={16} />}قيّم امتحاني</Button>
+            <Button variant="ghost" onClick={add}><Plus size={16} />{t('adv.ra.another')}</Button>
+            <Button className="flex-1" onClick={evaluate} disabled={busy || !questions.some(q => q.prompt.trim())}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Award size={16} />}{t('adv.ra.evaluate')}</Button>
           </div>
           {error && <p className="text-xs text-[var(--danger)] mt-2">{error}</p>}
         </CardContent>
@@ -62,26 +64,26 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
       <Card>
         <CardContent>
           {!result ? (
-            <div className="py-10 text-center"><div className="mx-auto h-14 w-14 rounded-2xl grid place-items-center" style={{ background: 'var(--accent-soft)' }}><Award style={{ color: 'var(--accent)' }} /></div><div className="text-sm font-semibold mt-3">درجة صانع الامتحان</div><p className="body-copy mt-1">صمّم أسئلتك ثم قيّمها. الأسئلة عالية المستوى (تحليل/تقويم/تصميم) ترفع درجتك.</p></div>
+            <div className="py-10 text-center"><div className="mx-auto h-14 w-14 rounded-2xl grid place-items-center" style={{ background: 'var(--accent-soft)' }}><Award style={{ color: 'var(--accent)' }} /></div><div className="text-sm font-semibold mt-3">{t('adv.ra.makerScore')}</div><p className="body-copy mt-1">{t('adv.ra.emptyHint')}</p></div>
           ) : (
             <>
               <div className="text-center">
-                <div className="eyebrow">درجة صانع الامتحان</div>
+                <div className="eyebrow">{t('adv.ra.makerScore')}</div>
                 <Gauge value={result.makerScore} band={result.band} />
-                <BandLabel band={result.band} />
+                <BandLabel band={result.band} t={t} />
               </div>
               <div className="mt-5 grid grid-cols-2 gap-2.5">
-                <Dim icon={<Layers size={14} />} label="العمق الإدراكي" value={result.dimensions.depth} />
-                <Dim icon={<Target size={14} />} label="التغطية" value={result.dimensions.coverage} />
-                <Dim icon={<Fingerprint size={14} />} label="التمييز" value={result.dimensions.discrimination} />
-                <Dim icon={<Award size={14} />} label="الإحكام" value={result.dimensions.rigor} />
+                <Dim icon={<Layers size={14} />} label={t('adv.ra.dimDepth')} value={result.dimensions.depth} />
+                <Dim icon={<Target size={14} />} label={t('adv.ra.dimCoverage')} value={result.dimensions.coverage} />
+                <Dim icon={<Fingerprint size={14} />} label={t('adv.ra.dimDiscrimination')} value={result.dimensions.discrimination} />
+                <Dim icon={<Award size={14} />} label={t('adv.ra.dimRigor')} value={result.dimensions.rigor} />
               </div>
               {result.coverageGaps?.length ? (
                 <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: '#f7dede' }}>
-                  <b>مخرجات لم يقسها أي سؤال:</b> {result.coverageGaps.join('، ')}
+                  <b>{t('adv.ra.gapsLabel')}</b> {result.coverageGaps.join(', ')}
                 </div>
               ) : null}
-              {result.band !== 'surface' && <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--brand-soft)' }}>✅ أُضيف هذا كدليل <b>Proof of Learning</b> في Evidence Capsule.</div>}
+              {result.band !== 'surface' && <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--brand-soft)' }}>{t('adv.ra.addedProof')}</div>}
               <p className="text-[10px] muted mt-4 leading-5">{result.note}</p>
             </>
           )}
@@ -104,9 +106,9 @@ function Gauge({ value, band }: { value: number; band: string }) {
     </div>
   );
 }
-function BandLabel({ band }: { band: string }) {
-  const m: Record<string, string> = { mastery: 'إتقان', developing: 'قيد التطوّر', surface: 'سطحي' };
-  return <div className="text-sm font-semibold mt-1">{m[band] || band}</div>;
+function BandLabel({ band, t }: { band: string; t: (k: string) => string }) {
+  const m: Record<string, string> = { mastery: 'adv.band.mastery', developing: 'adv.band.developing', surface: 'adv.band.surface' };
+  return <div className="text-sm font-semibold mt-1">{m[band] ? t(m[band]) : band}</div>;
 }
 function Dim({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (

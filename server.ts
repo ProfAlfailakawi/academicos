@@ -147,6 +147,8 @@ import {
   type ServerLocale,
 } from "./src/server/server-locale";
 import { SRV, SRV2 } from "./src/server/server-messages";
+import { registerAdvancedRoutes } from "./src/server/advanced/routes";
+import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
 import {
   addConcierge,
@@ -157,6 +159,7 @@ import {
 } from "./src/server/experience-engine";
 import type {
   AdminUserRecord,
+  LearningEvidenceRecord,
   AIUsagePolicy,
   AssignmentIntake,
   CopilotMode,
@@ -10061,6 +10064,67 @@ async function startServer() {
       }
     },
   );
+  // Advanced capabilities registry (router-registry pattern — see
+  // docs/ARCHITECTURE_REFACTOR.md). One call mounts the eight advanced engines;
+  // dependencies are injected via ctx so no engine reaches into server internals.
+  // GradeLossMap and ReverseAssessment run on real data today; GhostCohort is
+  // wired end-to-end and honestly returns "not available" until a process-timeline
+  // source exists (no fabricated cohort figures). Un-UI'd engines fail cleanly.
+  registerAdvancedRoutes(app, {
+    // Adapt the return type: express middleware ignores the value, and the
+    // registry contract types the handler as void-returning.
+    authenticate: (req, res, next) => {
+      void authenticate(req as AuthenticatedRequest, res, next);
+    },
+    requireRoles: (...roles: string[]) => {
+      const guard = requireRoles(...(roles as UserRole[]));
+      return (req, res, next) => {
+        void guard(req as AuthenticatedRequest, res, next);
+      };
+    },
+    realtime: realtimeHub,
+    featureEnabled: (tenantId, key) =>
+      firestoreStore.getFeatureFlag(tenantId, key, true),
+    data: {
+      getGhostCohortMembers: async () => [],
+      getAssignmentSubmissions: async (tenantId, assignmentId) =>
+        (await firestoreStore.listTenantSubmissions(tenantId, 1000)).filter(
+          (submission) => submission.assignmentId === assignmentId,
+        ),
+      getProjectDNA: (tenantId, projectId, userId) =>
+        firestoreStore.getProject(projectId, userId, tenantId),
+      saveProofOfLearning: async (tenantId, projectId, userId, pol) => {
+        const proof = pol as { title?: string; summary?: string };
+        const record: LearningEvidenceRecord = {
+          id: randomUUID(),
+          projectId,
+          userId,
+          tenantId,
+          source: "manual",
+          summary: String(proof?.summary || proof?.title || "Proof of Learning"),
+          evidence: [
+            { label: "kind", value: "reverse_assessment" },
+            { label: "title", value: String(proof?.title || "") },
+          ],
+          createdAt: new Date().toISOString(),
+        };
+        await firestoreStore.saveLearningEvidence(record);
+      },
+      // The engines below are mounted but not yet UI-wired; their data sources
+      // are backed as they are built out. Empty/null results degrade cleanly
+      // (404 / empty ledger) instead of fabricating state.
+      getClarificationThread: async () => null,
+      saveClarificationThread: async () => {},
+      listAffectedProjectOwners: async () => [],
+      applyDnaPatchToProject: async () => {},
+      getPeerCreditLedger: async () => [],
+      savePeerExplanation: async () => {},
+      savePeerCreditLedger: async () => {},
+      attachBlackBoxToCapsule: async () => {},
+      getLegacyEligibilityInputs: async () => ({}),
+      saveLegacyListing: async () => {},
+    },
+  });
   app.use("/api", (_req, res) =>
     res.status(404).json({ error: "API route not found", code: "NOT_FOUND" }),
   );

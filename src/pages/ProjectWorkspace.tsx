@@ -17,6 +17,9 @@ import {
   FileCheck2,
   FileText,
   GitBranch,
+  Ghost,
+  Droplet,
+  Repeat,
   GraduationCap,
   ListChecks,
   LoaderCircle,
@@ -45,6 +48,9 @@ import { RequirementMatrixStudio } from "../components/project/RequirementMatrix
 import { AutoPresentationStudio } from "../components/project/AutoPresentationStudio";
 import { PortfolioArtifactBadge } from "../components/project/PortfolioArtifactBadge";
 import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
+import { GhostCohortPanel } from "../components/project/GhostCohortPanel";
+import { GradeLossMap } from "../components/project/GradeLossMap";
+import { ReverseAssessmentStudio } from "../components/project/ReverseAssessmentStudio";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import {
@@ -65,6 +71,8 @@ const tabs = [
   ["scholar", "pw.tabScholar", Search],
   ["slides", "pw.tabSlides", Presentation],
   ["visualizer", "pw.tabVisuals", BarChart2],
+  ["benchmark", "pw.tabBenchmark", Ghost],
+  ["reverse", "pw.tabReverse", Repeat],
   ["formatter", "pw.tabFormatter", ArrowRightLeft],
   ["portfolio", "pw.tabPortfolio", Award],
   ["plan", "pw.tabPlan", ListChecks],
@@ -374,6 +382,13 @@ export function ProjectWorkspace() {
       {tab === "scholar" && <LiveScholarVerifier project={project} />}
       {tab === "slides" && <AutoPresentationStudio project={project} />}
       {tab === "visualizer" && <DynamicDataVisualizer project={project} />}
+      {tab === "benchmark" && (
+        <div className="space-y-6">
+          <GhostCohortPanel project={project} />
+          <GradeLossMap project={project} />
+        </div>
+      )}
+      {tab === "reverse" && <ReverseAssessmentStudio project={project} />}
       {tab === "formatter" && <CrossStyleFormatter project={project} />}
       {tab === "portfolio" && <PortfolioArtifactBadge project={project} />}
       {tab === "plan" && (

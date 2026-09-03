@@ -8,6 +8,7 @@
 //  • «متفوق» = درجة ≥ عتبة (افتراضي 0.85) على نفس التكليف.
 
 import { isoNow, round, clamp, percentile, meetsKAnonymity, K_ANONYMITY_MIN } from './_shared';
+import { ADV, tA, tAf, type ServerLocale } from './i18n';
 
 export interface GhostMemberInput {
   submissionId: string;
@@ -54,9 +55,9 @@ export interface GhostLiveComparison {
 }
 
 const PHASE_ORDER: GhostPhase[] = ['intake', 'research', 'outline', 'draft', 'revision', 'evidence', 'finalize'];
-const PHASE_LABEL: Record<GhostPhase, string> = {
-  intake: 'استيعاب التكليف', research: 'البحث وجمع المصادر', outline: 'الهيكلة والمخطط',
-  draft: 'المسودة الأولى', revision: 'المراجعة والتحسين', evidence: 'توثيق الأدلة', finalize: 'الإنهاء والتسليم',
+const PHASE_LABEL: Record<GhostPhase, typeof ADV.phaseIntake> = {
+  intake: ADV.phaseIntake, research: ADV.phaseResearch, outline: ADV.phaseOutline,
+  draft: ADV.phaseDraft, revision: ADV.phaseRevision, evidence: ADV.phaseEvidence, finalize: ADV.phaseFinalize,
 };
 
 function progressOf(at: number, start: number, end: number): number {
@@ -66,13 +67,14 @@ function progressOf(at: number, start: number, end: number): number {
 
 export function buildGhostCohort(
   members: GhostMemberInput[],
-  opts: { gradeThreshold?: number; now?: number; live?: { startedAt: number; deadline: number; now: number; milestones: Array<{ phase: GhostPhase; at: number }>; revisionCount?: number } } = {},
+  opts: { gradeThreshold?: number; now?: number; locale?: ServerLocale; live?: { startedAt: number; deadline: number; now: number; milestones: Array<{ phase: GhostPhase; at: number }>; revisionCount?: number } } = {},
 ): GhostCohortResult {
   const gradeThreshold = opts.gradeThreshold ?? 0.85;
+  const locale: ServerLocale = opts.locale ?? 'en';
   const now = opts.now ?? Date.now();
   const top = members.filter(m => m.gradeRatio >= gradeThreshold && m.submittedAt > m.startedAt);
   const cohortSize = top.length;
-  const privacyNote = `كل الأرقام مشتقة من ≥${K_ANONYMITY_MIN} متفوقين ومجهولة الهوية تمامًا (توزيعات زمنية مطبّعة فقط، بلا نصوص أو درجات أو هويات فردية). المصدر: أزمنة نُسخ المشاريع لأفواج سابقة على نفس التكليف.`;
+  const privacyNote = tAf(ADV.ghostPrivacy, locale, { k: K_ANONYMITY_MIN });
 
   if (!meetsKAnonymity(cohortSize)) {
     return { generatedAt: isoNow(now), available: false, cohortSize, kAnonymityMin: K_ANONYMITY_MIN, gradeThreshold, phases: [], benchmarks: { medianRevisions: 0, medianSourceReviews: 0, medianActiveDays: 0 }, privacyNote };
@@ -87,7 +89,7 @@ export function buildGhostCohort(
     }
     ratios.sort((a, b) => a - b);
     return {
-      phase, label: PHASE_LABEL[phase],
+      phase, label: tA(PHASE_LABEL[phase], locale),
       typicalAtP25: ratios.length ? round(percentile(ratios, 0.25) * 100, 0) : 0,
       typicalAtP50: ratios.length ? round(percentile(ratios, 0.50) * 100, 0) : 0,
       typicalAtP75: ratios.length ? round(percentile(ratios, 0.75) * 100, 0) : 0,
@@ -117,10 +119,10 @@ export function buildGhostCohort(
       status: (p * 100 > upcoming.typicalAtP75 ? 'overdue' : p * 100 >= upcoming.typicalAtP50 ? 'due_now' : 'upcoming') as 'upcoming' | 'due_now' | 'overdue',
     } : undefined;
     const nudges: string[] = [];
-    if (pace === 'behind') nudges.push('المتفوقون في هذه المرحلة الزمنية كانوا قد تجاوزوا المسودة الأولى — ركّز على إنجاز هيكل كامل الآن ولو خشِنًا.');
-    if (opts.live.revisionCount !== undefined && opts.live.revisionCount < benchmarks.medianRevisions - 1) nudges.push(`المتفوقون راجعوا عملهم ~${benchmarks.medianRevisions} مرة؛ أنت أقل من ذلك حتى الآن. المراجعة المتكررة أقوى مؤشر على درجة عالية.`);
-    if (nextPhase?.status === 'overdue') nudges.push(`مرحلة «${nextPhase.label}» تأخّرت مقارنة بإيقاع الفوج — ابدأها قبل أن تتراكم.`);
-    if (pace === 'ahead') nudges.push('إيقاعك أسرع من متوسط المتفوقين — استثمر الوقت الفائض في جودة الأدلة والمراجعة لا في التسليم المبكر.');
+    if (pace === 'behind') nudges.push(tA(ADV.nudgeBehind, locale));
+    if (opts.live.revisionCount !== undefined && opts.live.revisionCount < benchmarks.medianRevisions - 1) nudges.push(tAf(ADV.nudgeRevisions, locale, { n: benchmarks.medianRevisions }));
+    if (nextPhase?.status === 'overdue') nudges.push(tAf(ADV.nudgeOverdue, locale, { phase: nextPhase.label }));
+    if (pace === 'ahead') nudges.push(tA(ADV.nudgeAhead, locale));
     live = { progress: round(p * 100, 0), currentPhase, pace, nextPhase, nudges };
   }
 

@@ -6,6 +6,7 @@
 // لا اختلاق: معيار بلا تصحيحات كافية يظهر «بيانات غير كافية» لا 0%.
 
 import { isoNow, round, mean, meetsKAnonymity, K_ANONYMITY_MIN, normalize } from './_shared';
+import { ADV, tA, tAf, type ServerLocale } from './i18n';
 import type { CourseSubmissionRecord, RubricCriterion } from '../../types';
 
 export interface GradeLossCriterion {
@@ -31,30 +32,31 @@ export interface GradeLossMap {
 }
 
 // استخراج أشيع سبب من ملاحظات الفاقد: كلمات دلالية شائعة في التصحيح.
-const REASON_HINTS: Array<{ key: RegExp; reason: string }> = [
-  { key: /(مصدر|مراجع|استشهاد|citation|source|reference)/i, reason: 'ضعف المصادر أو الاستشهاد' },
-  { key: /(تحليل|عمق|سطحي|analysis|shallow|depth)/i, reason: 'تحليل سطحي لا يكفي المطلوب' },
-  { key: /(بنية|تنظيم|ترتيب|structure|organization)/i, reason: 'ضعف بنية العمل وتنظيمه' },
-  { key: /(دليل|إثبات|evidence|proof)/i, reason: 'أدلة غير كافية على الادعاءات' },
-  { key: /(لغة|صياغة|أسلوب|grammar|clarity|wording)/i, reason: 'مشكلات لغوية/صياغة' },
-  { key: /(متطلب|ناقص|غير مكتمل|missing|incomplete|requirement)/i, reason: 'متطلب مفقود أو غير مكتمل' },
+const REASON_HINTS: Array<{ key: RegExp; reason: typeof ADV.glReasonSources }> = [
+  { key: /(مصدر|مراجع|استشهاد|citation|source|reference)/i, reason: ADV.glReasonSources },
+  { key: /(تحليل|عمق|سطحي|analysis|shallow|depth)/i, reason: ADV.glReasonDepth },
+  { key: /(بنية|تنظيم|ترتيب|structure|organization)/i, reason: ADV.glReasonStructure },
+  { key: /(دليل|إثبات|evidence|proof)/i, reason: ADV.glReasonEvidence },
+  { key: /(لغة|صياغة|أسلوب|grammar|clarity|wording)/i, reason: ADV.glReasonLanguage },
+  { key: /(متطلب|ناقص|غير مكتمل|missing|incomplete|requirement)/i, reason: ADV.glReasonMissing },
 ];
-function inferReason(feedbacks: string[]): string | undefined {
+function inferReason(feedbacks: string[], locale: ServerLocale): string | undefined {
   const joined = feedbacks.join(' \n ');
-  for (const h of REASON_HINTS) if (h.key.test(joined)) return h.reason;
+  for (const h of REASON_HINTS) if (h.key.test(joined)) return tA(h.reason, locale);
   return undefined;
 }
 
 export function buildGradeLossMap(
   submissions: CourseSubmissionRecord[],
   currentRubric: RubricCriterion[] = [],
+  locale: ServerLocale = 'en',
 ): GradeLossMap {
   const graded = submissions.filter(s => (s.status === 'graded' || s.status === 'released') && (s.rubricGrades?.length || 0) > 0);
   const cohortSize = graded.length;
-  const privacyNote = `الخريطة مبنية على ≥${K_ANONYMITY_MIN} تسليمًا مصححًا مجهول الهوية على نفس التكليف. لا تُعرض درجة أو هوية أي طالب؛ فقط أنماط الفاقد التجميعية.`;
+  const privacyNote = tAf(ADV.glPrivacy, locale, { k: K_ANONYMITY_MIN });
 
   if (!meetsKAnonymity(cohortSize)) {
-    return { generatedAt: isoNow(), available: false, cohortSize, kAnonymityMin: K_ANONYMITY_MIN, criteria: [], headline: 'لا تتوفر بيانات فوج كافية بعد لبناء خريطة موثوقة.', privacyNote };
+    return { generatedAt: isoNow(), available: false, cohortSize, kAnonymityMin: K_ANONYMITY_MIN, criteria: [], headline: tA(ADV.glInsufficientCohort, locale), privacyNote };
   }
 
   const agg = new Map<string, { title: string; lossFlags: number[]; lostPcts: number[]; reasons: string[] }>();
@@ -80,13 +82,13 @@ export function buildGradeLossMap(
     const personalRisk: GradeLossCriterion['personalRisk'] = yourReadiness === undefined ? 'unknown'
       : (severity === 'high' && (yourReadiness === 'not_evidenced' || yourReadiness === 'needs_revision')) ? 'critical'
       : (severity !== 'low' && yourReadiness !== 'covered') ? 'watch' : 'ok';
-    return { rubricId, title: x.title, gradedCount, lossProbability, averageLostPercent, severity, commonReason: inferReason(x.reasons), yourReadiness, personalRisk };
+    return { rubricId, title: x.title, gradedCount, lossProbability, averageLostPercent, severity, commonReason: inferReason(x.reasons, locale), yourReadiness, personalRisk };
   }).sort((a, b) => b.lossProbability - a.lossProbability);
 
   const top = criteria.find(c => c.severity !== 'insufficient');
   const headline = top
-    ? `${top.lossProbability}% من الفوج السابق خسروا نقاطًا في «${top.title}»${top.commonReason ? ` — الأشيع: ${top.commonReason}` : ''}. عالجها قبل التسليم.`
-    : 'لم يظهر معيار عالي الخطورة في بيانات الفوج الحالية.';
+    ? tAf(ADV.glHeadline, locale, { prob: top.lossProbability, title: top.title, reason: top.commonReason ? tAf(ADV.glReasonSuffix, locale, { reason: top.commonReason }) : '' })
+    : tA(ADV.glNoHighRisk, locale);
 
   return {
     generatedAt: isoNow(), available: true, cohortSize, kAnonymityMin: K_ANONYMITY_MIN,

@@ -10,6 +10,7 @@
 
 import type { Express, Request, Response, NextFunction } from 'express';
 import { RealtimeHub } from '../realtime';
+import { resolveServerLocale, type ServerLocale } from '../server-locale';
 import { buildGhostCohort, type GhostMemberInput } from './ghost-cohort';
 import { buildGradeLossMap, alignRubricByTitle } from './grade-loss-map';
 import { evaluateReverseAssessment, buildExamBrief, type ReverseAssessmentInput } from './reverse-assessment';
@@ -30,7 +31,7 @@ export interface AdvancedRouteContext {
     getGhostCohortMembers: (tenantId: string, assignmentId: string) => Promise<GhostMemberInput[]>;
     getAssignmentSubmissions: (tenantId: string, assignmentId: string) => Promise<any[]>;
     getProjectDNA: (tenantId: string, projectId: string, userId: string) => Promise<any | null>;
-    saveProofOfLearning: (tenantId: string, projectId: string, pol: unknown) => Promise<void>;
+    saveProofOfLearning: (tenantId: string, projectId: string, userId: string, pol: unknown) => Promise<void>;
     getClarificationThread: (tenantId: string, threadId: string) => Promise<ClarificationThread | null>;
     saveClarificationThread: (t: ClarificationThread) => Promise<void>;
     listAffectedProjectOwners: (tenantId: string, assignmentId: string) => Promise<Array<{ userId: string; projectId: string }>>;
@@ -44,6 +45,9 @@ export interface AdvancedRouteContext {
   };
 }
 
+function reqLocale(req: any): ServerLocale {
+  return resolveServerLocale(req?.body?.locale, req?.query?.locale, req?.appLocale);
+}
 function h(fn: (req: any, res: Response) => Promise<void>) {
   return (req: Request, res: Response) => fn(req, res).catch((e: any) => {
     const status = Number(e?.status) || 500;
@@ -70,7 +74,7 @@ export function registerAdvancedRoutes(app: Express, ctx: AdvancedRouteContext) 
         live = { startedAt: new Date(dna.createdAt).getTime(), deadline: new Date(dna.deadlines.final).getTime(), now: Date.now(), milestones: dna.ghostMilestones || [], revisionCount: dna.revision || 0 };
       }
     }
-    res.json(buildGhostCohort(members, { live }));
+    res.json(buildGhostCohort(members, { live, locale: reqLocale(req) }));
   }));
 
   // 2) Predictive Grade-Loss Map — أين خسر الفوج درجات، مقابل جاهزية Rubric الحالية.
@@ -79,7 +83,8 @@ export function registerAdvancedRoutes(app: Express, ctx: AdvancedRouteContext) 
     const submissions = await data.getAssignmentSubmissions(req.actor.tenantId, req.params.assignmentId);
     const projectId = String(req.query.projectId || '');
     const dna = projectId ? await data.getProjectDNA(req.actor.tenantId, projectId, req.actor.userId) : null;
-    let map = buildGradeLossMap(submissions as any, dna?.rubric || []);
+    const locale = reqLocale(req);
+    let map = buildGradeLossMap(submissions as any, dna?.rubric || [], locale);
     if (dna?.rubric?.length) map = alignRubricByTitle(map, dna.rubric);
     res.json(map);
   }));
@@ -88,14 +93,14 @@ export function registerAdvancedRoutes(app: Express, ctx: AdvancedRouteContext) 
   app.get('/api/projects/:id/reverse-assessment/brief', authenticate, h(async (req, res) => {
     const dna = await data.getProjectDNA(req.actor.tenantId, req.params.id, req.actor.userId);
     if (!dna) throw Object.assign(new Error('Project not found'), { status: 404, code: 'NOT_FOUND' });
-    res.json(buildExamBrief(dna));
+    res.json(buildExamBrief(dna, reqLocale(req)));
   }));
   app.post('/api/projects/:id/reverse-assessment', authenticate, h(async (req, res) => {
     const dna = await data.getProjectDNA(req.actor.tenantId, req.params.id, req.actor.userId);
     if (!dna) throw Object.assign(new Error('Project not found'), { status: 404, code: 'NOT_FOUND' });
     const input: ReverseAssessmentInput = { projectId: req.params.id, dna, questions: Array.isArray(req.body?.questions) ? req.body.questions.slice(0, 20) : [] };
-    const result = evaluateReverseAssessment(input);
-    if (result.band !== 'surface') await data.saveProofOfLearning(req.actor.tenantId, req.params.id, result.proofOfLearning);
+    const result = evaluateReverseAssessment(input, reqLocale(req));
+    if (result.band !== 'surface') await data.saveProofOfLearning(req.actor.tenantId, req.params.id, req.actor.userId, result.proofOfLearning);
     res.json(result);
   }));
 

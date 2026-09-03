@@ -131,7 +131,7 @@ export function ControlPlane() {
         <section className="grid xl:grid-cols-[1.15fr_.85fr] gap-5">
           <Card>
             <CardContent>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Route size={18} /></span><div><div className="eyebrow">{t("ui.productFunnel")}</div><h2 className="section-title mt-1">{t("control.funnelTitle")}</h2></div></div>
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Route size={18} /></span><div><div className="eyebrow">{t("ui.productFunnel")}</div><h2 className="section-title mt-1">{t("control.funnelTitle")}</h2></div></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">
                 <Funnel label={t("ui.activation")} value={product.activation} />
                 <Funnel label={t("control.firstAssignment")} value={product.firstAssignmentSuccess} />
@@ -144,8 +144,8 @@ export function ControlPlane() {
           </Card>
           <Card>
             <CardContent>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><Gauge size={18} /></span><div><div className="eyebrow">{t("ui.aiCostQualityGate")}</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
-              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[10px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Gauge size={18} /></span><div><div className="eyebrow">{t("ui.aiCostQualityGate")}</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
+              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[10px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
               <div className="mt-4 flex items-center gap-2 text-[10px] muted"><DollarSign size={13} /> {t("control.costCaveat")}</div>
             </CardContent>
           </Card>
@@ -156,10 +156,10 @@ export function ControlPlane() {
           <CardContent>
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
               <div className="flex items-start gap-3">
-                <span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center shrink-0"><Fingerprint size={19} /></span>
+                <span className="h-11 w-11 rounded-2xl tone-tile shrink-0"><Fingerprint size={19} /></span>
                 <div><div className="eyebrow">{t("ui.fairUseShield")}</div><h2 className="section-title mt-1">{t("control.fairUseTitle")}</h2><p className="body-copy mt-2 max-w-3xl">{t("control.fairUseDesc")}</p></div>
               </div>
-              <span className="rounded-full px-3 py-1.5 text-xs font-semibold brand-soft-bg">{t("control.noMac")}</span>
+              <span className="tone-chip" data-tone="brand">{t("control.noMac")}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">
               <Twin label={t("control.fairUseReviewed")} value={fairUse.eventsReviewed} />
@@ -175,10 +175,10 @@ export function ControlPlane() {
         <section className="panel-flat rounded-2xl p-5 md:p-6">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
             <div><div className="eyebrow">{t("ui.institutionDecisionRoom")}</div><h2 className="section-title mt-1">{t('ctrl.twinTitle')}</h2><p className="body-copy mt-2">{t('ctrl.twinDesc')}</p></div>
-            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${command.posture === "healthy" ? "brand-soft-bg" : command.posture === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}>{command.posture === "healthy" ? t('ctrl.posture.healthy') : command.posture === "critical" ? t('ctrl.posture.critical') : t('ctrl.posture.attention')}</span>
+            <span className="tone-chip" data-tone={command.posture === "healthy" ? "success" : command.posture === "critical" ? "danger" : "warning"}>{command.posture === "healthy" ? t('ctrl.posture.healthy') : command.posture === "critical" ? t('ctrl.posture.critical') : t('ctrl.posture.attention')}</span>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5"><Twin label={t('ctrl.twin.projects')} value={command.twin.projects}/><Twin label={t('ctrl.twin.courses')} value={command.twin.courses}/><Twin label={t('ctrl.twin.assignments')} value={command.twin.assignments}/><Twin label={t('ctrl.twin.coverage')} value={`${command.twin.outcomeCoverage}%`}/><Twin label={t('ctrl.twin.submissions')} value={command.twin.submissions}/><Twin label={t('ctrl.twin.released')} value={command.twin.released}/></div>
-          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[10px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-emerald-500" : op.state === "attention" ? "bg-amber-500" : "bg-red-500"}`}/></div><div className="text-[9px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
+          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[10px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[9px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
         </section>
       )}
       <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
@@ -223,9 +223,7 @@ export function ControlPlane() {
                       <td>
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 rounded-full bg-[var(--line)] overflow-hidden">
-                            <div
-                              className="h-full brand-bg"
-                              style={{ width: `${p.progress}%` }}
+                            <div style={{ width: `${p.progress}%` }}
                             />
                           </div>
                           <span className="text-xs">{p.progress}%</span>
@@ -353,5 +351,5 @@ function Metric({ icon: Icon, label, value }: any) {
     </div>
   );
 }
-function Funnel({ label, value }: { label: string; value: number }) { const pct = Math.max(0, Math.min(100, (Number(value) || 0) * 100)); return <div className="rounded-xl border hairline p-3"><div className="flex items-center justify-between gap-2"><span className="text-[9px] muted">{label}</span><strong className="text-sm mono-number">{pct}%</strong></div><div className="h-1.5 rounded-full soft-bg overflow-hidden mt-3"><div className="h-full brand-bg rounded-full" style={{ width: `${pct}%` }} /></div></div>; }
+function Funnel({ label, value }: { label: string; value: number }) { const pct = Math.max(0, Math.min(100, (Number(value) || 0) * 100)); return <div className="rounded-xl border hairline p-3"><div className="flex items-center justify-between gap-2"><span className="text-[9px] muted">{label}</span><strong className="text-sm mono-number">{pct}%</strong></div><div className="tone-meter mt-3"><div style={{ width: `${pct}%` }} /></div></div>; }
 function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="text-lg font-semibold mono-number">{value}</div><div className="text-[9px] muted mt-1">{label}</div></div>}

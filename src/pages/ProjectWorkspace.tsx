@@ -293,10 +293,8 @@ export function ProjectWorkspace() {
               {project.title}
             </h1>
             <div className="mt-4 flex items-center gap-3">
-              <div className="h-2 max-w-md flex-1 rounded-full soft-bg overflow-hidden">
-                <div
-                  className="h-full brand-bg rounded-full"
-                  style={{ width: `${project.progress}%` }}
+              <div className="tone-meter max-w-md flex-1">
+                <div style={{ width: `${project.progress}%` }}
                 />
               </div>
               <span className="text-xs muted mono-number">
@@ -526,7 +524,7 @@ function Overview({
   return (
     <div className="grid xl:grid-cols-[1.35fr_.65fr] gap-5">
       <div className="space-y-5">
-        <section className="relative overflow-hidden rounded-[22px] brand-bg p-6 md:p-8">
+        <section className="relative overflow-hidden rounded-[22px] brand-hero p-6 md:p-8">
           <div className="absolute inset-0 opacity-10 paper-grid" />
           <div className="relative">
             <div className="text-xs text-white/70 flex items-center gap-2">
@@ -543,7 +541,7 @@ function Overview({
             )}
             <Button
               variant="secondary"
-              className="mt-5 bg-white text-[var(--brand-2)]"
+              className="mt-5 btn-on-deep"
               onClick={() => onTab("tasks")}
             >
               <Play size={15} />
@@ -635,7 +633,7 @@ function Overview({
             </div>
             <p className="body-copy mt-3">{project.aiPolicy.summary}</p>
             {project.aiPolicy.needsConfirmation && (
-              <div className="mt-3 rounded-xl bg-[#f7eddd] dark:bg-[#332a1d] text-[var(--warning)] text-xs p-3 flex gap-2">
+              <div className="mt-3 rounded-xl bg-warning/12 text-warning text-xs p-3 flex gap-2">
                 <AlertTriangle size={15} />
                 <span>{t("pw.policyWarning")}</span>
               </div>
@@ -739,7 +737,7 @@ function Deliverables({
         <Card key={d.id}>
           <CardContent className="h-full flex flex-col">
             <div className="flex justify-between gap-3">
-              <div className="h-10 w-10 rounded-xl brand-soft-bg flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl tone-tile">
                 <FileCheck2 size={17} />
               </div>
               <StatusPill status={d.status} />
@@ -808,7 +806,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
                   <td className="py-3 muted">{t(`req.category.${r.category}`)}</td>
                   <td className="py-3">
                     <span
-                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-[#f7eddd] text-[var(--warning)] dark:bg-[#332a1d]" : "brand-soft-bg"}`}
+                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
                     >
                       {r.confidence === "needs_confirmation"
                         ? t("pw.needsConfirm")
@@ -926,7 +924,7 @@ function AuditModal({
         {audit.checks.map((c) => (
           <div key={c.id} className="rounded-xl border hairline p-3 flex gap-3">
             <div
-              className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${c.status === "pass" ? "brand-soft-bg" : c.status === "critical" ? "bg-[#f5e6e3] text-[var(--danger)] dark:bg-[#382522]" : "bg-[#f7eddd] text-[var(--warning)] dark:bg-[#332a1d]"}`}
+              className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${c.status === "pass" ? "brand-soft-bg" : c.status === "critical" ? "bg-danger/12 text-danger " : "bg-warning/12 text-warning "}`}
             >
               {c.status === "pass" ? (
                 <Check size={15} />
@@ -981,7 +979,7 @@ function RescueModal({
     </div>
     {plan && <div className="mt-5 space-y-3">
       {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">
-        <span className="h-8 w-8 rounded-lg brand-soft-bg grid place-items-center text-xs font-semibold shrink-0">{index + 1}</span>
+        <span className="h-8 w-8 rounded-lg tone-tile text-xs font-semibold shrink-0">{index + 1}</span>
         <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[10px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
       </div>)}
       {plan.deferredTaskIds.length > 0 && <div className="rounded-xl soft-bg p-3 text-xs muted">{t("pw.deferredTasks").replace("{count}", String(plan.deferredTaskIds.length))}</div>}

@@ -56,7 +56,7 @@ export function Support() {
         description={t("support.description")}
       />
       {error && (
-        <div className="rounded-xl border border-[var(--danger)]/20 p-3 text-sm text-[var(--danger)]">
+        <div className="rounded-xl border border-[var(--danger)]/20 p-3 text-sm text-danger">
           {error}
         </div>
       )}

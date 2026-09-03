@@ -36,7 +36,7 @@ export function Status() {
           <span className="text-[10px] muted">{t("status.publicStatus")}</span>
         </div>
         <div className="mt-14">
-          <div className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center">
+          <div className="h-12 w-12 rounded-2xl tone-tile">
             <Activity size={20} />
           </div>
           <h1 className="text-3xl md:text-4xl font-semibold mt-4">
@@ -47,7 +47,7 @@ export function Status() {
           </p>
         </div>
         {h?.incidentBanner && (
-          <div className="mt-6 rounded-xl bg-[#f7eddd] dark:bg-[#332a1d] p-4 text-sm">
+          <div className="mt-6 rounded-xl bg-warning/12 p-4 text-sm">
             {h.incidentBanner}
           </div>
         )}
@@ -58,7 +58,7 @@ export function Status() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-sm">{label}</div>
                   <span
-                    className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-emerald-500" : "bg-amber-500"}`}
+                    className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
                   />
                 </div>
                 <div className="text-[11px] muted mt-2">

@@ -64,7 +64,7 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
             {busy ? <LoaderCircle size={16} className="animate-spin" /> : <Sparkles size={16} />}
             {t("copilot.run")}
           </Button>
-          {error && <p className="text-xs text-[var(--danger)] mt-3">{error}</p>}
+          {error && <p className="text-xs text-danger mt-3">{error}</p>}
         </CardContent>
       </Card>
       <div className="space-y-5">
@@ -85,7 +85,7 @@ function CopilotResult({ result }: { result: CopilotResponse }) {
               <div className="eyebrow">{result.mode}</div>
               <h2 className="section-title mt-1">{t("ui.guidedOutput")}</h2>
             </div>
-            <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${result.controls.blocked ? "bg-[#f7eddd] text-[var(--warning)]" : "brand-soft-bg"}`}>{result.controls.provider}</span>
+            <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${result.controls.blocked ? "bg-warning/12 text-warning" : "brand-soft-bg"}`}>{result.controls.provider}</span>
           </div>
           <p className="body-copy whitespace-pre-wrap mt-4">{result.answer}</p>
           <div className="mt-5 grid sm:grid-cols-2 gap-2">

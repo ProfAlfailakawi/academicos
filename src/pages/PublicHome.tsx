@@ -6,6 +6,7 @@ import {
   Sparkles, UploadCloud, Users,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Logo } from "../components/brand/Logo";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
@@ -21,8 +22,7 @@ export function PublicHome() {
     <div className="public-shell min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <header className="public-header px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between gap-3">
         <Link to="/" className="min-h-11 flex items-center gap-3 focus-ring rounded-xl">
-          <div className="h-10 w-10 rounded-2xl brand-bg grid place-items-center text-xs font-black">AO</div>
-          <div><div className="font-bold">AcademicOS</div><div className="text-[10px] muted">{t("landing.tagline")}</div></div>
+          <Logo markSize={40} caption={t("landing.tagline")} />
         </Link>
         <nav className="hidden lg:flex items-center gap-1 text-sm">
           <a href="#how" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navHow")}</a>
@@ -78,10 +78,10 @@ export function PublicHome() {
           </div>
         </section>
 
-        <section id="teacher" className="teacher-lite-strip">
+        <section id="teacher" className="teacher-lite-strip surface-deep strip-deep">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-start gap-4"><span className="h-12 w-12 rounded-2xl bg-white/12 grid place-items-center shrink-0"><GraduationCap size={23} /></span><div><div className="eyebrow text-white/65">ProfessorOS · {t("landing.optional")}</div><h2 className="text-2xl font-bold mt-1">{t("landing.teacherTitle")}</h2></div></div>
-            <Button variant="outline" asChild className="bg-white text-slate-950 border-white"><Link to="/login">{t("landing.teacherSignIn")}</Link></Button>
+            <Button variant="outline" asChild className="btn-on-deep"><Link to="/login">{t("landing.teacherSignIn")}</Link></Button>
           </div>
         </section>
       </main>

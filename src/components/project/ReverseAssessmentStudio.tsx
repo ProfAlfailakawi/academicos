@@ -57,7 +57,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
             <Button variant="ghost" onClick={add}><Plus size={16} />{t('adv.ra.another')}</Button>
             <Button className="flex-1" onClick={evaluate} disabled={busy || !questions.some(q => q.prompt.trim())}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Award size={16} />}{t('adv.ra.evaluate')}</Button>
           </div>
-          {error && <p className="text-xs text-[var(--danger)] mt-2">{error}</p>}
+          {error && <p className="text-xs text-danger mt-2">{error}</p>}
         </CardContent>
       </Card>
 
@@ -79,7 +79,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
                 <Dim icon={<Award size={14} />} label={t('adv.ra.dimRigor')} value={result.dimensions.rigor} />
               </div>
               {result.coverageGaps?.length ? (
-                <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: '#f7dede' }}>
+                <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)' }}>
                   <b>{t('adv.ra.gapsLabel')}</b> {result.coverageGaps.join(', ')}
                 </div>
               ) : null}

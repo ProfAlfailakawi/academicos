@@ -49,7 +49,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
                 <span className="h-3 w-0.5" style={{ background: 'var(--brand-2)' }} />
               </div>
             )}
-            <div className="h-2.5 rounded-full mt-4" style={{ background: 'linear-gradient(90deg,#deeee7,#a8d5c2,#0c5d49)' }} />
+            <div className="h-2.5 rounded-full mt-4" style={{ background: 'linear-gradient(90deg, var(--brand-soft), color-mix(in srgb, var(--brand) 45%, var(--brand-soft)), var(--brand))' }} />
             <div className="mt-4 space-y-2.5">
               {data.phases.map((ph: any) => (
                 <div key={ph.phase} className="grid grid-cols-[110px_1fr] items-center gap-3">
@@ -91,7 +91,7 @@ function PaceBadge({ pace, t }: { pace: string; t: (k: string) => string }) {
   const map: Record<string, { key: string; bg: string; c: string }> = {
     ahead: { key: 'adv.pace.ahead', bg: 'var(--brand-soft)', c: 'var(--brand-2)' },
     on_track: { key: 'adv.pace.onTrack', bg: 'var(--accent-soft)', c: 'var(--accent)' },
-    behind: { key: 'adv.pace.behind', bg: '#f7dede', c: 'var(--danger)' },
+    behind: { key: 'adv.pace.behind', bg: 'color-mix(in srgb, var(--danger) 12%, transparent)', c: 'var(--danger)' },
   };
   const s = map[pace] || map.on_track;
   return <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold" style={{ background: s.bg, color: s.c }}><TrendingUp size={13} />{t(s.key)}</span>;

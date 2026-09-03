@@ -63,24 +63,24 @@ export function CrossStyleFormatter({ project }: { project: ProjectDNA }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-fuchsia-500/10 via-pink-500/5 to-transparent p-5 md:p-6 flex items-start gap-3.5">
-        <div className="h-11 w-11 rounded-2xl bg-fuchsia-500/20 text-fuchsia-600 grid place-items-center shrink-0"><ArrowRightLeft size={22}/></div>
-        <div><div className="text-[10px] font-bold tracking-wider uppercase text-fuchsia-600">{t("ui.verifiedMetadataFormatter")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("formatter.title")}</h2><p className="text-[11px] text-muted-foreground mt-1 leading-5 max-w-2xl">{t("formatter.description")}</p></div>
+      <div className="rounded-2xl border hairline bg-gradient-to-r from-insight/10 via-insight/8 to-transparent p-5 md:p-6 flex items-start gap-3.5">
+        <div className="h-11 w-11 rounded-2xl bg-insight/20 text-insight grid place-items-center shrink-0"><ArrowRightLeft size={22}/></div>
+        <div><div className="text-[10px] font-bold tracking-wider uppercase text-insight">{t("ui.verifiedMetadataFormatter")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("formatter.title")}</h2><p className="text-[11px] text-muted-foreground mt-1 leading-5 max-w-2xl">{t("formatter.description")}</p></div>
       </div>
 
       <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3">
         <label className="text-xs font-semibold">{t("formatter.realDoi")}</label>
         <div className="flex flex-col sm:flex-row gap-2"><input value={doi} onChange={(e) => setDoi(e.target.value)} onKeyDown={(e) => e.key === "Enter" && verifyAndFormat()} placeholder={t("formatter.doiPh")} className="field flex-1 font-mono ltr"/><Button onClick={verifyAndFormat} disabled={loading || !doi.trim()}>{loading ? <RefreshCw size={14} className="animate-spin"/> : <ShieldCheck size={14}/>}{t("formatter.verifyFormat")}</Button></div>
-        {error && <div className="text-[11px] text-amber-600 flex gap-2 items-start"><AlertTriangle size={14} className="shrink-0 mt-0.5"/>{error}</div>}
+        {error && <div className="text-[11px] text-warning flex gap-2 items-start"><AlertTriangle size={14} className="shrink-0 mt-0.5"/>{error}</div>}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">{(Object.keys(STYLE_NAME) as AcademicStyle[]).map((key) => <button key={key} onClick={() => setSelectedStyle(key)} className={`p-3.5 rounded-2xl border text-center transition-all ${selectedStyle === key ? "bg-fuchsia-600 text-white border-fuchsia-600 shadow-md" : "bg-[var(--panel)] hairline"}`}><div className="font-bold text-xs">{STYLE_NAME[key]}</div></button>)}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">{(Object.keys(STYLE_NAME) as AcademicStyle[]).map((key) => <button key={key} onClick={() => setSelectedStyle(key)} className={`p-3.5 rounded-2xl border text-center transition-all ${selectedStyle === key ? "bg-insight text-white border-insight shadow-md" : "bg-[var(--panel)] hairline"}`}><div className="font-bold text-xs">{STYLE_NAME[key]}</div></button>)}</div>
 
       {source ? (
         <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-5">
-          <div className="flex items-start justify-between gap-3"><div><div className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold"><Check size={12}/>{t("ui.crossrefMetadataMatched")}</div><h3 className="text-sm font-bold mt-1">{source.title}</h3><p className="text-[11px] text-muted-foreground mt-1">{authorsPlain(source)}{source.year ? ` · ${source.year}` : ""}{source.containerTitle ? ` · ${source.containerTitle}` : ""}</p></div><span className="font-mono text-[10px] text-muted-foreground ltr break-all max-w-[35%]">{source.doi}</span></div>
-          <div className="grid md:grid-cols-2 gap-3"><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="flex items-center gap-2 text-[11px] font-semibold"><BookMarked size={14} className="text-fuchsia-600"/>{t("formatter.inText")} · {STYLE_NAME[selectedStyle]}</div><div className="mt-3 text-sm font-medium ltr">{inText(source, selectedStyle)}</div></div><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-[11px] font-semibold">{t("formatter.references")} · {STYLE_NAME[selectedStyle]}</div><p className="mt-3 text-xs leading-6 ltr">{formatted(source, selectedStyle)}</p></div></div>
-          <Button variant="outline" onClick={copyRef}>{copied ? <Check size={14} className="text-emerald-500"/> : <Copy size={14}/>} {copied ? t("formatter.copied") : t("formatter.copyStyle").replace("{style}", STYLE_NAME[selectedStyle])}</Button>
+          <div className="flex items-start justify-between gap-3"><div><div className="inline-flex items-center gap-1 text-[10px] text-success font-semibold"><Check size={12}/>{t("ui.crossrefMetadataMatched")}</div><h3 className="text-sm font-bold mt-1">{source.title}</h3><p className="text-[11px] text-muted-foreground mt-1">{authorsPlain(source)}{source.year ? ` · ${source.year}` : ""}{source.containerTitle ? ` · ${source.containerTitle}` : ""}</p></div><span className="font-mono text-[10px] text-muted-foreground ltr break-all max-w-[35%]">{source.doi}</span></div>
+          <div className="grid md:grid-cols-2 gap-3"><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="flex items-center gap-2 text-[11px] font-semibold"><BookMarked size={14} className="text-insight"/>{t("formatter.inText")} · {STYLE_NAME[selectedStyle]}</div><div className="mt-3 text-sm font-medium ltr">{inText(source, selectedStyle)}</div></div><div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-[11px] font-semibold">{t("formatter.references")} · {STYLE_NAME[selectedStyle]}</div><p className="mt-3 text-xs leading-6 ltr">{formatted(source, selectedStyle)}</p></div></div>
+          <Button variant="outline" onClick={copyRef}>{copied ? <Check size={14} className="text-success"/> : <Copy size={14}/>} {copied ? t("formatter.copied") : t("formatter.copyStyle").replace("{style}", STYLE_NAME[selectedStyle])}</Button>
         </div>
       ) : <div className="rounded-2xl border hairline p-7 text-center text-xs text-muted-foreground">{t("formatter.empty")}</div>}
     </div>

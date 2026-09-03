@@ -130,15 +130,15 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="rounded-2xl border hairline bg-gradient-to-r from-success/10 via-success/8 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center shrink-0">
+          <div className="h-11 w-11 rounded-2xl bg-success/20 text-success grid place-items-center shrink-0">
             <ShieldCheck size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400">{t("source.title")}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20 flex items-center gap-1">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-success">{t("source.title")}</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-success/15 text-success font-semibold border border-success/20 flex items-center gap-1">
                 <Database size={10} /> {t("ui.crossrefLive")}
               </span>
             </div>
@@ -168,10 +168,10 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder={t("source.searchPlaceholder")}
-              className="w-full rounded-xl border hairline bg-[var(--panel)] ps-10 pe-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="w-full rounded-xl border hairline bg-[var(--panel)] ps-10 pe-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-success/40"
             />
           </div>
-          <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
+          <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-success hover:bg-success text-white shrink-0">
             {searching ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />} {t("source.searchAction")}
           </Button>
         </div>
@@ -188,7 +188,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                 placeholder="10.xxxx/xxxxx · https://doi.org/…"
                 className="flex-1 rounded-xl border hairline bg-[var(--bg)] px-3.5 py-2 text-xs font-mono ltr"
               />
-              <Button size="sm" onClick={handleDoiCheck} disabled={searching || !doiInput.trim()} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button size="sm" onClick={handleDoiCheck} disabled={searching || !doiInput.trim()} className="bg-success hover:bg-success text-white">
                 {searching ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />} {t("source.verifyRecord")}
               </Button>
             </div>
@@ -197,15 +197,15 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
       )}
 
       {error && (
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-6 flex items-start gap-2">
-          <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-warning/25 bg-warning/8 p-3 text-xs leading-6 flex items-start gap-2">
+          <AlertTriangle size={15} className="text-warning shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {!hasSearched && !searching && (
         <div className="rounded-2xl border hairline bg-[var(--panel)] p-8 text-center">
-          <Database size={28} className="mx-auto text-emerald-600 mb-3" />
+          <Database size={28} className="mx-auto text-success mb-3" />
           <div className="font-semibold text-sm">{t("source.emptyTitle")}</div>
           <p className="text-xs text-muted-foreground mt-2">{t("source.emptyDesc")}</p>
         </div>
@@ -219,18 +219,18 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
         {results.length > 0 && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>{results.length} {t("source.records")}</span>
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+            <span className="flex items-center gap-1 text-success font-semibold">
               <CheckCircle2 size={13} /> {t("source.identityOnly")}
             </span>
           </div>
         )}
 
         {results.map((source, index) => (
-          <div key={source.doi} className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3.5 hover:border-emerald-500/40 transition-colors">
+          <div key={source.doi} className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3.5 hover:border-success/40 transition-colors">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-success/10 text-success border border-success/20 flex items-center gap-1">
                     <CheckCircle2 size={11} /> {t("ui.crossrefRecordMatched")}
                   </span>
                   <span className="text-[11px] font-mono text-muted-foreground">{t("source.result")} #{index + 1}</span>
@@ -238,7 +238,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                     <span className="text-[11px] text-muted-foreground">{t("ui.crossrefCitedBy")}: {source.citedByCount}</span>
                   )}
                   {!!source.licenseUrls?.length && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400">{t("source.licenseAvailable")}</span>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] bg-info/10 text-info">{t("source.licenseAvailable")}</span>
                   )}
                 </div>
                 <h3 className="text-sm md:text-base font-bold text-foreground leading-snug">{source.title}</h3>
@@ -248,7 +248,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                   {source.containerTitle ? <> — <span className="italic text-foreground/80">{source.containerTitle}</span></> : null}
                 </div>
               </div>
-              <Button asChild size="sm" variant="outline" className="shrink-0 text-xs gap-1.5 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+              <Button asChild size="sm" variant="outline" className="shrink-0 text-xs gap-1.5 border-success/30 hover:bg-success/10">
                 <a href={source.url} target="_blank" rel="noreferrer"><ExternalLink size={13} /> DOI</a>
               </Button>
             </div>
@@ -260,8 +260,8 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-[11px] leading-5 flex gap-2">
-              <Link2 size={14} className="text-sky-600 shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-info/20 bg-info/8 p-3 text-[11px] leading-5 flex gap-2">
+              <Link2 size={14} className="text-info shrink-0 mt-0.5" />
               <span><strong>{t("source.title")}:</strong> {t("source.guardianNote")}</span>
             </div>
 
@@ -269,14 +269,14 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               <div className="text-[10px] text-muted-foreground">{t("source.metadataVerified")}: {formatDateTime(source.metadataVerifiedAt, locale)}</div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2.5" onClick={() => copyCitation(source, "apa")}>
-                  {copied === `${source.doi}-apa` ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />} {t("source.copyApa")}
+                  {copied === `${source.doi}-apa` ? <Check size={12} className="text-success" /> : <Copy size={12} />} {t("source.copyApa")}
                 </Button>
                 <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2.5" onClick={() => copyCitation(source, "bibtex")}>
-                  {copied === `${source.doi}-bibtex` ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />} BibTeX
+                  {copied === `${source.doi}-bibtex` ? <Check size={12} className="text-success" /> : <Copy size={12} />} BibTeX
                 </Button>
                 <Button
                   size="sm"
-                  className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                  className="h-7 text-[11px] px-3 bg-success hover:bg-success text-white gap-1"
                   disabled={addingDoi === source.doi || addedDois.has(source.doi)}
                   onClick={() => addToProject(source)}
                 >

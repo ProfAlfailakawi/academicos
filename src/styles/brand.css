@@ -1,0 +1,776 @@
+/* =============================================================================
+   AcademicOS — brand system, boot splash and first-run experience.
+   Loaded after Tailwind so these tokens and components win on equal specificity.
+   ========================================================================== */
+
+/* --- 1. Typeface -----------------------------------------------------------
+   One family carries Arabic and Latin with the same skeleton, so an RTL screen
+   and an LTR screen read as the same product. Everything degrades to the
+   previous system stack when the network font is unavailable. */
+
+
+body { font-family: var(--font-sans); }
+
+/* التوكنز تبقى خارج الطبقات؛ أما مكوّنات التصميم فتُدرَج في طبقة
+   components حتى تظل أدوات Tailwind قادرة على تجاوزها عند الحاجة. */
+:root {
+  --font-sans:
+    "IBM Plex Sans Arabic", "IBM Plex Sans", ui-sans-serif, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Noto Sans Arabic",
+    "Noto Kufi Arabic", "Noto Sans Devanagari", "Noto Sans SC",
+    "Noto Nastaliq Urdu", Tahoma, Arial, sans-serif;
+
+  /* Motion vocabulary — every transition in the product speaks one of these. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.48, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 620ms;
+}
+html[data-locale="ur"] {
+  --font-sans:
+    "Noto Nastaliq Urdu", "IBM Plex Sans Arabic", ui-sans-serif, Tahoma, Arial,
+    sans-serif;
+}
+:root {
+  --info: #2c6a8c;
+  --insight: #61519c;
+}
+:root.dark {
+  --info: #86bcd6;
+  --insight: #b6a6e6;
+}
+[data-tone] { --tone: var(--brand); }
+
+@layer components {
+/* --- 2. Brand marks -------------------------------------------------------- */
+.acos-mark { display: block; flex: 0 0 auto; overflow: visible; }
+.acos-mark .acos-mark__seal { transform-origin: 50% 50%; }
+
+.acos-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.acos-lockup__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+.acos-lockup__caption {
+  margin-top: 3px;
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acos-wordmark {
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+  white-space: nowrap;
+  font-feature-settings: "ss01";
+}
+.acos-wordmark__os {
+  color: var(--brand);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.dark .acos-wordmark__os { color: var(--brand-2); }
+
+/* The seal is the one place the product allows itself a flourish: it wakes up
+   when you touch the identity, and is otherwise perfectly still. */
+a:hover > .acos-lockup .acos-mark__seal,
+.acos-lockup:hover .acos-mark__seal,
+.sidebar-brand-mark:hover .acos-mark__seal {
+  animation: acos-seal-pulse 1.4s var(--ease-out-quint) infinite;
+}
+@keyframes acos-seal-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(1.28); opacity: 0.82; }
+}
+
+/* Draw-on animation shared by the splash and any hero placement. */
+.acos-mark.is-animated .acos-mark__orbit {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: acos-draw 1150ms var(--ease-out-quint) 60ms forwards;
+}
+.acos-mark.is-animated .acos-mark__ascent path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: acos-draw 720ms var(--ease-out-quint) forwards;
+}
+.acos-mark.is-animated .acos-mark__ascent path:nth-child(1) { animation-delay: 200ms; }
+.acos-mark.is-animated .acos-mark__ascent path:nth-child(2) { animation-delay: 620ms; }
+.acos-mark.is-animated .acos-mark__seal {
+  transform: scale(0);
+  animation: acos-stamp 620ms var(--ease-spring) 980ms forwards;
+}
+@keyframes acos-draw { to { stroke-dashoffset: 0; } }
+@keyframes acos-stamp {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- 3. Splash ------------------------------------------------------------- */
+.acos-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(760px 520px at 50% 8%, color-mix(in srgb, var(--brand-soft) 78%, transparent), transparent 68%),
+    radial-gradient(620px 420px at 12% 92%, color-mix(in srgb, var(--accent-soft) 52%, transparent), transparent 72%),
+    var(--bg);
+}
+.acos-splash__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.acos-splash__halo {
+  position: absolute;
+  top: -46px;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand) 13%, transparent), transparent 62%);
+  filter: blur(6px);
+  animation: acos-halo 3.6s ease-in-out infinite;
+}
+@keyframes acos-halo {
+  0%, 100% { transform: scale(0.94); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+.acos-splash__mark { position: relative; }
+.acos-splash__word {
+  position: relative;
+  margin-top: 22px;
+  font-size: 1.6rem;
+  animation: acos-rise 700ms var(--ease-out-quint) 900ms both;
+}
+.acos-splash__tagline {
+  position: relative;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: 0.005em;
+  max-width: 30ch;
+  animation: acos-rise 700ms var(--ease-out-quint) 1030ms both;
+}
+.acos-splash__rail {
+  position: relative;
+  margin-top: 26px;
+  width: 132px;
+  height: 2px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 90%, transparent);
+  animation: acos-rise 600ms var(--ease-out-quint) 1160ms both;
+}
+.acos-splash__rail > span {
+  position: absolute;
+  inset-block: 0;
+  width: 42%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--brand), var(--accent), transparent);
+  animation: acos-rail 1.5s var(--ease-out-quint) infinite;
+}
+@keyframes acos-rail {
+  0% { transform: translateX(-115%); }
+  100% { transform: translateX(275%); }
+}
+.acos-splash__status {
+  position: relative;
+  margin-top: 14px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+  animation: acos-rise 600ms var(--ease-out-quint) 1260ms both;
+}
+@keyframes acos-rise {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 4. First run (onboarding) --------------------------------------------- */
+/* The flow lives inside the app shell (it is also reachable from Settings),
+   so it is a bounded panel rather than a viewport takeover. The frame carries
+   the container so the panel itself can respond to the column it lands in. */
+.onboard-frame { container-type: inline-size; }
+.onboard-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: min(720px, calc(100svh - 12rem));
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  overflow: clip;
+  box-shadow: var(--shadow);
+  background:
+    radial-gradient(820px 520px at 88% -6%, color-mix(in srgb, var(--brand-soft) 46%, transparent), transparent 66%),
+    var(--panel);
+}
+/* Container query, not a viewport query: this panel also renders inside the
+   app shell next to a 276px sidebar, where the viewport width lies. */
+@container (min-width: 940px) {
+  .onboard-shell { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); }
+}
+@media (max-width: 639px) { .onboard-shell { border-radius: 20px; } }
+
+.onboard-rail {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.25rem 2.15rem;
+  border-inline-end: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 46%, transparent), transparent 48%),
+    color-mix(in srgb, var(--panel-2) 60%, var(--panel));
+  overflow: hidden;
+}
+@container (min-width: 940px) { .onboard-rail { display: flex; } }
+
+.onboard-mobile-card { margin-top: 2.5rem; }
+@container (min-width: 940px) { .onboard-mobile-card { display: none; } }
+.onboard-rail::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -140px;
+  bottom: -180px;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand) 14%, transparent);
+  pointer-events: none;
+}
+
+/* The identity card assembles itself while the questions are answered.
+   It is the reason the flow feels like building something, not filling a form. */
+.identity-card {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--brand) 16%, var(--line));
+  padding: 1.35rem 1.4rem 1.15rem;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--panel) 96%, var(--brand-soft)), var(--panel));
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.identity-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 38%, color-mix(in srgb, white 26%, transparent) 50%, transparent 62%);
+  opacity: 0;
+  pointer-events: none;
+}
+.identity-card.is-sealed::before { animation: acos-foil 1100ms var(--ease-out-quint) forwards; }
+@keyframes acos-foil {
+  0% { opacity: 0; transform: translateX(-60%); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(60%); }
+}
+.identity-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--line-strong) 70%, transparent);
+}
+.identity-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  font-size: 12.5px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.identity-row:last-of-type { border-bottom: 0; }
+.identity-row > dt { color: var(--muted); white-space: nowrap; }
+.identity-row > dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: end;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.identity-row.is-empty > dd {
+  display: inline-block;
+  width: 84px;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 88%, transparent);
+}
+.identity-row.is-filled > dd { animation: acos-rise 420ms var(--ease-out-quint) both; }
+.identity-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed color-mix(in srgb, var(--line-strong) 70%, transparent);
+}
+.identity-card__foot > span:first-child {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  min-width: 0;
+}
+.identity-card__seal {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 52%, transparent);
+  color: var(--accent);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-align: center;
+  line-height: 1.2;
+  opacity: 0.3;
+  filter: grayscale(1);
+  transform: rotate(-8deg) scale(0.9);
+  transition: opacity var(--dur-base) var(--ease-spring),
+    transform var(--dur-base) var(--ease-spring), filter var(--dur-base) ease;
+}
+.identity-card.is-sealed .identity-card__seal {
+  opacity: 1;
+  filter: none;
+  transform: rotate(-8deg) scale(1);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.onboard-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem 1.15rem 2.5rem;
+}
+@media (min-width: 640px) { .onboard-main { padding: 2.25rem 2rem 2.5rem; } }
+@container (min-width: 940px) { .onboard-main { padding: 2.75rem 2.85rem; } }
+.onboard-body { width: 100%; max-width: 42rem; margin-inline: auto; }
+
+.onboard-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.onboard-step-dot {
+  height: 6px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  width: 22px;
+  background: color-mix(in srgb, var(--line-strong) 72%, transparent);
+  transition: width var(--dur-base) var(--ease-out-quint), background-color var(--dur-base) ease;
+}
+.onboard-step-dot.is-done { background: color-mix(in srgb, var(--brand) 46%, transparent); cursor: pointer; }
+.onboard-step-dot.is-current { width: 46px; background: var(--brand); }
+
+.onboard-question { position: relative; }
+.onboard-question[data-motion="in"] { animation: acos-step-in 420ms var(--ease-out-quint) both; }
+@keyframes acos-step-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.onboard-title {
+  font-size: clamp(1.85rem, 4.6vw, 2.65rem);
+  font-weight: 700;
+  letter-spacing: -0.038em;
+  line-height: 1.14;
+  text-wrap: balance;
+}
+
+.choice-grid { display: grid; gap: 0.65rem; }
+@media (min-width: 640px) { .choice-grid { grid-template-columns: 1fr 1fr; } }
+
+.choice-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: start;
+  padding: 0.95rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  transition: border-color var(--dur-fast) ease, background-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out-quint), box-shadow var(--dur-fast) ease;
+}
+.choice-card:hover { border-color: var(--line-strong); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.choice-card.is-selected {
+  border-color: color-mix(in srgb, var(--brand) 62%, transparent);
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.choice-card__name { font-weight: 600; font-size: 0.95rem; }
+.choice-card__sample { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.choice-card__check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--on-brand);
+  flex: 0 0 auto;
+  animation: acos-stamp 380ms var(--ease-spring) both;
+}
+
+/* One pill, two jobs: suggestion chips in the first-run flow and the
+   segmented filters the studios use. Both follow --tone. */
+.suggest-row,
+.segmented { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.suggest-chip,
+.segmented > button {
+  min-height: 34px;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease, transform var(--dur-fast) var(--ease-out-quint);
+}
+.suggest-chip:hover,
+.segmented > button:hover { color: var(--ink); border-color: var(--line-strong); transform: translateY(-1px); }
+.suggest-chip.is-active,
+.segmented > button[aria-pressed="true"] {
+  color: color-mix(in srgb, var(--tone, var(--brand)) 78%, var(--ink));
+  background: color-mix(in srgb, var(--tone, var(--brand)) 14%, transparent);
+  border-color: color-mix(in srgb, var(--tone, var(--brand)) 36%, transparent);
+}
+
+/* Studio header band — the repeated "tool identity + primary action" row. */
+.studio-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-radius: 20px;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--brand)) 20%, var(--line));
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--tone, var(--brand)) 12%, transparent), transparent 62%),
+    var(--panel);
+}
+@media (min-width: 768px) {
+  .studio-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.3rem 1.45rem;
+  }
+}
+.studio-head__title {
+  margin-top: 0.2rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.3;
+}
+
+.onboard-input {
+  width: 100%;
+  height: 60px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding-inline: 1.05rem;
+  font-size: 1.0625rem;
+  outline: none;
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 34%, transparent), var(--shadow-xs);
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+.onboard-input:focus {
+  border-color: color-mix(in srgb, var(--brand) 58%, var(--line));
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+/* Course tokens: the answer becomes visible objects instead of a comma string. */
+.token-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 60px;
+  padding: 0.55rem 0.6rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 34%, transparent), var(--shadow-xs);
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+.token-field:focus-within {
+  border-color: color-mix(in srgb, var(--brand) 58%, var(--line));
+  box-shadow: 0 0 0 4px var(--ring);
+}
+.token-field > input {
+  flex: 1 1 8rem;
+  min-width: 8rem;
+  min-height: 40px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--ink);
+  padding-inline: 0.5rem;
+}
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.4rem 0.32rem 0.7rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  animation: acos-token-in 300ms var(--ease-spring) both;
+}
+[dir="rtl"] .token { padding: 0.32rem 0.7rem 0.32rem 0.4rem; }
+@keyframes acos-token-in {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+.token > button {
+  display: grid;
+  place-items: center;
+  min-height: 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: inherit;
+  opacity: 0.65;
+  transition: opacity var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+.token > button:hover { opacity: 1; background: color-mix(in srgb, var(--brand) 18%, transparent); }
+@media (pointer: coarse) {
+  .token { padding-block: 0.42rem; }
+  .token > button { min-height: 30px; width: 30px; height: 30px; }
+}
+
+.onboard-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+.onboard-hint kbd {
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-family: inherit;
+  background: var(--panel-2);
+}
+
+/* The last beat of the flow: the profile is sealed before the app opens. */
+.onboard-sealing {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  animation: acos-rise 260ms var(--ease-out-quint) both;
+}
+.onboard-sealing__inner { display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .acos-mark.is-animated .acos-mark__orbit,
+  .acos-mark.is-animated .acos-mark__ascent path { stroke-dashoffset: 0; animation: none; }
+  .acos-mark.is-animated .acos-mark__seal { transform: none; animation: none; }
+  .acos-splash__halo,
+  .acos-splash__rail > span { animation: none; }
+  .identity-card.is-sealed::before { animation: none; }
+}
+.a11y-reduced-motion .acos-mark.is-animated .acos-mark__orbit,
+.a11y-reduced-motion .acos-mark.is-animated .acos-mark__ascent path { stroke-dashoffset: 0; }
+.a11y-reduced-motion .acos-mark.is-animated .acos-mark__seal { transform: none; }
+
+/* --- 5. Global polish ------------------------------------------------------ */
+/* Any control without an explicit .focus-ring still shows a clear focus state. */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+/* Small caption text was the one place the type scale went soft. */
+.acos-lockup__caption,
+.identity-row > dt { font-variant-numeric: tabular-nums; }
+
+/* =============================================================================
+   6. Semantic tones
+   The product had 352 raw Tailwind palette colours (red/amber/emerald/blue…)
+   scattered across 30 files, and only 50 of them carried a dark: variant — so
+   most semantic colour was simply wrong in dark mode. Meaning now lives in one
+   place: set data-tone once, and every child reads --tone.
+   ========================================================================== */
+
+[data-tone="brand"] { --tone: var(--brand); }
+[data-tone="accent"] { --tone: var(--accent); }
+[data-tone="danger"] { --tone: var(--danger); }
+[data-tone="warning"] { --tone: var(--warning); }
+[data-tone="success"] { --tone: var(--success); }
+[data-tone="info"] { --tone: var(--info); }
+[data-tone="insight"] { --tone: var(--insight); }
+[data-tone="muted"] { --tone: var(--muted); }
+
+.tone-text { color: var(--tone, var(--brand)); }
+.tone-strong { color: color-mix(in srgb, var(--tone, var(--brand)) 76%, var(--ink)); }
+.tone-soft { background: color-mix(in srgb, var(--tone, var(--brand)) 11%, transparent); }
+.tone-line { border-color: color-mix(in srgb, var(--tone, var(--brand)) 26%, var(--line)); }
+.tone-solid { background: var(--tone, var(--brand)); color: var(--on-brand); }
+.tone-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tone, var(--brand));
+}
+
+/* Soft icon tile — the single most repeated shape in the product. */
+.tone-tile {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  color: var(--tone, var(--brand));
+  background: color-mix(in srgb, var(--tone, var(--brand)) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--brand)) 13%, transparent);
+}
+
+/* Callout / inline notice. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  border-radius: 16px;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--brand)) 24%, var(--line));
+  background: color-mix(in srgb, var(--tone, var(--brand)) 9%, transparent);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.note > .lucide { color: var(--tone, var(--brand)); margin-top: 2px; }
+.note strong { color: color-mix(in srgb, var(--tone, var(--brand)) 74%, var(--ink)); }
+
+/* Pill that carries meaning rather than decoration. */
+.tone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 26px;
+  padding: 0.24rem 0.6rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--tone, var(--brand)) 78%, var(--ink));
+  background: color-mix(in srgb, var(--tone, var(--brand)) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone, var(--brand)) 21%, transparent);
+}
+
+/* Meter used for scores, coverage and risk across the studios. */
+.tone-meter {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 78%, transparent);
+}
+.tone-meter > * {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--tone, var(--brand));
+  transition: width var(--dur-slow) var(--ease-out-quint);
+}
+
+  /* ---------------------------------------------------------------------
+     أسطح داكنة بقرار تصميمي (شريحة عرض، شريط دعائي): تُعيد تعريف التوكنز
+     محليًا، فتظل الأصناف الدلالية نفسها تعمل داخلها دون ألوان مبعثرة —
+     وهذا ما كان يكسر الوضع الليلي سابقًا. */
+  .surface-deep {
+    --ink: #f4f6f5;
+    --muted: #a9b2ad;
+    --line: #2a3038;
+    --line-strong: #3a424b;
+    --panel: #16181c;
+    --warning: #ddb269;
+    --accent: #d3a56d;
+    --success: #93c9a2;
+    --danger: #e27b78;
+    color: var(--ink);
+  }
+  .slide-canvas {
+    background: linear-gradient(150deg, #191c21, #0d0f12 58%, #08090b);
+    border: 1px solid #262b32;
+  }
+  .strip-deep {
+    background: linear-gradient(120deg, #0c5d49, #06382c 72%);
+  }
+  :root.dark .strip-deep {
+    background: linear-gradient(120deg, #12362c, #0b241d 72%);
+  }
+  /* زر مقصود أن يظل فاتحًا فوق سطح داكن في السمتين. */
+  .btn-on-deep {
+    background: #fffefa;
+    color: #073f33;
+    border-color: #fffefa;
+  }
+  .btn-on-deep:hover { background: #ffffff; }
+
+  /* أسطح "البطل" بلون العلامة: تبقى عميقة في السمتين بدلًا من أن تنقلب
+     إلى نعناعي فاتح تحت نص أبيض. */
+  .brand-hero {
+    --ink: #fffefa;
+    --muted: rgba(255, 254, 250, 0.72);
+    --line: rgba(255, 254, 250, 0.16);
+    color: var(--ink);
+    background: linear-gradient(135deg, #0c5d49, #063a2d 74%);
+  }
+  :root.dark .brand-hero { background: linear-gradient(135deg, #123a2f, #0a231c 74%); }
+
+  /* الرسمة التوضيحية تحمل خلفية كريمية ثابتة داخل الملف نفسه، فتتحوّل في
+     الوضع الليلي إلى مستطيل ساطع يقطع الصفحة. تهدئتها تُبقيها واضحة
+     وتُجلسها داخل السطح بدل أن تطفو فوقه. */
+  :root.dark .student-hero-visual > img,
+  :root.dark .journey-illustration img {
+    filter: brightness(0.84) contrast(1.03) saturate(0.94);
+  }
+  :root.dark .journey-illustration { background: color-mix(in srgb, var(--accent) 10%, var(--panel)) !important; }
+}

@@ -603,7 +603,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
           </CardContent>
         </Card>
         {error && (
-          <div className="rounded-xl border border-[var(--danger)]/20 p-3 text-sm text-[var(--danger)]">
+          <div className="rounded-xl border border-[var(--danger)]/20 p-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -962,7 +962,7 @@ export function WorkspaceStudios({ project }: { project: ProjectDNA }) {
                       <div className="flex gap-2 text-xs">
                         <AlertTriangle
                           size={14}
-                          className="text-[var(--danger)] shrink-0 mt-0.5"
+                          className="text-danger shrink-0 mt-0.5"
                         />
                         <div>
                           <strong>{t("studio.deleteThisItem")}</strong>

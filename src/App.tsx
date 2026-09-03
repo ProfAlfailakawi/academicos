@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router";
 import { Layout } from "./components/Layout";
+import { AppSplash } from "./components/brand/AppSplash";
 import { useI18n } from "./lib/i18n";
 import { useAuth } from "./contexts/AuthContext";
 import { adminMfaRequiredByDeployment } from "./lib/firebase";
@@ -183,12 +184,7 @@ function ProtectedLayout() {
   const { user, loading } = useAuth();
   const { t } = useI18n();
   const location = useLocation();
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="eyebrow">{t("app.initializing")}</div>
-      </div>
-    );
+  if (loading) return <AppSplash label={t("app.initializing")} />;
   if (!user)
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   if (
@@ -234,12 +230,7 @@ function HomeRoute() {
 }
 
 function AppSuspenseFallback() {
-  const { t } = useI18n();
-  return (
-    <div className="min-h-screen grid place-items-center bg-[var(--bg)]">
-      <div className="eyebrow">{t("app.opening")}</div>
-    </div>
-  );
+  return <AppSplash />;
 }
 
 export default function App() {

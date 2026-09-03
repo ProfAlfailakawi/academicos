@@ -159,7 +159,7 @@ export function LearnStudio() {
         <CardContent>
           <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-5 items-start">
             <div>
-              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl brand-soft-bg grid place-items-center"><BrainCircuit size={19} /></span><div><div className="eyebrow">{t("ui.examAutopilot")}</div><h2 className="section-title mt-1">{t("learn.autopilotTitle")}</h2></div></div>
+              <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><BrainCircuit size={19} /></span><div><div className="eyebrow">{t("ui.examAutopilot")}</div><h2 className="section-title mt-1">{t("learn.autopilotTitle")}</h2></div></div>
               <p className="body-copy mt-3">{t("learn.autopilotDescription")}</p>
               <input ref={studyFileRef} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(event) => ingestStudyFiles(event.target.files)} />
               <div className="flex flex-wrap gap-2 mt-4">
@@ -177,7 +177,7 @@ export function LearnStudio() {
             <div className="flex items-start gap-3"><span className="h-9 w-9 rounded-xl soft-bg grid place-items-center shrink-0"><FileText size={16} /></span><div className="flex-1"><div className="text-xs font-semibold">{t("learn.materialMapReady")}</div><p className="text-xs leading-6 muted mt-1">{examIntake.guide.summary}</p></div></div>
             {examIntake.guide.keyIdeas.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{examIntake.guide.keyIdeas.slice(0, 6).map((idea, index) => <button key={index} onClick={() => { setTab("explain"); setTopic(idea.slice(0, 550)); }} className="focus-ring rounded-full border hairline px-3 py-1.5 text-[10px] font-semibold hover:bg-[var(--panel-2)]">{t("learn.explainPrefix")}: {idea.slice(0, 70)}</button>)}</div>}
             {examIntake.guide.examPrompts[0] && <div className="mt-4 rounded-xl soft-bg p-4"><div className="text-[10px] muted">{t("learn.suggestedQuestion")}</div><p className="text-sm leading-7 mt-1">{examIntake.guide.examPrompts[0]}</p><Button size="sm" className="mt-3" onClick={() => { setTab("solve"); setProblem(examIntake.guide.examPrompts[0]); }}>{t("learn.testMe")}</Button></div>}
-            {examIntake.guide.warnings.length > 0 && <div className="mt-3 text-[10px] text-[var(--warning)]">{examIntake.guide.warnings[0]}</div>}
+            {examIntake.guide.warnings.length > 0 && <div className="mt-3 text-[10px] text-warning">{examIntake.guide.warnings[0]}</div>}
           </div>}
         </CardContent>
       </Card>
@@ -224,7 +224,7 @@ export function LearnStudio() {
         </Card>
       )}
 
-      {error && <div className="text-sm text-red-500">{error}</div>}
+      {error && <div className="text-sm text-danger">{error}</div>}
 
       {tab === "explain" && lesson && (
         <Card>

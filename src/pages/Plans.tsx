@@ -88,11 +88,11 @@ export function Plans() {
 
     <section className="panel-flat rounded-[24px] p-4 md:p-5">
       <div className="grid md:grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center">
-        <span className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center"><BookOpenCheck size={20} /></span>
+        <span className="h-12 w-12 rounded-2xl tone-tile"><BookOpenCheck size={20} /></span>
         <label className="min-w-0"><span className="eyebrow">{t("plans.projectLabel")}</span>{loading ? <span className="field mt-2 flex items-center gap-2"><LoaderCircle size={15} className="animate-spin" /> {t("plans.loadingProjects")}</span> : projects.length ? <select className="field mt-2" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{projects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.course}</option>)}</select> : <p className="text-xs muted mt-2">{t("plans.noProject")}</p>}</label>
         {!projects.length && !loading ? <Button asChild><Link to="/app/upload">{t("plans.uploadAssignment")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : access?.unlocked && selected ? <Button asChild><Link to={`/app/project/${selected.id}`}>{t("plans.openProject")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : null}
       </div>
-      {selected && <div className="mt-3 flex flex-wrap gap-2 text-[10px]"><span className="rounded-full soft-bg px-3 py-1.5">{selected.collaborationMode === "group" ? t("plans.groupProject") : t("plans.individualProject")}</span><span className={`rounded-full px-3 py-1.5 ${access?.unlocked ? "brand-soft-bg" : "bg-amber-500/10 text-[var(--warning)]"}`}>{access?.unlocked ? t("plans.unlocked") : t("plans.freePreview")}</span></div>}
+      {selected && <div className="mt-3 flex flex-wrap gap-2 text-[10px]"><span className="rounded-full soft-bg px-3 py-1.5">{selected.collaborationMode === "group" ? t("plans.groupProject") : t("plans.individualProject")}</span><span className={`rounded-full px-3 py-1.5 ${access?.unlocked ? "brand-soft-bg" : "bg-warning/10 text-warning"}`}>{access?.unlocked ? t("plans.unlocked") : t("plans.freePreview")}</span></div>}
     </section>
 
     {message && <div role="status" className="rounded-2xl brand-soft-bg p-4 text-sm text-center">{message}</div>}

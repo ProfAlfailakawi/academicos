@@ -38,6 +38,7 @@ import { api } from "../lib/api";
 import { Button } from "./ui/button";
 import { predictNext, recordNavigation } from "../lib/predictiveNavigation";
 import { formatDateTime, useI18n } from "../lib/i18n";
+import { LogoMark, Wordmark } from "./brand/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { roleTranslationKey } from "../lib/role-labels";
 
@@ -554,7 +555,7 @@ export function Layout() {
           </Button>
           <div className="flex items-center gap-2 ps-2 border-s hairline">
             <div className="hidden md:flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full brand-soft-bg flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full tone-tile">
                 <UserRound size={15} />
               </div>
               <div className="max-w-28">
@@ -572,7 +573,7 @@ export function Layout() {
               onClick={() => logout()}
               title={t("layout.logout")}
               aria-label={t("layout.logout")}
-              className="text-red-600 dark:text-red-400 hover:bg-red-500/10"
+              className="text-danger hover:bg-danger/10"
             >
               <LogOut size={18} />
             </Button>
@@ -580,10 +581,10 @@ export function Layout() {
         </header>
 
         {user && user.emailVerified === false && (
-          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium">
+          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-warning/30 bg-warning/15 text-warning font-medium">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center justify-between gap-2">
               <span className="leading-relaxed"><strong className="font-bold">{t("layout.verifyEmailTitle")}</strong> {t("layout.verifyEmailDesc")}</span>
-              <button type="button" className="focus-ring shrink-0 rounded-lg px-3 py-1 text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white dark:bg-amber-400 dark:hover:bg-amber-300 dark:text-amber-950 transition-colors shadow-xs" onClick={async()=>{
+              <button type="button" className="focus-ring tone-solid shrink-0 rounded-lg px-3 py-1 text-xs font-semibold transition-colors shadow-xs" data-tone="warning" onClick={async()=>{
   setVerificationError("");
   try {
     await resendVerification();
@@ -597,7 +598,7 @@ export function Layout() {
                 {verificationSent ? t("layout.verificationSent") : t("layout.resendVerification")}
               </button>
               {verificationError && (
-                <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+                <span role="alert" className="text-xs text-danger">
                   {verificationError}
                 </span>
               )}
@@ -605,7 +606,7 @@ export function Layout() {
           </div>
         )}
         {user?.impersonation && (
-          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-amber-500/30 bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium">
+          <div className="px-4 md:px-7 py-2.5 text-xs border-b border-warning/30 bg-warning/15 text-warning font-medium">
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-semibold">
                 {t("layout.readOnlySupportSession")}
@@ -619,7 +620,7 @@ export function Layout() {
         )}
         {(serviceNotice.incident || serviceNotice.maintenance) && (
           <div
-            className={`px-4 md:px-7 py-2.5 text-xs border-b hairline ${serviceNotice.maintenance ? "bg-amber-500/15 dark:bg-amber-950/60 text-amber-950 dark:text-amber-100 font-medium" : "brand-soft-bg"}`}
+            className={`px-4 md:px-7 py-2.5 text-xs border-b hairline ${serviceNotice.maintenance ? "bg-warning/15 text-warning font-medium" : "brand-soft-bg"}`}
           >
             <div className="mx-auto max-w-[1440px] flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-semibold">
@@ -688,7 +689,7 @@ export function Layout() {
             className="focus-ring flex flex-col items-center justify-center -mt-5"
           >
             <span className="mobile-add-button h-12 w-12 rounded-2xl brand-bg flex items-center justify-center">
-              {academicWorkMode ? <Plus size={22} /> : <GraduationCap size={20} />}
+              {academicWorkMode ? <Plus size={22} /> : <LogoMark variant="seal" size={24} inverted />}
             </span>
             <span className="text-[10px] font-semibold mt-1">
               {academicWorkMode ? t("layout.add") : t("layout.work")}
@@ -757,7 +758,7 @@ export function Layout() {
                   }}
                   className="focus-ring w-full flex items-center gap-3 rounded-xl px-3 py-3 text-start hover:bg-[var(--panel-2)]"
                 >
-                  <span className="h-8 w-8 rounded-lg brand-soft-bg flex items-center justify-center">
+                  <span className="h-8 w-8 rounded-lg tone-tile">
                     <Sparkles size={16} />
                   </span>
                   <div>
@@ -876,9 +877,7 @@ function SidebarContent({
               className="sidebar-brand-mark h-10 w-10 rounded-xl object-contain border hairline bg-white p-1"
             />
           ) : (
-            <div className="sidebar-brand-mark h-10 w-10 rounded-xl brand-bg flex items-center justify-center">
-              <span className="font-semibold text-sm">AO</span>
-            </div>
+            <LogoMark variant="tile" size={40} className="sidebar-brand-mark rounded-xl" />
           )}
           <div className="min-w-0">
             <div
@@ -886,10 +885,12 @@ function SidebarContent({
               title={branding.institutionName || "AcademicOS"}
               className="text-base font-semibold tracking-[-0.02em] truncate"
             >
-              {branding.institutionName || "AcademicOS"}
+              {branding.institutionName || <Wordmark size={17} />}
             </div>
-            <div className="text-[10px] muted">
-              AcademicOS · {t("layout.tagline")}
+            <div className="text-[10px] muted truncate">
+              {branding.institutionName
+                ? `AcademicOS · ${t("layout.tagline")}`
+                : t("brand.tagline")}
             </div>
           </div>
         </div>
@@ -937,7 +938,7 @@ function SidebarContent({
           </div>
           <button
             onClick={() => onLogout()}
-            className="focus-ring mt-3 w-full rounded-xl py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 flex items-center justify-center gap-2 border border-red-200/80 dark:border-red-900/40 transition-colors"
+            className="focus-ring mt-3 w-full rounded-xl py-2 text-xs font-semibold text-danger hover:bg-danger/10 flex items-center justify-center gap-2 border border-danger/45 transition-colors"
           >
             <LogOut size={15} />
             <span>{t("layout.logout")}</span>

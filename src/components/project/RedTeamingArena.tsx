@@ -49,18 +49,61 @@ export function RedTeamingArena({ project }: { project: ProjectDNA }) {
   const labels: Record<string,string> = { methodology:t("red.cat.methodology"), sampling:t("red.cat.sampling"), generalizability:t("red.cat.generalizability"), theoretical:t("red.cat.theoretical"), requirements:t("red.cat.requirements"), evidence:t("red.cat.evidence") };
   const filtered = activeCategory === "all" ? argumentsList : argumentsList.filter(a => a.category === activeCategory);
 
-  return <div className="space-y-6">
-    <div className="rounded-2xl border hairline bg-gradient-to-r from-red-500/10 via-rose-500/5 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <div className="flex items-center gap-3.5"><div className="h-11 w-11 rounded-2xl bg-red-500/20 text-red-600 grid place-items-center shrink-0"><Flame size={22}/></div><div><div className="flex items-center gap-2 flex-wrap"><span className="text-[10px] font-bold tracking-wider uppercase text-red-600">{t("ui.evidenceBoundRedTeam")}</span><span className="px-2 py-0.5 rounded-full text-[10px] bg-red-500/15 text-red-700 font-semibold border border-red-500/20">{t("red.badge")}</span></div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("red.title")}</h2><p className="text-xs text-muted-foreground mt-1 max-w-2xl">{t("red.description")}</p></div></div>
-      <Button onClick={handleSimulateAttack} disabled={analyzing} className="bg-red-600 hover:bg-red-700 text-white gap-2 shrink-0">{analyzing ? <RefreshCw size={15} className="animate-spin"/> : <Zap size={15}/>} {analyzing ? t("red.analyzing") : t("red.attack")}</Button>
+  return <div className="space-y-6" data-tone="danger">
+    <div className="studio-head">
+      <div className="flex items-center gap-3.5 min-w-0">
+        <span className="tone-tile h-11 w-11"><Flame size={22}/></span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="eyebrow tone-text">{t("ui.evidenceBoundRedTeam")}</span>
+            <span className="tone-chip">{t("red.badge")}</span>
+          </div>
+          <h2 className="studio-head__title">{t("red.title")}</h2>
+          <p className="text-xs text-muted-foreground mt-1.5 max-w-2xl leading-relaxed">{t("red.description")}</p>
+        </div>
+      </div>
+      <Button variant="danger" onClick={handleSimulateAttack} disabled={analyzing} className="shrink-0">
+        {analyzing ? <RefreshCw size={15} className="animate-spin"/> : <Zap size={15}/>}
+        {analyzing ? t("red.analyzing") : t("red.attack")}
+      </Button>
     </div>
-    {error && <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-800 dark:text-amber-300">{error}</div>}
-    <div className="flex gap-2 flex-wrap text-xs"><button onClick={() => setActiveCategory("all")} className={`px-3 py-1.5 rounded-xl border hairline ${activeCategory === "all" ? "bg-red-600 text-white border-red-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}>{t("red.all")} ({argumentsList.length})</button>{categories.map(cat => <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-3 py-1.5 rounded-xl border hairline ${activeCategory === cat ? "bg-red-600 text-white border-red-600 font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}>{labels[cat] || cat}</button>)}</div>
-    <div className="space-y-4">{filtered.map(item => <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-4 hover:border-red-500/30 transition-colors">
-      <div className="flex items-start justify-between gap-3"><div className="flex items-start gap-2"><span className="h-7 w-7 rounded-lg bg-red-100 dark:bg-red-950/60 text-red-600 grid place-items-center shrink-0"><ShieldAlert size={16}/></span><div><h3 className="font-bold text-sm">{item.challengeTitle}</h3><span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">{item.origin === "ai_review" ? <BrainCircuit size={11}/> : <ShieldCheck size={11}/>} {item.origin === "ai_review" ? t("red.originAi") : t("red.originDna")}</span></div></div>
-        <button onClick={() => toggleStatus(item.id)} className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1.5 ${item.defenseStatus === "strong" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : item.defenseStatus === "addressed" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" : "bg-red-500/10 text-red-600 border-red-500/20"}`}>{item.defenseStatus === "strong" ? <><CheckCircle2 size={12}/>{t("red.closed")}</> : item.defenseStatus === "addressed" ? <><ShieldCheck size={12}/>{t("red.addressed")}</> : <><AlertTriangle size={12}/>{t("red.open")}</>}</button></div>
-      <div className="p-3.5 rounded-xl bg-red-50/40 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 text-xs leading-relaxed"><span className="font-bold block mb-1">{t("red.critique")}:</span>{item.critiqueText}</div>
-      <div className="p-3.5 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-xs leading-relaxed"><span className="font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 mb-1"><Sparkles size={13}/>{t("red.defense")}:</span>{item.suggestedDefense}</div>
-    </div>)}</div>
+
+    {error && <div className="note" data-tone="warning" role="alert"><AlertTriangle size={15}/><span>{error}</span></div>}
+
+    <div className="segmented">
+      <button aria-pressed={activeCategory === "all"} onClick={() => setActiveCategory("all")}>
+        {t("red.all")} <span className="mono-number opacity-70">({argumentsList.length})</span>
+      </button>
+      {categories.map(cat => <button key={cat} aria-pressed={activeCategory === cat} onClick={() => setActiveCategory(cat)}>{labels[cat] || cat}</button>)}
+    </div>
+
+    <div className="space-y-4">{filtered.map(item => {
+      const tone = item.defenseStatus === "strong" ? "success" : item.defenseStatus === "addressed" ? "info" : "danger";
+      return <div key={item.id} className="academic-card panel-flat p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <span className="tone-tile h-8 w-8 rounded-lg"><ShieldAlert size={16}/></span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm leading-snug">{item.challengeTitle}</h3>
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                {item.origin === "ai_review" ? <BrainCircuit size={11}/> : <ShieldCheck size={11}/>}
+                {item.origin === "ai_review" ? t("red.originAi") : t("red.originDna")}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => toggleStatus(item.id)} className="tone-chip focus-ring shrink-0" data-tone={tone}>
+            {item.defenseStatus === "strong" ? <><CheckCircle2 size={12}/>{t("red.closed")}</> : item.defenseStatus === "addressed" ? <><ShieldCheck size={12}/>{t("red.addressed")}</> : <><AlertTriangle size={12}/>{t("red.open")}</>}
+          </button>
+        </div>
+        <div className="note" data-tone="danger">
+          <ShieldAlert size={15}/>
+          <span><strong className="block mb-1">{t("red.critique")}</strong>{item.critiqueText}</span>
+        </div>
+        <div className="note" data-tone="success">
+          <Sparkles size={15}/>
+          <span><strong className="block mb-1">{t("red.defense")}</strong>{item.suggestedDefense}</span>
+        </div>
+      </div>;
+    })}</div>
   </div>;
 }

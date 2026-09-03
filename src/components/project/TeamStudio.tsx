@@ -135,7 +135,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
               </span>
             </div>
             {project.collaborationMode !== "group" ? (
-              <div className="mt-5 rounded-xl bg-[#f7eddd] text-[var(--warning)] dark:bg-[#332a1d] p-4 text-xs leading-6">
+              <div className="mt-5 rounded-xl bg-warning/12 text-warning p-4 text-xs leading-6">
                 {t("team.individualNotice")}
               </div>
             ) : isOwner ? (
@@ -172,7 +172,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
               </div>
             )}
             {error && (
-              <div className="mt-4 rounded-xl border border-[var(--danger)]/20 p-3 text-xs text-[var(--danger)]">
+              <div className="mt-4 rounded-xl border border-[var(--danger)]/20 p-3 text-xs text-danger">
                 {error}
               </div>
             )}
@@ -196,7 +196,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     key={p.userId}
                     className="rounded-full border hairline px-3 py-1.5 text-[10px] flex items-center gap-2"
                   >
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="h-2 w-2 rounded-full bg-success" />
                     <span className="font-semibold">
                       {p.userId === user?.id ? t("team.you") : p.displayName}
                     </span>
@@ -355,7 +355,7 @@ function MemberRow({
   const { t } = useI18n();
   return (
     <div className="rounded-xl border hairline p-3 flex items-center gap-3">
-      <div className="h-9 w-9 rounded-xl brand-soft-bg grid place-items-center">
+      <div className="h-9 w-9 rounded-xl tone-tile">
         <UsersRound size={15} />
       </div>
       <div className="min-w-0 flex-1">

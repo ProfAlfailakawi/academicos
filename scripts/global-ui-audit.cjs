@@ -122,7 +122,9 @@ for(const p of uiPaths){
   }; visit(sf);
 }
 const visibleLiteralLeaks=[];
-const allowedVisibleLiteral=/^(?:L|ProfessorOS|ProfessorOS ·|· AI L|AO|AcademicOS|AcademicOS —|AcademicOS ·|v|K|ESC|SHA-256(?: ·)?|DOI|doi:|BibTeX|Word)$/;
+// Academic + OS are the two halves of the wordmark (brand, never translated);
+// Enter is a keyboard key name, allowed on the same grounds as ESC.
+const allowedVisibleLiteral=/^(?:L|ProfessorOS|ProfessorOS ·|· AI L|AO|AcademicOS|AcademicOS —|AcademicOS ·|Academic|OS|v|K|ESC|Enter|SHA-256(?: ·)?|DOI|doi:|BibTeX|Word)$/;
 for(const p of uiPaths){
   const rel=path.relative(root,p), text=fs.readFileSync(p,'utf8');
   const sf=ts.createSourceFile(p,text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="AcademicOS">
+  <rect width="48" height="48" fill="#0c5d49"/>
+  <g transform="translate(24 24) scale(0.66) translate(-24 -24)">
+    <g fill="none" stroke="#fffefa" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.6 34.6 L24 13.4 L33.4 34.6" stroke-width="3.7"/>
+      <path d="M17.7 27.6 H30.3" stroke-width="3.1"/>
+    </g>
+    <circle cx="37.4" cy="11.6" r="3.2" fill="#d3a56d"/>
+  </g>
+</svg>

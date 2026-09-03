@@ -119,7 +119,7 @@ export function MfaSetup() {
       <div className="absolute top-4 end-4"><LanguageSwitcher compact /></div>
       <Card className="w-full max-w-xl">
         <CardContent className="p-6 md:p-8">
-          <div className="h-12 w-12 rounded-2xl brand-soft-bg flex items-center justify-center">
+          <div className="h-12 w-12 rounded-2xl tone-tile">
             <ShieldCheck size={22} />
           </div>
           <div className="eyebrow brand-text mt-5">{t("mfaSetup.eyebrow")}</div>
@@ -185,7 +185,7 @@ export function MfaSetup() {
               </label>
 
               {error && (
-                <div role="alert" className="text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5">
+                <div role="alert" className="text-xs p-3 rounded-lg bg-danger/10 text-danger border border-danger/20 leading-5">
                   {error}
                 </div>
               )}
@@ -197,7 +197,7 @@ export function MfaSetup() {
           ) : null}
 
           {!secret && !alreadyConfigured && error && (
-            <div role="alert" className="mt-6 text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5">
+            <div role="alert" className="mt-6 text-xs p-3 rounded-lg bg-danger/10 text-danger border border-danger/20 leading-5">
               {error}
             </div>
           )}

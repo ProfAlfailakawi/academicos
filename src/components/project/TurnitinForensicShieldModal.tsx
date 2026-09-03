@@ -86,9 +86,9 @@ export function TurnitinForensicShieldModal({
 
   const riskTone = report
     ? report.styleRiskScore >= 60
-      ? "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/25"
+      ? "bg-danger/10 text-danger border-danger/25"
       : report.styleRiskScore >= 30
-        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+        ? "bg-warning/10 text-warning border-warning/25"
         : "brand-soft-bg brand-text border-[var(--brand)]/20"
     : "";
 
@@ -98,7 +98,7 @@ export function TurnitinForensicShieldModal({
       <div className="relative panel w-full max-w-5xl max-h-[92vh] rounded-[28px] overflow-hidden shadow-2xl">
         <header className="p-5 md:p-6 border-b hairline flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
-            <span className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center shrink-0"><Fingerprint size={21} /></span>
+            <span className="h-12 w-12 rounded-2xl tone-tile shrink-0"><Fingerprint size={21} /></span>
             <div>
               <div className="eyebrow">{t("ui.styleIntegrityGuardian")}</div>
               <h2 className="text-xl md:text-2xl font-bold mt-1">{t("integrity.title")}</h2>
@@ -113,7 +113,7 @@ export function TurnitinForensicShieldModal({
             <div
               role="alert"
               aria-live="polite"
-              className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+              className="rounded-2xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
               {actionError}
             </div>
@@ -171,7 +171,7 @@ export function TurnitinForensicShieldModal({
                 </Button>
               </div>
               {actionError && (
-                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-600">
+                <div className="mt-3 rounded-xl border border-danger/20 bg-danger/8 px-3 py-2 text-xs text-danger">
                   {actionError}
                 </div>
               )}
@@ -219,7 +219,7 @@ export function TurnitinForensicShieldModal({
                     <div className="eyebrow">{t("integrity.signals")}</div>
                     {report.signals.map((signal, index) => (
                       <div key={`${signal.title}-${index}`} className="rounded-xl border hairline p-4 flex gap-3">
-                        <span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${signal.severity === "high" || signal.severity === "critical" ? "bg-amber-500/10 text-[var(--warning)]" : "brand-soft-bg brand-text"}`}>
+                        <span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${signal.severity === "high" || signal.severity === "critical" ? "bg-warning/10 text-warning" : "brand-soft-bg brand-text"}`}>
                           {signal.severity === "low" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
                         </span>
                         <div><strong className="text-sm">{signal.title}</strong><p className="text-xs muted leading-6 mt-1">{signal.description}</p></div>
@@ -236,7 +236,7 @@ export function TurnitinForensicShieldModal({
               {tab === "sentences" && (
                 <div className="space-y-2 max-h-[46vh] overflow-auto pe-1">
                   {report.sentenceBreakdown.map((sentence, index) => (
-                    <div key={index} className={`rounded-xl border p-3 ${sentence.highlightColor === "red" ? "border-red-500/25 bg-red-500/5" : sentence.highlightColor === "orange" ? "border-amber-500/25 bg-amber-500/5" : "hairline"}`}>
+                    <div key={index} className={`rounded-xl border p-3 ${sentence.highlightColor === "red" ? "border-danger/25 bg-danger/8" : sentence.highlightColor === "orange" ? "border-warning/25 bg-warning/8" : "hairline"}`}>
                       <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-[9px] font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
                       <div className="flex flex-wrap gap-1.5 mt-2">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-[9px] muted">{reason}</span>)}</div>
                     </div>

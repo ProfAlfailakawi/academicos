@@ -164,7 +164,7 @@ export function Settings() {
         description={t("settings.description")}
       />
       {h?.incidentBanner && (
-        <div className="rounded-xl bg-[#f7eddd] dark:bg-[#332a1d] p-4 text-sm">
+        <div className="rounded-xl bg-warning/12 p-4 text-sm">
           {h.incidentBanner}
         </div>
       )}
@@ -308,7 +308,7 @@ export function Settings() {
               </div>
             ) : profileLoadError ? (
               <div className="mt-4 rounded-xl border hairline bg-[var(--bg)] p-4">
-                <p className="text-xs text-rose-600">{profileLoadError}</p>
+                <p className="text-xs text-danger">{profileLoadError}</p>
               </div>
             ) : (
               <div className="h-24 soft-bg rounded-xl mt-4 animate-pulse" />
@@ -362,7 +362,7 @@ export function Settings() {
                 </div>
               </div>
               <span
-                className={`h-2.5 w-2.5 rounded-full ${h?.billing?.configured ? "bg-emerald-500" : "bg-amber-500"}`}
+                className={`h-2.5 w-2.5 rounded-full ${h?.billing?.configured ? "bg-success" : "bg-warning"}`}
               />
             </div>
             <Button className="mt-4" asChild><Link to="/app/plans">{t("settings.viewPlans")}</Link></Button>
@@ -497,7 +497,7 @@ export function Settings() {
         <Card className="lg:col-span-2">
           <CardContent>
             <div className="flex items-center gap-2">
-              <Trash2 size={17} className="text-[var(--danger)]" />
+              <Trash2 size={17} className="text-danger" />
               <h2 className="section-title">{t("settings.accountDeletion")}</h2>
             </div>
             <p className="body-copy mt-3">{t("settings.accountDeletionNote")}</p>
@@ -541,7 +541,7 @@ function Service({ label, ok, value }: any) {
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold">{label}</span>
         <span
-          className={`h-2 w-2 rounded-full ${ok ? "bg-emerald-500" : "bg-amber-500"}`}
+          className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
         />
       </div>
       <div className="text-[10px] muted mt-2 truncate">{value}</div>

@@ -181,7 +181,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
       <div className="grid xl:grid-cols-[1fr_.8fr] gap-5">
         <Card>
           <CardContent>
-            <div className="h-12 w-12 rounded-2xl brand-soft-bg grid place-items-center"><GraduationCap size={20} /></div>
+            <div className="h-12 w-12 rounded-2xl tone-tile"><GraduationCap size={20} /></div>
             <div className="eyebrow mt-5">{t("ui.voiceVivaSimulator")}</div>
             <h2 className="text-2xl font-semibold mt-1">{t("viva.heroTitle")}</h2>
             <p className="body-copy mt-3 max-w-2xl">{t("viva.heroDesc")}</p>
@@ -197,7 +197,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               </label>
             </div>
             {session?.status === "completed" && <div className="mt-5 rounded-xl brand-soft-bg p-4 text-sm"><strong>{t("viva.roundComplete")}</strong> {t("viva.roundCompleteDesc")}</div>}
-            {error && <p className="text-xs text-[var(--danger)] mt-3">{error}</p>}
+            {error && <p className="text-xs text-danger mt-3">{error}</p>}
           </CardContent>
         </Card>
         <Learning evidence={evidence} />
@@ -219,7 +219,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
             </div>
             <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-[10px] muted">{answeredCount} {t("viva.answered")}</div></div>
           </div>
-          <div className="h-1.5 rounded-full soft-bg mt-4 overflow-hidden"><div className="h-full brand-bg rounded-full transition-all" style={{ width: `${progress}%` }} /></div>
+          <div className="tone-meter mt-4"><div style={{ width: `${progress}%` }} /></div>
 
           {activeQuestion && <div className="mt-7">
             <div className="rounded-2xl brand-soft-bg p-5">
@@ -241,7 +241,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               )}
             </div>
           </div>}
-          {error && <p className="text-xs text-[var(--danger)] mt-4">{error}</p>}
+          {error && <p className="text-xs text-danger mt-4">{error}</p>}
         </CardContent>
       </Card>
       <Learning evidence={evidence} />

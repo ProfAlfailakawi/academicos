@@ -4,15 +4,243 @@
     <meta charset="UTF-8" />
     <script src="/locale-bootstrap.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f3f5f2" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f5f2" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1411" />
     <meta name="description" content="AcademicOS — The Operating System for Human Learning in the AI Age." />
     <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="mask-icon" href="/icon-mono.svg" color="#0c5d49" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
     <title>AcademicOS — From Assignment to Evidence</title>
+
+    <!-- الخطوط تُحمَّل بلا حجب للرسم الأول: شاشة الإقلاع تظهر فورًا بخط النظام
+         ثم تنتقل إلى IBM Plex Sans Arabic عند جاهزيته. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" />
+    </noscript>
+
+    <!-- يُطبَّق الوضع الليلي قبل أي رسم لمنع وميض الشاشة البيضاء. -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem("academicos-theme") || "light";
+          var dark =
+            theme === "dark" ||
+            (theme === "system" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      /* ---- شاشة الإقلاع: مستقلة تمامًا عن حزمة CSS كي ترسم في أول إطار ---- */
+      :root {
+        --acos-boot-bg: #f3f5f2;
+        --acos-boot-ink: #14201b;
+        --acos-boot-muted: #66716b;
+        --acos-boot-line: #d9dfda;
+        --acos-boot-brand: #0c5d49;
+        --acos-boot-accent: #a8763c;
+        --acos-boot-glow: rgba(12, 93, 73, 0.13);
+        --acos-boot-glow-2: rgba(168, 118, 60, 0.1);
+      }
+      html.dark {
+        --acos-boot-bg: #0e1411;
+        --acos-boot-ink: #edf3ef;
+        --acos-boot-muted: #9da9a2;
+        --acos-boot-line: #2b3731;
+        --acos-boot-brand: #79c5a7;
+        --acos-boot-accent: #d3a56d;
+        --acos-boot-glow: rgba(121, 197, 167, 0.12);
+        --acos-boot-glow-2: rgba(211, 165, 109, 0.08);
+      }
+      html { background: var(--acos-boot-bg); }
+      html.acos-booting, html.acos-booting body { overflow: hidden; }
+
+      #acos-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background:
+          radial-gradient(760px 520px at 50% 8%, var(--acos-boot-glow), transparent 68%),
+          radial-gradient(620px 420px at 12% 92%, var(--acos-boot-glow-2), transparent 72%),
+          var(--acos-boot-bg);
+        color: var(--acos-boot-ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+        opacity: 1;
+        transition: opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      #acos-boot[data-leaving="1"] { opacity: 0; transform: scale(1.03); pointer-events: none; }
+
+      .acos-boot__stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .acos-boot__halo {
+        position: absolute;
+        top: -52px;
+        width: 268px;
+        height: 268px;
+        border-radius: 999px;
+        background: radial-gradient(circle, var(--acos-boot-glow), transparent 62%);
+        animation: acos-boot-halo 3.6s ease-in-out infinite;
+      }
+      @keyframes acos-boot-halo {
+        0%, 100% { transform: scale(0.94); opacity: 0.7; }
+        50% { transform: scale(1.06); opacity: 1; }
+      }
+
+      .acos-boot__mark { position: relative; overflow: visible; }
+      .acos-boot__orbit,
+      .acos-boot__ascent path {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        animation: acos-boot-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      .acos-boot__orbit { animation-duration: 1150ms; animation-delay: 60ms; }
+      .acos-boot__ascent path:nth-child(1) { animation-delay: 200ms; }
+      .acos-boot__ascent path:nth-child(2) { animation-delay: 620ms; }
+      .acos-boot__seal {
+        transform-origin: 50% 50%;
+        transform: scale(0);
+        animation: acos-boot-stamp 620ms cubic-bezier(0.34, 1.32, 0.48, 1) 980ms forwards;
+      }
+      @keyframes acos-boot-draw { to { stroke-dashoffset: 0; } }
+      @keyframes acos-boot-stamp {
+        0% { transform: scale(0); opacity: 0; }
+        60% { transform: scale(1.35); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      .acos-boot__word {
+        position: relative;
+        margin-top: 22px;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        direction: ltr;
+        animation: acos-boot-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 900ms both;
+      }
+      .acos-boot__word i { font-style: normal; color: var(--acos-boot-brand); font-weight: 600; }
+      .acos-boot__tagline {
+        position: relative;
+        margin: 8px 0 0;
+        max-width: 32ch;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: var(--acos-boot-muted);
+        animation: acos-boot-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 1030ms both;
+      }
+      .acos-boot__rail {
+        position: relative;
+        margin-top: 26px;
+        width: 132px;
+        height: 2px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--acos-boot-line);
+        animation: acos-boot-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) 1160ms both;
+      }
+      .acos-boot__rail span {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 42%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, var(--acos-boot-brand), var(--acos-boot-accent), transparent);
+        animation: acos-boot-slide 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+      }
+      @keyframes acos-boot-slide {
+        0% { transform: translateX(-115%); }
+        100% { transform: translateX(275%); }
+      }
+      @keyframes acos-boot-rise {
+        from { opacity: 0; transform: translateY(9px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #acos-boot *,
+        #acos-boot *::before { animation: none !important; transition: none !important; }
+        .acos-boot__orbit,
+        .acos-boot__ascent path { stroke-dashoffset: 0; }
+        .acos-boot__seal { transform: none; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- شاشة الإقلاع تُرسم قبل تحميل حزمة JavaScript، وتُزال فور جاهزية React. -->
+    <div id="acos-boot" role="status" aria-live="polite">
+      <div class="acos-boot__stage">
+        <span class="acos-boot__halo" aria-hidden="true"></span>
+        <svg class="acos-boot__mark" width="92" height="92" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AcademicOS">
+          <path class="acos-boot__orbit" d="M43.92 22.26 A20 20 0 1 1 25.74 4.08" fill="none" stroke="var(--acos-boot-accent)" stroke-width="2.3" stroke-linecap="round" opacity="0.9" pathLength="1" />
+          <g class="acos-boot__ascent" fill="none" stroke="var(--acos-boot-brand)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.2 35.6 L24 12.2 L35.8 35.6" stroke-width="4.2" pathLength="1" />
+            <path d="M16.9 26.2 H31.1" stroke-width="3.4" pathLength="1" />
+          </g>
+          <circle class="acos-boot__seal" cx="38.14" cy="9.86" r="3" fill="var(--acos-boot-accent)" />
+        </svg>
+        <div class="acos-boot__word">Academic<i>OS</i></div>
+        <p class="acos-boot__tagline" id="acos-boot-tagline">From assignment to evidence</p>
+        <div class="acos-boot__rail" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("acos-booting");
+        var taglines = {
+          ar: "من التكليف إلى الدليل",
+          en: "From assignment to evidence",
+          tr: "Ödevden kanıta",
+          zh: "从作业到学习证据",
+          hi: "असाइनमेंट से प्रमाण तक",
+          es: "De la tarea a la evidencia",
+          fr: "Du devoir à la preuve",
+          ur: "اسائنمنٹ سے ثبوت تک",
+        };
+        var node = document.getElementById("acos-boot-tagline");
+        var lang = (root.getAttribute("lang") || "en").slice(0, 2);
+        if (node && taglines[lang]) node.textContent = taglines[lang];
+
+        var splash = document.getElementById("acos-boot");
+        var removed = false;
+        function dismiss() {
+          if (removed || !splash) return;
+          removed = true;
+          splash.setAttribute("data-leaving", "1");
+          root.classList.remove("acos-booting");
+          window.setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 520);
+        }
+        window.__acosBootReady = dismiss;
+        // شبكة أمان: لا تُحتجَز الواجهة خلف الشاشة إذا فشل تحميل الحزمة.
+        window.setTimeout(dismiss, 9000);
+      })();
+    </script>
+
     <noscript>AcademicOS requires JavaScript to run.</noscript>
     <!-- إعداد وقت التشغيل: يُحمّل قبل التطبيق فتُقرأ قيم Firebase من window.__ENV__
          دون إعادة بناء. يمكن لـCloud Run توليد هذا الملف عند الإقلاع من متغيرات البيئة. -->

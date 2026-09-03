@@ -1,12 +1,16 @@
 {
   "name": "AcademicOS",
   "short_name": "AcademicOS",
-  "description": "The Operating System for Human Learning in the AI Age",
+  "description": "From assignment to evidence — the operating system for human learning in the AI age.",
   "start_url": "/app",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f3f5f2",
   "theme_color": "#0c5d49",
-  "lang": "ar",
-  "dir": "rtl",
-  "icons": [{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "dir": "auto",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    { "src": "/icon-mono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "monochrome" }
+  ]
 }

@@ -296,14 +296,14 @@ export function ProjectWriterStudio({
     return (
       <Card className="overflow-hidden">
         <CardContent className="py-12 text-center">
-          <span className="h-16 w-16 rounded-[22px] brand-soft-bg grid place-items-center mx-auto"><WandSparkles size={26} /></span>
+          <span className="h-16 w-16 rounded-[22px] tone-tile mx-auto"><WandSparkles size={26} /></span>
           <h2 className="text-2xl font-semibold mt-5">{t("writer.readyTitle")}</h2>
           <p className="body-copy mt-2 max-w-xl mx-auto">{t("writer.readyDesc")}</p>
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             <Button onClick={() => generate({ mode: "write", assistanceMode: "practice", language: meta.aiName, desiredPages: 12, academicTone: "clear" })}><Sparkles size={16} /> {t("writer.writeDraft")}</Button>
             <Button variant="outline" onClick={() => generate({ mode: "write", assistanceMode: "policy_strict", language: meta.aiName, desiredPages: 12, academicTone: "clear" })}><ShieldCheck size={16} /> {t("writer.strictMode")}</Button>
           </div>
-          {error && <p role="alert" className="text-xs text-[var(--danger)] mt-4">{error}</p>}
+          {error && <p role="alert" className="text-xs text-danger mt-4">{error}</p>}
         </CardContent>
       </Card>
     );
@@ -312,7 +312,7 @@ export function ProjectWriterStudio({
     <div className="space-y-5">
       <ProjectFlow document={document} />
       {document.accessTier === "preview" && (
-        <section className="rounded-[24px] border border-amber-500/30 bg-amber-500/10 p-4 md:p-5">
+        <section className="rounded-[24px] border border-warning/30 bg-warning/10 p-4 md:p-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <span className="h-12 w-12 rounded-2xl bg-[var(--panel)] grid place-items-center shrink-0"><LockKeyhole size={20} /></span>
@@ -323,7 +323,7 @@ export function ProjectWriterStudio({
         </section>
       )}
       {(notice || error) && (
-        <div className={`rounded-xl px-4 py-3 text-xs flex items-start gap-2 ${error ? "bg-red-500/10 text-[var(--danger)]" : "brand-soft-bg"}`} role={error ? "alert" : "status"}>
+        <div className={`rounded-xl px-4 py-3 text-xs flex items-start gap-2 ${error ? "bg-danger/10 text-danger" : "brand-soft-bg"}`} role={error ? "alert" : "status"}>
           {error ? <AlertTriangle size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
           <span>{error || notice}</span>
         </div>
@@ -340,7 +340,7 @@ export function ProjectWriterStudio({
                 <button key={item.id} type="button" onClick={() => setSelectedId(item.id)} className={`section-nav focus-ring w-full rounded-xl p-3 text-start flex items-start gap-3 ${item.id === section?.id ? "is-selected" : ""}`}>
                   <span className="h-7 w-7 rounded-lg soft-bg grid place-items-center text-[10px] font-semibold mono-number">{index + 1}</span>
                   <span className="min-w-0 flex-1"><strong className="block text-xs leading-5">{item.title}</strong><span className="block text-[9px] muted mt-1">{item.wordCount} {t("writer.words")}</span></span>
-                  {item.status === "verified" ? <ShieldCheck size={13} className="text-emerald-600" /> : <span className="h-2 w-2 rounded-full bg-amber-500 mt-1.5" />}
+                  {item.status === "verified" ? <ShieldCheck size={13} className="text-success" /> : <span className="h-2 w-2 rounded-full bg-warning mt-1.5" />}
                 </button>
               ))}
             </div>
@@ -419,7 +419,7 @@ function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
   const stages = mode === "rescue"
     ? [t("writer.stageRead"), t("writer.stageSources"), t("writer.stageStructure"), t("writer.stageExplain")]
     : [t("writer.stageUnderstand"), t("writer.stagePlan"), t("writer.stageWrite"), t("writer.stageViva")];
-  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center"><span className="generation-orb h-20 w-20 rounded-[28px] brand-soft-bg grid place-items-center mx-auto"><LoaderCircle size={30} className="animate-spin" /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">{stages.map((stage, index) => <div key={stage} className="rounded-2xl bg-[var(--bg)] border hairline p-4"><span className="h-8 w-8 rounded-xl brand-soft-bg grid place-items-center mx-auto text-xs font-semibold">{index + 1}</span><div className="text-xs font-semibold mt-3">{stage}</div></div>)}</div><p className="text-[10px] muted mt-6">{t("writer.buildingNote")}</p></CardContent></Card>;
+  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><LoaderCircle size={30} className="animate-spin" /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">{stages.map((stage, index) => <div key={stage} className="rounded-2xl bg-[var(--bg)] border hairline p-4"><span className="h-8 w-8 rounded-xl tone-tile mx-auto text-xs font-semibold">{index + 1}</span><div className="text-xs font-semibold mt-3">{stage}</div></div>)}</div><p className="text-[10px] muted mt-6">{t("writer.buildingNote")}</p></CardContent></Card>;
 }
 
 function ProjectFlow({ document }: { document: ProjectDocument }) {
@@ -441,11 +441,11 @@ function QualityCard({ document }: { document: ProjectDocument }) {
     [t("writer.metricCoherence"), document.quality.coherence],
     [t("writer.metricViva"), document.quality.discussability],
   ] as const;
-  return <Card><CardContent><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{t("writer.health")}</div><h3 className="text-sm font-semibold mt-1">{t("writer.quickPanel")}</h3></div><PanelRightOpen size={17} className="muted" /></div><div className="quality-rings grid grid-cols-2 gap-3 mt-5">{metrics.map(([label, value]) => <div key={label} className="quality-ring" style={{ "--score": value } as React.CSSProperties}><div className="quality-ring__dial"><strong>{value}</strong><span>%</span></div><div className="text-[10px] font-semibold mt-2">{label}</div></div>)}</div>{document.integrityWarnings[0] && <div className="rounded-xl bg-amber-500/10 text-[var(--warning)] p-3 text-[10px] leading-5 mt-4 flex gap-2"><AlertTriangle size={13} className="shrink-0 mt-0.5" />{document.integrityWarnings[0]}</div>}</CardContent></Card>;
+  return <Card><CardContent><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{t("writer.health")}</div><h3 className="text-sm font-semibold mt-1">{t("writer.quickPanel")}</h3></div><PanelRightOpen size={17} className="muted" /></div><div className="quality-rings grid grid-cols-2 gap-3 mt-5">{metrics.map(([label, value]) => <div key={label} className="quality-ring" style={{ "--score": value } as React.CSSProperties}><div className="quality-ring__dial"><strong>{value}</strong><span>%</span></div><div className="text-[10px] font-semibold mt-2">{label}</div></div>)}</div>{document.integrityWarnings[0] && <div className="rounded-xl bg-warning/10 text-warning p-3 text-[10px] leading-5 mt-4 flex gap-2"><AlertTriangle size={13} className="shrink-0 mt-0.5" />{document.integrityWarnings[0]}</div>}</CardContent></Card>;
 }
 
 function XRayPanel({ report, onClose, onOpenViva }: { report: ProjectXRayReport; onClose: () => void; onOpenViva?: () => void }) {
   const { t } = useI18n();
   const scores = Object.entries(report.scores) as Array<[string, number]>;
-  return <div className="fixed inset-0 z-[90] flex items-end md:items-center justify-center p-0 md:p-4"><button className="absolute inset-0 bg-black/35 backdrop-blur-sm" onClick={onClose} aria-label={t("writer.closeXray")} /><section role="dialog" aria-modal="true" aria-labelledby="xray-title" className="relative panel w-full max-w-5xl max-h-[92vh] overflow-auto rounded-t-[28px] md:rounded-[28px]"><div className="sticky top-0 z-10 bg-[var(--panel)] border-b hairline px-5 py-4 flex items-center justify-between gap-4"><div><div className="eyebrow">{t("ui.projectXray")}</div><h2 id="xray-title" className="section-title mt-1">{t("writer.xrayTitle")}</h2></div><Button variant="ghost" size="sm" onClick={onClose}>{t("writer.close")}</Button></div><div className="p-5 md:p-7"><div className="grid grid-cols-2 md:grid-cols-5 gap-3">{scores.map(([key, value]) => <div key={key} className="rounded-2xl soft-bg p-4 text-center"><div className="text-2xl font-semibold mono-number">{value}%</div><div className="text-[10px] muted mt-1">{key}</div></div>)}</div><div className="grid lg:grid-cols-[1.2fr_.8fr] gap-5 mt-6"><div><h3 className="text-sm font-semibold">{t("writer.xrayFindings")}</h3><div className="space-y-2 mt-3">{report.findings.map((finding) => <div key={finding.id} className="rounded-2xl border hairline p-4 flex gap-3"><span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${finding.severity === "good" ? "brand-soft-bg" : finding.severity === "critical" ? "bg-red-500/10 text-[var(--danger)]" : "bg-amber-500/10 text-[var(--warning)]"}`}>{finding.severity === "good" ? <Check size={16} /> : <AlertTriangle size={16} />}</span><div><strong className="text-xs">{finding.title}</strong><p className="text-[11px] leading-5 muted mt-1">{finding.detail}</p><p className="text-[11px] leading-5 mt-2">{finding.action}</p></div></div>)}</div></div><aside><h3 className="text-sm font-semibold">{t("writer.professorQuestions")}</h3><div className="space-y-2 mt-3">{report.professorQuestions.map((question, index) => <div key={question} className="rounded-2xl brand-soft-bg p-4 text-xs leading-6"><span className="font-semibold me-2">{index + 1}.</span>{question}</div>)}</div><Button className="w-full mt-4" onClick={onOpenViva}><Mic2 size={15} /> {t("writer.startViva")}</Button></aside></div></div></section></div>;
+  return <div className="fixed inset-0 z-[90] flex items-end md:items-center justify-center p-0 md:p-4"><button className="absolute inset-0 bg-black/35 backdrop-blur-sm" onClick={onClose} aria-label={t("writer.closeXray")} /><section role="dialog" aria-modal="true" aria-labelledby="xray-title" className="relative panel w-full max-w-5xl max-h-[92vh] overflow-auto rounded-t-[28px] md:rounded-[28px]"><div className="sticky top-0 z-10 bg-[var(--panel)] border-b hairline px-5 py-4 flex items-center justify-between gap-4"><div><div className="eyebrow">{t("ui.projectXray")}</div><h2 id="xray-title" className="section-title mt-1">{t("writer.xrayTitle")}</h2></div><Button variant="ghost" size="sm" onClick={onClose}>{t("writer.close")}</Button></div><div className="p-5 md:p-7"><div className="grid grid-cols-2 md:grid-cols-5 gap-3">{scores.map(([key, value]) => <div key={key} className="rounded-2xl soft-bg p-4 text-center"><div className="text-2xl font-semibold mono-number">{value}%</div><div className="text-[10px] muted mt-1">{key}</div></div>)}</div><div className="grid lg:grid-cols-[1.2fr_.8fr] gap-5 mt-6"><div><h3 className="text-sm font-semibold">{t("writer.xrayFindings")}</h3><div className="space-y-2 mt-3">{report.findings.map((finding) => <div key={finding.id} className="rounded-2xl border hairline p-4 flex gap-3"><span className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 ${finding.severity === "good" ? "brand-soft-bg" : finding.severity === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>{finding.severity === "good" ? <Check size={16} /> : <AlertTriangle size={16} />}</span><div><strong className="text-xs">{finding.title}</strong><p className="text-[11px] leading-5 muted mt-1">{finding.detail}</p><p className="text-[11px] leading-5 mt-2">{finding.action}</p></div></div>)}</div></div><aside><h3 className="text-sm font-semibold">{t("writer.professorQuestions")}</h3><div className="space-y-2 mt-3">{report.professorQuestions.map((question, index) => <div key={question} className="rounded-2xl brand-soft-bg p-4 text-xs leading-6"><span className="font-semibold me-2">{index + 1}.</span>{question}</div>)}</div><Button className="w-full mt-4" onClick={onOpenViva}><Mic2 size={15} /> {t("writer.startViva")}</Button></aside></div></div></section></div>;
 }

@@ -142,7 +142,7 @@ export function AssignmentSubmissions() {
       {error && (
         <div
           role="alert"
-          className="rounded-xl bg-red-500/5 border border-red-500/20 p-3 text-sm text-[var(--danger)]"
+          className="rounded-xl bg-danger/8 border border-danger/20 p-3 text-sm text-danger"
         >
           {error}
         </div>

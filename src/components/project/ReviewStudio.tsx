@@ -318,7 +318,7 @@ export function ReviewStudio({
         </Card>
       </div>
       {error && (
-        <div className="xl:col-span-2 rounded-xl border border-[var(--danger)]/20 bg-[var(--panel)] p-3 text-xs text-[var(--danger)]">
+        <div className="xl:col-span-2 rounded-xl border border-[var(--danger)]/20 bg-[var(--panel)] p-3 text-xs text-danger">
           {error}
         </div>
       )}

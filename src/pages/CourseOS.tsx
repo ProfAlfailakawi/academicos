@@ -343,7 +343,7 @@ export function CourseOS() {
         </div>
       </header>
       {error && (
-        <div className="rounded-xl bg-red-500/5 border border-red-500/20 p-3 text-sm text-red-700 dark:text-red-300">
+        <div className="rounded-xl bg-danger/8 border border-danger/20 p-3 text-sm text-danger">
           {error}
         </div>
       )}
@@ -362,7 +362,7 @@ export function CourseOS() {
                       key={i}
                       className="rounded-xl bg-[var(--bg)] border hairline p-3 flex gap-3"
                     >
-                      <span className="h-6 w-6 rounded-lg brand-soft-bg grid place-items-center text-[10px] font-semibold shrink-0">
+                      <span className="h-6 w-6 rounded-lg tone-tile text-[10px] font-semibold shrink-0">
                         {i + 1}
                       </span>
                       <p className="text-xs leading-6">{o}</p>
@@ -514,7 +514,7 @@ export function CourseOS() {
                         <div className="flex items-start justify-between gap-3">
                           <p className="text-xs leading-6 font-semibold">{o}</p>
                           <span
-                            className={`rounded-full px-2 py-1 text-[9px] shrink-0 ${linked.length ? "brand-soft-bg" : "bg-[#f7eddd] text-[var(--warning)] dark:bg-[#332a1d]"}`}
+                            className={`rounded-full px-2 py-1 text-[9px] shrink-0 ${linked.length ? "brand-soft-bg" : "bg-warning/12 text-warning "}`}
                           >
                             {linked.length} {t("course.assignmentUnit")}
                           </span>
@@ -524,7 +524,7 @@ export function CourseOS() {
                             {linked.map((a) => a.title).join(" · ")}
                           </div>
                         ) : (
-                          <div className="mt-2 text-[10px] text-[var(--warning)]">
+                          <div className="mt-2 text-[10px] text-warning">
                             {t("course.noAssignmentForOutcome")}
                           </div>
                         )}
@@ -654,7 +654,7 @@ export function CourseOS() {
                           ) : (
                             <AlertTriangle
                               size={14}
-                              className="text-[var(--warning)]"
+                              className="text-warning"
                             />
                           )}
                           <span className="text-xs font-semibold">
@@ -677,7 +677,7 @@ export function CourseOS() {
                                   {c.label}
                                 </span>
                                 <span
-                                  className={`text-[9px] ${c.status === "pass" ? "brand-text" : c.status === "critical" ? "text-[var(--danger)]" : "text-[var(--warning)]"}`}
+                                  className={`text-[9px] ${c.status === "pass" ? "brand-text" : c.status === "critical" ? "text-danger" : "text-warning"}`}
                                 >
                                   {runtimeEnumLabel(c.status, locale)}
                                 </span>
@@ -949,7 +949,7 @@ export function CourseOS() {
               </BuilderList>
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-2">
                 <p
-                  className={`text-xs ${totalWeight === 100 ? "brand-text" : "text-[var(--warning)]"}`}
+                  className={`text-xs ${totalWeight === 100 ? "brand-text" : "text-warning"}`}
                 >
                   {totalWeight === 100
                     ? t("course.rubricBalanced")

@@ -58,20 +58,31 @@ export function AppPreferencesProvider({
     localStorage.setItem("academicos-locale", "ar");
   }, []);
 
+  // اللغة والاتجاه مملوكان لـI18nProvider وحده. كان هذا التأثير يعيد فرض
+  // العربية/RTL عند كل تغيير للسمة أو تفضيلات الوصول، فيقلب واجهة المستخدم
+  // الإنجليزي إلى RTL بمجرد تبديل الوضع الليلي.
   useEffect(() => {
     const root = document.documentElement;
-    const dark =
-      theme === "dark" ||
-      (theme === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-    root.classList.toggle("dark", dark);
-    root.dir = locale === "ar" ? "rtl" : "ltr";
-    root.lang = locale;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      root.classList.toggle(
+        "dark",
+        theme === "dark" || (theme === "system" && media.matches),
+      );
+    };
+    apply();
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
     root.classList.toggle("a11y-high-contrast", accessibility.highContrast);
     root.classList.toggle("a11y-large-text", accessibility.largeText);
     root.classList.toggle("a11y-reduced-motion", accessibility.reducedMotion);
     root.classList.toggle("a11y-simplified", accessibility.simplified);
-  }, [theme, locale, accessibility]);
+  }, [accessibility]);
 
   const value = useMemo(
     () => ({

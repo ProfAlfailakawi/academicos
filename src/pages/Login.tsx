@@ -21,6 +21,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { firebaseAuth } from "../lib/firebase";
 import { useI18n } from "../lib/i18n";
 import { Button } from "../components/ui/button";
+import { Logo } from "../components/brand/Logo";
 import { Card, CardContent } from "../components/ui/card";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
@@ -217,11 +218,8 @@ export function Login() {
   return (
     <div className="auth-shell min-h-screen grid lg:grid-cols-[1fr_.8fr] bg-[var(--bg)]">
       <section className="auth-visual hidden lg:flex paper-grid p-10 xl:p-16 flex-col justify-between border-e hairline">
-        <Link to="/" className="flex items-center gap-3 w-fit">
-          <div className="h-10 w-10 rounded-xl brand-bg flex items-center justify-center text-xs font-semibold">
-            AO
-          </div>
-          <div className="font-semibold">AcademicOS</div>
+        <Link to="/" className="focus-ring rounded-2xl w-fit">
+          <Logo markSize={42} caption={t("brand.tagline")} />
         </Link>
         <div className="max-w-xl">
           <div className="eyebrow brand-text">{t("login.journey")}</div>
@@ -245,7 +243,7 @@ export function Login() {
 
             {mfaResolver ? (
               <>
-                <div className="h-12 w-12 rounded-2xl brand-soft-bg flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl tone-tile">
                   <ShieldCheck size={21} />
                 </div>
                 <h1 className="text-2xl font-semibold mt-5">{t("login.mfaTitle")}</h1>
@@ -307,12 +305,12 @@ export function Login() {
                   </label>
 
                   {error && (
-                    <div role="alert" className="text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5">
+                    <div role="alert" className="text-xs p-3 rounded-lg bg-danger/10 text-danger border border-danger/20 leading-5">
                       {error}
                     </div>
                   )}
                   {successMsg && (
-                    <div role="status" className="text-xs p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-start gap-2 leading-5">
+                    <div role="status" className="text-xs p-3 rounded-lg bg-success/10 text-success border border-success/20 flex items-start gap-2 leading-5">
                       <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
                       <div>{successMsg}</div>
                     </div>
@@ -328,7 +326,7 @@ export function Login() {
               </>
             ) : (
               <>
-                <div className="h-12 w-12 rounded-2xl brand-soft-bg flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl tone-tile">
                   {mode === "forgot" ? <KeyRound size={20} /> : <LockKeyhole size={20} />}
                 </div>
                 <h1 className="text-2xl font-semibold mt-5">
@@ -339,7 +337,7 @@ export function Login() {
                 </p>
 
                 {!configured && (
-                  <div role="alert" className="mt-5 text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5">
+                  <div role="alert" className="mt-5 text-xs p-3 rounded-lg bg-danger/10 text-danger border border-danger/20 leading-5">
                     <strong>{t("login.notConfiguredTitle")}</strong><br />
                     {t("login.notConfiguredBody")}
                   </div>
@@ -372,10 +370,10 @@ export function Login() {
                   )}
 
                   {error && (
-                    <div role="alert" className="text-xs p-3 rounded-lg bg-red-500/10 text-[var(--danger)] border border-red-500/20 leading-5">{error}</div>
+                    <div role="alert" className="text-xs p-3 rounded-lg bg-danger/10 text-danger border border-danger/20 leading-5">{error}</div>
                   )}
                   {successMsg && (
-                    <div role="status" className="text-xs p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-start gap-2 leading-5">
+                    <div role="status" className="text-xs p-3 rounded-lg bg-success/10 text-success border border-success/20 flex items-start gap-2 leading-5">
                       <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
                       <div>{successMsg}</div>
                     </div>

@@ -10,23 +10,15 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="mask-icon" href="/icon-mono.svg" color="#0c5d49" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
+    <!-- iOS لا يقرأ SVG لأيقونة الشاشة الرئيسية، ويعرض الشفافية سوداء. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <title>AcademicOS — From Assignment to Evidence</title>
 
-    <!-- الخطوط تُحمَّل بلا حجب للرسم الأول: شاشة الإقلاع تظهر فورًا بخط النظام
-         ثم تنتقل إلى IBM Plex Sans Arabic عند جاهزيته. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
-    />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" />
-    </noscript>
+    <!-- الخط مستضاف ذاتيًا (public/fonts). يُحمَّل مسبقًا الوزنان الأكثر استخدامًا. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/plex-ar-arabic-400.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/plex-ar-arabic-600.woff2" crossorigin />
 
     <!-- يُطبَّق الوضع الليلي قبل أي رسم لمنع وميض الشاشة البيضاء. -->
     <script>

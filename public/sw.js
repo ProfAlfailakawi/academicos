@@ -1,5 +1,5 @@
 const CACHE = 'academicos-shell-v4';
-const SHELL = ['/', '/app', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg', '/icon-mono.svg'];
+const SHELL = ['/', '/app', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg', '/icon-mono.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 // بلا skipWaiting يبقى العامل الجديد في الانتظار ما دام هناك تبويب مفتوح،
 // فيستمر القديم في خدمة هيكل مخزّن يشير إلى أصول نشرة سابقة.
 self.addEventListener('install', event => { self.skipWaiting(); event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).catch(() => undefined)); });

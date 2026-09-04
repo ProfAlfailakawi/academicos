@@ -1,0 +1,10 @@
+.env.example
+package.json
+server.ts
+scripts/configure-firebase-runtime-iam.sh
+scripts/deploy-cloud-run.sh
+scripts/repair-cloud-run-firebase-access.sh
+scripts/static-release-audit.mjs
+tests/security-regressions.test.ts
+PATCH_NOTES_AR.md
+PATCH_MANIFEST.txt

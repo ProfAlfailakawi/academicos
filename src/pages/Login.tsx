@@ -51,6 +51,9 @@ export function Login() {
   const [phoneVerificationId, setPhoneVerificationId] = useState("");
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const location = useLocation();
+  const showcaseMode = Boolean(
+    import.meta.env.DEV && import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_URL,
+  );
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get("mfa") === "enrolled") {
@@ -397,6 +400,28 @@ export function Login() {
                     </div>
                   )}
                 </div>
+
+                {mode === "login" && showcaseMode && (
+                  <div className="mt-6 rounded-2xl brand-soft-bg p-4 border border-[var(--border-subtle)]">
+                    <div className="text-xs font-semibold">{t("login.showcaseTitle")}</div>
+                    <p className="text-[10px] muted leading-5 mt-1">{t("login.showcaseDesc")}</p>
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {[
+                        ["student@showcase.academicos.local", t("login.roleStudent")],
+                        ["professor@showcase.academicos.local", t("login.roleTeacher")],
+                        ["university_admin@showcase.academicos.local", t("login.roleAdmin")],
+                      ].map(([showcaseEmail, label]) => (
+                        <button key={showcaseEmail} type="button" onClick={async () => {
+                          setEmail(showcaseEmail); setPassword("AcademicOS!Showcase2026"); setBusy(true); setError("");
+                          try { await login(showcaseEmail, "AcademicOS!Showcase2026"); }
+                          catch (e: any) { if (e?.code === "auth/multi-factor-auth-required") startMfaChallenge(e); else { setError(mapAuthError(e)); setBusy(false); } }
+                        }} className="focus-ring rounded-xl bg-[var(--panel)] hover:bg-[var(--panel-hover)] px-2 py-2.5 text-[11px] font-semibold border hairline transition-colors shadow-xs">
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-6 pt-5 border-t hairline text-[11px] muted leading-5">
                   <strong>{t("login.firstTimeTitle")}</strong> {t("login.firstTimeDesc")}

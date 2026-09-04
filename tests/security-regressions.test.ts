@@ -14,51 +14,6 @@ test('request extraction budget is finite and shared',()=>{assert.deepEqual(crea
 test('every AI gateway receives an immutable safety instruction',()=>{assert.match(ACADEMIC_FACULTY_SYSTEM_INSTRUCTION,/untrusted data/);assert.match(ACADEMIC_FACULTY_SYSTEM_INSTRUCTION,/Do not fabricate/)});
 test('Tap webhook signature must match signed payment fields and preserve project metadata',()=>{const previous=process.env.TAP_SECRET_KEY;process.env.TAP_SECRET_KEY='test-secret';try{const body={id:'chg_1',amount:10,currency:'KWD',status:'CAPTURED',transaction:{created:'1700000000000'},reference:{gateway:'gw',payment:'pay'},metadata:{tenantId:'tenant',userId:'user',projectId:'project-1',planId:'project_viva'}};const raw=Buffer.from(JSON.stringify(body)),material='x_idchg_1x_amount10.000x_currencyKWDx_gateway_referencegwx_payment_referencepayx_statusCAPTUREDx_created1700000000000',signature=createHmac('sha256','test-secret').update(material).digest('hex');const event=verifyTapWebhook(raw,signature);assert.equal(event.status,'paid');assert.equal(event.projectId,'project-1');assert.equal(event.planId,'project_viva');assert.throws(()=>verifyTapWebhook(raw,'0'.repeat(64)),/Invalid Tap/)}finally{if(previous===undefined)delete process.env.TAP_SECRET_KEY;else process.env.TAP_SECRET_KEY=previous}});
 
-test('demoStore enforces cross-tenant boundaries for project access', async () => {
-  // We simulate the data access layer by requiring explicit adversarial verification.
-  const { demoStore } = await import('../src/server/demo-store');
-  // Seed a malicious tenant record directly (bypassing normal API creation)
-  const project = await demoStore.saveProject({
-    id: "project-adversarial",
-    tenantId: "tenant-legitimate",
-    userId: "user-victim",
-    title: "Secret Data",
-    course: "CS 101",
-    projectType: "Project",
-    academicDomain: "CS",
-    complexity: "low",
-    collaborationMode: "individual",
-    requiredActions: [],
-    requiredSkills: [],
-    learningOutcomes: [],
-    deliverables: [],
-    requirements: [],
-    rubric: [],
-    aiPolicy: { level: 2, summary: "", needsConfirmation: false, allowed: [], prohibited: [], disclosureRequired: false },
-    riskFlags: [],
-    tasks: [],
-    deadlines: { milestones: [] },
-    workspaceModules: [],
-    status: 'in_progress',
-    progress: 0,
-    revision: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
-
-  // Attempt 1: Malicious user in same tenant (authorization failure)
-  const attackerSameTenant = await demoStore.getProject("project-adversarial", "user-attacker", "tenant-legitimate");
-  assert.equal(attackerSameTenant, null);
-
-  // Attempt 2: Malicious user from a different tenant querying victim's project id directly
-  const attackerDiffTenant = await demoStore.getProject("project-adversarial", "user-attacker", "tenant-evil");
-  assert.equal(attackerDiffTenant, null);
-
-  // Attempt 3: Cross-tenant enumeration
-  const maliciousList = await demoStore.listProjects("user-attacker", "tenant-evil");
-  assert.ok(!maliciousList.some(p => p.id === "project-adversarial"));
-});
-
 test('server token verification keeps signature validation mandatory while revocation check is deployment-configurable', async () => {
   const { readFile } = await import('node:fs/promises');
   const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');

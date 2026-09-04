@@ -10,6 +10,7 @@
 
 import type { AcademicTaskInput, AcademicTaskOutput } from './ai';
 import { createHmac } from 'node:crypto';
+import { resolveVariationSecret } from './variation-secret';
 
 export type SolveMode = 'worked' | 'guided';
 
@@ -22,7 +23,7 @@ export interface SolvePolicyContext {
 export interface SolveDecision { mode: SolveMode; reason: string; disclosureRequired: boolean }
 
 export interface SolveVariation { id:string; approach:string; explanation:string; example:string }
-export function buildSolveVariation(userId:string,problem:string,secret=process.env.PROJECT_VARIATION_SECRET||process.env.CSRF_SIGNING_SECRET||'academicos-development-solve-v1'):SolveVariation{
+export function buildSolveVariation(userId:string,problem:string,secret=resolveVariationSecret('solve-v1')):SolveVariation{
   const d=createHmac('sha256',secret).update(`${userId}|${clip(problem,2000)}`).digest();
   const pick=(items:string[],offset:number)=>items[d[offset%d.length]%items.length];
   return{

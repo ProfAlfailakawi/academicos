@@ -37,7 +37,8 @@ const uiCorpus=uiFiles.join('\n');
 
 
 expect('Missing bearer token fails closed',/if \(!token\)[\s\S]{0,220}AUTH_REQUIRED/.test(server),'authenticate() must return 401 without token');
-expect('Firebase token uses Admin SDK verification',server.includes('return getAuth().verifyIdToken(token, checkRevoked)')&&server.includes('const decoded: any = await verifyFirebaseIdToken(token)'),'token acceptance requires Firebase Admin verification');
+expect('Firebase token uses Admin SDK verification',server.includes('getAuth().verifyIdToken(token, checkRevoked)')&&server.includes('const decoded: any = await verifyFirebaseIdToken(token)'),'token acceptance requires Firebase Admin verification');
+expect('Revoked tokens are never downgraded to local verification',server.includes('REVOCATION_FAILURE_CODES')&&/if \(!checkRevoked \|\| REVOCATION_FAILURE_CODES\.has\(code\)\) throw error;/.test(server)&&server.includes('"auth/id-token-revoked"'),'a revoked or disabled token must be rethrown, never retried without the revocation check');
 expect('No unsigned JWT authentication fallback',!/Buffer\.from\(parts\[1\][\s\S]{0,1200}return \{[\s\S]{0,900}uid:/.test(server),'decoded JWT metadata must never become an authenticated actor');
 expect('Unsigned JWT payloads are never trusted',server.includes('Diagnostic only')&&server.includes('acceptance still requires Firebase Admin signature validation')&&!server.includes('safeVerifyToken'),'unverified JWT payload may only be used for diagnostics, never authentication');
 expect('Named Firestore database is explicit',firebaseServices.includes('appletConfig.firestoreDatabaseId')&&firebaseServices.includes('getFirestore(databaseId)'),'backend must use the configured named Firestore database instead of silently targeting (default)');

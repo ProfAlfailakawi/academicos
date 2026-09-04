@@ -10,6 +10,7 @@ import type {
   ProjectXRayReport,
 } from "../types";
 import type { AcademicTaskOutput } from "./ai";
+import { resolveVariationSecret } from "./variation-secret";
 import {
   L,
   joinList,
@@ -356,9 +357,7 @@ function pick<T>(items: T[], digest: Buffer, offset: number) {
 export function buildVariationProfile(
   project: ProjectDNA,
   userId: string,
-  secret = process.env.PROJECT_VARIATION_SECRET ||
-    process.env.CSRF_SIGNING_SECRET ||
-    "academicos-development-variation-v1",
+  secret = resolveVariationSecret("project-variation-v1"),
 ): ProjectVariationProfile {
   const assignmentFingerprint = [
     project.course,

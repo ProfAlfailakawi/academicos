@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAppFirestore } from "./firebase-services";
 import type { Request } from "express";
@@ -29,11 +29,16 @@ export type FairUseAssessment = {
 export type FairUseReservation = { id: string; counterIds: string[]; benefit: string; userId: string };
 
 function now() { return new Date().toISOString(); }
+// Never ship a literal fallback secret: when ABUSE_HASH_SECRET is missing outside
+// production we derive a random per-process value instead of a guessable constant.
+let ephemeralAbuseSecret = "";
 function secret() {
   const value = String(process.env.ABUSE_HASH_SECRET || "").trim();
   if (process.env.NODE_ENV === "production" && value.length < 32)
     throw Object.assign(new Error("ABUSE_HASH_SECRET must be configured for production"), { status: 503, code: "ABUSE_GUARD_NOT_CONFIGURED" });
-  return value || "academicos-development-only-abuse-secret";
+  if (value) return value;
+  if (!ephemeralAbuseSecret) ephemeralAbuseSecret = randomBytes(32).toString("hex");
+  return ephemeralAbuseSecret;
 }
 function hmac(value: string) { return createHmac("sha256", secret()).update(value).digest("hex"); }
 function validHeader(value: unknown) {

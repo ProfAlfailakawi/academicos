@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { createExtractionBudget } from '../src/server/file-extract';
+import { assertSupportedFileContent, createExtractionBudget } from '../src/server/file-extract';
 import { safeCsvCell } from '../src/server/export';
 import { ACADEMIC_FACULTY_SYSTEM_INSTRUCTION } from '../src/server/ai';
 import { assignableRolesFor, canManageUserRole, canSupportImpersonate, normalizeRateRoute, privilegedMfaRequired } from '../src/server/security-controls';
@@ -42,4 +42,48 @@ test('Cloud Run deployment preserves the existing service identity and repairs t
   assert.match(repair, /spec\.template\.spec\.serviceAccountName/);
   assert.match(iam, /RUNTIME_SERVICE_ACCOUNT is required/);
   assert.match(iam, /roles\/datastore\.user/);
+});
+
+test('uploads are validated by content signature, not by the client-declared type', () => {
+  const file = (name: string, mimeType: string, bytes: Buffer) => ({
+    name,
+    mimeType,
+    base64: bytes.toString('base64'),
+    size: bytes.length,
+  });
+  const pdf = Buffer.concat([Buffer.from('%PDF-1.7\n'), Buffer.alloc(64, 0x20)]);
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32)]);
+  const zip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(64)]);
+  const elf = Buffer.concat([Buffer.from([0x7f, 0x45, 0x4c, 0x46]), Buffer.alloc(64)]);
+
+  // Real product uploads keep working.
+  assert.equal(assertSupportedFileContent(file('a.pdf', 'application/pdf', pdf)), 'pdf');
+  assert.equal(assertSupportedFileContent(file('a.png', 'image/png', png)), 'image');
+  assert.equal(
+    assertSupportedFileContent(
+      file('a.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', zip),
+    ),
+    'zip',
+  );
+  // Browsers that fail to sniff a type still send a usable extension.
+  assert.equal(assertSupportedFileContent(file('a.docx', 'application/octet-stream', zip)), 'zip');
+  assert.equal(assertSupportedFileContent(file('a.md', 'text/markdown', Buffer.from('# عنوان\nnote\n'))), 'text');
+
+  // Forged types and unsupported families are rejected.
+  assert.throws(() => assertSupportedFileContent(file('evil.png', 'image/png', elf)), /does not match/);
+  assert.throws(
+    () => assertSupportedFileContent(file('evil.png', 'image/png', Buffer.from('<script>alert(1)</script>'))),
+    /does not match/,
+  );
+  assert.throws(() => assertSupportedFileContent(file('evil.pdf', 'application/pdf', zip)), /does not match/);
+  assert.throws(() => assertSupportedFileContent(file('evil.txt', 'text/plain', elf)), /does not match/);
+  assert.throws(() => assertSupportedFileContent(file('evil.exe', 'application/octet-stream', elf)), /Unsupported file type/);
+  assert.throws(() => assertSupportedFileContent(file('a.txt', 'text/plain', Buffer.alloc(0))), /empty/);
+});
+
+test('the upload validator runs on every file intake path', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  assert.match(server, /function validateFile\([\s\S]{0,1600}assertSupportedFileContent\(file\)/);
+  assert.equal(server.split('forEach(validateFile)').length - 1, 2);
 });

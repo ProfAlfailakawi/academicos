@@ -23,6 +23,7 @@ import { getAppCheck } from "firebase-admin/app-check";
 import appletConfig from "./firebase-applet-config.json";
 import { aiConfigured, aiProviderStatus, getAIProvider } from "./src/server/ai";
 import {
+  assertSupportedFileContent,
   createExtractionBudget,
   extractFileText,
   type IncomingFile,
@@ -368,8 +369,19 @@ const PLATFORM_OWNER_EMAILS: ReadonlySet<string> = new Set(
     .filter(Boolean),
 );
 
-function isPlatformOwnerEmail(emailLower: string): boolean {
-  return emailLower.length > 0 && PLATFORM_OWNER_EMAILS.has(emailLower);
+// The email allow-list is only a BOOTSTRAP fallback for an account that carries
+// no role custom claim yet (see scripts/bootstrap-root.mjs, which is the real
+// mechanism). It requires a verified email so that merely registering an address
+// that appears in the allow-list can never hand out platform ownership.
+function isPlatformOwnerEmail(
+  emailLower: string,
+  emailVerified: boolean,
+): boolean {
+  return (
+    emailVerified &&
+    emailLower.length > 0 &&
+    PLATFORM_OWNER_EMAILS.has(emailLower)
+  );
 }
 
 // Platform-wide (cross-tenant) scope is a property of the ROLE only. It must
@@ -530,14 +542,56 @@ function firebaseAuthErrorResponse(error: any, token: string) {
   };
 }
 
+// Firebase surfaces these codes when the token itself is no longer usable.
+// They are genuine authentication failures and must never be downgraded.
+const REVOCATION_FAILURE_CODES = new Set([
+  "auth/id-token-revoked",
+  "auth/session-cookie-revoked",
+  "auth/user-disabled",
+  "auth/user-not-found",
+]);
+
+// Revocation checking defaults ON in production so a signed-out or compromised
+// session cannot keep using an already-revoked refresh token until it expires.
+// CHECK_REVOKED_ID_TOKENS explicitly overrides the default in either direction,
+// which lets local development and emulator runs skip the extra round trip.
+function shouldCheckRevokedIdTokens(): boolean {
+  const configured = String(process.env.CHECK_REVOKED_ID_TOKENS || "")
+    .trim()
+    .toLowerCase();
+  if (configured === "true" || configured === "1") return true;
+  if (configured === "false" || configured === "0") return false;
+  return process.env.NODE_ENV === "production";
+}
+
+let revocationCheckDegradedLogged = false;
+
 async function verifyFirebaseIdToken(token: string) {
   // Signature, issuer, audience and expiry are always verified locally by the
-  // Admin SDK. Revocation checking is optional because Firebase documents that
-  // checkRevoked=true performs an extra Authentication-backend round trip.
-  // Cloud Run deployments whose runtime service account lacks that extra Auth
-  // permission must not misclassify every otherwise-valid user token as invalid.
-  const checkRevoked = process.env.CHECK_REVOKED_ID_TOKENS === "true";
-  return getAuth().verifyIdToken(token, checkRevoked);
+  // Admin SDK. Revocation checking additionally performs an Authentication
+  // backend round trip, which Cloud Run runtime service accounts may lack the
+  // permission for. A revoked/disabled token is always rejected; only an
+  // infrastructure-level failure of that extra call falls back to local
+  // verification so a missing IAM permission cannot lock every user out.
+  const checkRevoked = shouldCheckRevokedIdTokens();
+  try {
+    return await getAuth().verifyIdToken(token, checkRevoked);
+  } catch (error) {
+    const code = String((error as { code?: string })?.code || "");
+    if (!checkRevoked || REVOCATION_FAILURE_CODES.has(code)) throw error;
+    // Retry without the revocation round trip only if plain verification of the
+    // very same token succeeds; an invalid token still fails here.
+    const decoded = await getAuth().verifyIdToken(token, false);
+    if (!revocationCheckDegradedLogged) {
+      revocationCheckDegradedLogged = true;
+      console.error(
+        "Revocation check unavailable, falling back to local token verification. " +
+          "Grant the runtime service account Firebase Authentication access. Cause:",
+        code || error,
+      );
+    }
+    return decoded;
+  }
 }
 
 async function authenticate(
@@ -565,7 +619,12 @@ async function authenticate(
     const decoded: any = await verifyFirebaseIdToken(token);
 
     const emailLower = String(decoded.email || "").toLowerCase();
-    const defaultRole = isPlatformOwnerEmail(emailLower) ? "superadmin" : "student";
+    const defaultRole = isPlatformOwnerEmail(
+      emailLower,
+      Boolean(decoded.email_verified),
+    )
+      ? "superadmin"
+      : "student";
     const role = normalizeServerRole(decoded.role, defaultRole);
     const tenantId = String(decoded.tenantId || `individual_${decoded.uid}`);
     const impersonatorId = decoded.impersonatorId
@@ -889,6 +948,9 @@ function validateFile(file?: IncomingFile) {
       status: 400,
       code: "INVALID_FILE_SIZE",
     });
+  // The declared mimeType and extension come from the client and are forgeable,
+  // so the real leading bytes decide which family the upload belongs to.
+  assertSupportedFileContent(file);
 }
 type RateBucket = {
   minute: number;
@@ -1148,13 +1210,21 @@ function userTenantId(user: {
 }) {
   return String(user.customClaims?.tenantId || `individual_${user.uid}`);
 }
-function userRole(user: { email?: string; customClaims?: Record<string, unknown> }): UserRole {
+function userRole(user: {
+  email?: string;
+  emailVerified?: boolean;
+  customClaims?: Record<string, unknown>;
+}): UserRole {
+  // An explicit role custom claim is authoritative — this mirrors what
+  // authenticate() enforces on the request path, so an administrative demotion
+  // is not silently undone here. The env allow-list is only the fallback for an
+  // account that has no role claim yet.
+  const role = String(user.customClaims?.role || "");
+  if (ALL_ROLES.includes(role as UserRole)) return role as UserRole;
   const emailLower = String(user.email || "").toLowerCase();
-  if (isPlatformOwnerEmail(emailLower)) {
+  if (isPlatformOwnerEmail(emailLower, Boolean(user.emailVerified)))
     return "superadmin";
-  }
-  const role = String(user.customClaims?.role || "student");
-  return ALL_ROLES.includes(role as UserRole) ? (role as UserRole) : "student";
+  return "student";
 }
 function toAdminUserRecord(user: any): AdminUserRecord {
   return {

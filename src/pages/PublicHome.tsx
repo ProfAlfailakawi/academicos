@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Logo } from "../components/brand/Logo";
+import { HeroJourney } from "../components/brand/HeroJourney";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
@@ -42,8 +43,8 @@ export function PublicHome() {
               <div className="flex flex-wrap gap-3 mt-8"><Button size="lg" asChild><Link to="/login">{t("landing.startProject")} <ArrowRight size={17} className="directional-icon" /></Link></Button><Button size="lg" variant="outline" asChild><a href="#how">{t("landing.seeJourney")}</a></Button></div>
               <div className="grid grid-cols-3 gap-2 mt-8 max-w-xl"><Proof icon={Languages} label={t("landing.proofLanguage")} /><Proof icon={ShieldCheck} label={t("landing.proofSources")} /><Proof icon={Users} label={t("landing.proofPersonal")}/></div>
             </div>
-            <div className="student-hero-visual">
-              <img src="/assets/academicos-project-journey.png" alt={t("landing.heroImageAlt")} />
+            <div className="student-hero-visual" role="img" aria-label={t("landing.heroImageAlt")}>
+              <HeroJourney />
               <div className="hero-result-card"><FileCheck2 size={18} /><span><strong>92%</strong> {t("landing.vivaReady")}</span></div>
             </div>
           </div>

@@ -789,13 +789,22 @@ a:hover > .acos-lockup .acos-mark__seal,
   :root.dark .brand-hero { background: linear-gradient(135deg, #123a2f, #0a231c 74%); }
 
   /* الرسمة تحمل خلفية فاتحة داخل الملف نفسه؛ تهدئتها ليلًا تُجلسها داخل السطح. */
-  :root.dark .student-hero-visual > img,
-  :root.dark .journey-illustration img {
-    filter: brightness(0.84) contrast(1.03) saturate(0.94);
-  }
-  :root.dark .journey-illustration { background: color-mix(in srgb, var(--accent) 10%, var(--panel)) !important; }
+  /* الرسمة متجهة الآن وتقرأ التوكنز، فلا تحتاج تصحيحًا في الوضع الليلي. */
 
   /* حارس: وسوم إجراءات ترويسة الصفحة لا تُضغط حتى ينكسر النص العربي داخلها. */
   .page-header__action label { align-items: center; }
   .page-header__action label > span { flex: 0 0 auto; white-space: nowrap; }
+
+  /* رسمة الهيرو المتجهة: تملأ فتحتها وتتنفّس مسارها الذهبي بلطف. */
+  .hero-journey { display: block; width: 100%; height: 100%; }
+  .student-hero-visual > .hero-journey {
+    border-radius: 34px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+    background: transparent;
+  }
+  .hj-path { stroke-dasharray: 6 8; animation: hj-flow 2.4s linear infinite; }
+  @keyframes hj-flow { to { stroke-dashoffset: -28; } }
+  @media (prefers-reduced-motion: reduce) { .hj-path { animation: none; } }
+  .a11y-reduced-motion .hj-path { animation: none; }
 }

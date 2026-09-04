@@ -2,6 +2,7 @@ import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ArrowRight, Award, Bell, BookOpenCheck, BrainCircuit, CalendarDays, Camera, CheckCircle2, Clock3, FileHeart, FilePenLine, FileText, FolderOpen, GraduationCap, LoaderCircle, Mic2, Paperclip, ScanSearch, ShieldCheck, Sparkles, Target, WandSparkles, X, Zap } from "lucide-react";
+import { HeroJourney } from "../components/brand/HeroJourney";
 import { api } from "../lib/api";
 import type { LearningBrain, MissionControlPlan, ProjectDNA, UserProfile } from "../types";
 import { useAuth } from "../contexts/AuthContext";
@@ -204,7 +205,7 @@ export function MissionControl() {
         <div className="flex gap-2 flex-wrap mt-3" aria-label={t("mission.optionalRouting")}>{(["auto","write","rescue","exam"] as Intent[]).map((value)=><button key={value} onClick={()=>setIntent(value)} className={`focus-ring rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all ${intent===value?"bg-[var(--brand)] text-white border-[var(--brand)] shadow-xs":"bg-[var(--panel)] text-[var(--ink)] border-[var(--line-strong)] hover:bg-[var(--panel-2)]"}`}>{t(`mission.intent.${value}`)}{value==="auto"&&canGo?` · ${t("mission.routesTo")} ${intentLabel(resolvedIntent)}`:""}</button>)}</div>
         {error&&<div role="alert" className="mt-3 rounded-xl bg-danger/15 border border-danger/30 text-danger p-3.5 text-xs font-medium leading-relaxed">{error}</div>}
       </div>
-      <div className="journey-illustration relative min-h-[330px] bg-[var(--accent-soft)] overflow-hidden"><img src="/assets/academicos-project-journey.png" alt={t("mission.imageAlt")} className="absolute inset-0 h-full w-full object-cover"/><div className="absolute inset-x-5 bottom-5 panel rounded-2xl p-4 backdrop-blur-sm border hairline"><div className="flex items-center gap-2 text-xs font-semibold"><Zap size={14} className="brand-text"/>{t("mission.valueFirst")}</div><p className="text-[10px] muted leading-5 mt-1">{t("mission.valueFirstDesc")}</p></div></div>
+      <div className="journey-illustration relative min-h-[330px] overflow-hidden" role="img" aria-label={t("mission.imageAlt")}><HeroJourney className="absolute inset-0 h-full w-full"/><div className="absolute inset-x-5 bottom-5 panel rounded-2xl p-4 backdrop-blur-sm border hairline"><div className="flex items-center gap-2 text-xs font-semibold"><Zap size={14} className="brand-text"/>{t("mission.valueFirst")}</div><p className="text-[10px] muted leading-5 mt-1">{t("mission.valueFirstDesc")}</p></div></div>
     </div></section>
 
     {mission&&<section className="grid xl:grid-cols-[1.25fr_.75fr] gap-5"><Card className="overflow-hidden"><CardContent>

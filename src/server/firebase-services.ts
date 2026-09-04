@@ -26,9 +26,16 @@ export function firestoreDatabaseId(env: NodeJS.ProcessEnv = process.env) {
   return String(appletConfig.firestoreDatabaseId || "(default)").trim() || "(default)";
 }
 
+// يُهيّأ مرة واحدة: الحقول الاختيارية (وصف/فصل دراسي غائب) تصل كـundefined،
+// والـAdmin SDK يرفضها افتراضيًا فتفشل كل كتابة تحمل حقلًا غير معبّأ بخطأ داخلي.
+let firestoreInstance: ReturnType<typeof getFirestore> | null = null;
 export function getAppFirestore(env: NodeJS.ProcessEnv = process.env) {
+  if (firestoreInstance) return firestoreInstance;
   const databaseId = firestoreDatabaseId(env);
-  return databaseId === "(default)" ? getFirestore() : getFirestore(databaseId);
+  const instance = databaseId === "(default)" ? getFirestore() : getFirestore(databaseId);
+  try { instance.settings({ ignoreUndefinedProperties: true }); } catch { /* settings مقفلة بعد أول استخدام */ }
+  firestoreInstance = instance;
+  return instance;
 }
 
 /** Resolve the Admin Storage bucket from deployment env or the checked-in Firebase applet config. */

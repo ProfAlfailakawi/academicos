@@ -10,6 +10,7 @@ import { StatusPill } from '../components/StatusPill';
 import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDate, formatDateTime, useI18n } from '../lib/i18n';
+import { localizedUiError } from '../lib/ui-error';
 
 
 export function Dashboard() {
@@ -17,7 +18,7 @@ export function Dashboard() {
   const { t, locale } = useI18n();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState('');
-  useEffect(() => { api.dashboard().then(r => setSummary(r.summary)).catch(e => setError(e.message)); }, []);
+  useEffect(() => { api.dashboard().then(r => setSummary(r.summary)).catch(e => { console.error(e); setError(localizedUiError(e, t)); }); }, []);
 
   const nextProject = useMemo(() => summary?.projects.find(p => p.status !== 'completed' && p.nextAction) || summary?.projects[0], [summary]);
   if (error) return <ErrorBox message={error} />;

@@ -7,6 +7,7 @@ import{PageHeader}from'../components/PageHeader';
 import{Card,CardContent}from'../components/ui/card';
 import{Button}from'../components/ui/button';
 import{formatDateTime,useI18n}from'../lib/i18n';
+import{localizedUiError}from'../lib/ui-error';
 import{roleTranslationKey}from'../lib/role-labels';
 
 const academic:UserRole[]=['student','student_group_leader','teaching_assistant','professor','course_coordinator','department_admin','college_admin','ai_governance_officer','accreditation_officer','employer'];
@@ -15,9 +16,9 @@ type Pending={user:AdminUserRecord;patch:{role?:UserRole;disabled?:boolean};labe
 export function UserManagement(){
  const{t,locale}=useI18n();
  const{user}=useAuth();const[items,setItems]=useState<AdminUserRecord[]>([]);const[loading,setLoading]=useState(true);const[query,setQuery]=useState('');const[error,setError]=useState('');const[pending,setPending]=useState<Pending|null>(null);const[reason,setReason]=useState('');const[saving,setSaving]=useState(false);const[nextPage,setNextPage]=useState<string|null>(null);const roles=allowed(user?.role);
- function load(pageToken?:string){setLoading(true);api.adminUsers(pageToken).then(r=>{setItems(v=>pageToken?[...v,...r.users.filter(x=>!v.some(y=>y.id===x.id))]:r.users);setNextPage(r.nextPageToken)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))}useEffect(()=>load(),[]);
+ function load(pageToken?:string){setLoading(true);api.adminUsers(pageToken).then(r=>{setItems(v=>pageToken?[...v,...r.users.filter(x=>!v.some(y=>y.id===x.id))]:r.users);setNextPage(r.nextPageToken)}).catch(e=>{console.error(e);setError(localizedUiError(e,t))}).finally(()=>setLoading(false))}useEffect(()=>load(),[]);
  const filtered=useMemo(()=>{const q=query.trim().toLowerCase();return q?items.filter(x=>[x.displayName,x.email,x.role,x.id].filter(Boolean).join(' ').toLowerCase().includes(q)):items},[items,query]);
- async function apply(){if(!pending||!reason.trim())return;setSaving(true);setError('');try{const r=await api.updateAdminUser(pending.user.id,{...pending.patch,reason:reason.trim()});setItems(v=>v.map(x=>x.id===r.user.id?r.user:x));setPending(null);setReason('')}catch(e:any){setError(e.message)}finally{setSaving(false)}}
+ async function apply(){if(!pending||!reason.trim())return;setSaving(true);setError('');try{const r=await api.updateAdminUser(pending.user.id,{...pending.patch,reason:reason.trim()});setItems(v=>v.map(x=>x.id===r.user.id?r.user:x));setPending(null);setReason('')}catch(e:any){console.error(e);setError(localizedUiError(e,t))}finally{setSaving(false)}}
  return <div className="space-y-6"><PageHeader eyebrow={t("ui.rbacTenantScoped")} title={t('users.pageTitle')} description={t('users.pageDesc')}/>
   {error&&<div className="rounded-xl border border-[var(--danger)]/20 p-3 text-sm text-danger">{error}</div>}
   <Card><CardContent><div className="flex flex-col md:flex-row md:items-center gap-3 justify-between"><div><div className="eyebrow">{t("ui.directory")}</div><h2 className="section-title mt-1">{t('users.tenantUsers')}</h2></div><label className="relative w-full md:w-80"><Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 muted"/><input className="field ps-9" value={query} onChange={e=>setQuery(e.target.value)} placeholder={t('users.searchPh')}/></label></div>

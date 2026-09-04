@@ -293,9 +293,13 @@ export const firestoreStore = {
   async listTenantProjects(
     tenantId: string,
     limit = 100,
+    platformScope = false,
   ): Promise<TenantProjectSummary[]> {
+    // Platform-wide scope is granted ONLY by an explicit role decision made at
+    // the route (never inferred from a tenant id that happens to be empty or to
+    // start with "individual_"). Without it we always filter by tenantId.
     let query: any = db().collection(COLLECTIONS.projects);
-    if (tenantId && !tenantId.startsWith("individual_")) {
+    if (!platformScope) {
       query = query.where("tenantId", "==", tenantId);
     }
     const snap = await query
@@ -417,6 +421,7 @@ export const firestoreStore = {
     project: ProjectDNA,
     actorId: string,
     summary = "Project state updated",
+    expectedRevision?: number,
   ) {
     const ref = db().collection(COLLECTIONS.projects).doc(project.id);
     let persisted: ProjectDNA = project;
@@ -435,6 +440,17 @@ export const firestoreStore = {
         throw Object.assign(new Error("Project scope mismatch"), {
           status: 403,
           code: "FORBIDDEN",
+        });
+      // Optimistic concurrency: when the caller declares the revision it based
+      // its edit on, reject silent last-write-wins clobbering of a newer state.
+      if (
+        typeof expectedRevision === "number" &&
+        Number(current.revision || 1) !== expectedRevision
+      )
+        throw Object.assign(new Error("Project was modified by someone else"), {
+          status: 409,
+          code: "REVISION_CONFLICT",
+          currentRevision: Number(current.revision || 1),
         });
       const nextRevision = Math.max(1, Number(current.revision || 1)) + 1;
       persisted = { ...project, revision: nextRevision };
@@ -867,6 +883,14 @@ export const firestoreStore = {
           status: 403,
           code: "SUBMISSION_SCOPE",
         });
+      // Released grades are immutable. Re-check inside the transaction so two
+      // overlapping grade writes cannot clobber an already-released grade
+      // after both passed a stale pre-release read outside the transaction.
+      if (current.status === "released")
+        throw Object.assign(
+          new Error("Released grades are immutable."),
+          { status: 409, code: "GRADE_RELEASED" },
+        );
       persisted = firestoreSafe({
         ...current,
         ...patch,
@@ -1872,9 +1896,9 @@ export const firestoreStore = {
     const ticket = doc.data() as SupportTicket;
     return ticket.tenantId === tenantId ? ticket : null;
   },
-  async countUsers(tenantId?: string) {
+  async countUsers(tenantId?: string, platformScope = false) {
     let query: any = db().collection(COLLECTIONS.users);
-    if (tenantId && !tenantId.startsWith("individual_")) {
+    if (!platformScope && tenantId) {
       query = query.where("tenantId", "==", tenantId);
     }
     let count = 0;
@@ -1890,16 +1914,18 @@ export const firestoreStore = {
     }
     return count;
   },
-  async getControlPlane(tenantId: string): Promise<ControlPlaneData> {
-    const projects = await this.listTenantProjects(tenantId, 150);
-    const isPlatformTenant = !tenantId || tenantId.startsWith("individual_");
+  async getControlPlane(
+    tenantId: string,
+    platformScope = false,
+  ): Promise<ControlPlaneData> {
+    const projects = await this.listTenantProjects(tenantId, 150, platformScope);
 
     let auditQuery: any = db().collection(COLLECTIONS.auditLogs);
     let aiQuery: any = db().collection(COLLECTIONS.aiRuns);
     let incidentQuery: any = db().collection(COLLECTIONS.securityEvents).where("status", "==", "open");
     let supportQuery: any = db().collection(COLLECTIONS.supportTickets);
 
-    if (!isPlatformTenant) {
+    if (!platformScope) {
       auditQuery = auditQuery.where("tenant", "==", tenantId);
       aiQuery = aiQuery.where("tenantId", "==", tenantId);
       incidentQuery = incidentQuery.where("tenantId", "==", tenantId);
@@ -1908,7 +1934,7 @@ export const firestoreStore = {
 
     const [users, auditSnap, aiSnap, incidentSnap, supportSnap] =
       await Promise.all([
-        this.countUsers(tenantId),
+        this.countUsers(tenantId, platformScope),
         auditQuery.limit(50).get(),
         aiQuery.limit(500).get(),
         incidentQuery.limit(100).get(),

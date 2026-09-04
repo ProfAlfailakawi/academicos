@@ -372,6 +372,20 @@ function isPlatformOwnerEmail(emailLower: string): boolean {
   return emailLower.length > 0 && PLATFORM_OWNER_EMAILS.has(emailLower);
 }
 
+// Platform-wide (cross-tenant) scope is a property of the ROLE only. It must
+// never be inferred from a tenant id that is empty or starts with "individual_"
+// — a privileged actor whose token simply lacks a tenant claim is NOT a
+// platform admin and must stay scoped to its own (individual) tenant.
+const CROSS_TENANT_PLATFORM_ROLES = new Set<UserRole>([
+  "national_admin",
+  "admin",
+  "superadmin",
+  "root_owner",
+]);
+function isPlatformScopeActor(actor: { role: UserRole }): boolean {
+  return CROSS_TENANT_PLATFORM_ROLES.has(actor.role);
+}
+
 function normalizeServerRole(rawValue: unknown, fallback: UserRole): UserRole {
   const normalized = String(rawValue || "")
     .trim()
@@ -2048,6 +2062,24 @@ async function startServer() {
                 status: 400,
                 code: "PAYMENT_METADATA_INVALID",
               });
+            // Defense in depth: never unlock a plan the captured amount does not
+            // cover, even though the Checkout Session is created server-side.
+            // Stripe amounts are in minor units (cents) → convert to major.
+            const capturedMajor =
+              Number(
+                object.amount_total || object.amount_paid || object.amount || 0,
+              ) / 100;
+            if (
+              paymentCoversPlan({
+                planId,
+                amount: capturedMajor,
+                currency: String(object.currency || "USD"),
+              }) === false
+            )
+              throw Object.assign(
+                new Error("Captured amount does not cover the requested plan"),
+                { status: 400, code: "PAYMENT_AMOUNT_MISMATCH" },
+              );
             await platformStore.grantProjectEntitlement({
               tenantId,
               userId,
@@ -3239,7 +3271,7 @@ async function startServer() {
         return res
           .status(401)
           .json({ error: "Invalid API key or scope", code: "API_KEY_INVALID" });
-      const control = await firestoreStore.getControlPlane(key.tenantId);
+      const control = await firestoreStore.getControlPlane(key.tenantId, false);
       res.json({
         data: {
           tenantId: key.tenantId,
@@ -6346,19 +6378,19 @@ async function startServer() {
             .status(404)
             .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
         const format = String(req.query.format || "zip").toLowerCase();
-        if (format !== "json") {
-          const access = await platformStore.projectEntitlementAccess(
-            a.tenantId,
-            a.userId,
-            project.id,
-          );
-          if (!access.canExport)
-            return res.status(402).json({
-              error: tx(SRV.exportNeedsUnlock, reqLocale(req)),
-              code: "PROJECT_EXPORT_PAYMENT_REQUIRED",
-              access,
-            });
-        }
+        // Export is a paid feature for ALL formats. json is a structured,
+        // downloadable copy of the workspace too, so it must be gated as well.
+        const access = await platformStore.projectEntitlementAccess(
+          a.tenantId,
+          a.userId,
+          project.id,
+        );
+        if (!access.canExport)
+          return res.status(402).json({
+            error: tx(SRV.exportNeedsUnlock, reqLocale(req)),
+            code: "PROJECT_EXPORT_PAYMENT_REQUIRED",
+            access,
+          });
         const workspaceArtifacts = await firestoreStore.listWorkspaceArtifacts(
           project.id,
           a.tenantId,
@@ -7347,9 +7379,14 @@ async function startServer() {
             error: "Invalid assistance mode",
             code: "PROJECT_ASSISTANCE_MODE_INVALID",
           });
+        // Clamp to the entitled plan's own page allowance, not the global max,
+        // so a lower-tier plan cannot request a higher-tier length.
+        const planPageCap = access.planId
+          ? billingPlan(access.planId)?.pages ?? 35
+          : 35;
         const targetPages = Math.max(
           3,
-          Math.min(35, Number(req.body?.desiredPages || 12)),
+          Math.min(planPageCap, Number(req.body?.desiredPages || 12)),
         );
         const request: ProjectWriterRequest = {
           mode,
@@ -9635,7 +9672,7 @@ async function startServer() {
     async (req: AuthenticatedRequest, res, next) => {
       try {
         const a = req.actor!;
-        const control = await firestoreStore.getControlPlane(a.tenantId);
+        const control = await firestoreStore.getControlPlane(a.tenantId, isPlatformScopeActor(a));
         control.system = {
           mode: "production",
           firebase: firebaseInitialized,
@@ -9686,7 +9723,7 @@ async function startServer() {
         let submissions: CourseSubmissionRecord[];
         {
           [control, courses, assignments, submissions] = await Promise.all([
-            firestoreStore.getControlPlane(a.tenantId),
+            firestoreStore.getControlPlane(a.tenantId, isPlatformScopeActor(a)),
             firestoreStore.listCourses(a.tenantId),
             firestoreStore.listTenantAssignments(a.tenantId),
             firestoreStore.listTenantSubmissions(a.tenantId, 1000),
@@ -9761,9 +9798,7 @@ async function startServer() {
         const target = await getAuth().getUser(String(req.params.uid));
         const targetTenant = userTenantId(target as any),
           targetRole = userRole(target as any);
-        const isPlatformAdmin =
-          ["superadmin", "admin", "root_owner", "national_admin", "university_admin"].includes(a.role) ||
-          a.tenantId.startsWith("individual_");
+        const isPlatformAdmin = isPlatformScopeActor(a);
         if (!isPlatformAdmin && targetTenant !== a.tenantId)
           return res.status(403).json({
             error: "User is outside the authenticated tenant",
@@ -9826,10 +9861,12 @@ async function startServer() {
           limit = Math.min(200, Math.max(20, Number(req.query.limit || 100))),
           pageToken = cleanField(req.query.pageToken, 1000) || undefined;
         const page = await getAuth().listUsers(limit, pageToken);
-        const isPlatformAdmin =
-          ["superadmin", "admin", "root_owner", "national_admin", "university_admin"].includes(a.role) ||
-          a.tenantId.startsWith("individual_");
-        const filterTenant = (req.query.tenantId as string) || (isPlatformAdmin ? undefined : a.tenantId);
+        const isPlatformAdmin = isPlatformScopeActor(a);
+        // Only a platform-scope admin may target another tenant via ?tenantId.
+        // A tenant-scoped admin is always pinned to its own tenant.
+        const filterTenant = isPlatformAdmin
+          ? ((req.query.tenantId as string) || undefined)
+          : a.tenantId;
 
         let rawUsers = page.users;
         if (filterTenant) {
@@ -9872,9 +9909,7 @@ async function startServer() {
           target = await auth.getUser(uid);
         const targetTenant = userTenantId(target as any),
           targetRole = userRole(target as any);
-        const isPlatformAdmin =
-          ["superadmin", "admin", "root_owner", "national_admin", "university_admin"].includes(a.role) ||
-          a.tenantId.startsWith("individual_");
+        const isPlatformAdmin = isPlatformScopeActor(a);
         if (!isPlatformAdmin && targetTenant !== a.tenantId)
           return res.status(403).json({
             error: "User is outside the authenticated tenant",
@@ -9954,7 +9989,7 @@ async function startServer() {
     async (req: AuthenticatedRequest, res, next) => {
       try {
         const a = req.actor!;
-        const control = await firestoreStore.getControlPlane(a.tenantId);
+        const control = await firestoreStore.getControlPlane(a.tenantId, isPlatformScopeActor(a));
         res.json({
           success: true,
           metrics: control.metrics,

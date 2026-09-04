@@ -34,6 +34,7 @@ export function AppDialog({
 }: AppDialogProps) {
   const { t } = useI18n();
   const firstField = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +59,26 @@ export function AppDialog({
         event.preventDefault();
         void onConfirm();
       }
+
+      // Trap Tab focus inside the dialog so keyboard focus cannot escape to the
+      // page behind the modal.
+      if (event.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          const active = document.activeElement as HTMLElement | null;
+          if (event.shiftKey && active === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && active === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -80,6 +101,7 @@ export function AppDialog({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-dialog-title"

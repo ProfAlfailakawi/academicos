@@ -105,7 +105,7 @@ export function AppDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-dialog-title"
-        className="w-full max-w-lg rounded-3xl border hairline bg-[var(--surface)] shadow-2xl"
+        className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-y-auto overscroll-contain rounded-3xl border hairline bg-[var(--surface)] shadow-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b hairline p-5">
           <div>

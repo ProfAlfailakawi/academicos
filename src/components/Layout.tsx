@@ -980,13 +980,13 @@ function MobileNav({ item }: { item: NavItem }) {
       end={item.end}
       className={({ isActive }) =>
         cn(
-          "mobile-nav-link focus-ring min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px]",
+          "mobile-nav-link focus-ring min-w-0 min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px]",
           isActive ? "brand-text font-semibold" : "muted",
         )
       }
     >
-      <Icon size={18} />
-      <span>{t(item.short)}</span>
+      <Icon size={18} className="shrink-0" />
+      <span className="max-w-full truncate px-0.5">{t(item.short)}</span>
     </NavLink>
   );
 }

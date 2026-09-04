@@ -1910,10 +1910,22 @@ async function startServer() {
       "camera=(self), microphone=(self), geolocation=()",
     );
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+    // CSP notes (see SECURITY-TODO.md):
+    //  - 'unsafe-inline' is load-bearing: index.html ships two inline <script>
+    //    blocks (theme-flash guard and boot splash) and an inline <style>, and
+    //    the UI uses React inline style props. Removing it blanks the app.
+    //  - 'unsafe-eval' is kept for Google reCAPTCHA Enterprise, which backs
+    //    Firebase App Check and phone-auth RecaptchaVerifier. None of our own
+    //    bundles use eval/new Function, so set CSP_ALLOW_UNSAFE_EVAL=false to
+    //    drop it once reCAPTCHA has been verified in a live browser session.
+    const allowUnsafeEval =
+      String(process.env.CSP_ALLOW_UNSAFE_EVAL || "").trim().toLowerCase() !==
+      "false";
+    const evalSource = allowUnsafeEval ? " 'unsafe-eval'" : "";
     const devScript =
       process.env.NODE_ENV === "production"
-        ? "'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.recaptcha.net"
-        : "'self' 'unsafe-inline' 'unsafe-eval'";
+        ? `'self' 'unsafe-inline'${evalSource} https://www.google.com https://www.gstatic.com https://www.recaptcha.net`
+        : `'self' 'unsafe-inline'${evalSource}`;
     const configuredEmulator = String(
         process.env.VITE_FIREBASE_AUTH_EMULATOR_URL || "",
       ),
@@ -1922,7 +1934,7 @@ async function startServer() {
         /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(configuredEmulator)
           ? ` ${new URL(configuredEmulator).origin}`
           : "";
-    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
+    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
     res.setHeader(
       "Content-Security-Policy",
       `${csp}${process.env.NODE_ENV === "production" ? "; upgrade-insecure-requests" : ""}`,

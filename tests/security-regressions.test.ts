@@ -87,3 +87,16 @@ test('the upload validator runs on every file intake path', async () => {
   assert.match(server, /function validateFile\([\s\S]{0,1600}assertSupportedFileContent\(file\)/);
   assert.equal(server.split('forEach(validateFile)').length - 1, 2);
 });
+
+test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchable', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  // script-src-attr 'none' kills injected onclick=/onerror= payloads even while
+  // 'unsafe-inline' stays for the inline <script> blocks index.html depends on.
+  assert.match(server, /script-src-attr 'none'/);
+  assert.match(server, /CSP_ALLOW_UNSAFE_EVAL/);
+  // No inline event-handler attribute may creep into the shell, or the
+  // script-src-attr 'none' directive above would break the page.
+  assert.equal(/\son[a-z]+\s*=/.test(html), false);
+});

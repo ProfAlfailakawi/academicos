@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run verify:pwa && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -51,7 +51,8 @@
     "audit:release": "node scripts/static-release-audit.mjs",
     "audit:global-ui": "node scripts/global-ui-audit.cjs",
     "audit:launch": "node scripts/static-release-audit.mjs && node scripts/global-ui-audit.cjs && node scripts/ts-syntax-audit.cjs",
-    "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh"
+    "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh",
+    "verify:pwa": "node scripts/verify-pwa.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

@@ -315,7 +315,7 @@ export function ProjectWorkspace() {
               <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border hairline bg-[var(--panel)] hover:bg-[var(--panel-2)]">
                 {t("pw.submissionTools")} <ChevronDown size={14} />
               </summary>
-              <div className="absolute z-30 end-0 mt-2 w-64 panel rounded-xl border hairline shadow-xl p-2 space-y-1">
+              <div className="absolute z-30 start-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] panel rounded-xl border hairline shadow-xl p-2 space-y-1">
                 <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                   <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                 </a>

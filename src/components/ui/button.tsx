@@ -8,7 +8,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const styles = (variant: ButtonProps['variant'], size: ButtonProps['size']) => cn(
-  'ui-button focus-ring inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-[background,color,border,transform,box-shadow] duration-200 disabled:cursor-not-allowed disabled:opacity-45',
+  'ui-button focus-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-[background,color,border,transform,box-shadow] duration-200 disabled:cursor-not-allowed disabled:opacity-45',
   variant === 'default' && 'brand-bg border border-transparent hover:opacity-90',
   variant === 'outline' && 'border hairline bg-transparent hover:bg-[var(--panel-2)]',
   variant === 'ghost' && 'border border-transparent bg-transparent hover:bg-[var(--panel-2)]',

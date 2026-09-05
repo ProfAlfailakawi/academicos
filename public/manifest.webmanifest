@@ -36,6 +36,12 @@
       "purpose": "maskable"
     },
     {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icon-mono.svg",
       "sizes": "any",
       "type": "image/svg+xml",
@@ -57,6 +63,22 @@
       "name": "Projects",
       "short_name": "Projects",
       "url": "/app/projects"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/cover-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AcademicOS"
+    },
+    {
+      "src": "/screenshots/cover-wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AcademicOS"
     }
   ]
 }

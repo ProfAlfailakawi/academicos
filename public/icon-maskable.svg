@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="AcademicOS">
   <rect width="48" height="48" fill="#0c5d49"/>
-  <g transform="translate(24 24) scale(0.66) translate(-24 -24)">
+  <!-- The lockup is asymmetric (the seal sits top-right), so the group is nudged
+       to put the INK's optical centre on the icon centre — a circular Android
+       mask crops to the centre and any offset reads as a crooked icon. -->
+  <g transform="translate(21.9 25.2) scale(0.66) translate(-24 -24)">
     <g fill="none" stroke="#fffefa" stroke-linecap="round" stroke-linejoin="round">
       <path d="M14.6 34.6 L24 13.4 L33.4 34.6" stroke-width="3.7"/>
       <path d="M17.7 27.6 H30.3" stroke-width="3.1"/>

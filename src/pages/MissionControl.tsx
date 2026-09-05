@@ -24,6 +24,18 @@ const ACADEMIC_TOOLS = [
   { to: "/app/passport", icon: ShieldCheck, label: "layout.navPassportShort", detail: "mission.toolPassportDesc" },
 ] as const;
 
+// The seven steps of the onboarding wizard (src/pages/Onboarding.tsx), in order.
+// Used only to show honest "X/7" progress on the invitation card below.
+const ONBOARDING_FIELDS: ReadonlyArray<(profile: UserProfile) => boolean> = [
+  (p) => Boolean(p.language),
+  (p) => Boolean(p.country),
+  (p) => Boolean(p.university),
+  (p) => Boolean(p.specialization),
+  (p) => Boolean(p.studyYear),
+  (p) => Boolean(p.academicTerm),
+  (p) => Boolean(p.courses?.length),
+];
+
 function inferIntent(text: string, files: File[]): Exclude<Intent, "auto"> {
   const sample = `${text} ${files.map((file) => file.name).join(" ")}`.toLowerCase();
   if (/(exam|quiz|midterm|final|test|question bank|اختبار|كويز|أسئلة|امتحان|فاينل|ميدتيرم|examen|prueba|考试|परीक्षा|sınav|امتحان)/i.test(sample)) return "exam";
@@ -187,6 +199,12 @@ export function MissionControl() {
   }
 
   const minuteUnit = t("mission.minuteShort");
+  // The onboarding wizard is never forced on anyone, so this is its only real
+  // entry point: while the profile is unfinished it sits high on the home page
+  // as an invitation; once finished it recedes to a quiet "review" link below.
+  const onboardingSteps = profile ? ONBOARDING_FIELDS.map((read) => read(profile)) : [];
+  const onboardingDone = onboardingSteps.filter(Boolean).length;
+  const showOnboardingInvite = Boolean(profile) && !profile?.onboardingCompleted;
   return <div className="student-home space-y-6 md:space-y-8">
     <section className="student-hero panel-flat rounded-[32px] overflow-hidden"><div className="grid lg:grid-cols-[1.03fr_.97fr] items-stretch">
       <div className="p-6 md:p-9 lg:p-11">
@@ -208,6 +226,31 @@ export function MissionControl() {
       <div className="journey-illustration relative min-h-[330px] overflow-hidden" role="img" aria-label={t("mission.imageAlt")}><HeroJourney className="absolute inset-0 h-full w-full"/><div className="absolute inset-x-5 bottom-5 panel rounded-2xl p-4 backdrop-blur-sm border hairline"><div className="flex items-center gap-2 text-xs font-semibold"><Zap size={14} className="brand-text"/>{t("mission.valueFirst")}</div><p className="text-[10px] muted leading-5 mt-1">{t("mission.valueFirstDesc")}</p></div></div>
     </div></section>
 
+    {showOnboardingInvite&&<section aria-labelledby="personalize-title" className="onboarding-invite relative overflow-hidden rounded-[28px] border hairline bg-[var(--panel)] p-5 md:p-7 shadow-sm">
+      <span aria-hidden="true" className="onboarding-invite__wash pointer-events-none absolute inset-0"/>
+      <div className="relative grid gap-6 lg:grid-cols-[1.35fr_.65fr] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <span className="h-11 w-11 shrink-0 rounded-2xl brand-soft-bg brand-text grid place-items-center"><Target size={19}/></span>
+            <div className="eyebrow">{t("mission.profileInviteEyebrow")}</div>
+          </div>
+          <h2 id="personalize-title" className="section-title mt-4">{t("mission.profileInviteTitle")}</h2>
+          <p className="body-copy mt-2 max-w-2xl">{t("mission.profileInviteDesc")}</p>
+        </div>
+        <div className="min-w-0 hairline lg:border-s lg:ps-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[11px] font-semibold muted">{t("mission.profileInviteProgress").replace("{done}",String(onboardingDone)).replace("{total}",String(ONBOARDING_FIELDS.length))}</span>
+            <span className="mono-number text-sm font-bold" style={{color:"var(--accent)"}}>{onboardingDone}/{ONBOARDING_FIELDS.length}</span>
+          </div>
+          <div className="onboarding-invite__track mt-2 h-1.5 w-full overflow-hidden rounded-full" role="presentation">
+            <span className="onboarding-invite__fill block h-full rounded-full" style={{inlineSize:`${Math.max(4,(onboardingDone/ONBOARDING_FIELDS.length)*100)}%`}}/>
+          </div>
+          <Button asChild className="mt-5 w-full"><Link to="/app/onboarding">{t("mission.profileInviteCta")}<ArrowRight size={15} className="directional-icon"/></Link></Button>
+          <p className="text-[10px] muted leading-5 mt-2.5 text-center">{t("mission.profileInviteTime")}</p>
+        </div>
+      </div>
+    </section>}
+
     {mission&&<section className="grid xl:grid-cols-[1.25fr_.75fr] gap-5"><Card className="overflow-hidden"><CardContent>
       <div className="flex items-start justify-between gap-4"><div><div className="eyebrow">{t("mission.today")} · {mission.availableMinutes} {minuteUnit}</div><h2 className="section-title mt-1">{t("mission.startHere")}</h2><p className="body-copy mt-2">{t(mission.pressure.level==="critical"?"mission.pressureCriticalDesc":mission.pressure.level==="busy"?"mission.pressureBusyDesc":"mission.pressureCalmDesc").replace("{count}",String(mission.pressure.dueWithinSevenDays))}</p></div><span className={`rounded-full px-3 py-1.5 text-[10px] font-semibold ${mission.pressure.level==="critical"?"bg-danger/10 text-danger":mission.pressure.level==="busy"?"bg-warning/10 text-warning":"brand-soft-bg brand-text"}`}>{t(mission.pressure.level==="critical"?"mission.pressureCritical":mission.pressure.level==="busy"?"mission.pressureBusy":"mission.pressureCalm")}</span></div>
       <div className="mt-5 space-y-2">{mission.actions.slice(0,4).map((action,index)=><Link key={action.id} to={action.path} className="focus-ring rounded-2xl border hairline p-4 flex items-center gap-3 hover:bg-[var(--panel-2)]"><span className="h-10 w-10 rounded-xl tone-tile font-bold mono-number">{index+1}</span><span className="min-w-0 flex-1"><strong className="block text-sm">{action.title}</strong><span className="block text-[10px] muted mt-1 truncate">{action.projectTitle} · {t("mission.priorityReason")}</span></span><span className="inline-flex items-center gap-1 text-[10px] muted"><Clock3 size={12}/>{action.estimatedMinutes}{minuteUnit}</span><ArrowRight size={15} className="muted directional-icon"/></Link>)}{!mission.actions.length&&<div className="rounded-2xl brand-soft-bg p-6 text-center"><CheckCircle2 size={22} className="mx-auto"/><strong className="block mt-2">{t("mission.noPressure")}</strong><p className="text-xs mt-1 opacity-75">{t("mission.noPressureDesc")}</p></div>}</div>
@@ -216,8 +259,10 @@ export function MissionControl() {
 
     <section aria-labelledby="shortcuts-title"><div className="flex items-center justify-between gap-4 mb-4"><div><div className="eyebrow">{t("mission.shortcutsEyebrow")}</div><h2 id="shortcuts-title" className="section-title mt-1">{t("mission.shortcutsTitle")}</h2></div><span className="hidden sm:inline-flex items-center gap-2 text-[11px] muted"><WandSparkles size={15}/>{t("mission.shortcutsHint")}</span></div><div className="grid md:grid-cols-3 gap-4">{JOURNEYS.map((journey)=>{const Icon=journey.icon;return <Link key={journey.to} to={journey.to} className="journey-card focus-ring group rounded-[24px]"><Card className={`h-full journey-card--${journey.tone}`}><CardContent className="p-5"><span className="journey-icon h-12 w-12 rounded-2xl grid place-items-center"><Icon size={21}/></span><h3 className="text-base font-semibold mt-5">{t(journey.title)}</h3><p className="text-xs muted mt-1">{t(journey.detail)}</p><div className="mt-4 flex items-center gap-2 text-xs font-semibold brand-text">{t("mission.open")}<ArrowRight size={14} className="directional-icon"/></div></CardContent></Card></Link>})}</div></section>
 
-    <section className="grid xl:grid-cols-[1.15fr_.85fr] gap-5 items-start"><Card><CardContent><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><FolderOpen size={19}/></span><div><div className="eyebrow">{t("mission.yourProjects")}</div><h2 className="section-title mt-1">{t("mission.continue")}</h2></div></div><Button asChild variant="ghost" size="sm"><Link to="/app/projects">{t("mission.all")}<ArrowRight size={14} className="directional-icon"/></Link></Button></div><div className="mt-5 space-y-2">{latest.map((project)=><Link key={project.id} to={`/app/project/${project.id}`} className="project-quick-row focus-ring rounded-2xl flex items-center gap-3 p-3 border hairline"><span className="h-10 w-10 rounded-xl soft-bg grid place-items-center"><BookOpenCheck size={17}/></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold truncate">{project.title}</span><span className="block text-[10px] muted mt-1">{project.course} · {project.progress}%</span></span><ArrowRight size={16} className="muted directional-icon"/></Link>)}{!latest.length&&<div className="rounded-2xl border border-dashed hairline p-8 text-center"><ScanSearch size={24} className="mx-auto brand-text"/><div className="font-semibold mt-3">{t("mission.noProject")}</div><p className="text-xs muted mt-1">{t("mission.noProjectDesc")}</p></div>}</div></CardContent></Card>
-    <Card><CardContent><div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Target size={19}/></span><div><div className="eyebrow">{t("mission.personalizationOptional")}</div><h2 className="section-title mt-1">{t("mission.profileLater")}</h2></div></div><p className="body-copy mt-4">{t(profile?.onboardingCompleted?"mission.profileReady":"mission.profileNotReady")}</p><Button asChild variant="outline" className="mt-4"><Link to="/app/onboarding">{t(profile?.onboardingCompleted?"mission.reviewProfile":"mission.customizeLater")}</Link></Button></CardContent></Card></section>
+    <section className={`grid gap-5 items-start ${showOnboardingInvite?"":"xl:grid-cols-[1.15fr_.85fr]"}`}><Card><CardContent><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><FolderOpen size={19}/></span><div><div className="eyebrow">{t("mission.yourProjects")}</div><h2 className="section-title mt-1">{t("mission.continue")}</h2></div></div><Button asChild variant="ghost" size="sm"><Link to="/app/projects">{t("mission.all")}<ArrowRight size={14} className="directional-icon"/></Link></Button></div><div className="mt-5 space-y-2">{latest.map((project)=><Link key={project.id} to={`/app/project/${project.id}`} className="project-quick-row focus-ring rounded-2xl flex items-center gap-3 p-3 border hairline"><span className="h-10 w-10 rounded-xl soft-bg grid place-items-center"><BookOpenCheck size={17}/></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold truncate">{project.title}</span><span className="block text-[10px] muted mt-1">{project.course} · {project.progress}%</span></span><ArrowRight size={16} className="muted directional-icon"/></Link>)}{!latest.length&&<div className="rounded-2xl border border-dashed hairline p-8 text-center"><ScanSearch size={24} className="mx-auto brand-text"/><div className="font-semibold mt-3">{t("mission.noProject")}</div><p className="text-xs muted mt-1">{t("mission.noProjectDesc")}</p></div>}</div></CardContent></Card>
+    {/* Quiet state. The loud invitation above takes over while the profile is
+        unfinished, so this never doubles up with it. */}
+    {!showOnboardingInvite&&<Card><CardContent><div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Target size={19}/></span><div><div className="eyebrow">{t("mission.personalizationOptional")}</div><h2 className="section-title mt-1">{t("mission.profileLater")}</h2></div></div><p className="body-copy mt-4">{t(profile?.onboardingCompleted?"mission.profileReady":"mission.profileNotReady")}</p><Button asChild variant="outline" className="mt-4"><Link to="/app/onboarding">{t(profile?.onboardingCompleted?"mission.reviewProfile":"mission.customizeLater")}</Link></Button></CardContent></Card>}</section>
 
     <section aria-labelledby="academic-toolkit-title" className="rounded-[28px] border hairline bg-[var(--panel)] p-5 md:p-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">

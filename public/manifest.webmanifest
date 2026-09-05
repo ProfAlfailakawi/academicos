@@ -1,12 +1,14 @@
 {
   "name": "AcademicOS",
   "short_name": "AcademicOS",
+  "id": "/app",
   "description": "From assignment to evidence — the operating system for human learning in the AI age.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f3f5f2",
   "theme_color": "#0c5d49",
+  "lang": "ar",
   "dir": "auto",
   "icons": [
     {
@@ -38,6 +40,23 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "monochrome"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Assignment",
+      "short_name": "Assignment",
+      "url": "/app/upload"
+    },
+    {
+      "name": "Learn",
+      "short_name": "Learn",
+      "url": "/app/learn"
+    },
+    {
+      "name": "Projects",
+      "short_name": "Projects",
+      "url": "/app/projects"
     }
   ]
 }

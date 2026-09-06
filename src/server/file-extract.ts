@@ -46,11 +46,13 @@ function decodeXml(value: string) {
     .replace(/<w:br\s*\/>/g, '\n')
     .replace(/<a:br\s*\/>/g, '\n')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    // Decode &amp; last so that already-decoded entities (e.g. "&amp;lt;")
+    // are not double-unescaped into markup characters.
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
     .trim();
 }

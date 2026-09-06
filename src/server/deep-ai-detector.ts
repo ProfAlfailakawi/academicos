@@ -131,7 +131,9 @@ const CITATION_LIKE = /\([A-Z][\p{L}'-]+(?:\s+et\s+al\.|\s+&\s+[A-Z][\p{L}'-]+)?
 const DOI = /10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
 const URL = /https?:\/\//i;
 const QUANTITATIVE = /(?:\b\d+(?:\.\d+)?\s?%|٪\s?\d+|\b\d+(?:\.\d+)?\s*(?:percent|percentage|million|billion)\b|(?:أظهرت|تشير|وجدت)\s+(?:الدراسة|الدراسات|النتائج))/iu;
-const INLINE_CITATION = /(?:\([^)]*(?:19|20)\d{2}[^)]*\)|\[[0-9]{1,3}\]|10\.\d{4,9}\/)/u;
+// Parenthetical content is length-bounded so the two `[^)]` runs cannot cause
+// polynomial backtracking on adversarial input; 300 comfortably covers any real citation.
+const INLINE_CITATION = /(?:\([^)]{0,300}(?:19|20)\d{2}[^)]{0,300}\)|\[[0-9]{1,3}\]|10\.\d{4,9}\/)/u;
 
 function splitSentences(text: string) {
   return text

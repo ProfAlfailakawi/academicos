@@ -5,6 +5,7 @@ import express, {
   type Response,
 } from "express";
 import cors from "cors";
+import { readFileSync as readBuildStampFile } from "node:fs";
 import path from "node:path";
 import {
   createHash,
@@ -2322,6 +2323,25 @@ async function startServer() {
       ? assignmentJson(req, res, next)
       : defaultJson(req, res, next),
   );
+  /*
+   * نقطة خفيفة تعرض بصمة البناء الحالية على الخادم.
+   * هي الحقيقة الوحيدة التي يقارنها العميل بثابت الحزمة (__BUILD_ID__)، وتُكتب في
+   * dist/build-id.json عند البناء (scripts/build-stamp.mjs). في التطوير تسقط إلى 'dev'.
+   */
+  let cachedBuildId = "";
+  const currentBuildId = () => {
+    if (cachedBuildId) return cachedBuildId;
+    try {
+      cachedBuildId = String(JSON.parse(readBuildStampFile(path.join(process.cwd(), "dist", "build-id.json"), "utf8")).build || "");
+    } catch { cachedBuildId = ""; }
+    if (!cachedBuildId) cachedBuildId = process.env.BUILD_ID || "dev";
+    return cachedBuildId;
+  };
+  app.get("/api/version", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.json({ build: currentBuildId() });
+  });
+
   app.get("/api/health", (_req, res) =>
     res.json({
       status: "ok",

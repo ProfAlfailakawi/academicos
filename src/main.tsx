@@ -5,10 +5,14 @@ import { AppPreferencesProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { I18nProvider } from './lib/i18n';
 import './index.css';
+import { installAppUpdate } from './lib/app-update';
 
 declare global {
   interface Window { __acosBootReady?: () => void }
 }
+
+// التحديث الذاتي الصامت: بصمة الإصدار، منارتها، ثم التحديث والتصعيد عند اللزوم.
+installAppUpdate();
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined)); }
 

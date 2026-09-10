@@ -8,11 +8,13 @@ import {
 import { Button } from "../components/ui/button";
 import { Logo } from "../components/brand/Logo";
 import { HeroJourney } from "../components/brand/HeroJourney";
+import { HeroConstellation, useHeroEntrance } from "../components/brand/HeroEntrance";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
 export function PublicHome() {
   const { t, locale } = useI18n();
+  const heroEntering = useHeroEntrance();
   const journey = [
     { icon: FilePenLine, title: t("landing.writeTitle"), text: t("landing.writeText"), to: "/login", tone: "mint" },
     { icon: ScanSearch, title: t("landing.rescueTitle"), text: t("landing.rescueText"), to: "/login", tone: "sand" },
@@ -34,7 +36,7 @@ export function PublicHome() {
       </header>
 
       <main>
-        <section className="public-student-hero border-y hairline overflow-hidden">
+        <section className={`public-student-hero border-y hairline overflow-hidden${heroEntering ? " is-entering" : ""}`}>
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-20 grid lg:grid-cols-[.95fr_1.05fr] gap-10 items-center">
             <div>
               <div className="student-proof-chip"><Sparkles size={15} /> {t("landing.globalChip")}</div>
@@ -45,6 +47,7 @@ export function PublicHome() {
             </div>
             <div className="student-hero-visual" role="img" aria-label={t("landing.heroImageAlt")}>
               <HeroJourney />
+              <HeroConstellation />
               <div className="hero-result-card"><FileCheck2 size={18} /><span><strong>92%</strong> {t("landing.vivaReady")}</span></div>
             </div>
           </div>

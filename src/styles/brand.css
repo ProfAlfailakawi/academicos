@@ -852,3 +852,116 @@ html[dir="rtl"] .onboarding-invite__fill {
   .a11y-reduced-motion .hj-path { animation: none; }
 
 }
+
+/* =============================================================================
+   7. Public hero entrance — the AcademicOS assembly.
+   Six scattered academic elements (assignment, rubric, source, citation,
+   highlight, evidence) drift in, rearrange, and settle around the workspace
+   illustration; only then do the name and hero title appear. Plays once per
+   entry to the public page (`.is-entering` set from PublicHome), transform +
+   opacity only, ~2.6s. Without the class — and under reduced motion — the
+   final composition simply shows.
+   ========================================================================== */
+
+.hero-constellation { position: absolute; inset: 0; pointer-events: none; }
+.hero-el {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid color-mix(in srgb, white 58%, var(--line));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.hero-el svg { color: var(--brand); flex: 0 0 auto; }
+
+/* Final composition: a quiet frame of elements docked around the illustration. */
+.hero-el--assignment { top: 6%; inset-inline-start: -2%; }
+.hero-el--rubric { top: 3%; inset-inline-end: 6%; }
+.hero-el--source { top: 34%; inset-inline-end: -2%; }
+.hero-el--citation { top: 46%; inset-inline-start: -3%; }
+.hero-el--highlight { bottom: 22%; inset-inline-end: 4%; }
+.hero-el--evidence { bottom: 6%; inset-inline-end: -2%; }
+
+@media (max-width: 640px) {
+  .hero-el { font-size: 10px; padding: 6px 10px; }
+  .hero-el--assignment { inset-inline-start: 0; }
+  .hero-el--source { inset-inline-end: 0; }
+  .hero-el--citation { inset-inline-start: 0; }
+  .hero-el--evidence { inset-inline-end: 0; }
+}
+
+/* --- The choreography, driven by .is-entering --------------------------- */
+/* Each element starts far away at its own angle and scale, drifts through a
+   loose mid-flight cluster, then settles into its docked spot. */
+@keyframes hero-el-assemble {
+  0% { opacity: 0; transform: translate(var(--drift-x), var(--drift-y)) rotate(var(--drift-r)) scale(1.12); }
+  18% { opacity: 1; }
+  55% { opacity: 1; transform: translate(calc(var(--drift-x) * 0.22), calc(var(--drift-y) * 0.22)) rotate(calc(var(--drift-r) * 0.3)) scale(1.04); }
+  100% { opacity: 1; transform: none; }
+}
+.public-student-hero.is-entering .hero-el {
+  opacity: 0;
+  animation: hero-el-assemble 1.7s var(--ease-out-quint) both;
+}
+.public-student-hero.is-entering .hero-el--assignment { --drift-x: -120px; --drift-y: -70px; --drift-r: -10deg; animation-delay: 0.05s; }
+.public-student-hero.is-entering .hero-el--rubric { --drift-x: 90px; --drift-y: -110px; --drift-r: 8deg; animation-delay: 0.16s; }
+.public-student-hero.is-entering .hero-el--source { --drift-x: 150px; --drift-y: 30px; --drift-r: 12deg; animation-delay: 0.28s; }
+.public-student-hero.is-entering .hero-el--citation { --drift-x: -150px; --drift-y: 50px; --drift-r: -8deg; animation-delay: 0.38s; }
+.public-student-hero.is-entering .hero-el--highlight { --drift-x: 110px; --drift-y: 120px; --drift-r: 9deg; animation-delay: 0.48s; }
+.public-student-hero.is-entering .hero-el--evidence { --drift-x: 40px; --drift-y: 150px; --drift-r: -6deg; animation-delay: 0.58s; }
+
+/* The workspace illustration receives the elements: it breathes up to meet
+   them, and the result card stamps on last. */
+@keyframes hero-visual-settle {
+  0% { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: none; }
+}
+.public-student-hero.is-entering .student-hero-visual > .hero-journey {
+  opacity: 0;
+  animation: hero-visual-settle 1.3s var(--ease-out-quint) 0.35s both;
+}
+@keyframes hero-card-stamp {
+  0% { opacity: 0; transform: translateY(14px) scale(1.06); }
+  100% { opacity: 1; transform: none; }
+}
+.public-student-hero.is-entering .hero-result-card {
+  opacity: 0;
+  animation: hero-card-stamp 0.7s var(--ease-out-quint) 1.75s both;
+}
+
+/* Only after the elements settle does the copy appear: chip, then the
+   AcademicOS hero title, then body, actions and proofs. */
+@keyframes hero-copy-rise {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: none; }
+}
+.public-student-hero.is-entering .student-proof-chip { opacity: 0; animation: hero-copy-rise 0.6s var(--ease-out-quint) 1.55s both; }
+.public-student-hero.is-entering h1 { opacity: 0; animation: hero-copy-rise 0.75s var(--ease-out-quint) 1.7s both; }
+.public-student-hero.is-entering h1 + p { opacity: 0; animation: hero-copy-rise 0.6s var(--ease-out-quint) 1.9s both; }
+.public-student-hero.is-entering h1 ~ div { opacity: 0; animation: hero-copy-rise 0.6s var(--ease-out-quint) 2.05s both; }
+
+/* Reduced motion: no choreography, final composition immediately. */
+@media (prefers-reduced-motion: reduce) {
+  .public-student-hero.is-entering .hero-el,
+  .public-student-hero.is-entering .student-hero-visual > .hero-journey,
+  .public-student-hero.is-entering .hero-result-card,
+  .public-student-hero.is-entering .student-proof-chip,
+  .public-student-hero.is-entering h1,
+  .public-student-hero.is-entering h1 + p,
+  .public-student-hero.is-entering h1 ~ div { animation: none; opacity: 1; }
+}
+.a11y-reduced-motion .public-student-hero.is-entering .hero-el,
+.a11y-reduced-motion .public-student-hero.is-entering .student-hero-visual > .hero-journey,
+.a11y-reduced-motion .public-student-hero.is-entering .hero-result-card,
+.a11y-reduced-motion .public-student-hero.is-entering .student-proof-chip,
+.a11y-reduced-motion .public-student-hero.is-entering h1,
+.a11y-reduced-motion .public-student-hero.is-entering h1 + p,
+.a11y-reduced-motion .public-student-hero.is-entering h1 ~ div { animation: none; opacity: 1; }

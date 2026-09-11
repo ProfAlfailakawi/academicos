@@ -22,6 +22,32 @@ export function useDelayedVisible(delay = 250): boolean {
  * size: 16 (in-button) … 64 (main region max). Design is authored on a
  * 48x48 stage and scaled with a transform.
  */
+/**
+ * Tiny in-button waiting indicator: three currentColor dots with a calm
+ * opacity pulse. Purely presentational (the surrounding button/label carries
+ * the state), no layout shift, fades in after ~250ms via CSS.
+ */
+export function InlineLoader({
+  size = 15,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  const dot = Math.max(3, Math.round(size / 5));
+  return (
+    <span
+      aria-hidden="true"
+      className={`acad-dots ${className}`}
+      style={{ width: size, height: size, ["--dot" as string]: `${dot}px` }}
+    >
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
+
 export function AcademicLoader({
   size = 32,
   label,

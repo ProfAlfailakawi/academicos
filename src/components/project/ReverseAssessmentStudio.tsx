@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Repeat, LoaderCircle, Plus, Trash2, Award, Target, Layers, Fingerprint } from 'lucide-react';
+import { Repeat, Plus, Trash2, Award, Target, Layers, Fingerprint } from "lucide-react";
 import { advancedApi } from '../../lib/api';
 import type { ProjectDNA } from '../../types';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
+import { InlineLoader } from "../ui/AcademicLoader";
 
 // Reverse Assessment — the student designs exam questions about their project; a deterministic evaluator scores the exam-maker.
 interface Q { id: string; prompt: string; modelAnswer: string; targetOutcome?: string }
@@ -55,7 +56,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
           </div>
           <div className="mt-4 flex gap-2">
             <Button variant="ghost" onClick={add}><Plus size={16} />{t('adv.ra.another')}</Button>
-            <Button className="flex-1" onClick={evaluate} disabled={busy || !questions.some(q => q.prompt.trim())}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Award size={16} />}{t('adv.ra.evaluate')}</Button>
+            <Button className="flex-1" onClick={evaluate} disabled={busy || !questions.some(q => q.prompt.trim())}>{busy ? <InlineLoader size={16}/> : <Award size={16} />}{t('adv.ra.evaluate')}</Button>
           </div>
           {error && <p className="text-xs text-danger mt-2">{error}</p>}
         </CardContent>

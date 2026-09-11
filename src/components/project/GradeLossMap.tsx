@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Droplet, LoaderCircle, AlertTriangle, ShieldCheck, Eye } from 'lucide-react';
+import { Droplet, AlertTriangle, ShieldCheck, Eye } from "lucide-react";
 import { advancedApi } from '../../lib/api';
 import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
+import { AcademicLoader } from "../ui/AcademicLoader";
 
 // Predictive Grade-Loss Map — where the cohort actually lost points, matched to your readiness.
 export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; assignmentId?: string }) {
@@ -18,7 +19,7 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
     advancedApi.gradeLossMap(aid, project.id).then(setData).catch(e => setError(String(e?.message || e))).finally(() => setLoading(false));
   }, [aid, project.id]);
 
-  if (loading) return <Card><CardContent><div className="h-40 grid place-items-center"><LoaderCircle className="animate-spin brand-text" /></div></CardContent></Card>;
+  if (loading) return <Card><CardContent><div className="h-40 grid place-items-center"><AcademicLoader size={40} label={t("app.loading")}/></div></CardContent></Card>;
   if (!aid || error || !data?.available) {
     return <Card><CardContent><div className="py-8 text-center"><div className="mx-auto h-14 w-14 rounded-2xl grid place-items-center" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)' }}><Droplet style={{ color: 'var(--danger)' }} /></div><div className="text-sm font-semibold mt-3">{t('adv.gl.unavailable')}</div><p className="body-copy mt-1 max-w-md mx-auto">{error || data?.headline || t('adv.gl.needData')}</p></div></CardContent></Card>;
   }

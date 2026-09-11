@@ -1,13 +1,14 @@
 import { localizedUiError } from "../lib/ui-error";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
-import { CheckCircle2, GraduationCap, Lightbulb, ListChecks, AlertTriangle, Play, Square, Sparkles, ShieldCheck, UploadCloud, BrainCircuit, Clock3, FileText, LoaderCircle, Target } from "lucide-react";
+import { CheckCircle2, GraduationCap, Lightbulb, ListChecks, AlertTriangle, Play, Square, Sparkles, ShieldCheck, UploadCloud, BrainCircuit, Clock3, FileText, Target } from "lucide-react";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useI18n, LOCALES, localeMeta } from "../lib/i18n";
 import type { LearningBrain } from "../types";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 type Tab = "explain" | "solve";
 type ExamIntake = Awaited<ReturnType<typeof api.learnIntake>>;
@@ -163,7 +164,7 @@ export function LearnStudio() {
               <p className="body-copy mt-3">{t("learn.autopilotDescription")}</p>
               <input ref={studyFileRef} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(event) => ingestStudyFiles(event.target.files)} />
               <div className="flex flex-wrap gap-2 mt-4">
-                <Button variant="outline" onClick={() => studyFileRef.current?.click()} disabled={intakeBusy}>{intakeBusy ? <LoaderCircle size={16} className="animate-spin" /> : <UploadCloud size={16} />}{intakeBusy ? t("learn.readingMaterial") : t("learn.uploadMaterial")}</Button>
+                <Button variant="outline" onClick={() => studyFileRef.current?.click()} disabled={intakeBusy}>{intakeBusy ? <InlineLoader size={16}/> : <UploadCloud size={16} />}{intakeBusy ? t("learn.readingMaterial") : t("learn.uploadMaterial")}</Button>
                 <label className="inline-flex items-center gap-2 rounded-xl border hairline px-3 py-2 text-xs"><Clock3 size={14} /><span className="muted">{t("learn.examDate")}</span><input type="date" value={examDate} onChange={(event) => setExamDate(event.target.value)} className="bg-transparent outline-none" /></label>
               </div>
             </div>

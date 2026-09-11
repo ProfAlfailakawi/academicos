@@ -1,12 +1,19 @@
 import React,{useEffect,useState}from'react';
-import{Link,useParams}from'react-router';
-import{BadgeCheck,ExternalLink,KeyRound,LoaderCircle,ShieldCheck}from'lucide-react';
+import {
+  Link,
+  useParams}from'react-router';
+import{BadgeCheck,
+  ExternalLink,
+  KeyRound,
+  ShieldCheck,
+} from "lucide-react";
 import{api,ApiError}from'../lib/api';
 import type{EvidenceCapsule,PublicPlatformShare}from'../types';
 import{Button}from'../components/ui/button';
 import{Card,CardContent}from'../components/ui/card';
 import{formatDateTime,useI18n}from'../lib/i18n';
 import{runtimeEnumLabel}from'../lib/platform-locale';
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 export function PublicShare(){
  const{t}=useI18n();const{token=''}=useParams();const[share,setShare]=useState<PublicPlatformShare|null>(null);const[error,setError]=useState('');const[needsPassword,setNeedsPassword]=useState(false);const[password,setPassword]=useState('');const[busy,setBusy]=useState(false);
@@ -15,7 +22,7 @@ export function PublicShare(){
  return <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10"><div className="max-w-5xl mx-auto"><div className="flex items-center justify-between gap-4"><Link to="/" className="min-h-11 inline-flex items-center font-semibold focus-ring rounded-xl">AcademicOS</Link><div className="text-[10px] muted flex items-center gap-1"><ShieldCheck size={13}/> {t('share.consentShare')}</div></div>
   {needsPassword?<PasswordCard password={password} setPassword={setPassword} unlock={unlock} busy={busy} error={error}/>:error?<Card className="mt-16"><CardContent className="py-16 text-center"><div className="font-semibold">{t('share.cannotOpen')}</div><p className="body-copy mt-2">{error}</p></CardContent></Card>:!share?<div className="mt-16 h-64 panel rounded-3xl animate-pulse"/>:<ShareContent share={share}/>}</div></main>
 }
-function PasswordCard({password,setPassword,unlock,busy,error}:{password:string;setPassword:(v:string)=>void;unlock:()=>void;busy:boolean;error:string}){const{t}=useI18n();return <Card className="mt-16 max-w-lg mx-auto"><CardContent className="py-10"><div className="h-12 w-12 rounded-2xl tone-tile"><KeyRound size={20}/></div><h1 className="text-xl font-semibold mt-4">{t('share.protectedTitle')}</h1><p className="body-copy mt-2">{t('share.protectedDesc')}</p><div className="mt-5 flex gap-2"><input type="password" autoComplete="current-password" className="field flex-1" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')unlock()}}/><Button onClick={unlock} disabled={busy||!password}>{busy?<LoaderCircle size={15} className="animate-spin"/>:null}{t('share.unlock')}</Button></div>{error&&<p className="text-xs text-danger mt-3">{error}</p>}</CardContent></Card>}
+function PasswordCard({password,setPassword,unlock,busy,error}:{password:string;setPassword:(v:string)=>void;unlock:()=>void;busy:boolean;error:string}){const{t}=useI18n();return <Card className="mt-16 max-w-lg mx-auto"><CardContent className="py-10"><div className="h-12 w-12 rounded-2xl tone-tile"><KeyRound size={20}/></div><h1 className="text-xl font-semibold mt-4">{t('share.protectedTitle')}</h1><p className="body-copy mt-2">{t('share.protectedDesc')}</p><div className="mt-5 flex gap-2"><input type="password" autoComplete="current-password" className="field flex-1" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')unlock()}}/><Button onClick={unlock} disabled={busy||!password}>{busy?<InlineLoader size={15}/>:null}{t('share.unlock')}</Button></div>{error&&<p className="text-xs text-danger mt-3">{error}</p>}</CardContent></Card>}
 function ShareContent({share}:{share:PublicPlatformShare}){const{t,locale}=useI18n();const capsule=isCapsule(share)?share.snapshot as unknown as EvidenceCapsule:null;const[verification,setVerification]=useState<{hashValid:boolean;signatureValid:boolean|null;signerTrusted:boolean|null;status:'signed_trusted'|'signed_untrusted'|'hash_valid'|'invalid';keyId?:string}|null>(null);useEffect(()=>{if(!capsule){setVerification(null);return}api.verifyEvidenceCapsule(capsule).then(r=>setVerification(r.verification)).catch(()=>setVerification(null))},[capsule?.integrity.hash]);return <Card className="mt-10 relative overflow-hidden"><CardContent className="p-6 md:p-10"><div className="flex items-start gap-3"><div className="h-12 w-12 rounded-2xl tone-tile shrink-0"><BadgeCheck size={21} className="brand-text"/></div><div className="min-w-0"><div className="eyebrow">{t("ui.consentShare")} · {capsule?t("ui.evidenceCapsule"):share.kind}</div><h1 className="text-2xl md:text-3xl font-semibold tracking-[-0.03em] mt-1">{capsule?.project.title||share.label}</h1>{capsule&&<div className="text-xs muted mt-2">{capsule.project.course} · {runtimeEnumLabel(capsule.project.status,locale)}</div>}</div></div>{share.watermark&&<div className="mt-5 rounded-xl border hairline bg-[var(--bg)] px-4 py-3 text-[11px] muted">{t("ui.watermark")}: <span className="font-semibold text-[var(--ink)]">{share.watermark}</span></div>}{capsule?<CapsuleView capsule={capsule} verification={verification}/>:<GenericView snapshot={share.snapshot}/>}<ShareFooter share={share}/></CardContent></Card>}
 function isCapsule(share:PublicPlatformShare){return share.kind==='project'&&share.snapshot&&String((share.snapshot as any).schemaVersion)==='1.0'&&!!(share.snapshot as any).integrity}
 function CapsuleView({capsule,verification}:{capsule:EvidenceCapsule;verification:{hashValid:boolean;signatureValid:boolean|null;signerTrusted:boolean|null;status:'signed_trusted'|'signed_untrusted'|'hash_valid'|'invalid';keyId?:string}|null}){const{t,locale}=useI18n();return <div className="mt-8 space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-3"><Metric label={t("ui.skills")} value={capsule.skills.length}/><Metric label={t("ui.deliverables")} value={capsule.deliverables.length}/><Metric label={t("ui.evidence")} value={capsule.provenance.evidenceItems}/><Metric label={t("ui.humanContributors")} value={capsule.provenance.humanContributors}/></div>

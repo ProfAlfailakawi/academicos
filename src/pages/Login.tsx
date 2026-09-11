@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router";
+import {
+  Link,
+  Navigate,
+  useLocation } from "react-router";
 import {
   ArrowLeft,
   CheckCircle2,
   KeyRound,
-  LoaderCircle,
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
@@ -24,6 +26,7 @@ import { Button } from "../components/ui/button";
 import { Logo } from "../components/brand/Logo";
 import { Card, CardContent } from "../components/ui/card";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 function factorLabel(factor: MultiFactorInfo, t: (key: string) => string) {
   if (factor.factorId === TotpMultiFactorGenerator.FACTOR_ID)
@@ -314,7 +317,7 @@ export function Login() {
                   )}
 
                   <Button className="w-full" disabled={busy || !mfaCode.trim()}>
-                    {busy ? <><LoaderCircle size={16} className="animate-spin" />{t("login.verifying")}</> : t("login.mfaVerify")}
+                    {busy ? <><InlineLoader size={16}/>{t("login.verifying")}</> : t("login.mfaVerify")}
                   </Button>
                   <Button type="button" variant="ghost" className="w-full" onClick={resetMfaChallenge} disabled={busy}>
                     {t("login.mfaCancel")}
@@ -377,7 +380,7 @@ export function Login() {
                   )}
 
                   <Button className="w-full" disabled={busy || !configured}>
-                    {busy ? <><LoaderCircle size={16} className="animate-spin" />{t("login.verifying")}</> : mode === "signup" ? t("login.createAccount") : mode === "forgot" ? t("login.sendReset") : t("login.submit")}
+                    {busy ? <><InlineLoader size={16}/>{t("login.verifying")}</> : mode === "signup" ? t("login.createAccount") : mode === "forgot" ? t("login.sendReset") : t("login.submit")}
                   </Button>
                 </form>
 

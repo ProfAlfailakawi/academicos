@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Ghost, LoaderCircle, TrendingUp, Timer, RefreshCw, BookMarked, Sparkles } from 'lucide-react';
+import { Ghost, TrendingUp, Timer, RefreshCw, BookMarked, Sparkles } from "lucide-react";
 import { advancedApi } from '../../lib/api';
 import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
+import { AcademicLoader } from "../ui/AcademicLoader";
 
 // Ghost Cohort — anonymized rhythm of high scorers (k-anonymity) vs. the current student's progress.
 export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDNA; assignmentId?: string }) {
@@ -18,7 +19,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
     advancedApi.ghostCohort(aid, project.id).then(setData).catch(e => setError(String(e?.message || e))).finally(() => setLoading(false));
   }, [aid, project.id]);
 
-  if (loading) return <Card><CardContent><div className="h-40 grid place-items-center"><LoaderCircle className="animate-spin brand-text" /></div></CardContent></Card>;
+  if (loading) return <Card><CardContent><div className="h-40 grid place-items-center"><AcademicLoader size={40} label={t("app.loading")}/></div></CardContent></Card>;
   if (!aid || error || !data) return <Card><CardContent><EmptyGhost t={t} reason={error || t('adv.ghost.noAssignment')} /></CardContent></Card>;
   if (!data.available) return <Card><CardContent><EmptyGhost t={t} reason={t('adv.ghost.needK').replace('{k}', String(data.kAnonymityMin))} /></CardContent></Card>;
 

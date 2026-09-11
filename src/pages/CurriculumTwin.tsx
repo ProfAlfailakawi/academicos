@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useState}from'react';
-import{AlertTriangle,ArrowRight,BookOpenCheck,CheckCircle2,LoaderCircle,Network,RefreshCw}from'lucide-react';
+import{AlertTriangle,ArrowRight,BookOpenCheck,CheckCircle2,Network,RefreshCw}from'lucide-react';
 import{Link}from'react-router';
 import{api}from'../lib/api';
 import type{CurriculumTwinSimulation,CurriculumTwinSnapshot}from'../types';
@@ -7,6 +7,7 @@ import{PageHeader}from'../components/PageHeader';
 import{Button}from'../components/ui/button';
 import{Card,CardContent}from'../components/ui/card';
 import{useI18n}from'../lib/i18n';
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 export function CurriculumTwin(){
  const{t}=useI18n();
@@ -27,7 +28,7 @@ export function CurriculumTwin(){
      <Card><CardContent><div className="eyebrow">{t("ui.workloadDistribution")}</div><h2 className="section-title mt-1">{t('curric.workloadTitle')}</h2><div className="mt-5 space-y-4">{twin.workloadByTerm.map(x=><div key={x.term}><div className="flex justify-between gap-3 text-xs"><span className="font-semibold">{x.term}</span><span className="muted">{x.courses} {t('curric.courseWord')} · {x.assignments} {t('curric.assignmentWord')}</span></div><div className="tone-meter"><div style={{width:`${Math.max(6,(x.assignments/maxAssignments)*100)}%`}}/></div></div>)}</div></CardContent></Card>
     </div>
     <Card className="xl:sticky xl:top-24"><CardContent><div className="flex items-center gap-2"><Network size={18} className="brand-text"/><div><div className="eyebrow">{t("ui.scenarioLab")}</div><h2 className="section-title mt-1">{t('curric.whatIfTitle')}</h2></div></div><p className="body-copy mt-3">{t('curric.whatIfDesc')}</p>
-     <div className="mt-5 max-h-72 overflow-auto space-y-2">{twin.courses.map(c=><label key={c.id} className={`focus-ring flex items-start gap-3 rounded-xl border hairline p-3 cursor-pointer ${removed.includes(c.id)?'brand-soft-bg':''}`}><input type="checkbox" className="mt-0.5" checked={removed.includes(c.id)} onChange={()=>setRemoved(v=>v.includes(c.id)?v.filter(x=>x!==c.id):[...v,c.id])}/><span className="min-w-0"><span className="text-xs font-semibold block">{c.code} · {c.title}</span><span className="text-[10px] muted mt-1 block">{c.outcomes.length} {t("ui.outcome")} · {c.assignmentCount} {t('curric.assignmentWord')}</span></span></label>)}</div><div className="mt-4 flex gap-2"><Button onClick={simulate} disabled={busy||!removed.length}>{busy?<LoaderCircle size={15} className="animate-spin"/>:<RefreshCw size={15}/>}{t('curric.simulateChange')}</Button>{removed.length>0&&<Button variant="ghost" onClick={()=>{setRemoved([]);setSimulation(null)}}>{t('curric.clear')}</Button>}</div>
+     <div className="mt-5 max-h-72 overflow-auto space-y-2">{twin.courses.map(c=><label key={c.id} className={`focus-ring flex items-start gap-3 rounded-xl border hairline p-3 cursor-pointer ${removed.includes(c.id)?'brand-soft-bg':''}`}><input type="checkbox" className="mt-0.5" checked={removed.includes(c.id)} onChange={()=>setRemoved(v=>v.includes(c.id)?v.filter(x=>x!==c.id):[...v,c.id])}/><span className="min-w-0"><span className="text-xs font-semibold block">{c.code} · {c.title}</span><span className="text-[10px] muted mt-1 block">{c.outcomes.length} {t("ui.outcome")} · {c.assignmentCount} {t('curric.assignmentWord')}</span></span></label>)}</div><div className="mt-4 flex gap-2"><Button onClick={simulate} disabled={busy||!removed.length}>{busy?<InlineLoader size={15}/>:<RefreshCw size={15}/>}{t('curric.simulateChange')}</Button>{removed.length>0&&<Button variant="ghost" onClick={()=>{setRemoved([]);setSimulation(null)}}>{t('curric.clear')}</Button>}</div>
      {simulation&&<Impact simulation={simulation}/>} 
     </CardContent></Card>
    </div>

@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { ShieldAlert, Flame, Zap, CheckCircle2, AlertTriangle, Sparkles, ShieldCheck, RefreshCw, BrainCircuit } from "lucide-react";
+import { ShieldAlert, Flame, Zap, CheckCircle2, AlertTriangle, Sparkles, ShieldCheck, BrainCircuit } from "lucide-react";
 import type { ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
 import { useI18n } from "../../lib/i18n";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 interface CounterArgument {
   id: string;
@@ -63,7 +64,7 @@ export function RedTeamingArena({ project }: { project: ProjectDNA }) {
         </div>
       </div>
       <Button variant="danger" onClick={handleSimulateAttack} disabled={analyzing} className="shrink-0">
-        {analyzing ? <RefreshCw size={15} className="animate-spin"/> : <Zap size={15}/>}
+        {analyzing ? <InlineLoader size={15}/> : <Zap size={15}/>}
         {analyzing ? t("red.analyzing") : t("red.attack")}
       </Button>
     </div>

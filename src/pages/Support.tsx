@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   CircleHelp,
-  LoaderCircle,
   MessageSquarePlus,
   ShieldAlert,
 } from "lucide-react";
@@ -11,6 +10,7 @@ import { PageHeader } from "../components/PageHeader";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { formatDate, useI18n } from "../lib/i18n";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 export function Support() {
   const { t, locale } = useI18n();
@@ -135,7 +135,7 @@ export function Support() {
                 }
               >
                 {saving ? (
-                  <LoaderCircle size={16} className="animate-spin" />
+                  <InlineLoader size={16}/>
                 ) : (
                   <CircleHelp size={16} />
                 )}
@@ -152,7 +152,7 @@ export function Support() {
                 <h2 className="section-title mt-1">{t("support.historyTitle")}</h2>
               </div>
               {loading ? (
-                <LoaderCircle size={17} className="animate-spin brand-text" />
+                <InlineLoader size={17}/>
               ) : (
                 <span className="text-[11px] muted">{tickets.length}</span>
               )}

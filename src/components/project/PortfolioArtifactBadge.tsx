@@ -53,7 +53,7 @@ export function PortfolioArtifactBadge({ project }: { project: ProjectDNA }) {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border hairline bg-gradient-to-r from-info/10 via-info/8 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5"><div className="h-11 w-11 rounded-2xl bg-info/20 text-info grid place-items-center shrink-0"><Award size={22}/></div><div><div className="text-[10px] font-bold tracking-wider uppercase text-info">{t("ui.portfolioProof")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("portfolio.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("portfolio.description")}</p></div></div>
+        <div className="flex items-center gap-3.5"><div className="h-11 w-11 rounded-2xl bg-info/20 text-info grid place-items-center shrink-0"><Award size={22}/></div><div className="min-w-0"><div className="text-[10px] font-bold tracking-wider uppercase text-info">{t("ui.portfolioProof")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("portfolio.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("portfolio.description")}</p></div></div>
         <Button size="sm" onClick={createShare} disabled={sharing}>{sharing ? <InlineLoader size={14}/> : <Share2 size={14}/>}{t("portfolio.createLink")}</Button>
       </div>
       {error && <div className="rounded-xl border border-warning/20 bg-warning/8 p-3 text-xs flex gap-2"><AlertTriangle size={14} className="text-warning shrink-0"/>{error}</div>}

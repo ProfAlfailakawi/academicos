@@ -965,3 +965,106 @@ html[dir="rtl"] .onboarding-invite__fill {
 .a11y-reduced-motion .public-student-hero.is-entering h1,
 .a11y-reduced-motion .public-student-hero.is-entering h1 + p,
 .a11y-reduced-motion .public-student-hero.is-entering h1 ~ div { animation: none; opacity: 1; }
+
+/* === «المكتب المرتّب» — the full-screen overture ========================= */
+/* A full-viewport veil over the public page: the six academic cards fly
+   across the whole screen like loose papers, align into one geometric
+   centered composition under the AcademicOS identity, hold a beat, then
+   the veil slides up to reveal the settled hero. transform + opacity only. */
+.acos-overture {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  will-change: transform;
+}
+@keyframes acos-overture-exit {
+  to { transform: translateY(-100%); }
+}
+.acos-overture.is-leaving {
+  animation: acos-overture-exit 0.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.acos-overture__stage {
+  display: grid;
+  justify-items: center;
+  gap: 28px;
+  padding-inline: 20px;
+  max-width: 100%;
+}
+
+/* The identity settles in after the papers begin to gather. */
+@keyframes acos-overture-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.acos-overture__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  animation: acos-overture-rise 0.7s var(--ease-out-quint) 0.85s both;
+}
+
+/* The tidy desk: cards dock into a strict two-row grid. Inside the deck the
+   shared .hero-el chip flows in-grid instead of absolute positioning. */
+.acos-overture__deck {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 10px 12px;
+  justify-items: center;
+}
+.acos-overture__card {
+  position: static;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: acos-overture-fly 1.5s var(--ease-out-quint) both;
+}
+@keyframes acos-overture-fly {
+  0% { opacity: 0; transform: translate(var(--fly-x), var(--fly-y)) rotate(var(--fly-r)) scale(1.1); }
+  20% { opacity: 1; }
+  58% { opacity: 1; transform: translate(calc(var(--fly-x) * 0.16), calc(var(--fly-y) * 0.16)) rotate(calc(var(--fly-r) * 0.26)) scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+/* Each paper crosses from its own corner of the viewport. */
+.acos-overture__card--assignment { --fly-x: -46vw; --fly-y: -34vh; --fly-r: -14deg; animation-delay: 0.02s; }
+.acos-overture__card--rubric { --fly-x: 8vw; --fly-y: -46vh; --fly-r: 9deg; animation-delay: 0.12s; }
+.acos-overture__card--source { --fly-x: 48vw; --fly-y: -26vh; --fly-r: 13deg; animation-delay: 0.22s; }
+.acos-overture__card--citation { --fly-x: -48vw; --fly-y: 30vh; --fly-r: -9deg; animation-delay: 0.3s; }
+.acos-overture__card--highlight { --fly-x: -6vw; --fly-y: 46vh; --fly-r: 11deg; animation-delay: 0.38s; }
+.acos-overture__card--evidence { --fly-x: 46vw; --fly-y: 38vh; --fly-r: -12deg; animation-delay: 0.46s; }
+
+/* Elegant, quiet skip. */
+.acos-overture__skip {
+  position: absolute;
+  inset-inline-end: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  animation: acos-overture-rise 0.5s var(--ease-out-quint) 0.5s both;
+  transition: opacity 0.2s ease;
+}
+.acos-overture__skip:hover { color: var(--ink); }
+.acos-overture.is-leaving .acos-overture__skip { opacity: 0; pointer-events: none; }
+
+@media (max-width: 480px) {
+  .acos-overture__deck { grid-template-columns: repeat(2, auto); }
+  .acos-overture__identity { gap: 10px; }
+}
+
+/* Safety net: the overture never mounts under reduced motion, and even if
+   it did, it must not trap the page behind a static veil. */
+@media (prefers-reduced-motion: reduce) {
+  .acos-overture { display: none; }
+}
+.a11y-reduced-motion .acos-overture { display: none; }

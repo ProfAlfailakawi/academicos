@@ -32,6 +32,7 @@ import type {
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
+import { AcademicLoader } from "../ui/AcademicLoader";
 import { localizedUiError } from "../../lib/ui-error";
 
 type SectionAction =
@@ -419,7 +420,7 @@ function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
   const stages = mode === "rescue"
     ? [t("writer.stageRead"), t("writer.stageSources"), t("writer.stageStructure"), t("writer.stageExplain")]
     : [t("writer.stageUnderstand"), t("writer.stagePlan"), t("writer.stageWrite"), t("writer.stageViva")];
-  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><LoaderCircle size={30} className="animate-spin" /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">{stages.map((stage, index) => <div key={stage} className="rounded-2xl bg-[var(--bg)] border hairline p-4"><span className="h-8 w-8 rounded-xl tone-tile mx-auto text-xs font-semibold">{index + 1}</span><div className="text-xs font-semibold mt-3">{stage}</div></div>)}</div><p className="text-[10px] muted mt-6">{t("writer.buildingNote")}</p></CardContent></Card>;
+  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center" aria-busy="true"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><AcademicLoader size={48} delay={0} label={mode === "rescue" ? t("writer.rebuilding") : t("writer.building")} /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">{stages.map((stage, index) => <div key={stage} className="rounded-2xl bg-[var(--bg)] border hairline p-4"><span className="h-8 w-8 rounded-xl tone-tile mx-auto text-xs font-semibold">{index + 1}</span><div className="text-xs font-semibold mt-3">{stage}</div></div>)}</div><p className="text-[10px] muted mt-6">{t("writer.buildingNote")}</p></CardContent></Card>;
 }
 
 function ProjectFlow({ document }: { document: ProjectDocument }) {

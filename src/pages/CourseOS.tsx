@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams } from "react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -13,7 +17,6 @@ import {
   Download,
   FileCheck2,
   KeyRound,
-  LoaderCircle,
   RotateCcw,
   ShieldCheck,
   Target,
@@ -31,6 +34,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { localizedUiError } from "../lib/ui-error";
+import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 
 type DraftDeliverable = { title: string; format: string };
 type DraftRubric = { title: string; description: string; weighting: number };
@@ -264,7 +268,7 @@ export function CourseOS() {
   if (loading)
     return (
       <div className="min-h-64 grid place-items-center">
-        <LoaderCircle className="animate-spin brand-text" />
+        <AcademicLoader size={40} label={t("app.loading")}/>
       </div>
     );
   if (error && !course)
@@ -324,7 +328,7 @@ export function CourseOS() {
               disabled={Boolean(cloning)}
             >
               {cloning === "course" ? (
-                <LoaderCircle size={15} className="animate-spin" />
+                <InlineLoader size={15}/>
               ) : (
                 <Copy size={15} />
               )}
@@ -404,7 +408,7 @@ export function CourseOS() {
                   disabled={Boolean(joinBusy)}
                 >
                   {joinBusy === "new" ? (
-                    <LoaderCircle size={14} className="animate-spin" />
+                    <InlineLoader size={14}/>
                   ) : (
                     <CirclePlus size={14} />
                   )}
@@ -465,10 +469,7 @@ export function CourseOS() {
                             disabled={Boolean(joinBusy)}
                           >
                             {joinBusy === c.id ? (
-                              <LoaderCircle
-                                size={14}
-                                className="animate-spin"
-                              />
+                              <InlineLoader size={14}/>
                             ) : (
                               <RotateCcw size={14} />
                             )}
@@ -607,7 +608,7 @@ export function CourseOS() {
                           disabled={Boolean(cloning)}
                         >
                           {cloning === a.id ? (
-                            <LoaderCircle size={14} className="animate-spin" />
+                            <InlineLoader size={14}/>
                           ) : (
                             <Copy size={14} />
                           )}
@@ -962,7 +963,7 @@ export function CourseOS() {
                   }
                 >
                   {saving ? (
-                    <LoaderCircle size={16} className="animate-spin" />
+                    <InlineLoader size={16}/>
                   ) : (
                     <CirclePlus size={16} />
                   )}

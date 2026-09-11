@@ -739,6 +739,29 @@ html[dir="rtl"] .acad-loader__p1 { --tx: 15px; }
   .acad-loader__cap { animation: acadIdlePulse 2.6s ease-in-out infinite; opacity: 1; transform: scale(1); }
 }
 
+/* Tiny in-button dot-pulse loader (InlineLoader): currentColor, no layout
+   shift, ~250ms delayed fade-in, opacity-only motion. */
+.acad-dots {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 2px; flex-shrink: 0; opacity: 0;
+  animation: acadDelayedIn .18s ease .25s forwards;
+}
+.acad-dots > span {
+  width: var(--dot, 3px); height: var(--dot, 3px); border-radius: 999px;
+  background: currentColor; opacity: .25;
+  animation: acadDotPulse 1.05s ease-in-out infinite;
+}
+.acad-dots > span:nth-child(2) { animation-delay: .15s; }
+.acad-dots > span:nth-child(3) { animation-delay: .3s; }
+@keyframes acadDotPulse {
+  0%, 100% { opacity: .25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-1px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acad-dots { animation: none; opacity: 1; }
+  .acad-dots > span { animation: none; opacity: .7; }
+}
+
 /* Skeleton rows for list loading (evidence inbox etc.) */
 .acad-skeleton { border-radius: 16px; border: 1px solid var(--line); background: var(--bg); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
 .acad-skeleton__tile, .acad-skeleton__line { background: color-mix(in srgb, var(--brand) 9%, var(--panel-2)); animation: acadIdlePulse 1.8s ease-in-out infinite; }

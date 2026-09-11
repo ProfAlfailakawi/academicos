@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useParams } from "react-router";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -22,7 +25,6 @@ import {
   Repeat,
   GraduationCap,
   ListChecks,
-  LoaderCircle,
   Play,
   Sparkles,
   UsersRound,
@@ -53,6 +55,7 @@ import { GradeLossMap } from "../components/project/GradeLossMap";
 import { ReverseAssessmentStudio } from "../components/project/ReverseAssessmentStudio";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
+import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 import {
   Fingerprint,
   Search,
@@ -304,11 +307,11 @@ export function ProjectWorkspace() {
           </div>
           <div className="flex gap-2 flex-wrap items-center">
             <Button onClick={runAudit} disabled={auditing} className="shadow-sm">
-              {auditing ? <LoaderCircle size={16} className="animate-spin" /> : <ClipboardCheck size={16} />}
+              {auditing ? <InlineLoader size={16}/> : <ClipboardCheck size={16} />}
               {t("pw.submissionReady")}
             </Button>
             <Button variant="outline" onClick={() => runRescue()} disabled={rescueLoading}>
-              {rescueLoading ? <LoaderCircle size={16} className="animate-spin" /> : <Clock3 size={16} />}
+              {rescueLoading ? <InlineLoader size={16}/> : <Clock3 size={16} />}
               {t("pw.rescueMe")}
             </Button>
             <details className="relative">
@@ -425,7 +428,7 @@ export function ProjectWorkspace() {
             )}
             {originalLoading ? (
               <div className="h-28 grid place-items-center">
-                <LoaderCircle className="animate-spin brand-text" />
+                <AcademicLoader size={40} label={t("app.loading")}/>
               </div>
             ) : (
               <>
@@ -975,7 +978,7 @@ function RescueModal({
       <label className="text-xs font-semibold">{t("pw.timeAvailable")} <span className="muted">{minutes} {t("pw.minutes")}</span></label>
       <input type="range" min={30} max={720} step={30} value={minutes} onChange={(e) => onMinutes(Number(e.target.value))} className="w-full mt-3" />
       <div className="flex justify-between text-[10px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
-      <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <LoaderCircle size={15} className="animate-spin" /> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
+      <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <InlineLoader size={15}/> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
     </div>
     {plan && <div className="mt-5 space-y-3">
       {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">

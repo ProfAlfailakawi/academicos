@@ -1,11 +1,12 @@
 import { localizedUiError } from "../../lib/ui-error";
 import React, { useMemo, useState } from "react";
-import { BookOpen, FileSearch, FlaskConical, GraduationCap, LoaderCircle, Network, ShieldCheck, Sparkles } from "lucide-react";
+import { BookOpen, FileSearch, FlaskConical, GraduationCap, Network, ShieldCheck, Sparkles } from "lucide-react";
 import { api } from "../../lib/api";
 import type { CopilotMode, CopilotResponse, ProjectDNA } from "../../types";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 const modes: Array<{ id: CopilotMode; label: string; icon: React.ElementType }> = [
   { id: "file_search", label: "File Search", icon: FileSearch },
@@ -61,7 +62,7 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
           </div>
           <textarea value={query} onChange={(event) => setQuery(event.target.value)} placeholder={placeholder} className="focus-ring mt-5 w-full min-h-32 rounded-xl border hairline bg-[var(--bg)] p-3 text-sm leading-7" />
           <Button onClick={run} disabled={busy} className="mt-3">
-            {busy ? <LoaderCircle size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            {busy ? <InlineLoader size={16}/> : <Sparkles size={16} />}
             {t("copilot.run")}
           </Button>
           {error && <p className="text-xs text-danger mt-3">{error}</p>}

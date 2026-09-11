@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle2, Copy, KeyRound, LoaderCircle, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { Navigate, useNavigate } from "react-router";
 import {
   multiFactor,
@@ -12,6 +12,7 @@ import { useI18n } from "../lib/i18n";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 export function MfaSetup() {
   const { t } = useI18n();
@@ -56,7 +57,7 @@ export function MfaSetup() {
   if (loading)
     return (
       <div className="min-h-screen grid place-items-center bg-[var(--bg)]">
-        <LoaderCircle size={20} className="animate-spin" />
+        <InlineLoader size={20}/>
       </div>
     );
   if (!user) return <Navigate to="/login" replace />;
@@ -138,13 +139,13 @@ export function MfaSetup() {
                 </div>
               </div>
               <Button className="w-full mt-5" onClick={signInAgain} disabled={busy}>
-                {busy && <LoaderCircle size={16} className="animate-spin" />}
+                {busy && <InlineLoader size={16}/>}
                 {t("mfaSetup.signInAgain")}
               </Button>
             </div>
           ) : busy && !secret ? (
             <div className="mt-8 flex items-center gap-3 text-sm muted">
-              <LoaderCircle size={18} className="animate-spin" />
+              <InlineLoader size={18}/>
               {t("mfaSetup.preparing")}
             </div>
           ) : secret ? (
@@ -191,7 +192,7 @@ export function MfaSetup() {
               )}
 
               <Button className="w-full" disabled={busy || otp.trim().length < 6}>
-                {busy ? <><LoaderCircle size={16} className="animate-spin" />{t("mfaSetup.enrolling")}</> : t("mfaSetup.enroll")}
+                {busy ? <><InlineLoader size={16}/>{t("mfaSetup.enrolling")}</> : t("mfaSetup.enroll")}
               </Button>
             </form>
           ) : null}

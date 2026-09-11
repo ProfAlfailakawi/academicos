@@ -1,12 +1,13 @@
 import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useState } from "react";
-import { Award, Share2, Briefcase, Copy, Check, ShieldCheck, LoaderCircle, ExternalLink, AlertTriangle } from "lucide-react";
+import { Award, Share2, Briefcase, Copy, Check, ShieldCheck, ExternalLink, AlertTriangle } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
 import { runtimeEnumLabel } from "../../lib/platform-locale";
+import { InlineLoader, AcademicLoader } from "../ui/AcademicLoader";
 
 export function PortfolioArtifactBadge({ project }: { project: ProjectDNA }) {
   const { t, locale } = useI18n();
@@ -53,10 +54,10 @@ export function PortfolioArtifactBadge({ project }: { project: ProjectDNA }) {
     <div className="space-y-6">
       <div className="rounded-2xl border hairline bg-gradient-to-r from-info/10 via-info/8 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5"><div className="h-11 w-11 rounded-2xl bg-info/20 text-info grid place-items-center shrink-0"><Award size={22}/></div><div><div className="text-[10px] font-bold tracking-wider uppercase text-info">{t("ui.portfolioProof")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("portfolio.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("portfolio.description")}</p></div></div>
-        <Button size="sm" onClick={createShare} disabled={sharing}>{sharing ? <LoaderCircle size={14} className="animate-spin"/> : <Share2 size={14}/>}{t("portfolio.createLink")}</Button>
+        <Button size="sm" onClick={createShare} disabled={sharing}>{sharing ? <InlineLoader size={14}/> : <Share2 size={14}/>}{t("portfolio.createLink")}</Button>
       </div>
       {error && <div className="rounded-xl border border-warning/20 bg-warning/8 p-3 text-xs flex gap-2"><AlertTriangle size={14} className="text-warning shrink-0"/>{error}</div>}
-      {loading ? <div className="min-h-40 grid place-items-center"><LoaderCircle className="animate-spin text-info"/></div> : (
+      {loading ? <div className="min-h-40 grid place-items-center"><AcademicLoader size={40} label={t("app.loading")}/></div> : (
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
           <div className="rounded-3xl border-2 hairline bg-gradient-to-b from-[var(--panel)] to-[var(--bg)] p-6 md:p-8 space-y-6 shadow-xl">
             <div className="flex items-start justify-between gap-3"><div><span className="text-[10px] font-mono uppercase text-muted-foreground">{t("ui.projectEvidenceArtifact")}</span><h3 className="text-base font-bold mt-1">{project.title}</h3><p className="text-[11px] text-muted-foreground mt-1">{project.course} · {runtimeEnumLabel(project.status, locale)}</p></div><span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-info/10 text-info border border-info/20">{project.progress}% {t("ui.projectProgress")}</span></div>

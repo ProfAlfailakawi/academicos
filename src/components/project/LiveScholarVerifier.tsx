@@ -6,7 +6,6 @@ import {
   Sparkles,
   Copy,
   Check,
-  RefreshCw,
   Plus,
   ShieldCheck,
   AlertTriangle,
@@ -16,7 +15,7 @@ import {
 import type { AcademicSourceRecord, ProjectDNA } from "../../types";
 import { api, ApiError } from "../../lib/api";
 import { Button } from "../ui/button";
-import { AcademicLoader } from "../ui/AcademicLoader";
+import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
 import { Card, CardContent } from "../ui/card";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 
@@ -173,7 +172,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             />
           </div>
           <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-success hover:bg-success text-white shrink-0">
-            {searching ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />} {t("source.searchAction")}
+            {searching ? <InlineLoader size={15}/> : <Sparkles size={15} />} {t("source.searchAction")}
           </Button>
         </div>
       ) : (
@@ -190,7 +189,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                 className="flex-1 rounded-xl border hairline bg-[var(--bg)] px-3.5 py-2 text-xs font-mono ltr"
               />
               <Button size="sm" onClick={handleDoiCheck} disabled={searching || !doiInput.trim()} className="bg-success hover:bg-success text-white">
-                {searching ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />} {t("source.verifyRecord")}
+                {searching ? <InlineLoader size={14}/> : <ShieldCheck size={14} />} {t("source.verifyRecord")}
               </Button>
             </div>
           </CardContent>
@@ -296,7 +295,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                   disabled={addingDoi === source.doi || addedDois.has(source.doi)}
                   onClick={() => addToProject(source)}
                 >
-                  {addedDois.has(source.doi) ? <Check size={12} /> : addingDoi === source.doi ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
+                  {addedDois.has(source.doi) ? <Check size={12} /> : addingDoi === source.doi ? <InlineLoader size={12}/> : <Plus size={12} />}
                   {addedDois.has(source.doi) ? t("source.added") : t("source.add")}
                 </Button>
               </div>

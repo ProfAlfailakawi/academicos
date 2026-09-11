@@ -1,10 +1,14 @@
-import { localizedUiError } from "../../lib/ui-error";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  localizedUiError } from "../../lib/ui-error";
+import React,
+  { useEffect,
+  useMemo,
+  useRef,
+  useState } from "react";
 import {
   CheckCircle2,
   GraduationCap,
   Headphones,
-  LoaderCircle,
   Mic,
   MicOff,
   Play,
@@ -18,6 +22,7 @@ import type { LearningEvidenceRecord, ProjectDNA, VivaMode, VivaSession } from "
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { formatDateTime, useI18n } from "../../lib/i18n";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 function speak(text: string, lang = "en-US") {
   try {
@@ -191,7 +196,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               ))}
             </div>
             <div className="mt-5 flex items-center gap-3 flex-wrap">
-              <Button onClick={start} disabled={busy}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Play size={16} />}{t("viva.start")}</Button>
+              <Button onClick={start} disabled={busy}>{busy ? <InlineLoader size={16}/> : <Play size={16} />}{t("viva.start")}</Button>
               <label className="flex items-center gap-2 text-xs muted cursor-pointer">
                 <input type="checkbox" checked={autoVoice} onChange={(event) => setAutoVoice(event.target.checked)} /> {t("viva.autoVoice")}
               </label>
@@ -237,7 +242,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               {currentIndex < session.questions.length - 1 ? (
                 <Button onClick={nextQuestion} disabled={!activeAnswer.trim()}><SkipForward size={16} />{t("viva.saveNext")}</Button>
               ) : (
-                <Button onClick={finish} disabled={busy || !activeAnswer.trim()}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <ShieldCheck size={16} />}{t("viva.finish")}</Button>
+                <Button onClick={finish} disabled={busy || !activeAnswer.trim()}>{busy ? <InlineLoader size={16}/> : <ShieldCheck size={16} />}{t("viva.finish")}</Button>
               )}
             </div>
           </div>}

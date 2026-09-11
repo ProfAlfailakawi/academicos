@@ -1,5 +1,8 @@
-import { localizedUiError } from "../../lib/ui-error";
-import React, { useMemo, useState } from "react";
+import {
+  localizedUiError } from "../../lib/ui-error";
+import React,
+  { useMemo,
+  useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
@@ -8,7 +11,6 @@ import {
   Copy,
   FileSearch,
   Fingerprint,
-  LoaderCircle,
   Quote,
   ShieldCheck,
   Sparkles,
@@ -18,6 +20,7 @@ import type { DeepAIDetectionReport, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 export function TurnitinForensicShieldModal({
   project,
@@ -126,11 +129,11 @@ export function TurnitinForensicShieldModal({
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" onClick={improve} disabled={improving || (!sourceText && !report)}>
-                  {improving ? <LoaderCircle size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                  {improving ? <InlineLoader size={15}/> : <Sparkles size={15} />}
                   {t("integrity.improve")}
                 </Button>
                 <Button onClick={analyze} disabled={loading}>
-                  {loading ? <LoaderCircle size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                  {loading ? <InlineLoader size={15}/> : <ShieldCheck size={15} />}
                   {t("integrity.analyze")}
                 </Button>
               </div>

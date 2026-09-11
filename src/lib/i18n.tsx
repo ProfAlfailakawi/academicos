@@ -55,6 +55,7 @@ const S = (
 // قاموس مركّز على صفحة التعلّم والتنقّل — إطار قابل للتوسّع لبقية الواجهة.
 const DICT: Record<string, Record<LocaleCode, string>> = {
   "app.language": S("اللغة", "Language", "Dil", "语言", "भाषा", "Idioma", "Langue", "زبان"),
+  "app.loading": S("جارٍ التحميل…", "Loading…", "Yükleniyor…", "加载中…", "लोड हो रहा है…", "Cargando…", "Chargement…", "لوڈ ہو رہا ہے…"),
   "learn.title": S("مركز التعلّم", "Learning Studio", "Öğrenme Stüdyosu", "学习中心", "लर्निंग स्टूडियो", "Estudio de Aprendizaje", "Studio d'apprentissage", "لرننگ اسٹوڈیو"),
   "learn.subtitle": S(
     "اسأل عن أي موضوع فيشرحه معلّم ذكي، أو اطلب حلًّا يحترم سياسة مقررك.",

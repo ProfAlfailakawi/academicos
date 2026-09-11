@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Clock3,
-  LoaderCircle,
   RotateCcw,
   Send,
   ShieldCheck,
@@ -19,6 +18,7 @@ import type {
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { formatDateTime, useI18n } from "../lib/i18n";
+import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 
 type GradeDraft = {
   rubricGrades: Array<{
@@ -98,7 +98,7 @@ export function AssignmentSubmissions() {
   if (loading)
     return (
       <div className="min-h-64 grid place-items-center">
-        <LoaderCircle className="animate-spin brand-text" />
+        <AcademicLoader size={40} label={t("app.loading")}/>
       </div>
     );
   if (!course || !assignment)
@@ -320,7 +320,7 @@ export function AssignmentSubmissions() {
                     }
                   >
                     {busy === "returned" ? (
-                      <LoaderCircle size={15} className="animate-spin" />
+                      <InlineLoader size={15}/>
                     ) : (
                       <RotateCcw size={15} />
                     )}
@@ -332,7 +332,7 @@ export function AssignmentSubmissions() {
                     disabled={immutable || Boolean(busy)}
                   >
                     {busy === "grading" ? (
-                      <LoaderCircle size={15} className="animate-spin" />
+                      <InlineLoader size={15}/>
                     ) : (
                       <ShieldCheck size={15} />
                     )}
@@ -344,7 +344,7 @@ export function AssignmentSubmissions() {
                     disabled={immutable || Boolean(busy)}
                   >
                     {busy === "graded" ? (
-                      <LoaderCircle size={15} className="animate-spin" />
+                      <InlineLoader size={15}/>
                     ) : (
                       <CheckCircle2 size={15} />
                     )}
@@ -355,7 +355,7 @@ export function AssignmentSubmissions() {
                     disabled={immutable || Boolean(busy)}
                   >
                     {busy === "released" ? (
-                      <LoaderCircle size={15} className="animate-spin" />
+                      <InlineLoader size={15}/>
                     ) : (
                       <Send size={15} />
                     )}

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { ArrowRight, BookOpenCheck, Check, CreditCard, LoaderCircle, LockKeyhole, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Check, CreditCard, LockKeyhole, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { api } from "../lib/api";
 import type { ProjectAccess, ProjectDNA } from "../types";
 import { Button } from "../components/ui/button";
 import { formatMoney, useI18n } from "../lib/i18n";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 const FALLBACK = [
   { id: "preview", amountUsd: 0, pages: 3, projects: 1 },
@@ -89,7 +90,7 @@ export function Plans() {
     <section className="panel-flat rounded-[24px] p-4 md:p-5">
       <div className="grid md:grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center">
         <span className="h-12 w-12 rounded-2xl tone-tile"><BookOpenCheck size={20} /></span>
-        <label className="min-w-0"><span className="eyebrow">{t("plans.projectLabel")}</span>{loading ? <span className="field mt-2 flex items-center gap-2"><LoaderCircle size={15} className="animate-spin" /> {t("plans.loadingProjects")}</span> : projects.length ? <select className="field mt-2" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{projects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.course}</option>)}</select> : <p className="text-xs muted mt-2">{t("plans.noProject")}</p>}</label>
+        <label className="min-w-0"><span className="eyebrow">{t("plans.projectLabel")}</span>{loading ? <span className="field mt-2 flex items-center gap-2"><InlineLoader size={15}/> {t("plans.loadingProjects")}</span> : projects.length ? <select className="field mt-2" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{projects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.course}</option>)}</select> : <p className="text-xs muted mt-2">{t("plans.noProject")}</p>}</label>
         {!projects.length && !loading ? <Button asChild><Link to="/app/upload">{t("plans.uploadAssignment")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : access?.unlocked && selected ? <Button asChild><Link to={`/app/project/${selected.id}`}>{t("plans.openProject")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : null}
       </div>
       {selected && <div className="mt-3 flex flex-wrap gap-2 text-[10px]"><span className="rounded-full soft-bg px-3 py-1.5">{selected.collaborationMode === "group" ? t("plans.groupProject") : t("plans.individualProject")}</span><span className={`rounded-full px-3 py-1.5 ${access?.unlocked ? "brand-soft-bg" : "bg-warning/10 text-warning"}`}>{access?.unlocked ? t("plans.unlocked") : t("plans.freePreview")}</span></div>}
@@ -111,7 +112,7 @@ export function Plans() {
           <div className="plan-price"><strong>{formatMoney(plan.amountUsd, currency, locale)}</strong></div>
           <p>{t(`${key}.description`)}</p>
           <ul><li><Check size={14} /> {t("plans.featureNoRenewal")}</li><li><Check size={14} /> {t("plans.featureEvidence")}</li><li><Check size={14} /> {t("plans.featureLanguages")}</li></ul>
-          <Button className="w-full mt-auto" variant={paid ? "default" : "outline"} disabled={busy === plan.id || groupMismatch || (paid && access?.unlocked && access.planId === plan.id)} onClick={() => paid ? checkout(plan.id as "project" | "project_viva" | "group") : selected ? window.location.assign(`/app/project/${selected.id}`) : window.location.assign("/app/upload")}>{busy === plan.id ? <LoaderCircle size={15} className="animate-spin" /> : access?.unlocked && access.planId === plan.id ? <Check size={15} /> : paid ? <LockKeyhole size={15} /> : <Sparkles size={15} />}{access?.unlocked && access.planId === plan.id ? t("plans.active") : groupMismatch ? t("plans.individualOnly") : paid ? t("plans.choose") : t("plans.startPreview")}</Button>
+          <Button className="w-full mt-auto" variant={paid ? "default" : "outline"} disabled={busy === plan.id || groupMismatch || (paid && access?.unlocked && access.planId === plan.id)} onClick={() => paid ? checkout(plan.id as "project" | "project_viva" | "group") : selected ? window.location.assign(`/app/project/${selected.id}`) : window.location.assign("/app/upload")}>{busy === plan.id ? <InlineLoader size={15}/> : access?.unlocked && access.planId === plan.id ? <Check size={15} /> : paid ? <LockKeyhole size={15} /> : <Sparkles size={15} />}{access?.unlocked && access.planId === plan.id ? t("plans.active") : groupMismatch ? t("plans.individualOnly") : paid ? t("plans.choose") : t("plans.startPreview")}</Button>
         </article>;
       })}
     </div>

@@ -10,7 +10,6 @@ import {
   Expand,
   FileSearch,
   LockKeyhole,
-  LoaderCircle,
   MessageSquareText,
   Mic2,
   PanelRightOpen,
@@ -32,7 +31,7 @@ import type {
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
-import { AcademicLoader } from "../ui/AcademicLoader";
+import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
 import { localizedUiError } from "../../lib/ui-error";
 
 type SectionAction =
@@ -355,13 +354,13 @@ export function ProjectWriterStudio({
                 <div className="min-w-0"><div className="eyebrow">{t("writer.currentSection")}</div><h2 className="section-title mt-1 truncate">{section?.title}</h2></div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] muted">{draft.trim() ? draft.trim().split(/\s+/u).length : 0} {t("writer.words")}</span>
-                  <Button size="sm" variant="outline" onClick={saveSection} disabled={actionBusy === "save" || draft === section?.content}>{actionBusy === "save" ? <LoaderCircle size={14} className="animate-spin" /> : <Save size={14} />} {t("writer.save")}</Button>
+                  <Button size="sm" variant="outline" onClick={saveSection} disabled={actionBusy === "save" || draft === section?.content}>{actionBusy === "save" ? <InlineLoader size={14}/> : <Save size={14} />} {t("writer.save")}</Button>
                 </div>
               </div>
               <div className="writer-toolbar px-3 md:px-5 py-3 border-b hairline flex gap-2 overflow-x-auto">
                 {actionButtons.map(({ action, labelKey, icon: Icon, apply }) => (
                   <button key={action} type="button" onClick={() => runAction(action, apply)} disabled={Boolean(actionBusy)} className="writer-action focus-ring rounded-xl border hairline px-3 py-2 inline-flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap">
-                    {actionBusy === action ? <LoaderCircle size={14} className="animate-spin" /> : !access?.canWriteFull ? <LockKeyhole size={14} /> : <Icon size={14} />}{t(labelKey)}
+                    {actionBusy === action ? <InlineLoader size={14}/> : !access?.canWriteFull ? <LockKeyhole size={14} /> : <Icon size={14} />}{t(labelKey)}
                   </button>
                 ))}
               </div>
@@ -395,17 +394,17 @@ export function ProjectWriterStudio({
             <CardContent>
               <div className="flex items-center gap-2"><ScanSearch size={17} className="brand-text" /><h3 className="text-sm font-semibold">{t("ui.projectXray")}</h3></div>
               <p className="text-[11px] leading-5 muted mt-2">{t("writer.xrayDesc")}</p>
-              <Button className="w-full mt-4" variant="outline" onClick={runXRay} disabled={actionBusy === "xray"}>{actionBusy === "xray" ? <LoaderCircle size={15} className="animate-spin" /> : <ScanSearch size={15} />} {t("writer.runXray")}</Button>
+              <Button className="w-full mt-4" variant="outline" onClick={runXRay} disabled={actionBusy === "xray"}>{actionBusy === "xray" ? <InlineLoader size={15}/> : <ScanSearch size={15} />} {t("writer.runXray")}</Button>
             </CardContent>
           </Card>
           <Card>
             <CardContent>
               <div className="flex items-center gap-2"><MessageSquareText size={17} className="brand-text" /><h3 className="text-sm font-semibold">{t("writer.feedbackTitle")}</h3></div>
-              {!showFeedback ? <Button className="w-full mt-4" variant="outline" onClick={() => setShowFeedback(true)}>{t("writer.addFeedback")}</Button> : <div className="mt-4"><textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} rows={5} className="field resize-y" placeholder={t("writer.feedbackPh")} /><Button className="w-full mt-2" onClick={applyFeedback} disabled={!feedback.trim() || actionBusy === "feedback"}>{actionBusy === "feedback" ? <LoaderCircle size={15} className="animate-spin" /> : <WandSparkles size={15} />} {t("writer.applyFeedback")}</Button></div>}
+              {!showFeedback ? <Button className="w-full mt-4" variant="outline" onClick={() => setShowFeedback(true)}>{t("writer.addFeedback")}</Button> : <div className="mt-4"><textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} rows={5} className="field resize-y" placeholder={t("writer.feedbackPh")} /><Button className="w-full mt-2" onClick={applyFeedback} disabled={!feedback.trim() || actionBusy === "feedback"}>{actionBusy === "feedback" ? <InlineLoader size={15}/> : <WandSparkles size={15} />} {t("writer.applyFeedback")}</Button></div>}
             </CardContent>
           </Card>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <LoaderCircle size={15} className="animate-spin" /> : access?.canExport ? <Download size={15} /> : <LockKeyhole size={15} />} Word</Button>
+            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <InlineLoader size={15}/> : access?.canExport ? <Download size={15} /> : <LockKeyhole size={15} />} Word</Button>
             <Button onClick={() => access?.canViva ? onOpenViva?.() : window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)}>{access?.canViva ? <Mic2 size={15} /> : <LockKeyhole size={15} />} {t("writer.viva")}</Button>
           </div>
         </aside>

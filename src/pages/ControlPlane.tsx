@@ -9,7 +9,6 @@ import {
   Gauge,
   Route,
   Siren,
-  LoaderCircle,
   ShieldCheck,
   Fingerprint,
   Users,
@@ -22,6 +21,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
+import { AcademicLoader } from "../components/ui/AcademicLoader";
 
 export function ControlPlane() {
   const { t, locale } = useI18n();
@@ -99,7 +99,7 @@ export function ControlPlane() {
   if (!data)
     return (
       <div className="min-h-64 grid place-items-center">
-        <LoaderCircle className="animate-spin brand-text" />
+        <AcademicLoader size={40} label={t("app.loading")}/>
       </div>
     );
   const m = data.metrics;

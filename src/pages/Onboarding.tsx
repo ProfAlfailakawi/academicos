@@ -1,5 +1,10 @@
-import { localizedUiError } from "../lib/ui-error";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  localizedUiError } from "../lib/ui-error";
+import React,
+  { useEffect,
+  useMemo,
+  useRef,
+  useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,7 +15,6 @@ import {
   Compass,
   GraduationCap,
   Languages,
-  LoaderCircle,
   MapPin,
   ShieldCheck,
   SkipForward,
@@ -22,6 +26,7 @@ import type { UserProfile } from "../types";
 import { Button } from "../components/ui/button";
 import { Logo, LogoMark } from "../components/brand/Logo";
 import { LOCALES, type LocaleCode, useI18n } from "../lib/i18n";
+import { InlineLoader } from "../components/ui/AcademicLoader";
 
 type StepKind = "choice" | "text" | "tokens";
 type StepKey =
@@ -401,7 +406,7 @@ export function Onboarding() {
                 {t("onboard.skip")}
               </Button>
               <Button onClick={next} disabled={saving}>
-                {saving ? <LoaderCircle size={16} className="animate-spin" /> : <ArrowRight size={16} className="directional-icon" />}
+                {saving ? <InlineLoader size={16}/> : <ArrowRight size={16} className="directional-icon" />}
                 {step === STEPS.length - 1 ? t("onboard.start") : t("onboard.next")}
               </Button>
             </div>

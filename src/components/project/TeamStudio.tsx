@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  LoaderCircle,
   Mail,
   ShieldCheck,
   UserPlus,
@@ -18,6 +17,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 export function TeamStudio({ project }: { project: ProjectDNA }) {
   const { user } = useAuth();
@@ -157,7 +157,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     disabled={busy === "invite" || !email.trim()}
                   >
                     {busy === "invite" ? (
-                      <LoaderCircle size={15} className="animate-spin" />
+                      <InlineLoader size={15}/>
                     ) : (
                       <UserPlus size={15} />
                     )}
@@ -219,7 +219,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <h2 className="section-title mt-1">{t("team.membersTitle")}</h2>
               </div>
               {loading ? (
-                <LoaderCircle size={16} className="animate-spin brand-text" />
+                <InlineLoader size={16}/>
               ) : (
                 <span className="text-[11px] muted">
                   {members.filter((m) => m.status === "active").length + 1}{" "}
@@ -269,7 +269,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                         onClick={() => revoke(m)}
                       >
                         {busy === m.id ? (
-                          <LoaderCircle size={14} className="animate-spin" />
+                          <InlineLoader size={14}/>
                         ) : (
                           <X size={14} />
                         )}

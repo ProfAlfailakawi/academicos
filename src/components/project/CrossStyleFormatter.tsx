@@ -1,10 +1,11 @@
 import { localizedUiError } from "../../lib/ui-error";
 import React, { useState } from "react";
-import { ArrowRightLeft, Check, Copy, RefreshCw, ShieldCheck, AlertTriangle, BookMarked } from "lucide-react";
+import { ArrowRightLeft, Check, Copy, ShieldCheck, AlertTriangle, BookMarked } from "lucide-react";
 import type { AcademicSourceRecord, ProjectDNA } from "../../types";
 import { api, ApiError } from "../../lib/api";
 import { Button } from "../ui/button";
 import { useI18n } from "../../lib/i18n";
+import { InlineLoader } from "../ui/AcademicLoader";
 
 type AcademicStyle = "apa7" | "harvard" | "ieee" | "mla9" | "chicago";
 const STYLE_NAME: Record<AcademicStyle, string> = { apa7: "APA 7", harvard: "Harvard", ieee: "IEEE", mla9: "MLA 9", chicago: "Chicago" };
@@ -70,7 +71,7 @@ export function CrossStyleFormatter({ project }: { project: ProjectDNA }) {
 
       <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3">
         <label className="text-xs font-semibold">{t("formatter.realDoi")}</label>
-        <div className="flex flex-col sm:flex-row gap-2"><input value={doi} onChange={(e) => setDoi(e.target.value)} onKeyDown={(e) => e.key === "Enter" && verifyAndFormat()} placeholder={t("formatter.doiPh")} className="field flex-1 font-mono ltr"/><Button onClick={verifyAndFormat} disabled={loading || !doi.trim()}>{loading ? <RefreshCw size={14} className="animate-spin"/> : <ShieldCheck size={14}/>}{t("formatter.verifyFormat")}</Button></div>
+        <div className="flex flex-col sm:flex-row gap-2"><input value={doi} onChange={(e) => setDoi(e.target.value)} onKeyDown={(e) => e.key === "Enter" && verifyAndFormat()} placeholder={t("formatter.doiPh")} className="field flex-1 font-mono ltr"/><Button onClick={verifyAndFormat} disabled={loading || !doi.trim()}>{loading ? <InlineLoader size={14}/> : <ShieldCheck size={14}/>}{t("formatter.verifyFormat")}</Button></div>
         {error && <div className="text-[11px] text-warning flex gap-2 items-start"><AlertTriangle size={14} className="shrink-0 mt-0.5"/>{error}</div>}
       </div>
 

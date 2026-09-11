@@ -1,11 +1,11 @@
 import { localizedUiError } from "../../lib/ui-error";
 import React, { useEffect, useMemo, useState } from "react";
-import { Fingerprint, Download, ShieldCheck, FileCheck2, BrainCircuit, Copy, Check, LoaderCircle, ExternalLink, AlertTriangle, History } from "lucide-react";
+import { Fingerprint, Download, ShieldCheck, FileCheck2, BrainCircuit, Copy, Check, ExternalLink, AlertTriangle, History } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
-import { AcademicLoader } from "../ui/AcademicLoader";
+import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
 
 interface CapsuleVerification {
   hashValid: boolean;
@@ -127,8 +127,8 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
 
               <div className="rounded-xl bg-insight/10 border border-insight/10 p-4 space-y-3">
                 <div><div className="text-xs font-bold text-insight">{t("dossier.reviewLink")}</div><p className="text-[11px] text-insight mt-1">{t("dossier.reviewLinkDesc")}</p></div>
-                <div className="flex flex-col sm:flex-row gap-2"><Button size="sm" onClick={createReviewLink} disabled={sharing}>{sharing ? <LoaderCircle size={14} className="animate-spin"/> : <ExternalLink size={14}/>} {t("dossier.createReviewLink")}</Button><Button size="sm" variant="outline" onClick={exportCapsule} disabled={exporting}>
-  {exporting ? <LoaderCircle size={14} className="animate-spin"/> : <Download size={14}/>}
+                <div className="flex flex-col sm:flex-row gap-2"><Button size="sm" onClick={createReviewLink} disabled={sharing}>{sharing ? <InlineLoader size={14}/> : <ExternalLink size={14}/>} {t("dossier.createReviewLink")}</Button><Button size="sm" variant="outline" onClick={exportCapsule} disabled={exporting}>
+  {exporting ? <InlineLoader size={14}/> : <Download size={14}/>}
   {t("dossier.download")}
 </Button></div>
                 {shareUrl && <div className="rounded-lg bg-[var(--bg)]/70 p-2 text-[10px] break-all ltr flex gap-2 items-center"><span className="flex-1">{shareUrl}</span>{copied && <Check size={13} className="text-success shrink-0"/>}</div>}

@@ -16,6 +16,7 @@ import {
 import type { AcademicSourceRecord, ProjectDNA } from "../../types";
 import { api, ApiError } from "../../lib/api";
 import { Button } from "../ui/button";
+import { AcademicLoader } from "../ui/AcademicLoader";
 import { Card, CardContent } from "../ui/card";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 
@@ -203,6 +204,21 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
         </div>
       )}
 
+      {searching && (
+        <div className="acad-verify-panel rounded-2xl border hairline border-success/25 bg-[var(--panel)] p-6" role="status" aria-busy="true">
+          <span className="sr-only">{t("dossier.verifying")}</span>
+          <div aria-hidden="true" className="flex flex-col items-center gap-4">
+            <AcademicLoader size={40} delay={200} label="" />
+            <div className="acad-verify-chips flex flex-wrap justify-center gap-1.5">
+              {["DOI", t("source.result"), t("source.copyApa"), "Crossref"].map((chip, i) => (
+                <span key={chip} className="acad-verify-chip px-2 py-0.5 rounded-full text-[10px] border border-success/25 bg-success/8 text-success font-semibold" style={{ animationDelay: `${i * 90}ms` }}>{chip}</span>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("dossier.verifying")}…</p>
+          </div>
+        </div>
+      )}
+
       {!hasSearched && !searching && (
         <div className="rounded-2xl border hairline bg-[var(--panel)] p-8 text-center">
           <Database size={28} className="mx-auto text-success mb-3" />
@@ -226,7 +242,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
         )}
 
         {results.map((source, index) => (
-          <div key={source.doi} className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3.5 hover:border-success/40 transition-colors">
+          <div key={source.doi} className="acad-result-enter rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3.5 hover:border-success/40 transition-colors" style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}>
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

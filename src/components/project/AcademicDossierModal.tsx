@@ -5,6 +5,7 @@ import type { EvidenceCapsule, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 import { Button } from "../ui/button";
+import { AcademicLoader } from "../ui/AcademicLoader";
 
 interface CapsuleVerification {
   hashValid: boolean;
@@ -99,7 +100,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
           <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => window.print()}><Download size={15}/>{t("common.print")}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t("common.close")}</Button></div>
         </div>
 
-        {loading && <div className="min-h-56 grid place-items-center"><div className="text-center"><LoaderCircle className="animate-spin mx-auto brand-text"/><p className="text-xs text-muted-foreground mt-3">{t("dossier.building")}</p></div></div>}
+        {loading && <div className="min-h-56 grid place-items-center" aria-busy="true"><div className="text-center"><AcademicLoader size={48} label={t("dossier.building")} className="mx-auto"/><p className="text-xs text-muted-foreground mt-3">{t("dossier.building")}</p></div></div>}
         {error && <div className="rounded-xl border border-danger/20 bg-danger/8 p-3 text-xs flex gap-2"><AlertTriangle size={15} className="text-danger shrink-0"/><span>{error}</span></div>}
 
         {capsule && !loading && (

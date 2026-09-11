@@ -9,12 +9,14 @@ import { Button } from "../components/ui/button";
 import { Logo } from "../components/brand/Logo";
 import { HeroJourney } from "../components/brand/HeroJourney";
 import { HeroConstellation, useHeroEntrance } from "../components/brand/HeroEntrance";
+import { Overture, useOverture } from "../components/brand/Overture";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
 export function PublicHome() {
   const { t, locale } = useI18n();
-  const heroEntering = useHeroEntrance();
+  const [overtureActive, dismissOverture] = useOverture();
+  const heroEntering = useHeroEntrance(!overtureActive);
   const journey = [
     { icon: FilePenLine, title: t("landing.writeTitle"), text: t("landing.writeText"), to: "/login", tone: "mint" },
     { icon: ScanSearch, title: t("landing.rescueTitle"), text: t("landing.rescueText"), to: "/login", tone: "sand" },
@@ -23,6 +25,7 @@ export function PublicHome() {
   const projectPrice = formatMoney(6.99, "USD", locale);
   return (
     <div className="public-shell min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      {overtureActive && <Overture onDone={dismissOverture} />}
       <header className="public-header px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between gap-3">
         <Link to="/" className="min-h-11 flex items-center gap-3 focus-ring rounded-xl">
           <Logo markSize={40} caption={t("landing.tagline")} />

@@ -16,9 +16,16 @@ import { useI18n } from "../../lib/i18n";
  */
 let hasPlayedThisEntry = false;
 
-export function useHeroEntrance(): boolean {
+export function useHeroEntrance(enabled = true): boolean {
   const [play] = React.useState(() => {
     if (hasPlayedThisEntry) return false;
+    // When the full-screen overture runs instead, the hero appears already
+    // settled as the overture's reveal — don't replay the scatter, and mark
+    // this entry as played so SPA re-mounts stay quiet too.
+    if (!enabled) {
+      hasPlayedThisEntry = true;
+      return false;
+    }
     if (typeof window !== "undefined") {
       if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
       if (document.documentElement.classList.contains("a11y-reduced-motion")) return false;
@@ -29,7 +36,7 @@ export function useHeroEntrance(): boolean {
   return play;
 }
 
-const ELEMENTS = [
+export const HERO_ELEMENTS = [
   { key: "landing.elAssignment", icon: FilePenLine, pos: "assignment" },
   { key: "landing.elRubric", icon: ListChecks, pos: "rubric" },
   { key: "landing.elSource", icon: BookMarked, pos: "source" },
@@ -42,7 +49,7 @@ export function HeroConstellation() {
   const { t } = useI18n();
   return (
     <div className="hero-constellation" aria-hidden="true">
-      {ELEMENTS.map(({ key, icon: Icon, pos }) => (
+      {HERO_ELEMENTS.map(({ key, icon: Icon, pos }) => (
         <span key={key} className={`hero-el hero-el--${pos}`}>
           <Icon size={14} />
           {t(key)}

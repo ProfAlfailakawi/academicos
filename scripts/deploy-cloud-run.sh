@@ -32,6 +32,24 @@ if [[ -n "${GEMINI_API_KEY:-}" ]]; then
   echo "AI provider: Gemini will be configured on this deploy."
 fi
 
+# `gcloud run deploy --source` يبني عبر Cloud Build منتحلاً حساب الحوسبة
+# الافتراضي. في المشاريع المنشأة بعد تغيير Google لحساب البناء الافتراضي، هذا
+# الحساب يأتي بلا أدوار، فيفشل الرفع بـ "could not resolve source:
+# permission_denied" — رسالة تبدو كأنها مشكلة في حسابك أنت لا في حساب الخدمة.
+# roles/cloudbuild.builds.builder هو الدور الذي توثّقه Google لهذا الغرض.
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+echo "Granting Cloud Build role to $BUILD_SA (idempotent)…"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${BUILD_SA}" \
+  --role=roles/cloudbuild.builds.builder \
+  --condition=None --quiet >/dev/null || {
+    echo "⚠ تعذّر منح الدور. إن فشل النشر بخطأ صلاحيات، امنحه يدوياً:" >&2
+    echo "  gcloud projects add-iam-policy-binding $PROJECT_ID \\" >&2
+    echo "    --member=serviceAccount:${BUILD_SA} \\" >&2
+    echo "    --role=roles/cloudbuild.builds.builder" >&2
+  }
+
 echo "Deploying to EXISTING Cloud Run service: $SERVICE_NAME ($REGION)"
 # Preserve the service identity already managed by AI Studio/Cloud Run; do not override it.
 gcloud run deploy "$SERVICE_NAME" --source "$ROOT_DIR" --project "$PROJECT_ID" --region "$REGION" --allow-unauthenticated \

@@ -38,6 +38,59 @@ import type {
 export const DEMO_SESSION_TTL_MS = 60 * 60 * 1000;
 export const DEMO_TENANT_ID = "demo_tenant_academicos";
 export const DEMO_INSTRUCTOR_ID = "demo_user_instructor";
+
+/*
+ * أدوار البيئة التجريبية.
+ *
+ * كانت البيئة تفتح على الأستاذ وحده، فلا تُرى شاشة الطالب — وهي نصف المنتج،
+ * وأوّل ما يسأل عنه من يُعرض عليه. والأدوار هنا ليست ترقيةَ صلاحية: كلها داخل
+ * الصندوق المعزول نفسه، وكل واحدٍ منها شخصٌ موجود في بذرته فعلًا — فالشاشة
+ * تفتح على بياناته لا على فراغ.
+ *
+ * والخادم هو من يقرّر، لا الواجهة: تُرسل الواجهة الدور المطلوب، ويُطابَق هنا
+ * على قائمةٍ مغلقة. أي قيمة أخرى تسقط على الأستاذ.
+ */
+export interface DemoActorProfile {
+  userId: string;
+  role: "professor" | "teaching_assistant" | "university_admin" | "student";
+  displayName: string;
+  email: string;
+}
+
+export const DEMO_ACTORS: Record<string, DemoActorProfile> = {
+  professor: {
+    userId: DEMO_INSTRUCTOR_ID,
+    role: "professor",
+    displayName: "د. سارة الخالد (بيئة تجريبية)",
+    email: "demo_user_instructor@demo.academicos.test",
+  },
+  teaching_assistant: {
+    userId: "demo_user_ta",
+    role: "teaching_assistant",
+    displayName: "م. عبدالعزيز الشايع (بيئة تجريبية)",
+    email: "demo_user_ta@demo.academicos.test",
+  },
+  university_admin: {
+    userId: "demo_user_admin",
+    role: "university_admin",
+    displayName: "د. محمد البدر (بيئة تجريبية)",
+    email: "demo_user_admin@demo.academicos.test",
+  },
+  student: {
+    // أول طالبٍ في البذرة: مسجَّل في المقررات ولديه تسليمات وأدلّة تعلّم،
+    // فشاشته تفتح على عملٍ قائم لا على قائمةٍ فارغة.
+    userId: "demo_user_student_1",
+    role: "student",
+    displayName: "عبدالله الفيلكاوي (بيئة تجريبية)",
+    email: "demo_user_student_1@demo.academicos.test",
+  },
+};
+
+/** يحوّل ما تطلبه الواجهة إلى فاعلٍ معروف. المجهول يسقط على الأستاذ. */
+export function demoActorFor(requested: unknown): DemoActorProfile {
+  const key = String(requested || "").trim();
+  return DEMO_ACTORS[key] || DEMO_ACTORS.professor;
+}
 export const DEMO_TOKEN_PREFIX = "demo_";
 
 /** Demo is on by default; a deployment that must never offer it sets this to "false". */

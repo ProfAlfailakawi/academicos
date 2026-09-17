@@ -26,6 +26,7 @@ import { aiConfigured, aiProviderStatus, getAIProvider } from "./src/server/ai";
 import {
   DemoSandbox,
   DEMO_INSTRUCTOR_ID,
+  demoActorFor,
   DEMO_SESSION_TTL_MS,
   DEMO_TENANT_ID,
   DEMO_TOKEN_PREFIX,
@@ -627,12 +628,21 @@ async function authenticate(
         error: "Demo session has expired",
         code: "DEMO_SESSION_EXPIRED",
       });
+    /*
+     * الدور داخل الصندوق يختاره الزائر، والخادم هو من يقرّره.
+     *
+     * كانت البيئة تفتح على الأستاذ وحده فلا تُرى شاشة الطالب — وهي نصف المنتج.
+     * وترويسة `x-demo-role` لا تمنح صلاحية: تُطابَق على قائمةٍ مغلقة
+     * (`demoActorFor`)، وكل فاعلٍ فيها شخصٌ داخل الصندوق المعزول نفسه، والمجهول
+     * يسقط على الأستاذ. فلا يبلغ أيٌّ منها بيانات جهةٍ حقيقية، تمامًا كما كان.
+     */
+    const demoActor = demoActorFor(req.headers["x-demo-role"]);
     req.actor = {
-      userId: DEMO_INSTRUCTOR_ID,
+      userId: demoActor.userId,
       tenantId: DEMO_TENANT_ID,
-      role: "professor",
-      displayName: "د. سارة الخالد (بيئة تجريبية)",
-      email: "demo_user_instructor@demo.academicos.test",
+      role: demoActor.role,
+      displayName: demoActor.displayName,
+      email: demoActor.email,
       mfa: false,
       authTime: Math.floor(Date.now() / 1000),
       emailVerified: true,

@@ -31,6 +31,6 @@ echo "  service:  $SERVICE_NAME"
 echo "  region:   $REGION"
 echo "  identity: $IDENTITY"
 RUNTIME_SERVICE_ACCOUNT="$IDENTITY" FIREBASE_PROJECT_ID="$PROJECT_ID" \
-  "$ROOT_DIR/scripts/configure-firebase-runtime-iam.sh"
+  bash "$ROOT_DIR/scripts/configure-firebase-runtime-iam.sh"
 
 echo "Done. IAM changes apply to the existing Cloud Run revision; no new service account was created."

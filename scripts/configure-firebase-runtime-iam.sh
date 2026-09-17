@@ -28,20 +28,28 @@ if ! gcloud projects add-iam-policy-binding "$FIREBASE_PROJECT_ID" \
   echo "Database-scoped IAM binding failed; retrying with the standard project-level Datastore User role." >&2
   gcloud projects add-iam-policy-binding "$FIREBASE_PROJECT_ID" \
     --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" \
-    --role="roles/datastore.user" --quiet >/dev/null
+    --role="roles/datastore.user" --condition=None --quiet >/dev/null
 fi
 
+# --condition=None is required, not cosmetic: the scoped binding above puts a
+# condition into the policy, and from then on gcloud refuses an unconditioned
+# add-iam-policy-binding in non-interactive mode. Without it every role below
+# fails, and under `set -e` the deploy stops before APP_URL is ever set.
 for role in roles/firebaseauth.admin roles/firebaseappcheck.tokenVerifier roles/storage.objectUser roles/serviceusage.serviceUsageConsumer; do
-  gcloud projects add-iam-policy-binding "$FIREBASE_PROJECT_ID" \
-    --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" --role="$role" --quiet >/dev/null
-  echo "  ✓ $role"
+  if gcloud projects add-iam-policy-binding "$FIREBASE_PROJECT_ID" \
+      --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" --role="$role" \
+      --condition=None --quiet >/dev/null; then
+    echo "  ✓ $role"
+  else
+    echo "  ! $role لم يُمنح — امنحه يدوياً إن احتاجته الميزة المعتمدة عليه" >&2
+  fi
 done
 
 # Needed only for createCustomToken / signed URL paths. Do not fail the core login/database repair if policy editing on the SA is restricted.
 gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SERVICE_ACCOUNT" \
   --project "$FIREBASE_PROJECT_ID" \
   --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" \
-  --role="roles/iam.serviceAccountTokenCreator" --quiet >/dev/null 2>&1 || \
+  --role="roles/iam.serviceAccountTokenCreator" --condition=None --quiet >/dev/null 2>&1 || \
   echo "  ! tokenCreator self-binding skipped (core Firestore/Auth access is still configured)"
 
 echo "Firebase runtime IAM configured for the current Cloud Run identity."

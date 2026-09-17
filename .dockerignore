@@ -14,5 +14,9 @@ ui-debug.log
 *.md
 docs
 tests
-scripts
 .github
+
+# لا تستبعد scripts/: البناء يحتاجه مرّتين — `npm run build` يبدأ بـ
+# scripts/verify-pwa.mjs، و vite.config.ts يستورد ./scripts/build-stamp.mjs.
+# استبعاده كان يُفشل بناء الصورة بـ "Cannot find module". لا يكلّف شيئاً في
+# الصورة النهائية: المرحلة الثانية تنسخ dist فقط.

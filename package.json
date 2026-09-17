@@ -54,7 +54,8 @@
     "audit:global-ui": "node scripts/global-ui-audit.cjs",
     "audit:launch": "node scripts/static-release-audit.mjs && node scripts/global-ui-audit.cjs && node scripts/ts-syntax-audit.cjs",
     "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh",
-    "verify:pwa": "node scripts/verify-pwa.mjs"
+    "verify:pwa": "node scripts/verify-pwa.mjs",
+    "secrets:generate": "node scripts/generate-secrets.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

@@ -55,8 +55,17 @@ echo "Deploying to EXISTING Cloud Run service: $SERVICE_NAME ($REGION)"
 gcloud run deploy "$SERVICE_NAME" --source "$ROOT_DIR" --project "$PROJECT_ID" --region "$REGION" --allow-unauthenticated \
   --update-env-vars "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,FIREBASE_FIRESTORE_DATABASE_ID=$FIRESTORE_DATABASE_ID,FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_API_KEY=$FIREBASE_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=$FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=$FIREBASE_APP_ID,CHECK_REVOKED_ID_TOKENS=true${AI_ENV_VARS}" --quiet
 
+# لا يُسقط بقيةَ النشر: مرّتين حتى الآن فشلت خطوة صلاحيات وسط السكربت، فتوقّف
+# قبل ضبط APP_URL و ALLOWED_ORIGINS وترك الخدمة قائمة لكن مُعدّة خطأً — وطبع
+# رابطاً كأنه انتهى. الفشل هنا يُعلَن بصوت عالٍ ويُستكمل الإعداد.
+IAM_REPAIR_OK=yes
 CLOUD_RUN_SERVICE_NAME="$SERVICE_NAME" CLOUD_RUN_REGION="$REGION" FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
-  bash "$ROOT_DIR/scripts/repair-cloud-run-firebase-access.sh"
+  bash "$ROOT_DIR/scripts/repair-cloud-run-firebase-access.sh" || IAM_REPAIR_OK=no
 URL="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
 gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --update-env-vars "APP_URL=$URL,ALLOWED_ORIGINS=$URL" --quiet >/dev/null
 printf '\nService: %s\nURL: %s\nFirestore: %s\n' "$SERVICE_NAME" "$URL" "$FIRESTORE_DATABASE_ID"
+if [[ "$IAM_REPAIR_OK" != yes ]]; then
+  printf '\n⚠ الخدمة منشورة ومضبوطة، لكن إصلاح صلاحيات Firebase فشل.\n'
+  printf '  تسجيل الدخول أو الوصول إلى Firestore قد لا يعمل. راجع الخطأ أعلاه.\n'
+  exit 1
+fi

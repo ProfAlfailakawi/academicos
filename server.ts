@@ -802,6 +802,10 @@ function sanitizePlatformData(
   ).slice(0, 120)) {
     const key = cleanField(rawKey, 80);
     if (!key) continue;
+    // Drop prototype-pollution keys: these are never legitimate data fields and
+    // must not reach persisted records or any downstream merge.
+    if (key === "__proto__" || key === "constructor" || key === "prototype")
+      continue;
     const lower = key.toLowerCase();
     if (
       /(password|secret|privatekey|access[_-]?token|refresh[_-]?token|api[_-]?key)$/.test(

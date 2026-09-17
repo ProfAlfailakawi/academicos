@@ -169,6 +169,38 @@ expect('Integration runtime metadata is localized', integrations.includes('integ
 expect('Unknown status pills localize instead of leaking enum keys', statusPill.includes('runtimeEnumLabel(status, locale)'), 'StatusPill fallback should be locale-aware');
 expect('No Kuwait-only product defaults in UI', !/(ar-KW|KWD|د\.ك|الكويت فقط|Kuwait-only)/i.test(uiCorpus), 'Kuwait may be selectable, never a UI default');
 expect('Auth has no client-side fake session fallback', !/(academicos_local_user|demo_token|localUser|localStorage\.setItem\([^\n]*user)/i.test(auth), 'production auth must be Firebase-only');
+/*
+ * The rule above bans a session the CLIENT invents. The demo is the one identity
+ * that is not a Firebase user, so it gets its own rule rather than an exemption.
+ * Four structural properties, each a single readable assertion:
+ *   1. the handle is obtained from the server endpoint, not minted locally;
+ *   2. it is held in sessionStorage — one tab, gone when the tab closes;
+ *   3. it never touches localStorage, which would outlive the tab;
+ *   4. it outranks the Firebase token, so a tab in demo cannot send a real
+ *      identity to the server.
+ * And one behavioural property: the demo identity is only ever installed on a
+ * line that is guarded by the handle. Together these are stricter than the
+ * blanket ban would have been.
+ */
+const authLines = auth.split('\n');
+const demoUserInstalls = authLines
+  .map((line, i) => ({ line, i }))
+  .filter(({ line }) => /setUser\(DEMO_USER\)/.test(line));
+const guardedByHandle = ({ i }) =>
+  authLines.slice(Math.max(0, i - 6), i + 1).some((line) => /demoTokenRef\.current|data\.token/.test(line));
+const demoRules = [
+  ['handle comes from the server', /fetch\("\/api\/demo\/session", \{ method: "POST" \}\)/.test(auth)],
+  ['handle is per-tab', /window\.sessionStorage\.setItem\(DEMO_SESSION_KEY/.test(auth)],
+  ['handle never persists past the tab', !/localStorage[^\n]*DEMO_SESSION_KEY/.test(auth)],
+  ['handle outranks the Firebase token', /if \(demoTokenRef\.current\) return demoTokenRef\.current;/.test(auth)],
+  ['demo identity is installed only under the handle', demoUserInstalls.length > 0 && demoUserInstalls.every(guardedByHandle)],
+];
+const brokenDemoRules = demoRules.filter(([, ok]) => !ok).map(([name]) => name);
+expect(
+  'Demo identity exists only under a server-issued session',
+  !auth.includes('DEMO_USER') || brokenDemoRules.length === 0,
+  brokenDemoRules.join('; '),
+);
 expect('App routes keep global pages behind the shared Layout', app.includes('<Route path="/app" element={<ProtectedLayout />}>') && app.includes('<Route path="learn" element={<LearnStudio />} />'), 'protected app pages should inherit the same global shell');
 expect('Student utility pages are real routes, not dead redirects', ['invitations','calendar','notifications','skills','passport','archive','jobs'].every((route) => app.includes(`<Route path="${route}"`) && !app.includes(`<Route path="${route}" element={<Navigate to="/app" replace />} />`)), 'existing utility pages should remain reachable without bloating primary navigation');
 expect('Hidden academic tools remain discoverable', layout.includes('const utilityNav = useMemo') && layout.includes('layout.academicTools') && layout.includes('/app/notifications') && layout.includes('/app/passport'), 'utility routes should be searchable from the command palette');

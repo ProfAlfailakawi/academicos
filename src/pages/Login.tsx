@@ -417,7 +417,7 @@ export function Login() {
                         try {
                           await startDemo();
                         } catch {
-                          setError("تعذّر فتح البيئة التجريبية. حاول مرة أخرى.");
+                          setError(t("demo.enterFailed"));
                         } finally {
                           setDemoBusy(false);
                         }
@@ -425,10 +425,10 @@ export function Login() {
                       className="focus-ring w-full flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-500 hover:bg-amber-500/15 disabled:opacity-60"
                     >
                       {demoBusy ? <InlineLoader size={16}/> : <FlaskConical className="w-4 h-4" aria-hidden="true"/>}
-                      <span>استعراض النظام ببيانات تجريبية</span>
+                      <span>{t("demo.enter")}</span>
                     </button>
                     <p className="mt-2 text-center text-[10px] muted">
-                      بيئة معزولة ببيانات مصطنعة — لا تتصل ببيانات أي جهة حقيقية.
+                      {t("demo.enterHint")}
                     </p>
                   </div>
                 )}

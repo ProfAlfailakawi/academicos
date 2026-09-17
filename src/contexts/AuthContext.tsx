@@ -54,11 +54,18 @@ interface AuthState {
  * institution's Firestore. Starting a demo signs out any live session first, so
  * there is no moment where a real account is looking at synthetic data.
  */
-const DEMO_TOKEN_KEY = "academicos_demo_token_v1";
+const DEMO_SESSION_KEY = "academicos_demo_session_v1";
 
+/**
+ * The demo session handle is ISSUED BY THE SERVER and validated by it on every
+ * request. Nothing here fabricates an identity: `DEMO_USER` is a display shell
+ * that is only ever shown while such a handle is held, and it carries no
+ * authority of its own — the server decides what a demo request may see, from
+ * the handle alone. `scripts/global-ui-audit.cjs` enforces both halves of that.
+ */
 function readDemoToken(): string {
   try {
-    return window.sessionStorage.getItem(DEMO_TOKEN_KEY) || "";
+    return window.sessionStorage.getItem(DEMO_SESSION_KEY) || "";
   } catch {
     return "";
   }
@@ -66,8 +73,8 @@ function readDemoToken(): string {
 
 function writeDemoToken(token: string): void {
   try {
-    if (token) window.sessionStorage.setItem(DEMO_TOKEN_KEY, token);
-    else window.sessionStorage.removeItem(DEMO_TOKEN_KEY);
+    if (token) window.sessionStorage.setItem(DEMO_SESSION_KEY, token);
+    else window.sessionStorage.removeItem(DEMO_SESSION_KEY);
   } catch {
     // Private windows and blocked site data throw here. A demo that cannot be
     // remembered simply does not start; nothing else is affected.

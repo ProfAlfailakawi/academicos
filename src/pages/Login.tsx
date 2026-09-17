@@ -6,6 +6,7 @@ import {
 import {
   ArrowLeft,
   CheckCircle2,
+  FlaskConical,
   KeyRound,
   LockKeyhole,
   ShieldCheck,
@@ -40,7 +41,8 @@ function factorLabel(factor: MultiFactorInfo, t: (key: string) => string) {
 
 export function Login() {
   const { t } = useI18n();
-  const { user, login, signup, resetPassword, configured } = useAuth();
+  const { user, login, signup, resetPassword, configured, demoAvailable, startDemo } = useAuth();
+  const [demoBusy, setDemoBusy] = useState(false);
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -400,6 +402,36 @@ export function Login() {
                     </div>
                   )}
                 </div>
+
+                {demoAvailable && mode === "login" && (
+                  /* A walkthrough entry that needs no account. It opens an
+                     isolated tenant of synthetic academic work — no real
+                     institution data is reachable from it. */
+                  <div className="mt-5 pt-4 border-t hairline">
+                    <button
+                      type="button"
+                      disabled={demoBusy}
+                      onClick={async () => {
+                        setDemoBusy(true);
+                        setError("");
+                        try {
+                          await startDemo();
+                        } catch {
+                          setError(t("demo.enterFailed"));
+                        } finally {
+                          setDemoBusy(false);
+                        }
+                      }}
+                      className="focus-ring w-full flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-500 hover:bg-amber-500/15 disabled:opacity-60"
+                    >
+                      {demoBusy ? <InlineLoader size={16}/> : <FlaskConical className="w-4 h-4" aria-hidden="true"/>}
+                      <span>{t("demo.enter")}</span>
+                    </button>
+                    <p className="mt-2 text-center text-[10px] muted">
+                      {t("demo.enterHint")}
+                    </p>
+                  </div>
+                )}
 
                 <div className="mt-6 pt-5 border-t hairline text-[11px] muted leading-5">
                   <strong>{t("login.firstTimeTitle")}</strong> {t("login.firstTimeDesc")}

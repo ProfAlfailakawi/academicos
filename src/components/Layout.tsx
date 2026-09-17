@@ -17,11 +17,13 @@ import {
   Award,
   Bell,
   CalendarDays,
+  FlaskConical,
   LogOut,
   MailOpen,
   Menu,
   Moon,
   Plus,
+  RefreshCw,
   Search,
   ServerCog,
   Settings,
@@ -69,7 +71,7 @@ const studentUtilityNav: NavItem[] = [
 
 export function Layout() {
   const { t, locale } = useI18n();
-  const { user, logout, resendVerification } = useAuth();
+  const { user, logout, resendVerification, demo, resetDemo, endDemo } = useAuth();
   const { theme, setTheme } = useAppPreferences();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -567,12 +569,34 @@ export function Layout() {
                 </div>
               </div>
             </div>
+            {demo && (
+              /* Deliberately conspicuous. In a walkthrough someone is always
+                 looking over a shoulder, and they should be able to tell at a
+                 glance that no record on the screen belongs to a real student. */
+              <div
+                role="status"
+                aria-label={t("demo.badgeAria")}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-2.5 py-1 text-[10px] font-black tracking-wide text-amber-500"
+              >
+                <FlaskConical size={13} aria-hidden="true" />
+                <span>{t("demo.badge")}</span>
+                <button
+                  type="button"
+                  onClick={() => void resetDemo()}
+                  title={t("demo.reset")}
+                  aria-label={t("demo.reset")}
+                  className="focus-ring grid h-5 w-5 place-items-center rounded-full hover:bg-amber-500/25"
+                >
+                  <RefreshCw size={12} />
+                </button>
+              </div>
+            )}
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => logout()}
-              title={t("layout.logout")}
-              aria-label={t("layout.logout")}
+              onClick={() => (demo ? void endDemo() : logout())}
+              title={demo ? t("demo.exit") : t("layout.logout")}
+              aria-label={demo ? t("demo.exit") : t("layout.logout")}
               className="text-danger hover:bg-danger/10"
             >
               <LogOut size={18} />

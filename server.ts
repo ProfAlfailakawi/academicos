@@ -24,6 +24,14 @@ import { getAppCheck } from "firebase-admin/app-check";
 import appletConfig from "./firebase-applet-config.json";
 import { aiConfigured, aiProviderStatus, getAIProvider } from "./src/server/ai";
 import {
+  DemoSandbox,
+  DEMO_INSTRUCTOR_ID,
+  DEMO_SESSION_TTL_MS,
+  DEMO_TENANT_ID,
+  DEMO_TOKEN_PREFIX,
+  demoEnabled,
+} from "./src/server/demoSandbox";
+import {
   assertSupportedFileContent,
   createExtractionBudget,
   extractFileText,
@@ -602,7 +610,41 @@ async function authenticate(
 ) {
   const header = req.header("Authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  
+
+  /**
+   * Demo sessions authenticate against the sandbox registry, never Firebase.
+   *
+   * The token is 32 bytes of CSPRNG output that only exists in this process's
+   * memory, and it is accepted only while a live sandbox is registered under
+   * it — so it grants access to that sandbox and to nothing else. The actor it
+   * produces is a synthetic instructor inside the synthetic tenant, which means
+   * every tenant filter downstream keeps demo traffic inside demo data even if
+   * the sandbox binding were somehow bypassed.
+   */
+  if (demoEnabled() && token.startsWith(DEMO_TOKEN_PREFIX)) {
+    if (!DemoSandbox.has(token))
+      return res.status(401).json({
+        error: "Demo session has expired",
+        code: "DEMO_SESSION_EXPIRED",
+      });
+    req.actor = {
+      userId: DEMO_INSTRUCTOR_ID,
+      tenantId: DEMO_TENANT_ID,
+      role: "professor",
+      displayName: "د. سارة الخالد (بيئة تجريبية)",
+      email: "demo_user_instructor@demo.academicos.test",
+      mfa: false,
+      authTime: Math.floor(Date.now() / 1000),
+      emailVerified: true,
+    } as typeof req.actor;
+    return DemoSandbox.run(token, DEMO_SESSION_TTL_MS, next)
+      ? undefined
+      : res.status(401).json({
+          error: "Demo session has expired",
+          code: "DEMO_SESSION_EXPIRED",
+        });
+  }
+
   if (!firebaseInitialized) {
     return res.status(503).json({
       error: "Authentication service is not configured",
@@ -2344,6 +2386,48 @@ async function startServer() {
   app.get("/api/version", (_req, res) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.json({ build: currentBuildId() });
+  });
+
+  /**
+   * Demo entry points. Unauthenticated by design — starting a demo IS the
+   * authentication step, and what it hands back is a token that unlocks a
+   * freshly-built private sandbox and nothing else.
+   */
+  app.get("/api/demo/config", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ enabled: demoEnabled(), ttlMs: DEMO_SESSION_TTL_MS });
+  });
+
+  app.post("/api/demo/session", (_req, res) => {
+    if (!demoEnabled())
+      return res
+        .status(404)
+        .json({ error: "Demo is not enabled on this deployment", code: "DEMO_DISABLED" });
+    const token = DemoSandbox.create(DEMO_SESSION_TTL_MS);
+    return res.json({
+      token,
+      ttlMs: DEMO_SESSION_TTL_MS,
+      tenantId: DEMO_TENANT_ID,
+      actor: { userId: DEMO_INSTRUCTOR_ID, role: "professor", displayName: "د. سارة الخالد (بيئة تجريبية)" },
+      seeded: DemoSandbox.stats(token),
+    });
+  });
+
+  app.post("/api/demo/reset", (req, res) => {
+    const header = req.header("Authorization") || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+    if (!token.startsWith(DEMO_TOKEN_PREFIX) || !DemoSandbox.reset(token, DEMO_SESSION_TTL_MS))
+      return res
+        .status(410)
+        .json({ error: "Demo session has expired", code: "DEMO_SESSION_EXPIRED" });
+    return res.json({ ok: true, seeded: DemoSandbox.stats(token) });
+  });
+
+  app.post("/api/demo/end", (req, res) => {
+    const header = req.header("Authorization") || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+    if (token.startsWith(DEMO_TOKEN_PREFIX)) DemoSandbox.destroy(token);
+    return res.json({ ok: true });
   });
 
   app.get("/api/health", (_req, res) =>

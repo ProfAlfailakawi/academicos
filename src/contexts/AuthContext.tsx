@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -35,7 +36,54 @@ interface AuthState {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
+  /** True while this tab is inside an isolated demo tenant. */
+  demo: boolean;
+  demoAvailable: boolean;
+  startDemo: () => Promise<void>;
+  resetDemo: () => Promise<void>;
+  endDemo: () => Promise<void>;
 }
+
+/**
+ * Demo sessions.
+ *
+ * The token the server issues is kept in sessionStorage — one tab, discarded
+ * when the tab closes — and is handed to the API layer in place of a Firebase
+ * ID token. It unlocks one server-side sandbox and nothing else, so a demo
+ * visitor never authenticates against a real identity and never reaches the
+ * institution's Firestore. Starting a demo signs out any live session first, so
+ * there is no moment where a real account is looking at synthetic data.
+ */
+const DEMO_TOKEN_KEY = "academicos_demo_token_v1";
+
+function readDemoToken(): string {
+  try {
+    return window.sessionStorage.getItem(DEMO_TOKEN_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeDemoToken(token: string): void {
+  try {
+    if (token) window.sessionStorage.setItem(DEMO_TOKEN_KEY, token);
+    else window.sessionStorage.removeItem(DEMO_TOKEN_KEY);
+  } catch {
+    // Private windows and blocked site data throw here. A demo that cannot be
+    // remembered simply does not start; nothing else is affected.
+  }
+}
+
+const DEMO_USER: User = {
+  id: "demo_user_instructor",
+  email: "demo_user_instructor@demo.academicos.test",
+  displayName: "د. سارة الخالد (بيئة تجريبية)",
+  role: "professor",
+  tenantId: "demo_tenant_academicos",
+  emailVerified: true,
+  mfaEnrolled: false,
+  mfaSatisfied: true,
+};
 
 const Context = createContext<AuthState | null>(null);
 const allowedRoles: UserRole[] = [
@@ -120,9 +168,33 @@ function requireFirebase() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [demoToken, setDemoToken] = useState<string>(() =>
+    typeof window === "undefined" ? "" : readDemoToken(),
+  );
+  const [demoAvailable, setDemoAvailable] = useState(false);
+  // A ref, because the token provider is registered once and must read the
+  // current value rather than the one captured at registration.
+  const demoTokenRef = useRef(demoToken);
+  demoTokenRef.current = demoToken;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/demo/config", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!cancelled) setDemoAvailable(Boolean(data?.enabled));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setApiTokenProvider(async (forceRefresh = false) => {
+      // A demo token wins: while one is held, this tab must not send a real
+      // identity to the server under any circumstance.
+      if (demoTokenRef.current) return demoTokenRef.current;
       if (!firebaseAuth?.currentUser) return null;
       try {
         return await firebaseAuth.currentUser.getIdToken(forceRefresh);
@@ -137,6 +209,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         : null,
     );
 
+    if (demoTokenRef.current) {
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     if (!firebaseAuth || !firebaseClientConfigured) {
       setUser(null);
       setLoading(false);
@@ -145,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onIdTokenChanged(firebaseAuth, async (current) => {
       try {
+        if (demoTokenRef.current) return;
         setUser(current ? await mapFirebaseUser(current) : null);
       } catch (error) {
         console.error("Failed to map authenticated Firebase user", error);
@@ -195,8 +274,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await sendEmailVerification(auth.currentUser);
         }
       },
+      demo: Boolean(demoToken),
+      demoAvailable,
+      startDemo: async () => {
+        // Sign a live session out first; a real identity must never be the one
+        // looking at the sandbox.
+        if (firebaseAuth?.currentUser) await signOut(firebaseAuth).catch(() => undefined);
+        const response = await fetch("/api/demo/session", { method: "POST" });
+        if (!response.ok) throw new Error("Demo is not available");
+        const data = (await response.json()) as { token: string };
+        writeDemoToken(data.token);
+        demoTokenRef.current = data.token;
+        setDemoToken(data.token);
+        setUser(DEMO_USER);
+        setLoading(false);
+      },
+      resetDemo: async () => {
+        if (!demoTokenRef.current) return;
+        const response = await fetch("/api/demo/reset", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${demoTokenRef.current}` },
+        });
+        if (!response.ok) throw new Error("Demo session has expired");
+        // Rebuilt server-side; a reload is the simplest way to be sure no screen
+        // is still holding a row that no longer exists.
+        window.location.reload();
+      },
+      endDemo: async () => {
+        const token = demoTokenRef.current;
+        if (token)
+          await fetch("/api/demo/end", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => undefined);
+        writeDemoToken("");
+        demoTokenRef.current = "";
+        setDemoToken("");
+        setUser(null);
+        window.location.reload();
+      },
     }),
-    [user, loading],
+    [user, loading, demoToken, demoAvailable],
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;

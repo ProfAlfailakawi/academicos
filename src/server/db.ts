@@ -5,6 +5,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { getAppFirestore } from "./firebase-services";
+import { DemoSandbox } from "./demoSandbox";
 import { getAuth } from "firebase-admin/auth";
 import type {
   ControlPlaneData,
@@ -92,8 +93,17 @@ export const COLLECTIONS = {
   copilotChunks: "copilotChunks",
 } as const;
 
-function db() {
-  return getAppFirestore();
+/**
+ * The one seam between AcademicOS and its data.
+ *
+ * Inside a demo request this returns that visitor's private in-memory Firestore
+ * instead of the institution's real one, so all 73 store methods below operate
+ * on synthetic data without a line of change — and no demo request can reach,
+ * or write to, the real project. Outside a demo request the behaviour is exactly
+ * what it was.
+ */
+function db(): any {
+  return DemoSandbox.currentFirestore() || getAppFirestore();
 }
 
 function firestoreSafe<T>(value: T): T {

@@ -26,6 +26,22 @@ type Doc = Record<string, unknown>;
 const clone = <T>(value: T): T =>
   value === undefined ? value : (JSON.parse(JSON.stringify(value)) as T);
 
+/**
+ * Keys that must never be written through, at any depth.
+ *
+ * `clone()` round-trips documents through JSON, and `JSON.parse` keeps
+ * `__proto__` as a real OWN property rather than treating it as the accessor.
+ * That is what makes this reachable: a request body of
+ * `{"__proto__": {"isAdmin": true}}` reaches `mergeInto`, whose recursive branch
+ * then walks into `target["__proto__"]` — `Object.prototype` — and writes there.
+ * The pollution is process-wide, so it would not stay inside the demo sandbox:
+ * every later request, demo or real, would see the injected property. Blocking
+ * the keys is cheaper and more certain than reasoning about each write site.
+ */
+const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+const isSafeKey = (key: string): boolean => !FORBIDDEN_KEYS.has(key);
+
 function readPath(doc: Doc, path: string): unknown {
   // Firestore allows dotted field paths in `where`. The store only uses flat
   // ones today, but supporting the nested form costs three lines.
@@ -40,11 +56,12 @@ function readPath(doc: Doc, path: string): unknown {
 }
 
 function writePath(doc: Doc, path: string, value: unknown): void {
-  if (!path.includes(".")) {
-    doc[path] = value;
+  const parts = path.split(".");
+  if (!parts.every(isSafeKey)) return;
+  if (parts.length === 1) {
+    doc[parts[0]] = value;
     return;
   }
-  const parts = path.split(".");
   let cursor: Record<string, unknown> = doc;
   for (const part of parts.slice(0, -1)) {
     if (!cursor[part] || typeof cursor[part] !== "object")
@@ -56,6 +73,10 @@ function writePath(doc: Doc, path: string, value: unknown): void {
 
 function mergeInto(target: Doc, patch: Doc): void {
   for (const [key, value] of Object.entries(patch)) {
+    // Dropped rather than merged: a demo document has no legitimate reason to
+    // carry one of these keys, and the recursive branch below would otherwise
+    // walk straight into Object.prototype.
+    if (!isSafeKey(key)) continue;
     if (
       value &&
       typeof value === "object" &&

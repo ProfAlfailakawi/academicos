@@ -17,15 +17,21 @@
 ## الخطوات — من Google Cloud Shell
 
 ```sh
+set -euo pipefail
+
 PROJECT=tebyan-clean-2026-5f13b
 POOL=github
+NAME=academicos
 SA=academicos-deployer
 REPO=ProfAlfailakawi/academicos
 
 gcloud config set project "$PROJECT"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
 
-# ١. حساب خدمة للنشر
-gcloud iam service-accounts create "$SA" || true
+# ١. حساب خدمة للنشر — يُسأل عنه ثم يُنشأ، ولا يُبتلع خطأٌ غير «غير موجود»
+gcloud iam service-accounts describe "$SA@$PROJECT.iam.gserviceaccount.com" >/dev/null 2>&1 \
+  || gcloud iam service-accounts create "$SA"
+
 for ROLE in roles/run.admin \
             roles/cloudbuild.builds.editor \
             roles/artifactregistry.admin \
@@ -34,24 +40,41 @@ for ROLE in roles/run.admin \
             roles/resourcemanager.projectIamAdmin; do
   gcloud projects add-iam-policy-binding "$PROJECT" \
     --member "serviceAccount:$SA@$PROJECT.iam.gserviceaccount.com" \
-    --role "$ROLE" --condition=None
+    --role "$ROLE" --condition=None >/dev/null
 done
 
-# ٢. اتحاد هوية لـGitHub — مقيَّد بهذا المستودع وحده
-gcloud iam workload-identity-pools create "$POOL" --location global || true
-gcloud iam workload-identity-pools providers create-oidc academicos \
-  --location global --workload-identity-pool "$POOL" \
-  --issuer-uri "https://token.actions.githubusercontent.com" \
-  --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository" \
-  --attribute-condition "assertion.repository=='$REPO'" || true
+# ٢. المجمّع — قد يكون منشأً من قبل في هذا المشروع
+gcloud iam workload-identity-pools describe "$POOL" --location global >/dev/null 2>&1 \
+  || gcloud iam workload-identity-pools create "$POOL" --location global
 
-PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+# ٣. المزوّد — مقيَّد بهذا المستودع وحده
+gcloud iam workload-identity-pools providers describe "$NAME" \
+  --location global --workload-identity-pool "$POOL" >/dev/null 2>&1 \
+  || gcloud iam workload-identity-pools providers create-oidc "$NAME" \
+       --location global --workload-identity-pool "$POOL" \
+       --issuer-uri "https://token.actions.githubusercontent.com" \
+       --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository" \
+       --attribute-condition "assertion.repository=='$REPO'"
+
+# ٤. حقّ المستودع في انتحال حساب النشر
 gcloud iam service-accounts add-iam-policy-binding \
   "$SA@$PROJECT.iam.gserviceaccount.com" \
   --role roles/iam.workloadIdentityUser \
-  --member "principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL/attribute.repository/$REPO"
+  --member "principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL/attribute.repository/$REPO" >/dev/null
 
-echo "GCP_WORKLOAD_IDENTITY_PROVIDER = projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL/providers/academicos"
+# ٥. التحقق قبل الطباعة — لا تُعطى قيمةٌ لا يقابلها مزوّدٌ فعّال.
+#    هذا ما كان ناقصًا: طُبعت القيمتان مرةً بينما المزوّد لم يُنشأ، فاجتاز
+#    الورك-فلو فحصَ الإعداد ثم سقط عند المصادقة بـ`invalid_target`.
+STATE="$(gcloud iam workload-identity-pools providers describe "$NAME" \
+           --location global --workload-identity-pool "$POOL" --format='value(state)')"
+if [ "$STATE" != "ACTIVE" ]; then
+  echo "المزوّد غير فعّال (state=$STATE) — لا تضع المتغيّرات بعد." >&2
+  exit 1
+fi
+
+echo
+echo "تمّ. ضع هذين في إعدادات المستودع:"
+echo "GCP_WORKLOAD_IDENTITY_PROVIDER = projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL/providers/$NAME"
 echo "GCP_DEPLOY_SERVICE_ACCOUNT     = $SA@$PROJECT.iam.gserviceaccount.com"
 ```
 

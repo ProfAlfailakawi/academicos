@@ -36,7 +36,7 @@ import {
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useAppPreferences } from "../contexts/AppContext";
-import { api } from "../lib/api";
+import { api, readDemoRole, DEMO_ROLE_KEY } from "../lib/api";
 import { Button } from "./ui/button";
 import { predictNext, recordNavigation } from "../lib/predictiveNavigation";
 import { formatDateTime, useI18n } from "../lib/i18n";
@@ -72,6 +72,19 @@ const studentUtilityNav: NavItem[] = [
 export function Layout() {
   const { t, locale } = useI18n();
   const { user, logout, resendVerification, demo, resetDemo, endDemo } = useAuth();
+  /* تبديل الدور داخل البيئة التجريبية. إعادة التحميل مقصودة: الشاشات تُبنى على
+     الدور عند الإقلاع، فتبديلٌ في منتصف العمر يترك نصفَ واجهةٍ من دورٍ ونصفَها
+     من آخر — وهو ما يراه من يُعرض عليه المنتج. */
+  const [demoRole, setDemoRoleState] = React.useState(() => readDemoRole() || "professor");
+  const setDemoRole = (role: string) => {
+    setDemoRoleState(role);
+    try {
+      window.sessionStorage.setItem(DEMO_ROLE_KEY, role);
+    } catch {
+      /* تخزين محجوب: يبقى الدور الحالي ولا يُكسر شيء. */
+    }
+    window.location.reload();
+  };
   const { theme, setTheme } = useAppPreferences();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -570,24 +583,39 @@ export function Layout() {
               </div>
             </div>
             {demo && (
-              /* Deliberately conspicuous. In a walkthrough someone is always
-                 looking over a shoulder, and they should be able to tell at a
-                 glance that no record on the screen belongs to a real student. */
-              <div
-                role="status"
-                aria-label={t("demo.badgeAria")}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-2.5 py-1 text-[10px] font-black tracking-wide text-amber-500"
-              >
-                <FlaskConical size={13} aria-hidden="true" />
-                <span>{t("demo.badge")}</span>
+              /* شارةٌ صامتة بلا كلمة: أيقونةٌ تكفي للدلالة، ومعها اختيار الدور.
+                 كانت البيئة تفتح على الأستاذ وحده فلا تُرى شاشة الطالب — وهي
+                 نصف المنتج وأوّل ما يُسأل عنه. والوصف في title/aria-label
+                 فيبلغ قارئ الشاشة ولا يزاحم شريطًا مزدحمًا أصلًا. */
+              <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-1.5 py-0.5 text-amber-500">
+                <span
+                  role="status"
+                  title={t("demo.badgeAria")}
+                  aria-label={t("demo.badgeAria")}
+                  className="grid h-6 w-6 place-items-center"
+                >
+                  <FlaskConical size={13} aria-hidden="true" />
+                </span>
+                <select
+                  value={demoRole}
+                  onChange={(event) => setDemoRole(event.target.value)}
+                  title={t("demo.role")}
+                  aria-label={t("demo.role")}
+                  className="focus-ring h-6 rounded-full bg-transparent px-1 text-[11px] font-bold text-amber-500 outline-none"
+                >
+                  <option value="professor">{t("demo.role.professor")}</option>
+                  <option value="student">{t("demo.role.student")}</option>
+                  <option value="teaching_assistant">{t("demo.role.teaching_assistant")}</option>
+                  <option value="university_admin">{t("demo.role.university_admin")}</option>
+                </select>
                 <button
                   type="button"
                   onClick={() => void resetDemo()}
                   title={t("demo.reset")}
                   aria-label={t("demo.reset")}
-                  className="focus-ring grid h-5 w-5 place-items-center rounded-full hover:bg-amber-500/25"
+                  className="focus-ring grid h-6 w-6 place-items-center rounded-full hover:bg-amber-500/25"
                 >
-                  <RefreshCw size={12} />
+                  <RefreshCw size={12} aria-hidden="true" />
                 </button>
               </div>
             )}

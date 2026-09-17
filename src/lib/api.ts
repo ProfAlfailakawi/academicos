@@ -105,6 +105,17 @@ export class ApiError extends Error {
   }
 }
 
+/** الدور المختار داخل البيئة التجريبية، محفوظًا في تخزين التبويب وحده. */
+export const DEMO_ROLE_KEY = "academicos_demo_role_v1";
+
+export function readDemoRole(): string {
+  try {
+    return window.sessionStorage.getItem(DEMO_ROLE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
 async function authHeaders(init?: HeadersInit, forceRefresh = false) {
   const [token, appCheckToken] = await Promise.all([
     tokenProvider(forceRefresh),
@@ -116,6 +127,10 @@ async function authHeaders(init?: HeadersInit, forceRefresh = false) {
   for (const [key, value] of Object.entries(trustHeaders)) headers.set(key, value);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (appCheckToken) headers.set("X-Firebase-AppCheck", appCheckToken);
+  /* دور البيئة التجريبية — تُرسله الواجهة والخادم يقرّره من قائمةٍ مغلقة. لا
+     يُقرأ إلا داخل صندوقٍ تجريبي، فلا أثر له في أي جلسة حقيقية. */
+  const demoRole = readDemoRole();
+  if (demoRole) headers.set("x-demo-role", demoRole);
   return headers;
 }
 

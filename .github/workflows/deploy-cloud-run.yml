@@ -1,0 +1,119 @@
+# ينشر AcademicOS إلى Cloud Run عند كل دفع إلى main.
+#
+# لماذا هذا الملف موجود:
+#   المستودع يحمل سكربت نشر مكتملًا (`scripts/deploy-cloud-run.sh`) لكنه كان
+#   يُشغَّل باليد فقط. فكل ما يُدمج في main يبقى في GitHub ولا يصل إلى الخدمة —
+#   ومنه البيئة التجريبية: تُدمج، ولا تظهر على الموقع الحيّ أبدًا.
+#
+# والنشر يمرّ بالسكربت نفسه لا بأمرٍ مكتوبٍ هنا من جديد: هو يحمل قرارات
+# لا يجوز أن تُفقد — يرفض النشر عبر المشاريع، ولا يخترع خدمةً ثانية، ويحافظ على
+# متغيّرات Firebase، ويصلح صلاحيات الوصول بعد النشر. إعادة كتابته هنا كانت
+# ستفقدها بصمت.
+
+name: نشر AcademicOS إلى Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: academicos-deploy
+  cancel-in-progress: false
+
+# الوجهة مأخوذة من رابط الخدمة الحيّ نفسه:
+#   academicos-app-522016905178.europe-west2.run.app
+# أي الخدمة `academicos-app` في المشروع رقم 522016905178 (tebyan-clean-2026-5f13b)
+# بمنطقة europe-west2 — لا `academicos` في مشروع academicos-3991f، فتلك خدمةٌ
+# أخرى ونشرٌ عليها لا يغيّر شيئًا في الموقع الذي يفتحه الناس.
+env:
+  GCP_PROJECT_ID: tebyan-clean-2026-5f13b
+  CLOUD_RUN_SERVICE_NAME: academicos-app
+  CLOUD_RUN_REGION: europe-west2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: تثبيت الحزم
+        run: npm ci
+
+      # لا نشر فوق فحصٍ أحمر: نفس بوابات ورك-فلو التحقق وبترتيبها.
+      - name: تدقيق الإطلاق
+        run: npm run audit:launch
+
+      - name: فحص الأنواع
+        run: npm run typecheck
+
+      - name: البناء
+        run: npm run build
+
+      - name: الاختبارات
+        run: npm run test:ci
+
+      - name: التحقق من إعداد هوية النشر
+        shell: bash
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$WIF_PROVIDER" || -z "$DEPLOY_SERVICE_ACCOUNT" ]]; then
+            echo "هوية النشر غير مُعدّة بعد، فلا يمكن النشر." >&2
+            echo "تُضبط مرة واحدة فقط — الخطوات في docs/deploy-academicos.md" >&2
+            echo "ثم يُضاف في GitHub → Settings → Secrets and variables → Actions → Variables:" >&2
+            echo "  GCP_WORKLOAD_IDENTITY_PROVIDER" >&2
+            echo "  GCP_DEPLOY_SERVICE_ACCOUNT" >&2
+            exit 1
+          fi
+
+      - name: مصادقة Google Cloud بلا مفتاح دائم
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # اسم الخدمة والمنطقة يُمرَّران صراحةً: السكربت يستطيع استنتاجهما، لكنه
+      # يرفض حين يجد أكثر من مرشّح — والتصريح هنا يمنع مفاجأةً في مشروعٍ نمت فيه
+      # خدمةٌ ثانية لاحقًا.
+      - name: النشر عبر سكربت المستودع
+        shell: bash
+        env:
+          CLOUD_RUN_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
+          CLOUD_RUN_SERVICE_NAME: ${{ env.CLOUD_RUN_SERVICE_NAME }}
+          CLOUD_RUN_REGION: ${{ env.CLOUD_RUN_REGION }}
+          # الخدمة تعمل في مشروعٍ غير مشروع Firebase (هكذا نشرها AI Studio)،
+          # والسكربت يرفض ذلك افتراضًا حمايةً من نشرٍ عابرٍ بالخطأ. وهنا مقصود
+          # ومطابقٌ للواقع القائم، فيُصرَّح به بدل تعطيل الحارس.
+          ALLOW_CROSS_PROJECT_FIREBASE: "true" 
+        run: npm run deploy:cloudrun
+
+      - name: التحقق أن الخدمة تردّ بعد النشر
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" \
+                  --project "$GCP_PROJECT_ID" --region "$CLOUD_RUN_REGION" \
+                  --format='value(status.url)')"
+          echo "URL: $URL"
+          CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")"
+          echo "HTTP $CODE"
+          # نشرٌ ينتهي بخدمةٍ لا تردّ ليس نشرًا ناجحًا، وإن قال gcloud إنه تمّ.
+          [[ "$CODE" =~ ^(200|30[0-9])$ ]] || { echo "الخدمة لا تردّ بعد النشر." >&2; exit 1; }

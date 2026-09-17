@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 // AcademicOS — Launch Gates Verifier  (إصلاح الفجوة #5)
 // يحوّل بوابات الإطلاق السبع من نصّ في GO_LIVE_RUNBOOK.md إلى فحص آلي يعطي PASS/FAIL/MANUAL.
 // ما يمكن أتمتته (متغيرات البيئة، وجود المفاتيح، نجاح typecheck/الاختبارات) يُنفَّذ فعليًا؛
@@ -48,9 +49,23 @@ function tryCmd(cmd) { try { execSync(cmd, { stdio: 'pipe' }); return true; } ca
 
 // البوابة 4 — Realtime + Rate limiter موزّع (جاهزية التوسّع)
 {
-  const distributed = String(env.RATE_LIMIT_BACKEND || 'memory').toLowerCase() === 'firestore';
-  gate(4, 'Rate limiter موزّع (Cloud Run متعدد النسخ)', distributed ? 'PASS' : 'PARTIAL',
-    distributed ? 'firestore backend' : 'memory backend — اضبط RATE_LIMIT_BACKEND=firestore للإنتاج');
+  /*
+   * البوابة كانت تقرأ RATE_LIMIT_BACKEND وتُعلن PASS عند ضبطه على firestore — بينما لا
+   * يقرأ هذا المتغيّر أي كود في المشروع إطلاقاً. أي أن ضبطه كان يحوّل البوابة إلى PASS
+   * دون أن يتغيّر شيء، وهو أسوأ من FAIL صريح: يخفي الفجوة بدل أن يكشفها.
+   *
+   * البوابة الآن تتحقق من وجود تنفيذ فعلي في الكود، لا من وجود متغيّر بيئة.
+   */
+  const serverSource = readFileSync(new URL('../server.ts', import.meta.url), 'utf8');
+  const implemented = /RATE_LIMIT_BACKEND/.test(serverSource);
+  const requested = String(env.RATE_LIMIT_BACKEND || 'memory').toLowerCase() === 'firestore';
+  gate(4, 'Rate limiter موزّع (Cloud Run متعدد النسخ)',
+    implemented && requested ? 'PASS' : 'PARTIAL',
+    implemented
+      ? (requested ? 'firestore backend' : 'memory backend — اضبط RATE_LIMIT_BACKEND=firestore للإنتاج')
+      : 'الحدّ في الذاكرة فقط: كل نسخة Cloud Run لها عدّادها، فالحدّ الفعلي = الحدّ × عدد النسخ. '
+        + 'لا يوجد تنفيذ موزّع في server.ts، وضبط RATE_LIMIT_BACKEND لا يغيّر شيئاً. '
+        + 'قرار بنية/تكلفة: مخزن مشترك (Firestore/Memorystore) قبل تشغيل أكثر من نسخة.');
 }
 
 // البوابة 5 — typecheck + الاختبارات تنجح

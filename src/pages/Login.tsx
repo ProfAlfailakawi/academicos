@@ -407,10 +407,14 @@ export function Login() {
                   /* A walkthrough entry that needs no account. It opens an
                      isolated tenant of synthetic academic work — no real
                      institution data is reachable from it. */
-                  <div className="mt-5 pt-4 border-t hairline">
+                  <div className="mt-5 pt-4 border-t hairline flex justify-center">
+                    {/* أيقونة صامتة: المدخل ثانويّ ولا ينبغي أن يتصدّر شاشة
+                        الدخول بعبارة. الوصف في title/aria-label. */}
                     <button
                       type="button"
                       disabled={demoBusy}
+                      title={`${t("demo.enter")} — ${t("demo.enterHint")}`}
+                      aria-label={t("demo.enter")}
                       onClick={async () => {
                         setDemoBusy(true);
                         setError("");
@@ -422,14 +426,10 @@ export function Login() {
                           setDemoBusy(false);
                         }
                       }}
-                      className="focus-ring w-full flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-500 hover:bg-amber-500/15 disabled:opacity-60"
+                      className="focus-ring w-11 h-11 grid place-items-center rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-500 hover:bg-amber-500/15 disabled:opacity-60"
                     >
                       {demoBusy ? <InlineLoader size={16}/> : <FlaskConical className="w-4 h-4" aria-hidden="true"/>}
-                      <span>{t("demo.enter")}</span>
                     </button>
-                    <p className="mt-2 text-center text-[10px] muted">
-                      {t("demo.enterHint")}
-                    </p>
                   </div>
                 )}
 

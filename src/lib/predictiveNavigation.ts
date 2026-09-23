@@ -28,6 +28,8 @@ function learnedLabel(path: string, available: AvailableDestination[]) {
   const exact = available.find(item => item.to === path);
   if (exact) return exact.label;
   const sig = routeSignature(path);
+  const bySignature = available.find(item => item.to === sig);
+  if (bySignature) return bySignature.label;
   if (sig === '/app/project/:id') return 'مساحة المشروع';
   if (sig === '/app/course/:id') return 'مساحة المقرر';
   if (sig === '/app/upload') return 'تحليل تكليف جديد';

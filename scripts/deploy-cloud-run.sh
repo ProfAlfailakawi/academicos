@@ -61,10 +61,19 @@ gcloud run deploy "$SERVICE_NAME" --source "$ROOT_DIR" --project "$PROJECT_ID" -
 # قبل ضبط APP_URL و ALLOWED_ORIGINS وترك الخدمة قائمة لكن مُعدّة خطأً — وطبع
 # رابطاً كأنه انتهى. الفشل هنا يُعلَن بصوت عالٍ ويُستكمل الإعداد.
 IAM_REPAIR_OK=yes
-CLOUD_RUN_SERVICE_NAME="$SERVICE_NAME" CLOUD_RUN_REGION="$REGION" FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
+CLOUD_RUN_SERVICE_NAME="$SERVICE_NAME" CLOUD_RUN_REGION="$REGION" CLOUD_RUN_PROJECT_ID="$PROJECT_ID" FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
   bash "$ROOT_DIR/scripts/repair-cloud-run-firebase-access.sh" || IAM_REPAIR_OK=no
-URL="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
-gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --update-env-vars "APP_URL=$URL,ALLOWED_ORIGINS=$URL" --quiet >/dev/null
+SERVICE_JSON="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --format=json)"
+URL="$(printf '%s' "$SERVICE_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s)?.status?.url||""))')"
+# APP_URL الموجود يُحترم: بعد ربط نطاق خاص يضبطه المالك مرة واحدة، ولو أعدنا كتابته
+# برابط run.app في كل نشر لانكسر CORS للنطاق وذهبت روابط الدفع والـwebhook للرابط القديم.
+EXISTING_APP_URL="$(printf '%s' "$SERVICE_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const env=JSON.parse(s)?.spec?.template?.spec?.containers?.[0]?.env||[];process.stdout.write(String(env.find(e=>e.name==="APP_URL")?.value||""))})')"
+if [[ -z "$EXISTING_APP_URL" || "$EXISTING_APP_URL" == *".run.app"* ]]; then
+  gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --update-env-vars "APP_URL=$URL,ALLOWED_ORIGINS=$URL" --quiet >/dev/null
+else
+  echo "APP_URL مضبوط على نطاق خاص ($EXISTING_APP_URL) — يُترك كما هو."
+  URL="$EXISTING_APP_URL"
+fi
 printf '\nService: %s\nURL: %s\nFirestore: %s\n' "$SERVICE_NAME" "$URL" "$FIRESTORE_DATABASE_ID"
 if [[ "$IAM_REPAIR_OK" != yes ]]; then
   printf '\n⚠ الخدمة منشورة ومضبوطة، لكن إصلاح صلاحيات Firebase فشل.\n'

@@ -18,6 +18,9 @@
 > `gcloud run services update <SERVICE> --region <REGION> --update-env-vars BILLING_PROVIDER=tap,BILLING_LOCAL_CURRENCY=KWD,BILLING_LOCAL_UNITS_PER_USD=0.307 --update-secrets TAP_SECRET_KEY=tap-secret:latest`
 > ويُفضَّل وضع المفاتيح السرية في Secret Manager.
 
+> **عند ربط نطاق خاص:** اضبطه مرة واحدة، والنشر بعدها يحترمه ولا يعيده إلى رابط run.app:
+> `gcloud run services update academicos-app --project tebyan-clean-2026-5f13b --region europe-west2 --update-env-vars APP_URL=https://نطاقك,ALLOWED_ORIGINS=https://نطاقك`
+
 ## 1) Tap Payments (الخيار الافتراضي المقترح لمالك مقيم في الكويت)
 
 | المتغير | من أين تحصل عليه |

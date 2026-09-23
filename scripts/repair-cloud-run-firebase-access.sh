@@ -6,11 +6,14 @@ command -v gcloud >/dev/null 2>&1 || { echo "gcloud is required" >&2; exit 1; }
 command -v node >/dev/null 2>&1 || { echo "node is required" >&2; exit 1; }
 read_config(){ node -e "const c=require(process.argv[1]);const v=c[process.argv[2]];if(v!=null)process.stdout.write(String(v));" "$CONFIG_FILE" "$1"; }
 PROJECT_ID="${FIREBASE_PROJECT_ID:-$(read_config projectId)}"
+# الخدمة قد تعيش في مشروع Cloud Run غير مشروع Firebase (نشر عابر للمشاريع):
+# نقرأ هوية الخدمة من مشروعها هي، ونمنح الأدوار في مشروع Firebase.
+RUN_PROJECT_ID="${CLOUD_RUN_PROJECT_ID:-$PROJECT_ID}"
 SERVICE_NAME="${CLOUD_RUN_SERVICE_NAME:-}"
 REGION="${CLOUD_RUN_REGION:-}"
 
 if [[ -z "$SERVICE_NAME" || -z "$REGION" ]]; then
-  SERVICES_JSON="$(gcloud run services list --project "$PROJECT_ID" --platform managed --format=json)"
+  SERVICES_JSON="$(gcloud run services list --project "$RUN_PROJECT_ID" --platform managed --format=json)"
   DETECTED="$(printf '%s' "$SERVICES_JSON" | node -e '
 let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const a=JSON.parse(s||"[]");
 const rows=a.map(x=>({name:x?.metadata?.name||"",region:x?.metadata?.labels?.["cloud.googleapis.com/location"]||x?.metadata?.labels?.["run.googleapis.com/region"]||"",managed:String(x?.metadata?.labels?.["managed-by"]||"")})).filter(x=>x.name&&x.region);
@@ -20,14 +23,15 @@ if(c.length===1)process.stdout.write(c[0].name+"|"+c[0].region); else {console.e
   REGION="${REGION:-${DETECTED#*|}}"
 fi
 
-IDENTITY="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --format='value(spec.template.spec.serviceAccountName)')"
+IDENTITY="$(gcloud run services describe "$SERVICE_NAME" --project "$RUN_PROJECT_ID" --region "$REGION" --format='value(spec.template.spec.serviceAccountName)')"
 if [[ -z "$IDENTITY" ]]; then
-  PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+  PROJECT_NUMBER="$(gcloud projects describe "$RUN_PROJECT_ID" --format='value(projectNumber)')"
   IDENTITY="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 fi
 
 echo "Repairing the live service WITHOUT replacing its identity"
 echo "  service:  $SERVICE_NAME"
+echo "  project:  $RUN_PROJECT_ID (Cloud Run) → $PROJECT_ID (Firebase)"
 echo "  region:   $REGION"
 echo "  identity: $IDENTITY"
 RUNTIME_SERVICE_ACCOUNT="$IDENTITY" FIREBASE_PROJECT_ID="$PROJECT_ID" \

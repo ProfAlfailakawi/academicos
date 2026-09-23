@@ -398,6 +398,12 @@ export function Layout() {
         : []),
       { to: "/app/support", label: t("layout.navSupportShort") },
       { to: "/app/settings", label: t("layout.navSettings") },
+      // تسميات مُترجمة لمسارات التوقّع المتعلَّمة (بالتوقيع لا بالرابط الكامل).
+      { to: "/app/project/:id", label: t("layout.navProjects") },
+      { to: "/app/course/:id", label: t("layout.navCoursesShort") },
+      { to: "/app/upload", label: t("layout.actionAnalyzeAssignment") },
+      { to: "/app/semester", label: t("layout.actionCurrentSemester") },
+      { to: "/app/integrations", label: t("layout.navIntegrations") },
     ],
     [nav, utilityNav, studentMode, t],
   );

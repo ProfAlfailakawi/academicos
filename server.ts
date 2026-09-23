@@ -604,6 +604,40 @@ async function verifyFirebaseIdToken(token: string) {
   }
 }
 
+/**
+ * ما لا يصل إليه الصندوق التجريبي.
+ *
+ * `db()` في db.ts يحوّل طلب العرض إلى المخزن المعزول، لكن platform-store
+ * والإشعارات وحارس الإساءة تكتب إلى Firestore الحقيقي مباشرة. فالمسارات التي
+ * تنشئ أثرًا دائمًا خارج الصندوق (مفاتيح API، روابط مشاركة عامة، إدارة، فوترة،
+ * تنفيذ كود) تُرفض للزائر المجهول، ونداءات الذكاء الاصطناعي محدودة لكل جلسة
+ * كي لا يُنفق زائرٌ آلي ميزانية المزوّد.
+ */
+const DEMO_BLOCKED_WRITE_PREFIXES = [
+  "/api/admin/", "/api/shares", "/api/platform/", "/api/billing/",
+  "/api/security/", "/api/lifecycle/", "/api/feature-flags/",
+  "/api/support/", "/api/tools/code/execute", "/api/jobs/",
+  "/api/notification-preferences", "/api/notifications/",
+];
+const DEMO_AI_PATTERN = /\/(assist|copilot|writer|viva|red-team|xray|improve-style|style-integrity|explain|solve|intake|semantic|translate)(\/|$|\?)/;
+const DEMO_AI_CALLS_PER_SESSION = 25;
+const demoAiCalls = new Map<string, number>();
+function demoRouteBlock(method: string, url: string, token: string): string | "silent" | null {
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") return null;
+  const path = url.split("?")[0];
+  if (path === "/api/events") return "silent";
+  if (DEMO_BLOCKED_WRITE_PREFIXES.some((p) => path.startsWith(p)))
+    return "This action is not available in the demo — sign up to use it.";
+  if (DEMO_AI_PATTERN.test(path)) {
+    if (demoAiCalls.size > 5000) demoAiCalls.clear();
+    const used = (demoAiCalls.get(token) || 0) + 1;
+    demoAiCalls.set(token, used);
+    if (used > DEMO_AI_CALLS_PER_SESSION)
+      return "Demo AI limit reached — sign up to continue.";
+  }
+  return null;
+}
+
 async function authenticate(
   req: AuthenticatedRequest,
   res: Response,
@@ -636,6 +670,10 @@ async function authenticate(
      * (`demoActorFor`)، وكل فاعلٍ فيها شخصٌ داخل الصندوق المعزول نفسه، والمجهول
      * يسقط على الأستاذ. فلا يبلغ أيٌّ منها بيانات جهةٍ حقيقية، تمامًا كما كان.
      */
+    const demoBlock = demoRouteBlock(req.method, req.originalUrl || req.url, token);
+    if (demoBlock === "silent") return res.status(204).end();
+    if (demoBlock)
+      return res.status(403).json({ error: demoBlock, code: "DEMO_READ_ONLY" });
     const demoActor = demoActorFor(req.headers["x-demo-role"]);
     req.actor = {
       userId: demoActor.userId,
@@ -2413,7 +2451,12 @@ async function startServer() {
       return res
         .status(404)
         .json({ error: "Demo is not enabled on this deployment", code: "DEMO_DISABLED" });
-    const token = DemoSandbox.create(DEMO_SESSION_TTL_MS);
+    let token: string;
+    try {
+      token = DemoSandbox.create(DEMO_SESSION_TTL_MS);
+    } catch (error: any) {
+      return res.status(error?.status || 503).json({ error: error?.message, code: error?.code || "DEMO_CAPACITY" });
+    }
     return res.json({
       token,
       ttlMs: DEMO_SESSION_TTL_MS,

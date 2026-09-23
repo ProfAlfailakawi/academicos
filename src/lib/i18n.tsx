@@ -44,7 +44,7 @@ export function formatDate(value: string | number | Date, locale: LocaleCode, op
 }
 
 export function formatMoney(amount: number, currency: string, locale: LocaleCode) {
-  return new Intl.NumberFormat(localeIntlTag(locale), { style: "currency", currency, maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
+  return new Intl.NumberFormat(localeIntlTag(locale), { style: "currency", currency, currencyDisplay: "narrowSymbol", numberingSystem: "latn", maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
 }
 
 type Dict = Record<string, string>;

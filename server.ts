@@ -2202,7 +2202,12 @@ async function startServer() {
             });
         } else {
           let status = "pending";
-          if (["checkout.session.completed", "invoice.paid"].includes(type))
+          // جلسة مكتملة لا تعني دفعًا مستلَمًا: وسائل الدفع المؤجّلة تُكمل الجلسة
+          // بـ payment_status=unpaid ثم ترسل async_payment_succeeded لاحقًا.
+          const sessionPaid =
+            (type === "checkout.session.completed" && object.payment_status === "paid") ||
+            type === "checkout.session.async_payment_succeeded";
+          if (sessionPaid || type === "invoice.paid")
             status = "paid";
           else if (type.includes("payment_failed")) status = "failed";
           else if (type.includes("refunded")) status = "refunded";
@@ -2233,7 +2238,7 @@ async function startServer() {
             },
             `Stripe webhook ${type}`,
           );
-          if (type === "checkout.session.completed") {
+          if (sessionPaid) {
             if (!userId || !projectId || !isPaidProjectPlan(planId))
               throw Object.assign(new Error("Paid project metadata is incomplete"), {
                 status: 400,
@@ -2481,6 +2486,19 @@ async function startServer() {
     const token = header.startsWith("Bearer ") ? header.slice(7) : "";
     if (token.startsWith(DEMO_TOKEN_PREFIX)) DemoSandbox.destroy(token);
     return res.json({ ok: true });
+  });
+
+  /*
+   * خريطة الموقع للصفحات العامة. الأصل من APP_URL إن ضُبط (النطاق النهائي)،
+   * وإلا من مضيف الطلب نفسه؛ فلا يُثبَّت نطاق Cloud Run المؤقت في الكود.
+   */
+  app.get("/sitemap.xml", (req, res) => {
+    const configured = cleanField(process.env.APP_URL, 500).replace(/\/+$/, "");
+    const host = String(req.get("host") || "").replace(/[^a-zA-Z0-9.:-]/g, "");
+    const origin = /^https?:\/\//.test(configured) ? configured : `${req.protocol}://${host}`;
+    const paths = ["/", "/p/students", "/p/faculty", "/p/pricing", "/p/about", "/p/faq", "/p/contact", "/p/security", "/p/privacy", "/p/terms", "/p/accessibility"];
+    res.type("application/xml").setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths.map((p) => `  <url><loc>${origin}${p}</loc></url>`).join("\n")}\n</urlset>\n`);
   });
 
   app.get("/api/health", (_req, res) =>

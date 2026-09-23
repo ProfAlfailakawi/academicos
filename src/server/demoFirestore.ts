@@ -21,6 +21,8 @@
  * read-modify-write sequences correct without pretending to implement retries.
  */
 
+import { FieldValue } from "firebase-admin/firestore";
+
 type Doc = Record<string, unknown>;
 
 const clone = <T>(value: T): T =>
@@ -69,6 +71,55 @@ function writePath(doc: Doc, path: string, value: unknown): void {
     cursor = cursor[part] as Record<string, unknown>;
   }
   cursor[parts[parts.length - 1]] = value;
+}
+
+/*
+ * `FieldValue` sentinels (increment / delete) are class instances, so `clone()`
+ * would store `increment(1)` as `{"operand":1}` and `delete()` as `{}`. They are
+ * resolved against the current document first: increments become numbers, and
+ * deletes are returned as paths to remove after the write. Other sentinels are
+ * outside the slice and throw, like any other unsupported call.
+ */
+const INCREMENT_CTOR = FieldValue.increment(0).constructor;
+const DELETE_CTOR = FieldValue.delete().constructor;
+
+function resolveFieldValues(
+  data: Doc,
+  current: Doc | undefined,
+  prefix = "",
+  deletes: string[] = [],
+): { data: Doc; deletes: string[] } {
+  const out: Doc = {};
+  for (const [key, value] of Object.entries(data)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (value instanceof FieldValue) {
+      if (value.constructor === DELETE_CTOR) {
+        deletes.push(path);
+      } else if (value.constructor === INCREMENT_CTOR) {
+        const base = current ? Number(readPath(current, path)) : 0;
+        out[key] =
+          (Number.isFinite(base) ? base : 0) +
+          Number((value as unknown as { operand: number }).operand);
+      } else {
+        throw new Error(`Demo Firestore does not support this FieldValue at ${path}`);
+      }
+    } else if (value && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) {
+      out[key] = resolveFieldValues(value as Doc, current, path, deletes).data;
+    } else {
+      out[key] = value;
+    }
+  }
+  return { data: out, deletes };
+}
+
+function deletePath(doc: Doc, path: string): void {
+  const parts = path.split(".");
+  let cursor: unknown = doc;
+  for (const part of parts.slice(0, -1)) {
+    if (!cursor || typeof cursor !== "object") return;
+    cursor = (cursor as Doc)[part];
+  }
+  if (cursor && typeof cursor === "object") delete (cursor as Doc)[parts[parts.length - 1]];
 }
 
 function mergeInto(target: Doc, patch: Doc): void {
@@ -153,14 +204,16 @@ class DocumentRef implements DemoDocumentRef {
 
   setSync(data: Doc, options?: { merge?: boolean }): void {
     const bucket = this.store.bucket(this.collectionName);
+    const current = bucket.get(this.id);
+    const resolved = resolveFieldValues(data, options?.merge ? current : undefined);
     if (options?.merge) {
-      const current = bucket.get(this.id);
       const next = current ? clone(current) : ({} as Doc);
-      mergeInto(next, clone(data));
+      mergeInto(next, clone(resolved.data));
+      resolved.deletes.forEach((path) => deletePath(next, path));
       bucket.set(this.id, next);
       return;
     }
-    bucket.set(this.id, clone(data));
+    bucket.set(this.id, clone(resolved.data));
   }
 
   async set(data: Doc, options?: { merge?: boolean }): Promise<void> {
@@ -175,8 +228,10 @@ class DocumentRef implements DemoDocumentRef {
         code: "NOT_FOUND",
       });
     const next = clone(current);
-    for (const [key, value] of Object.entries(clone(data)))
+    const resolved = resolveFieldValues(data, current);
+    for (const [key, value] of Object.entries(clone(resolved.data)))
       writePath(next, key, value);
+    resolved.deletes.forEach((path) => deletePath(next, path));
     bucket.set(this.id, next);
   }
 

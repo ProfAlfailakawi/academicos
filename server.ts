@@ -25,6 +25,7 @@ import appletConfig from "./firebase-applet-config.json";
 import { aiConfigured, aiProviderStatus, getAIProvider } from "./src/server/ai";
 import {
   DemoSandbox,
+  DEMO_ACTORS,
   DEMO_INSTRUCTOR_ID,
   demoActorFor,
   DEMO_SESSION_TTL_MS,
@@ -10121,6 +10122,21 @@ async function startServer() {
         const a = req.actor!,
           limit = Math.min(200, Math.max(20, Number(req.query.limit || 100))),
           pageToken = cleanField(req.query.pageToken, 1000) || undefined;
+        // الزائر التجريبي لا يبلغ Firebase Auth الحقيقي أبدًا: يرى أعضاء صندوقه فقط.
+        if (DemoSandbox.isDemoRequest())
+          return res.json({
+            success: true,
+            users: Object.values(DEMO_ACTORS).map((actor) => ({
+              id: actor.userId,
+              email: actor.email,
+              displayName: actor.displayName,
+              role: actor.role,
+              tenantId: DEMO_TENANT_ID,
+              disabled: false,
+              emailVerified: true,
+            })),
+            nextPageToken: null,
+          });
         const page = await getAuth().listUsers(limit, pageToken);
         const isPlatformAdmin = isPlatformScopeActor(a);
         // Only a platform-scope admin may target another tenant via ?tenantId.

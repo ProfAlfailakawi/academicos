@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { getAppFirestore } from './firebase-services';
 import type { NotificationPreferences, NotificationRecord, UserRole } from '../types';
 import { platformStore } from './platform-store';
+import { DemoSandbox } from './demoSandbox';
 
 const COLLECTION='notifications';
 const PREFERENCES='notificationPreferences';
 const now=()=>new Date().toISOString();
-const db=()=>getAppFirestore();
+// داخل طلبٍ تجريبي تُقرأ الإشعارات من صندوق الزائر لا من المشروع الحقيقي.
+const db=():any=>DemoSandbox.currentFirestore()||getAppFirestore();
 
 type CreateNotice=Omit<NotificationRecord,'id'|'createdAt'|'delivery'>;
 

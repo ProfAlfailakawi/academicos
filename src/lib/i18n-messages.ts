@@ -2484,6 +2484,8 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
     "Votre session a expiré. Reconnectez-vous pour continuer.",
     "آپ کا سیشن ختم ہو گیا ہے۔ جاری رکھنے کے لیے دوبارہ سائن اِن کریں۔"
   ),
+  "ui.error.planRequired": { ar:"هذه الميزة ضمن خطة مدفوعة — افتحها من صفحة الخطط.", en:"This feature is part of a paid plan — unlock it from the Plans page.", tr:"Bu özellik ücretli bir plana dahildir — Planlar sayfasından açın.", zh:"此功能属于付费方案——请在方案页面解锁。", hi:"यह सुविधा सशुल्क योजना का हिस्सा है — योजनाएँ पृष्ठ से अनलॉक करें।", es:"Esta función forma parte de un plan de pago: desbloquéala en la página de Planes.", fr:"Cette fonctionnalité fait partie d'une offre payante — débloquez-la depuis la page Forfaits.", ur:"یہ فیچر ادا شدہ پلان کا حصہ ہے — پلانز صفحے سے اسے کھولیں۔" },
+  "ui.error.demoReadOnly": { ar:"هذا الإجراء غير متاح في النسخة التجريبية — أنشئ حسابًا لاستخدامه.", en:"This action isn't available in the demo — create an account to use it.", tr:"Bu işlem demoda kullanılamaz — kullanmak için hesap oluşturun.", zh:"演示版不支持此操作——请创建账户后使用。", hi:"यह क्रिया डेमो में उपलब्ध नहीं है — इसका उपयोग करने के लिए खाता बनाएँ।", es:"Esta acción no está disponible en la demo: crea una cuenta para usarla.", fr:"Cette action n'est pas disponible dans la démo — créez un compte pour l'utiliser.", ur:"یہ عمل ڈیمو میں دستیاب نہیں — استعمال کے لیے اکاؤنٹ بنائیں۔" },
   "ui.error.permission": UI(
     "ليست لديك صلاحية لإكمال هذه العملية.",
     "You do not have permission to complete this action.",

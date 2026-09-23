@@ -532,7 +532,7 @@ export function Layout() {
           {prediction && (
             <button
               onClick={goToPrediction}
-              title={prediction.reason}
+              title={locale === "ar" ? prediction.reason : prediction.label}
               className="predictive-chip focus-ring hidden 2xl:flex h-10 max-w-[260px] items-center gap-2 rounded-xl px-3 text-start"
             >
               <span className="predictive-chip__spark h-7 w-7 shrink-0 rounded-lg flex items-center justify-center">
@@ -795,9 +795,12 @@ export function Layout() {
                     <div className="text-[10px] font-bold muted">
                       {t("layout.predictedNow")} · {prediction.label}
                     </div>
-                    <div className="text-[11px] muted truncate">
-                      {prediction.reason}
-                    </div>
+                    {/* أسباب التنبؤ مكتوبة بالعربية فقط؛ لا تُعرض بلغةٍ أخرى. */}
+                    {locale === "ar" && (
+                      <div className="text-[11px] muted truncate">
+                        {prediction.reason}
+                      </div>
+                    )}
                   </div>
                   <ArrowRight size={15} className="muted directional-icon" />
                 </button>

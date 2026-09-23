@@ -19,6 +19,9 @@ export function localizedUiError(
   if (error instanceof ApiError) {
     const code = String(error.code || "").toUpperCase();
 
+    if (code === "DEMO_READ_ONLY") return t("ui.error.demoReadOnly");
+    if (error.status === 402 || code.endsWith("_PLAN_REQUIRED")) return t("ui.error.planRequired");
+
     if (code === "AUTH_EXPIRED" || code === "AUTH_INVALID" || error.status === 401) {
       return t("ui.error.sessionExpired");
     }

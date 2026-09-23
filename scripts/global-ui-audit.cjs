@@ -185,7 +185,7 @@ expect('Auth has no client-side fake session fallback', !/(academicos_local_user
 const authLines = auth.split('\n');
 const demoUserInstalls = authLines
   .map((line, i) => ({ line, i }))
-  .filter(({ line }) => /setUser\(DEMO_USER\)/.test(line));
+  .filter(({ line }) => /setUser\((DEMO_USER|demoUserForRole\(\))\)/.test(line));
 const guardedByHandle = ({ i }) =>
   authLines.slice(Math.max(0, i - 6), i + 1).some((line) => /demoTokenRef\.current|data\.token/.test(line));
 const demoRules = [

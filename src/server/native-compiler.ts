@@ -109,7 +109,8 @@ export function compileAssignmentNative(input: { text: string; timezone?: string
   const text = String(input.text || '');
   const language = detectLanguage(text);
   const ls = lines(text);
-  const title = clip(ls[0] || '', 160) || c(language,'untitled');
+  // The upload screen labels its sections ("--- ASSIGNMENT ---"); a marker is never the title.
+  const title = clip(ls.find(line => !/^-{3}\s*[A-Z ]+\s*-{3}$/.test(line.trim())) || '', 160) || c(language,'untitled');
 
   const actions = ACTION_KEYWORDS.filter(a => has(text, a.terms)).map(a => a.action);
   const requiredActions = actions.length ? [...new Set(actions)] : ['RESEARCH', 'WRITE', 'PRESENT'];

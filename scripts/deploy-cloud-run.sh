@@ -76,7 +76,23 @@ else
 fi
 printf '\nService: %s\nURL: %s\nFirestore: %s\n' "$SERVICE_NAME" "$URL" "$FIRESTORE_DATABASE_ID"
 if [[ "$IAM_REPAIR_OK" != yes ]]; then
-  printf '\n⚠ الخدمة منشورة ومضبوطة، لكن إصلاح صلاحيات Firebase فشل.\n'
-  printf '  تسجيل الدخول أو الوصول إلى Firestore قد لا يعمل. راجع الخطأ أعلاه.\n'
-  exit 1
+  # فشل إعادة المنح لا يعني أن الوصول مفقود: حساب النشر قد لا يملك تعديل سياسة
+  # مشروع Firebase، والمنح قائم من إعدادٍ سابق. الحَكَم هو الخدمة نفسها.
+  LIVE_URL="$(printf '%s' "$SERVICE_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s)?.status?.url||""))')"
+  PROBE=""
+  for attempt in 1 2 3 4 5 6; do
+    PROBE="$(curl -s --max-time 20 "$LIVE_URL/api/health/firestore" || true)"
+    [[ "$PROBE" == *'"ok":true'* ]] && break
+    sleep 10
+  done
+  if [[ "$PROBE" == *'"ok":true'* ]]; then
+    printf '\n⚠ لم يُعِد النشر منح صلاحيات Firebase (حساب النشر لا يملك ذلك على %s)،\n' "$FIREBASE_PROJECT_ID"
+    printf '  لكن الخدمة تصل إلى Firestore فعلًا، فالمنح قائم. لا شيء مطلوب.\n'
+  else
+    printf '\n✗ الخدمة منشورة لكنها لا تصل إلى Firestore (%s).\n' "${PROBE:-no response}"
+    printf '  نفّذ مرة واحدة من Cloud Shell بحسابك أنت (مالك المشروعين):\n'
+    printf '  CLOUD_RUN_PROJECT_ID=%s CLOUD_RUN_SERVICE_NAME=%s CLOUD_RUN_REGION=%s FIREBASE_PROJECT_ID=%s bash scripts/repair-cloud-run-firebase-access.sh\n' \
+      "$PROJECT_ID" "$SERVICE_NAME" "$REGION" "$FIREBASE_PROJECT_ID"
+    exit 1
+  fi
 fi

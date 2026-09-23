@@ -72,6 +72,7 @@ import {
   firebaseProjectId,
   firebaseStorageBucketName,
   firestoreDatabaseId,
+  getAppFirestore,
 } from "./src/server/firebase-services";
 import {
   exportCitations,
@@ -2531,6 +2532,30 @@ async function startServer() {
       incidentBanner: process.env.INCIDENT_BANNER || "",
     }),
   );
+  /*
+   * فحص وصول Firestore الفعلي: قراءة واحدة صغيرة بمهلة، والنتيجة مخزّنة ٦٠ ثانية
+   * فلا يصير الرابط العام بابًا لاستهلاك القراءات. يعتمد عليه النشر ليميّز
+   * "خطوة الصلاحيات لم تُعِد المنح" من "الخدمة فعلًا لا تصل إلى قاعدة البيانات".
+   */
+  let firestoreProbe: { at: number; ok: boolean; code?: string } | null = null;
+  app.get("/api/health/firestore", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (!firebaseInitialized)
+      return res.status(503).json({ ok: false, code: "FIREBASE_NOT_CONFIGURED" });
+    if (!firestoreProbe || Date.now() - firestoreProbe.at > 60_000) {
+      try {
+        await Promise.race([
+          getAppFirestore().collection("systemConfig").doc("health").get(),
+          new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("timeout"), { code: "TIMEOUT" })), 8000)),
+        ]);
+        firestoreProbe = { at: Date.now(), ok: true };
+      } catch (error: any) {
+        const code = String(error?.code ?? "UNKNOWN").toUpperCase();
+        firestoreProbe = { at: Date.now(), ok: false, code: code === "7" ? "PERMISSION_DENIED" : code };
+      }
+    }
+    return res.status(firestoreProbe.ok ? 200 : 503).json({ ok: firestoreProbe.ok, code: firestoreProbe.code });
+  });
   app.get("/api/public/config", (_req, res) => {
     const email = cleanField(process.env.SECURITY_CONTACT_EMAIL, 240);
     const disclosure = cleanField(process.env.RESPONSIBLE_DISCLOSURE_URL, 500);
@@ -10552,6 +10577,17 @@ async function startServer() {
     console.log(`AcademicOS server running on :${PORT} (${"production"})`),
   );
 }
+/*
+ * رفضٌ غير معالَج في مكتبةٍ خارجية (مثل عميل Firestore حين تتعذّر بيانات الاعتماد
+ * داخليًا) كان يُسقط العملية كلها: كل طلبٍ جارٍ يُقطع، وتضيع صناديق العرض وعدّادات
+ * الحدّ المحفوظة في الذاكرة. الطلب الذي سبّبه أخذ جوابه أو مهلته؛ فيُسجَّل الخطأ
+ * بوضوح وتبقى الخدمة. أما فشل الإقلاع نفسه فيبقى قاتلًا (الـcatch أدناه).
+ */
+process.on("unhandledRejection", (reason) => {
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+  console.error(JSON.stringify({ severity: "ERROR", event: "unhandled_rejection", message: error.message, stack: error.stack }));
+});
+
 startServer().catch((error) => {
   console.error(error);
   process.exit(1);

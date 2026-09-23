@@ -91,8 +91,15 @@ PROJECT_NUMBER="$(gcloud projects describe tebyan-clean-2026-5f13b --format='val
 gcloud projects add-iam-policy-binding tebyan-clean-2026-5f13b \
   --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
   --role=roles/cloudbuild.builds.builder --condition=None
-bash scripts/repair-cloud-run-firebase-access.sh
+CLOUD_RUN_PROJECT_ID=tebyan-clean-2026-5f13b CLOUD_RUN_SERVICE_NAME=academicos-app \
+  CLOUD_RUN_REGION=europe-west2 FIREBASE_PROJECT_ID=academicos-3991f \
+  bash scripts/repair-cloud-run-firebase-access.sh
 ```
+
+> الخدمة في مشروع (`tebyan-clean-2026-5f13b`) وFirebase في مشروع آخر (`academicos-3991f`)،
+> وحساب النشر لا يملك تعديل سياسة مشروع Firebase. لذلك يُنفَّذ الإصلاح أعلاه **بحسابك
+> أنت** مرة واحدة. بعدها لا يفشل النشر بسببه: إن تعذّر إعادة المنح يسأل السكربت الخدمةَ
+> `GET /api/health/firestore`؛ فإن وصلت إلى Firestore مضى، وإلا توقّف وطبع هذا الأمر.
 
 ## لماذا `--project` على كل أمر
 

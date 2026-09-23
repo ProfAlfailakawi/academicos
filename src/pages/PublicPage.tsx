@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -201,6 +201,12 @@ const pages: Record<string, PageContent> = {
 export function PublicPage() {
   const { t } = useI18n();
   const { slug = "about" } = useParams();
+  const pageTitle = t((pages[slug] || pages.about).eyebrow);
+  useEffect(() => {
+    const previous = document.title;
+    document.title = `${pageTitle} · AcademicOS`;
+    return () => { document.title = previous; };
+  }, [pageTitle]);
   if (["universities", "governments", "employers"].includes(slug))
     return <Navigate to="/" replace />;
   const c = pages[slug] || pages.about;

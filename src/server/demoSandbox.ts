@@ -626,6 +626,7 @@ function buildSandbox(): DemoFirestore {
 type SandboxRecord = { store: DemoFirestore; expiresAt: number };
 const context = new AsyncLocalStorage<{ sessionId: string; store: DemoFirestore }>();
 const sandboxes = new Map<string, SandboxRecord>();
+const MAX_SANDBOXES = Number(process.env.ACADEMICOS_DEMO_MAX_SESSIONS || 300);
 
 function sweep(): void {
   const now = Date.now();
@@ -640,6 +641,9 @@ export const DemoSandbox = {
 
   create(ttlMs: number = DEMO_SESSION_TTL_MS): string {
     sweep();
+    // سقفٌ للذاكرة: كل صندوق نسخة مزروعة كاملة، فلا يُترك عددها مفتوحًا لطلبات مجهولة.
+    if (sandboxes.size >= MAX_SANDBOXES)
+      throw Object.assign(new Error("Demo is at capacity, try again shortly"), { status: 503, code: "DEMO_CAPACITY" });
     const sessionId = `${DEMO_TOKEN_PREFIX}${randomBytes(32).toString("hex")}`;
     sandboxes.set(sessionId, { store: buildSandbox(), expiresAt: Date.now() + ttlMs });
     return sessionId;

@@ -17,7 +17,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
 
   render() {
     if (!this.state.failed) return this.props.children;
-    const ar = (document.documentElement.lang || navigator.language || "").startsWith("ar");
+    const ar = document.documentElement.dir === "rtl";
     return (
       <div role="alert" dir={ar ? "rtl" : "ltr"} style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, fontFamily: "inherit", textAlign: "center" }}>
         <div style={{ maxWidth: 420 }}>

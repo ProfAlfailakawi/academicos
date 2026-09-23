@@ -142,3 +142,7 @@ jobs:
           echo "HTTP $CODE"
           # نشرٌ ينتهي بخدمةٍ لا تردّ ليس نشرًا ناجحًا، وإن قال gcloud إنه تمّ.
           [[ "$CODE" =~ ^(200|30[0-9])$ ]] || { echo "الخدمة لا تردّ بعد النشر." >&2; exit 1; }
+          # الصفحة تردّ حتى لو انقطع Firestore؛ تسجيل الدخول والمشاريع لا. فيُفحص الوصول نفسه.
+          PROBE="$(curl -s --max-time 30 "$URL/api/health/firestore" || true)"
+          echo "Firestore: $PROBE"
+          [[ "$PROBE" == *'"ok":true'* ]] || { echo "الخدمة لا تصل إلى Firestore — راجع docs/deploy-academicos.md (إصلاح الصلاحيات)." >&2; exit 1; }

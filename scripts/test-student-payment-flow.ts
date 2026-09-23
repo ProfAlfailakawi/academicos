@@ -115,8 +115,9 @@ try {
   assert.equal(secondFree.response.status, 402, JSON.stringify(secondFree.body));
   const freeExport = await api(`/api/projects/${academicProjectId}/export?format=docx`, studentToken);
   assert.equal(freeExport.response.status, 402);
+  // التصدير مدفوع بكل صيغه، بما فيها json (انظر مسار export في server.ts).
   const rawJson = await api(`/api/projects/${academicProjectId}/export?format=json`, studentToken);
-  assert.equal(rawJson.response.status, 200);
+  assert.equal(rawJson.response.status, 402);
 
   await platformStore.grantProjectEntitlement({ tenantId, userId: studentId, projectId: academicProjectId, planId: "project", provider: "stripe", externalId: "cs_basic", eventId: "evt_basic" });
   const basicAccess = await api(`/api/projects/${academicProjectId}/access`, studentToken);
@@ -152,7 +153,7 @@ try {
   const joined = await api("/api/enrollments/join", studentToken, { method: "POST", body: JSON.stringify({ code: joinCode.body.secret }) });
   assert.equal(joined.response.status, 201, JSON.stringify(joined.body));
 
-  console.log(JSON.stringify({ previewOnce: true, secondPreviewBlocked: true, exportGated: true, rawExportAvailable: true, paidWriter: true, wordExport: true, vivaTierGated: true, refundDowngrade: true, refundRevoked: true, teacherLiteCreate: true, teacherStudentLink: true }));
+  console.log(JSON.stringify({ previewOnce: true, secondPreviewBlocked: true, exportGated: true, rawExportGated: true, paidWriter: true, wordExport: true, vivaTierGated: true, refundDowngrade: true, refundRevoked: true, teacherLiteCreate: true, teacherStudentLink: true }));
 } finally {
   server.kill("SIGTERM");
   await new Promise((resolve) => { server.once("exit", resolve); setTimeout(resolve, 2000); });

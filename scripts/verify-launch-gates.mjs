@@ -31,10 +31,11 @@ function tryCmd(cmd) { try { execSync(cmd, { stdio: 'pipe' }); return true; } ca
 {
   const provider = String(env.BILLING_PROVIDER || '').toLowerCase();
   const providerKeys = {
+    // مطابقة لـ configured() في src/server/billing.ts — لا مفتاح زائد ولا ناقص.
     stripe: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
-    lemonsqueezy: ['LEMONSQUEEZY_API_KEY', 'LEMONSQUEEZY_WEBHOOK_SECRET'],
-    myfatoorah: ['MYFATOORAH_API_TOKEN', 'MYFATOORAH_WEBHOOK_SECRET'],
-    tap: ['TAP_SECRET_KEY', 'TAP_WEBHOOK_SECRET'],
+    lemonsqueezy: ['LEMONSQUEEZY_API_KEY', 'LEMONSQUEEZY_STORE_ID', 'LEMONSQUEEZY_VARIANT_ID', 'LEMONSQUEEZY_WEBHOOK_SECRET'],
+    myfatoorah: ['MYFATOORAH_API_TOKEN', 'MYFATOORAH_PAYMENT_METHOD_ID', 'MYFATOORAH_WEBHOOK_SECRET'],
+    tap: ['TAP_SECRET_KEY', 'TAP_MERCHANT_ID'],
   };
   const keys = providerKeys[provider];
   const status = !provider ? 'FAIL' : keys && has(...keys) ? 'PASS' : 'PARTIAL';

@@ -2202,7 +2202,12 @@ async function startServer() {
             });
         } else {
           let status = "pending";
-          if (["checkout.session.completed", "invoice.paid"].includes(type))
+          // جلسة مكتملة لا تعني دفعًا مستلَمًا: وسائل الدفع المؤجّلة تُكمل الجلسة
+          // بـ payment_status=unpaid ثم ترسل async_payment_succeeded لاحقًا.
+          const sessionPaid =
+            (type === "checkout.session.completed" && object.payment_status === "paid") ||
+            type === "checkout.session.async_payment_succeeded";
+          if (sessionPaid || type === "invoice.paid")
             status = "paid";
           else if (type.includes("payment_failed")) status = "failed";
           else if (type.includes("refunded")) status = "refunded";
@@ -2233,7 +2238,7 @@ async function startServer() {
             },
             `Stripe webhook ${type}`,
           );
-          if (type === "checkout.session.completed") {
+          if (sessionPaid) {
             if (!userId || !projectId || !isPaidProjectPlan(planId))
               throw Object.assign(new Error("Paid project metadata is incomplete"), {
                 status: 400,

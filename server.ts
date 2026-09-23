@@ -2483,6 +2483,19 @@ async function startServer() {
     return res.json({ ok: true });
   });
 
+  /*
+   * خريطة الموقع للصفحات العامة. الأصل من APP_URL إن ضُبط (النطاق النهائي)،
+   * وإلا من مضيف الطلب نفسه؛ فلا يُثبَّت نطاق Cloud Run المؤقت في الكود.
+   */
+  app.get("/sitemap.xml", (req, res) => {
+    const configured = cleanField(process.env.APP_URL, 500).replace(/\/+$/, "");
+    const host = String(req.get("host") || "").replace(/[^a-zA-Z0-9.:-]/g, "");
+    const origin = /^https?:\/\//.test(configured) ? configured : `${req.protocol}://${host}`;
+    const paths = ["/", "/p/students", "/p/faculty", "/p/pricing", "/p/about", "/p/faq", "/p/contact", "/p/security", "/p/privacy", "/p/terms", "/p/accessibility"];
+    res.type("application/xml").setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths.map((p) => `  <url><loc>${origin}${p}</loc></url>`).join("\n")}\n</urlset>\n`);
+  });
+
   app.get("/api/health", (_req, res) =>
     res.json({
       status: "ok",

@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f5f2" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1411" />
-    <meta name="description" content="AcademicOS — The Operating System for Human Learning in the AI Age." />
+    <meta name="description" content="Upload any assignment — essay, lab report, case study or thesis. AcademicOS helps you understand it, build it yourself, check your evidence and prepare to defend it." />
     <meta name="color-scheme" content="light dark" />
     <!-- Social sharing (WhatsApp/Facebook/X). og:image is an absolute URL to a
          dedicated 1200x630 branded card; relative paths are not resolved by crawlers. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="AcademicOS" />
     <meta property="og:title" content="AcademicOS — From Assignment to Evidence" />
-    <meta property="og:description" content="AcademicOS — The Operating System for Human Learning in the AI Age." />
+    <meta property="og:description" content="Upload any assignment — essay, lab report, case study or thesis. AcademicOS helps you understand it, build it yourself, check your evidence and prepare to defend it." />
     <meta property="og:url" content="https://academicos-app-522016905178.europe-west2.run.app/" />
     <meta property="og:image" content="https://academicos-app-522016905178.europe-west2.run.app/og-academicos.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
     <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="AcademicOS — From Assignment to Evidence" />
-    <meta name="twitter:description" content="AcademicOS — The Operating System for Human Learning in the AI Age." />
+    <meta name="twitter:description" content="Upload any assignment — essay, lab report, case study or thesis. AcademicOS helps you understand it, build it yourself, check your evidence and prepare to defend it." />
     <meta name="twitter:image" content="https://academicos-app-522016905178.europe-west2.run.app/og-academicos.jpg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -359,7 +359,12 @@
         var startedAt = Date.now();
         // تسلسل الحركة ينتهي عند ~١٧٦٠ms. التطبيق غالبًا يجهز قبل ذلك بكثير،
         // فتُحجز مدة دنيا كي تكتمل الحركة ويستقرّ الشعار لحظةً قبل الانصراف.
+        // الحركة كاملةً في أول زيارة للجلسة فقط؛ التنقّل وإعادة التحميل بعدها لا تُنتظر.
         var MIN_VISIBLE = 2300;
+        try {
+          if (window.sessionStorage.getItem("acos-boot-seen")) MIN_VISIBLE = 0;
+          else window.sessionStorage.setItem("acos-boot-seen", "1");
+        } catch (e) {}
         var reduceMotion = false;
         try {
           reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

@@ -139,3 +139,19 @@ test("a batch applies together and a transaction's writes land only at the end",
   });
   assert.equal((await one.get()).data()?.n, 11);
 });
+
+test("FieldValue.increment and FieldValue.delete behave like Firestore, not as stored objects", async () => {
+  const { FieldValue } = await import("firebase-admin/firestore");
+  const store = createDemoFirestore();
+  const ref = store.collection("tenantCounters").doc("c1");
+  await ref.set({ value: FieldValue.increment(2), note: "x" }, { merge: true });
+  await ref.set({ value: FieldValue.increment(3), note: FieldValue.delete() }, { merge: true });
+  let stored = (await ref.get()).data();
+  assert.equal(stored?.value, 5);
+  assert.equal("note" in (stored || {}), false);
+  await ref.update({ value: FieldValue.increment(1), gone: FieldValue.delete() });
+  stored = (await ref.get()).data();
+  assert.equal(stored?.value, 6);
+  await ref.set({ value: FieldValue.increment(4) });
+  assert.equal((await ref.get()).data()?.value, 4, "a non-merge set starts from zero");
+});

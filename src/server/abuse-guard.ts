@@ -1,7 +1,11 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAppFirestore } from "./firebase-services";
+import { DemoSandbox } from "./demoSandbox";
 import type { Request } from "express";
+
+// داخل طلبٍ تجريبي: صندوق الزائر في الذاكرة، لا المشروع الحقيقي.
+const appDb = (): any => DemoSandbox.currentFirestore() || getAppFirestore();
 
 const SIGNALS = "abuseSignalRegistry";
 const COUNTERS = "abuseBenefitCounters";
@@ -99,13 +103,13 @@ function activeReservations(value: unknown, at = Date.now()) {
 }
 
 async function recordEvent(data: Record<string, unknown>) {
-  const ref = getAppFirestore().collection(EVENTS).doc();
+  const ref = appDb().collection(EVENTS).doc();
   await ref.set({ id: ref.id, createdAt: now(), ...data });
 }
 
 export async function reserveFreeBenefit(req: Request, actor: FairUseActor, benefit = "project_preview"):
   Promise<{ assessment: FairUseAssessment; reservation?: FairUseReservation }> {
-  const db = getAppFirestore();
+  const db = appDb();
   const signals = requestSignals(req, actor);
   const { key: win, days: windowDays } = windowKey();
   const reservationId = randomUUID();
@@ -178,7 +182,7 @@ export async function reserveFreeBenefit(req: Request, actor: FairUseActor, bene
 
 export async function finalizeFreeBenefit(reservation: FairUseReservation | undefined, success: boolean) {
   if (!reservation) return;
-  const db = getAppFirestore(), ref = db.collection(RESERVATIONS).doc(reservation.id);
+  const db = appDb(), ref = db.collection(RESERVATIONS).doc(reservation.id);
   await db.runTransaction(async (tx) => {
     const doc = await tx.get(ref); if (!doc.exists || doc.data()?.status !== "active") return;
     const counterIds = Array.isArray(doc.data()?.counterIds) ? doc.data()!.counterIds.map(String) : reservation.counterIds;
@@ -199,7 +203,7 @@ export async function finalizeFreeBenefit(reservation: FairUseReservation | unde
 }
 
 export async function fairUseMetrics() {
-  const db = getAppFirestore();
+  const db = appDb();
   const [eventsSnap, signalsSnap] = await Promise.all([
     db.collection(EVENTS).orderBy("createdAt", "desc").limit(500).get(),
     db.collection(SIGNALS).limit(1000).get(),

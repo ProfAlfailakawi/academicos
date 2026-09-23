@@ -157,7 +157,9 @@ export function predictNext(storageKey: string, pathname: string, role: string, 
     const existing = scores.get(candidate.to);
     const visitBonus = Math.min(3, (model.visits[routeSignature(candidate.to)] || 0) * 0.25);
     const score = candidate.score + visitBonus;
-    if (!existing || score > existing.score) scores.set(candidate.to, { ...candidate, score, learned: false });
+    // The pool carries the localized nav label; the Arabic literal is only a fallback.
+    const label = available.find(item => item.to === candidate.to)?.label || candidate.label;
+    if (!existing || score > existing.score) scores.set(candidate.to, { ...candidate, label, score, learned: false });
   }
 
   const best = [...scores.values()].sort((a,b) => b.score - a.score)[0];

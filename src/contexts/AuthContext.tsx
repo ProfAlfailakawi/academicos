@@ -24,7 +24,7 @@ import {
   firebaseAuth,
   firebaseClientConfigured,
 } from "../lib/firebase";
-import { setApiAppCheckTokenProvider, setApiTokenProvider } from "../lib/api";
+import { readDemoRole, setApiAppCheckTokenProvider, setApiTokenProvider } from "../lib/api";
 import type { User, UserRole } from "../types";
 
 interface AuthState {
@@ -91,6 +91,20 @@ const DEMO_USER: User = {
   mfaEnrolled: false,
   mfaSatisfied: true,
 };
+
+/* يطابق DEMO_ACTORS في src/server/demoSandbox.ts: الخادم يقرّر الفاعل من
+   ترويسة x-demo-role، فلا بد أن تبني الواجهة شاشتها على الدور نفسه — وإلا فتح
+   دور الطالب لوحةَ الأستاذ وفشلت كل طلباتها بـ403. */
+const DEMO_ROLE_USERS: Record<string, Pick<User, "id" | "email" | "displayName" | "role">> = {
+  teaching_assistant: { id: "demo_user_ta", email: "demo_user_ta@demo.academicos.test", displayName: "م. عبدالعزيز الشايع (بيئة تجريبية)", role: "teaching_assistant" },
+  university_admin: { id: "demo_user_admin", email: "demo_user_admin@demo.academicos.test", displayName: "د. محمد البدر (بيئة تجريبية)", role: "university_admin" },
+  student: { id: "demo_user_student_1", email: "demo_user_student_1@demo.academicos.test", displayName: "عبدالله الفيلكاوي (بيئة تجريبية)", role: "student" },
+};
+
+function demoUserForRole(): User {
+  const profile = DEMO_ROLE_USERS[readDemoRole()];
+  return profile ? { ...DEMO_USER, ...profile } : DEMO_USER;
+}
 
 const Context = createContext<AuthState | null>(null);
 const allowedRoles: UserRole[] = [
@@ -217,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (demoTokenRef.current) {
-      setUser(DEMO_USER);
+      setUser(demoUserForRole());
       setLoading(false);
       return;
     }
@@ -293,7 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         writeDemoToken(data.token);
         demoTokenRef.current = data.token;
         setDemoToken(data.token);
-        setUser(DEMO_USER);
+        setUser(demoUserForRole());
         setLoading(false);
       },
       resetDemo: async () => {

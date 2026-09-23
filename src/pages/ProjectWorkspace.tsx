@@ -1001,8 +1001,15 @@ function Modal({
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <button
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         aria-label={t("pw.close")}

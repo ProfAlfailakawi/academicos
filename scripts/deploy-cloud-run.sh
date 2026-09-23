@@ -52,7 +52,9 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 
 echo "Deploying to EXISTING Cloud Run service: $SERVICE_NAME ($REGION)"
 # Preserve the service identity already managed by AI Studio/Cloud Run; do not override it.
-gcloud run deploy "$SERVICE_NAME" --source "$ROOT_DIR" --project "$PROJECT_ID" --region "$REGION" --allow-unauthenticated \
+# الخدمة أُنشئت أول مرة بصورة أساس (buildpacks)، والبناء الآن من Dockerfile؛ فيرفض gcloud
+# النشر ما لم تُمسح صورة الأساس صراحةً. المسح لا يؤثر إن لم تكن مضبوطة.
+gcloud run deploy "$SERVICE_NAME" --source "$ROOT_DIR" --project "$PROJECT_ID" --region "$REGION" --allow-unauthenticated --clear-base-image \
   --update-env-vars "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,FIREBASE_FIRESTORE_DATABASE_ID=$FIRESTORE_DATABASE_ID,FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_API_KEY=$FIREBASE_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=$FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=$FIREBASE_APP_ID,CHECK_REVOKED_ID_TOKENS=true${AI_ENV_VARS}" --quiet
 
 # لا يُسقط بقيةَ النشر: مرّتين حتى الآن فشلت خطوة صلاحيات وسط السكربت، فتوقّف

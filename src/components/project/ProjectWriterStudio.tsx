@@ -79,6 +79,7 @@ export function ProjectWriterStudio({
   const [actionBusy, setActionBusy] = useState<SectionAction | "save" | "xray" | "feedback" | "export" | "">("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [aiReady, setAiReady] = useState<boolean | null>(null);
   const [insight, setInsight] = useState<{ title: string; body: string; points: string[] } | null>(null);
   const [xray, setXray] = useState<ProjectXRayReport | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -87,6 +88,14 @@ export function ProjectWriterStudio({
 
   useEffect(() => {
     let active = true;
+    api
+      .health()
+      .then((health) => {
+        if (active) setAiReady(health.aiConfigured);
+      })
+      .catch(() => {
+        if (active) setAiReady(null);
+      });
     api
       .projectDocument(project.id)
       .then((response) => {
@@ -124,6 +133,7 @@ export function ProjectWriterStudio({
       const response = await api.generateProjectDocument(project.id, request);
       setDocument(response.document);
       setAccess(response.access);
+      setAiReady(response.source === "ai");
       setSelectedId(response.document.sections[0]?.id || "");
       setNotice(
         response.notice ||
@@ -299,6 +309,17 @@ export function ProjectWriterStudio({
           <span className="h-16 w-16 rounded-[22px] tone-tile mx-auto"><WandSparkles size={26} /></span>
           <h2 className="text-2xl font-semibold mt-5">{t("writer.readyTitle")}</h2>
           <p className="body-copy mt-2 max-w-xl mx-auto">{t("writer.readyDesc")}</p>
+          {aiReady === false && (
+            <div role="alert" className="mx-auto mt-5 max-w-2xl rounded-2xl border border-warning/30 bg-warning/10 p-4 text-start">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warning" />
+                <div>
+                  <h3 className="text-sm font-semibold">{t("writer.aiUnavailableTitle")}</h3>
+                  <p className="mt-1 text-xs leading-6 muted">{t("writer.aiUnavailableDesc")}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             <Button onClick={() => generate({ mode: "write", assistanceMode: "practice", language: meta.aiName, desiredPages: 12, academicTone: "clear" })}><Sparkles size={16} /> {t("writer.writeDraft")}</Button>
             <Button variant="outline" onClick={() => generate({ mode: "write", assistanceMode: "policy_strict", language: meta.aiName, desiredPages: 12, academicTone: "clear" })}><ShieldCheck size={16} /> {t("writer.strictMode")}</Button>
@@ -311,6 +332,18 @@ export function ProjectWriterStudio({
   return (
     <div className="space-y-5">
       <ProjectFlow document={document} />
+      {(document.generationSource === "safe_scaffold" || (!document.generationSource && aiReady === false)) && (
+        <section role="alert" className="rounded-[24px] border border-warning/30 bg-warning/10 p-4 md:p-5">
+          <div className="flex items-start gap-3">
+            <span className="h-11 w-11 rounded-2xl bg-[var(--panel)] grid place-items-center shrink-0 text-warning"><AlertTriangle size={20} /></span>
+            <div>
+              <div className="eyebrow">{t("writer.aiUnavailableEyebrow")}</div>
+              <h2 className="section-title mt-1">{t("writer.aiUnavailableTitle")}</h2>
+              <p className="text-xs leading-6 muted mt-2">{t("writer.scaffoldWarning")}</p>
+            </div>
+          </div>
+        </section>
+      )}
       {document.accessTier === "preview" && (
         <section className="rounded-[24px] border border-warning/30 bg-warning/10 p-4 md:p-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

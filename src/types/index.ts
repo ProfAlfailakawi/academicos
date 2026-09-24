@@ -439,6 +439,7 @@ export interface ProjectDocumentSection {
 export interface ProjectDocument {
   id: string;
   projectId: string;
+  generationSource?: "ai" | "safe_scaffold";
   mode: AcademicWorkMode;
   assistanceMode: AcademicAssistanceMode;
   language: string;

@@ -7771,6 +7771,7 @@ async function startServer() {
         });
         const document: ProjectDocument = {
           ...composed,
+          generationSource: provider ? "ai" : "safe_scaffold",
           accessTier: generation.preview ? "preview" : "paid",
           planId: access.planId,
           targetPages,

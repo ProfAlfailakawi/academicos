@@ -6,6 +6,7 @@ import type { ProjectAccess, ProjectDNA } from "../types";
 import { Button } from "../components/ui/button";
 import { formatMoney, useI18n } from "../lib/i18n";
 import { InlineLoader } from "../components/ui/AcademicLoader";
+import { localizedUiError } from "../lib/ui-error";
 
 const FALLBACK = [
   { id: "preview", amountUsd: 0, pages: 3, projects: 1 },
@@ -39,7 +40,10 @@ export function Plans() {
         setProjects(projectResult.projects);
         setSelectedId((current) => projectResult.projects.some((project) => project.id === current) ? current : projectResult.projects[0]?.id || "");
       })
-      .catch((error) => setMessage(error.message || t("plans.loadError")))
+      .catch((error) => {
+        console.error("Failed to load billing plans", error);
+        setMessage(localizedUiError(error, t, "plans.loadError"));
+      })
       .finally(() => setLoading(false));
   }, [t]);
 
@@ -77,7 +81,11 @@ export function Plans() {
     if (!configured) { setMessage(t("plans.notConfigured")); return; }
     setBusy(planId); setMessage("");
     try { const result = await api.createCheckout(planId, selected.id); window.location.assign(result.url); }
-    catch (error: any) { setMessage(error.message || t("plans.checkoutError")); setBusy(""); }
+    catch (error: any) {
+      console.error("Failed to create checkout", error);
+      setMessage(localizedUiError(error, t, "plans.checkoutError"));
+      setBusy("");
+    }
   }
 
   return <div className="mx-auto max-w-6xl space-y-8">

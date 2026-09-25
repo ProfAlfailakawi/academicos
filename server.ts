@@ -66,7 +66,7 @@ import {
 import JSZip from "jszip";
 import { runSubmissionAudit } from "./src/server/audit";
 import { runStyleIntegrityAnalysis, improveScholarlyStyle } from "./src/server/deep-ai-detector";
-import { getOriginalFileUrl, storeOriginalFile } from "./src/server/storage";
+import { getOriginalFileUrl, probeStorageBucket, storeOriginalFile } from "./src/server/storage";
 import {
   assertFirebaseCredentialAlignment,
   firebaseProjectId,
@@ -2503,7 +2503,21 @@ async function startServer() {
     res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths.map((p) => `  <url><loc>${origin}${p}</loc></url>`).join("\n")}\n</urlset>\n`);
   });
 
-  app.get("/api/health", (_req, res) =>
+  let storageProbe: { at: number; configured: boolean; ready: boolean; code?: string } | null = null;
+  async function storageReadiness() {
+    if (!storageProbe || Date.now() - storageProbe.at > 60_000) {
+      const result = await Promise.race([
+        probeStorageBucket(),
+        new Promise<{ configured: boolean; ready: boolean; code: string }>((resolve) =>
+          setTimeout(() => resolve({ configured: Boolean(firebaseStorageBucketName()), ready: false, code: "STORAGE_PROBE_TIMEOUT" }), 5_000),
+        ),
+      ]);
+      storageProbe = { at: Date.now(), ...result };
+    }
+    return storageProbe;
+  }
+  app.get("/api/health", async (_req, res) => {
+    const storage = await storageReadiness();
     res.json({
       status: "ok",
       mode: "production",
@@ -2511,7 +2525,12 @@ async function startServer() {
       firebaseProject: firebaseProjectId(),
       firestoreDatabase: firestoreDatabaseId(),
       aiConfigured: aiConfigured(),
-      storageConfigured: Boolean(firebaseStorageBucketName()),
+      storageConfigured: storage.ready,
+      storage: {
+        configured: storage.configured,
+        ready: storage.ready,
+        code: storage.code,
+      },
       billing: billingStatus(),
       ocr: ocrStatus(),
       malware: {
@@ -2530,8 +2549,8 @@ async function startServer() {
       dataRegion: process.env.DATA_REGION || "global",
       maintenance: process.env.MAINTENANCE_MODE === "true",
       incidentBanner: process.env.INCIDENT_BANNER || "",
-    }),
-  );
+    });
+  });
   /*
    * فحص وصول Firestore الفعلي: قراءة واحدة صغيرة بمهلة، والنتيجة مخزّنة ٦٠ ثانية
    * فلا يصير الرابط العام بابًا لاستهلاك القراءات. يعتمد عليه النشر ليميّز
@@ -7056,7 +7075,10 @@ async function startServer() {
         await recordProductEventSafe(a, "assignment_parsed");
         const aiUsage = (parsed as any).__aiUsage;
         delete (parsed as any).__aiUsage;
-        if (incomingFiles.length)
+        // Demo uploads stay inside the in-memory sandbox. Sending a visitor's
+        // demo file to the production bucket breaks isolation and also makes
+        // the demo depend on an external storage resource it does not need.
+        if (incomingFiles.length && !DemoSandbox.isDemoRequest())
           for (let i = 0; i < incomingFiles.length; i += 1)
             attachments[i].storagePath = await storeOriginalFile(
               incomingFiles[i],
@@ -9961,11 +9983,12 @@ async function startServer() {
       try {
         const a = req.actor!;
         const control = await firestoreStore.getControlPlane(a.tenantId, isPlatformScopeActor(a));
+        const storage = await storageReadiness();
         control.system = {
           mode: "production",
           firebase: firebaseInitialized,
           aiConfigured: aiConfigured(),
-          storageConfigured: Boolean(firebaseStorageBucketName()),
+          storageConfigured: storage.ready,
           billingConfigured: billingStatus().configured,
           dataRegion: process.env.DATA_REGION || "global",
           maintenance: process.env.MAINTENANCE_MODE === "true",
@@ -10293,6 +10316,7 @@ async function startServer() {
       try {
         const a = req.actor!;
         const control = await firestoreStore.getControlPlane(a.tenantId, isPlatformScopeActor(a));
+        const storage = await storageReadiness();
         res.json({
           success: true,
           metrics: control.metrics,
@@ -10301,7 +10325,7 @@ async function startServer() {
             mode: "production",
             firebase: firebaseInitialized,
             aiConfigured: aiConfigured(),
-            storageConfigured: Boolean(firebaseStorageBucketName()),
+            storageConfigured: storage.ready,
             billingConfigured: billingStatus().configured,
           },
         });

@@ -560,6 +560,7 @@ export const api = {
       firebase: boolean;
       aiConfigured: boolean;
       storageConfigured: boolean;
+      storage?: { configured: boolean; ready: boolean; code?: string };
       billing: { provider: string; configured: boolean };
       ocr: {
         configured: boolean;

@@ -88,6 +88,16 @@ test('the upload validator runs on every file intake path', async () => {
   assert.equal(server.split('forEach(validateFile)').length - 1, 2);
 });
 
+test('demo uploads remain isolated from production storage and health probes the real bucket', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const storage = await readFile(new URL('../src/server/storage.ts', import.meta.url), 'utf8');
+  assert.match(server, /incomingFiles\.length && !DemoSandbox\.isDemoRequest\(\)/);
+  assert.match(server, /probeStorageBucket\(\)/);
+  assert.match(storage, /export async function probeStorageBucket/);
+  assert.match(storage, /STORAGE_BUCKET_NOT_FOUND/);
+});
+
 test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchable', async () => {
   const { readFile } = await import('node:fs/promises');
   const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');

@@ -43,6 +43,7 @@ import { formatDateTime, useI18n } from "../lib/i18n";
 import { LogoMark, Wordmark } from "./brand/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { roleTranslationKey } from "../lib/role-labels";
+import { useDialogA11y } from "./AppDialog";
 
 type NavItem = {
   to: string;
@@ -109,6 +110,8 @@ export function Layout() {
   const previousPath = useRef<string | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(paletteRef, { open: paletteOpen, onClose: () => setPaletteOpen(false) });
   const menuWasOpen = useRef(false);
 
   useEffect(() => {
@@ -761,12 +764,14 @@ export function Layout() {
 
       {paletteOpen && (
         <div
+          ref={paletteRef}
           className="fixed inset-0 z-[70] flex items-start justify-center px-4 pt-[12vh]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="command-title"
         >
           <button
+            tabIndex={-1}
             className="absolute inset-0 bg-black/25 backdrop-blur-sm"
             aria-label={t("layout.closeSearch")}
             onClick={() => setPaletteOpen(false)}

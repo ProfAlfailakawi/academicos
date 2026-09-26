@@ -1,5 +1,6 @@
 import { localizedUiError } from "../../lib/ui-error";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useDialogA11y } from "../AppDialog";
 import { Fingerprint, Download, ShieldCheck, FileCheck2, BrainCircuit, Copy, Check, ExternalLink, AlertTriangle, History } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
 import { api } from "../../lib/api";
@@ -25,6 +26,9 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
   const [sharing, setSharing] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  useDialogA11y(dialogRef, { open: true, onClose });
 
   useEffect(() => {
     let active = true;
@@ -93,10 +97,10 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
   const verificationGood = verification && verification.status !== "invalid";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border hairline bg-[var(--panel)] shadow-2xl p-6 md:p-8 space-y-6">
+    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border hairline bg-[var(--panel)] shadow-2xl p-6 md:p-8 space-y-6">
         <div className="flex items-start justify-between gap-4 border-b hairline pb-5">
-          <div className="flex items-center gap-3 min-w-0"><div className="h-12 w-12 rounded-2xl tone-tile text-insight shrink-0"><Fingerprint size={26}/></div><div className="min-w-0"><div className="text-[11px] font-semibold uppercase tracking-wider text-insight">{t("ui.evidenceCapsule")}</div><h2 className="text-xl md:text-2xl font-bold tracking-tight mt-0.5">{t("dossier.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("dossier.description")}</p></div></div>
+          <div className="flex items-center gap-3 min-w-0"><div className="h-12 w-12 rounded-2xl tone-tile text-insight shrink-0"><Fingerprint size={26}/></div><div className="min-w-0"><div className="text-[11px] font-semibold uppercase tracking-wider text-insight">{t("ui.evidenceCapsule")}</div><h2 id={titleId} className="text-xl md:text-2xl font-bold tracking-tight mt-0.5">{t("dossier.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("dossier.description")}</p></div></div>
           <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => window.print()}><Download size={15}/>{t("common.print")}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t("common.close")}</Button></div>
         </div>
 

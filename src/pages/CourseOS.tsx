@@ -31,6 +31,7 @@ import type {
   CourseRecord,
 } from "../types";
 import { Button } from "../components/ui/button";
+import { DialogFrame } from "../components/AppDialog";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { localizedUiError } from "../lib/ui-error";
@@ -705,16 +706,16 @@ export function CourseOS() {
         </Card>
       </div>
       {builder && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 md:p-5">
-          <button
-            className="absolute inset-0 bg-black/35 backdrop-blur-sm"
-            onClick={() => setBuilder(false)}
-            aria-label={t("course.close")}
-          />
-          <div className="relative panel rounded-2xl w-full max-w-4xl max-h-[94vh] overflow-hidden">
+        <DialogFrame
+          onClose={() => setBuilder(false)}
+          labelledBy="course-builder-title"
+          busy={saving}
+          overlayClassName="fixed inset-0 z-[80] flex items-center justify-center p-3 md:p-5"
+          className="relative panel rounded-2xl w-full max-w-4xl max-h-[94vh] overflow-hidden"
+        >
             <div className="h-14 px-5 flex items-center justify-between border-b hairline">
               <div>
-                <div className="text-xs font-semibold">{t("ui.assignmentBuilder")}</div>
+                <h2 id="course-builder-title" className="text-xs font-semibold">{t("ui.assignmentBuilder")}</h2>
                 <div className="text-[11px] muted">
                   {course.code} · {course.title}
                 </div>
@@ -971,8 +972,7 @@ export function CourseOS() {
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
+        </DialogFrame>
       )}
     </div>
   );

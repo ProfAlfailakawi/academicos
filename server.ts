@@ -145,6 +145,7 @@ import { SRV, SRV2 } from "./src/server/server-messages";
 import { registerAdvancedRoutes } from "./src/server/advanced/routes";
 import { registerBillingApiRoutes, registerBillingWebhookRoutes } from "./src/server/routes/billing";
 import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/routes/ai";
+import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
@@ -8066,6 +8067,7 @@ async function startServer() {
       }
     },
   );
+  registerProcessEvidenceRoutes(app, { ...routeDeps(), loadProjectIntelligence });
   app.get(
     "/api/projects/:id/trust-graph",
     authenticate,
@@ -9098,7 +9100,7 @@ async function startServer() {
     },
   );
   app.post(
-    ["/api/projects/:id/improve-style", "/api/projects/:id/humanize"],
+    "/api/projects/:id/improve-style",
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
       try {
@@ -9128,8 +9130,6 @@ async function startServer() {
         res.json({
           success: true,
           improvedText: result.improvedText,
-          // Backward-compatible key for older clients. This is style improvement, not detector evasion.
-          humanizedText: result.improvedText,
           improvementsMade: result.improvementsMade,
         });
       } catch (e) {

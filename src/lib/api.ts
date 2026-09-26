@@ -1,5 +1,7 @@
 import type {
   AcademicTimeMachine,
+  ProcessEvidenceReport,
+  ProcessEvidenceVerification,
   AcademicSourceRecord,
   AcademicTrustGraph,
   AdminUserRecord,
@@ -993,6 +995,15 @@ export const api = {
     request<{ success: true; timeMachine: AcademicTimeMachine }>(
       `/api/projects/${encodeURIComponent(projectId)}/time-machine`,
     ),
+  processEvidence: (projectId: string) =>
+    request<{ success: true; report: ProcessEvidenceReport }>(
+      `/api/projects/${encodeURIComponent(projectId)}/process-evidence`,
+    ),
+  verifyProcessEvidence: (body: { report?: ProcessEvidenceReport; contentHash?: string; signature?: string }) =>
+    request<{ success: true; verification: ProcessEvidenceVerification }>(
+      "/api/public/process-evidence/verify",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
   projectTrustGraph: (projectId: string) =>
     request<{ success: true; trustGraph: AcademicTrustGraph }>(
       `/api/projects/${encodeURIComponent(projectId)}/trust-graph`,
@@ -1077,24 +1088,10 @@ export const api = {
       `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
       { method: "POST", body: JSON.stringify({ text, locale }) },
     ),
-  improveStyle: (projectId: string, text: string, locale?: string) =>
-    request<{
-      success: true;
-      improvedText: string;
-      improvementsMade: string[];
-    }>(`/api/projects/${encodeURIComponent(projectId)}/improve-style`, {
-      method: "POST",
-      body: JSON.stringify({ text, locale }),
-    }),
   // Compatibility aliases for older callers. No authorship detection/evasion is performed.
   detectAI: (projectId: string, text?: string) =>
     request<{ success: true; report: DeepAIDetectionReport }>(
       `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
-      { method: "POST", body: JSON.stringify({ text }) },
-    ),
-  humanize: (projectId: string, text: string) =>
-    request<{ success: true; humanizedText: string; improvementsMade: string[] }>(
-      `/api/projects/${encodeURIComponent(projectId)}/improve-style`,
       { method: "POST", body: JSON.stringify({ text }) },
     ),
   exportBundleUrl: (projectId: string) =>

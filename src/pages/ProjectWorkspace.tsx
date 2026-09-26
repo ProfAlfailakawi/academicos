@@ -29,6 +29,7 @@ import {
   Sparkles,
   UsersRound,
   ShieldCheck,
+  History,
   X,
 } from "lucide-react";
 import { api } from "../lib/api";
@@ -36,13 +37,14 @@ import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, Submiss
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
+import { DialogShell } from "../components/AppDialog";
 import { EvidenceStudio } from "../components/project/EvidenceStudio";
 import { VivaStudio } from "../components/project/VivaStudio";
 import { TeamStudio } from "../components/project/TeamStudio";
 import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
 import { ProjectCopilot } from "../components/project/ProjectCopilot";
 import { AcademicDossierModal } from "../components/project/AcademicDossierModal";
-import { TurnitinForensicShieldModal } from "../components/project/TurnitinForensicShieldModal";
+import { AuthorshipIntegrityModal } from "../components/project/AuthorshipIntegrityModal";
 import { LiveScholarVerifier } from "../components/project/LiveScholarVerifier";
 import { DynamicDataVisualizer } from "../components/project/DynamicDataVisualizer";
 import { RedTeamingArena } from "../components/project/RedTeamingArena";
@@ -53,6 +55,7 @@ import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
 import { GhostCohortPanel } from "../components/project/GhostCohortPanel";
 import { GradeLossMap } from "../components/project/GradeLossMap";
 import { ReverseAssessmentStudio } from "../components/project/ReverseAssessmentStudio";
+import { ProcessEvidenceTimeline } from "../components/project/ProcessEvidenceTimeline";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
@@ -80,6 +83,7 @@ const tabs = [
   ["portfolio", "pw.tabPortfolio", Award],
   ["plan", "pw.tabPlan", ListChecks],
   ["evidence", "pw.tabEvidence", Database],
+  ["timeline", "pw.tabTimeline", History],
   ["viva", "pw.tabViva", GraduationCap],
   ["team", "pw.tabTeam", UsersRound],
 ] as const;
@@ -95,7 +99,7 @@ export function ProjectWorkspace() {
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
-  const [showForensicRadar, setShowForensicRadar] = useState(false);
+  const [showIntegrityCheck, setShowIntegrityCheck] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [showMoreTools, setShowMoreTools] = useState(false);
   const [showRescue, setShowRescue] = useState(false);
@@ -140,6 +144,7 @@ export function ProjectWorkspace() {
     const focus = new URLSearchParams(location.search).get("focus");
     if (focus === "viva") setTab("viva");
     else if (focus === "plan" || focus === "tasks") setTab("plan");
+    else if (focus === "timeline") setTab("timeline");
     else setTab("writer");
   }, [location.search]);
   if (error)
@@ -322,7 +327,7 @@ export function ProjectWorkspace() {
                 <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                   <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                 </a>
-                <button onClick={() => setShowForensicRadar(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                <button onClick={() => setShowIntegrityCheck(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
                   <Fingerprint size={15} /> {t("pw.styleIntegrity")}
                 </button>
                 <button onClick={() => setShowDossier(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
@@ -362,7 +367,7 @@ export function ProjectWorkspace() {
                 )
                 .map(([key, label, Icon]) => (
                   <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
-                    <Icon size={14} />{label}
+                    <Icon size={14} />{t(label)}
                   </button>
                 ))}
             </div>
@@ -401,6 +406,7 @@ export function ProjectWorkspace() {
         />
       )}
       {tab === "evidence" && <EvidenceStudio project={project} />}
+      {tab === "timeline" && <ProcessEvidenceTimeline project={project} />}
       {tab === "viva" && <VivaStudio project={project} />}
       {tab === "team" && <TeamStudio project={project} />}
 
@@ -411,10 +417,14 @@ export function ProjectWorkspace() {
         />
       )}
 
-      {showForensicRadar && (
-        <TurnitinForensicShieldModal
+      {showIntegrityCheck && (
+        <AuthorshipIntegrityModal
           project={project}
-          onClose={() => setShowForensicRadar(false)}
+          onClose={() => setShowIntegrityCheck(false)}
+          onOpenTimeline={() => {
+            setShowIntegrityCheck(false);
+            setTab("timeline");
+          }}
         />
       )}
 
@@ -1000,38 +1010,14 @@ function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const { t } = useI18n();
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <button
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        aria-label={t("pw.close")}
-        onClick={onClose}
-      />
-      <div className="relative panel rounded-2xl w-full max-w-2xl max-h-[88vh] overflow-hidden">
-        <div className="h-14 px-5 flex items-center justify-between border-b hairline">
-          <h2 className="font-semibold">{title}</h2>
-          <Button
-            size="icon"
-            variant="ghost"
-            aria-label={t("pw.closeWindow")}
-            onClick={onClose}
-          >
-            <X size={18} />
-          </Button>
-        </div>
-        <div className="p-5 overflow-auto max-h-[calc(88vh-56px)]">
-          {children}
-        </div>
-      </div>
-    </div>
+    <DialogShell
+      title={title}
+      onClose={onClose}
+      className="relative panel rounded-2xl w-full max-w-2xl max-h-[88vh] overflow-hidden flex flex-col"
+    >
+      {children}
+    </DialogShell>
   );
 }
 function moduleName(value: string) {

@@ -8,7 +8,7 @@ const routeModules=fs.existsSync(path.join(root,'src/server/routes'))?fs.readdir
 const server=[read('server.ts'),...routeModules].join('\n');
 const auth=read('src/contexts/AuthContext.tsx');
 const login=read('src/pages/Login.tsx');
-const detector=read('src/components/project/TurnitinForensicShieldModal.tsx');
+const detector=read('src/components/project/AuthorshipIntegrityModal.tsx');
 const messages=read('src/lib/i18n-messages.ts');
 const visual=read('src/components/project/DynamicDataVisualizer.tsx');
 const red=read('src/components/project/RedTeamingArena.tsx');
@@ -52,7 +52,7 @@ expect('MFA is not a global read blocker',!server.includes('Multi-factor authent
 expect('MFA enrollment and challenge are implemented',mfaSetup.includes('TotpMultiFactorGenerator.generateSecret')&&login.includes('getMultiFactorResolver')&&login.includes('resolveSignIn'),'Firebase MFA must have a complete enrollment and sign-in path');
 expect('No local auth fallback',!auth.includes('localStorage') && !auth.includes('localUser'),'AuthContext must never fabricate a signed-in user');
 expect('Showcase demo personas are fully removed',!/showcase/i.test(login)&&!login.includes('@showcase.academicos.local'),'demo personas must not exist in production code');
-expect('Detector is not branded as external detector',messages.includes('It does not claim to identify who wrote the text or impersonate any external detector.') && messages.includes('integrity.riskNotAi'),'style analysis must state its boundary in i18n and never present its score as AI probability');
+expect('Integrity check never rewrites text or names an external detector',!/turnitin/i.test(detector)&&!detector.includes('improveStyle')&&!/clipboard/.test(detector)&&!server.includes('/humanize')&&messages.includes('It does not claim to identify who wrote the text or impersonate any external detector.') && messages.includes('integrity.riskNotAi'),'style analysis must state its boundary in i18n and never present its score as AI probability');
 expect('Visualizer contains no fabricated research sample',!visual.includes('المجموعة الضابطة')&&!visual.includes('p < 0.001')&&!visual.includes('N = 120'),'visuals must derive from Project DNA only');
 expect('Red team contains no fabricated Cronbach/sample result',!red.includes("Cronbach's Alpha =")&&!red.includes('كلية واحدة فقط'),'red team must derive critique from recorded context');
 expect('Presentation contains no fabricated findings',!slides.includes('إثبات صحة الفرضيات')&&!slides.includes('التحقق من الصدق')&&!slides.includes('أحدث الأبحاث (2022-2026)'),'presentation cannot invent research execution/results');

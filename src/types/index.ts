@@ -1526,3 +1526,60 @@ export interface StyleIntegrityReport {
 }
 
 export type DeepAIDetectionReport = StyleIntegrityReport;
+
+// ---- Process Evidence (authorship timeline) — mirrors src/server/process-evidence.ts ----
+export type ProcessEvidenceKind =
+  | "created"
+  | "draft"
+  | "revision"
+  | "viva"
+  | "source_check"
+  | "evidence"
+  | "ai_assist"
+  | "submission"
+  | "plan"
+  | "review"
+  | "other";
+
+export interface ProcessEvidenceEntry {
+  id: string;
+  at: string;
+  kind: ProcessEvidenceKind;
+  title: string;
+  detail: string;
+  actorType: "human" | "ai" | "system";
+  version?: number;
+}
+
+export interface ProcessEvidenceReport {
+  schema: "academicos.process-evidence/1";
+  projectId: string;
+  projectTitle: string;
+  course: string;
+  generatedAt: string;
+  entries: ProcessEvidenceEntry[];
+  summary: {
+    drafts: number;
+    revisions: number;
+    vivaAnswers: number;
+    sourceChecks: number;
+    aiAssists: number;
+    totalEntries: number;
+    activeDays: number;
+    firstAt?: string;
+    latestAt?: string;
+  };
+  integrity: {
+    algorithm: "SHA-256+HMAC-SHA256";
+    contentHash: string;
+    signature: string;
+    keyId: string;
+    verificationCode: string;
+  };
+}
+
+export interface ProcessEvidenceVerification {
+  hashValid: boolean;
+  signatureValid: boolean;
+  status: "valid" | "tampered" | "unknown_signer";
+}

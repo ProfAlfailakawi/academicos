@@ -157,7 +157,7 @@ expect('UI date/time formatting is locale-state driven', directLocaleFormatting.
 expect('No hard-coded Arabic JSX leaks outside i18n', visibleArabic.length===0, visibleArabic.slice(0,12).join(' | '));
 expect('No translatable visible JSX literals bypass i18n', visibleLiteralLeaks.length===0, visibleLiteralLeaks.slice(0,12).join(' | '));
 expect('Locale bootstrap runs before React', bootPos>=0 && mainPos>=0 && bootPos<mainPos, 'locale-bootstrap.js must be loaded before /src/main.tsx');
-expect('Bootstrap supports 8 locales with English fallback and an Arabic static default', LOCALES.every(c=>bootstrap.includes(`"${c}"`)) && bootstrap.includes('code = code || "en"') && /<html lang="ar" dir="rtl">/.test(html), 'bootstrap locale list/fallback incomplete or index.html default is not ar/rtl');
+expect('Bootstrap supports 8 locales with Arabic fallback and an Arabic static default', LOCALES.every(c=>bootstrap.includes(`"${c}"`)) && bootstrap.includes('code = code || "ar"') && /<html lang="ar" dir="rtl">/.test(html), 'bootstrap locale list/fallback incomplete or index.html default is not ar/rtl');
 expect('App shell reserves fixed sidebar using logical direction', css.includes('inset-inline-start: 0') && css.includes('margin-inline-start: 276px') && css.includes('width: calc(100% - 276px)'), 'sidebar/content geometry must use inline logical properties');
 expect('Mobile drawer close control is logical-direction aware', css.includes('.mobile-menu-close { inset-inline-end:'), 'mobile close button must follow start/end direction');
 expect('Directional icons rotate under RTL', css.includes('html[dir="rtl"] .directional-icon'), 'chevrons/arrows need RTL orientation');

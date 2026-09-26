@@ -9,9 +9,7 @@ import { readFileSync as readBuildStampFile } from "node:fs";
 import path from "node:path";
 import {
   createHash,
-  createHmac,
   randomUUID,
-  timingSafeEqual,
 } from "node:crypto";
 import {
   applicationDefault,
@@ -45,19 +43,6 @@ import {
 } from "./src/server/project-engine";
 import { compileAssignmentNative } from "./src/server/native-compiler";
 import {
-  buildTutorRequest,
-  toLesson,
-  nativeTutorScaffold,
-} from "./src/server/tutor";
-import {
-  decideSolveMode,
-  buildSolveRequest,
-  buildSolveVariation,
-  toSolveResult,
-  nativeSolveScaffold,
-} from "./src/server/solver";
-import { learnCacheKey, cacheScope } from "./src/server/learn-cache";
-import {
   buildDashboard,
   buildPassport,
   buildSkills,
@@ -84,11 +69,7 @@ import {
 import {
   billingPlan,
   billingStatus,
-  getBillingProvider,
   paymentCoversPlan,
-  verifyLemonSqueezyWebhook,
-  verifyMyFatoorahWebhook,
-  verifyTapWebhook,
   type VerifiedPaymentEvent,
 } from "./src/server/billing";
 import { completeViva, createVivaSession } from "./src/server/viva";
@@ -161,6 +142,9 @@ import {
 } from "./src/server/server-locale";
 import { SRV, SRV2 } from "./src/server/server-messages";
 import { registerAdvancedRoutes } from "./src/server/advanced/routes";
+import { registerBillingApiRoutes, registerBillingWebhookRoutes } from "./src/server/routes/billing";
+import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/routes/ai";
+import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
 import {
@@ -454,21 +438,6 @@ function initFirebase() {
     firebaseInitialized = false;
     if (process.env.NODE_ENV === "production") throw error;
   }
-}
-interface AuthenticatedRequest extends Request {
-  actor?: {
-    userId: string;
-    tenantId: string;
-    role: UserRole;
-    displayName: string;
-    email?: string;
-    impersonatorId?: string;
-    impersonationReadOnly?: boolean;
-    impersonationExpiresAt?: number;
-    mfa?: boolean;
-    authTime?: number;
-    emailVerified?: boolean;
-  };
 }
 async function verifyAppCheck(req: Request, res: Response, next: NextFunction) {
   const required = process.env.REQUIRE_APP_CHECK === "true";
@@ -1987,6 +1956,21 @@ async function loadLatestProjectDocument(
 async function startServer() {
   initFirebase();
   const app = express();
+  // Server-scoped helpers injected into route modules under src/server/routes.
+  const routeDeps = (): RouteDeps => ({
+    authenticate,
+    apiRateLimit,
+    cleanField,
+    persistVerifiedPayment,
+    assertFeature,
+    canManageCourse,
+    normalizeAcademicPolicy,
+    recordProductEventSafe,
+    reqLocale,
+    validateFile,
+    MAX_ASSIGNMENT_FILES,
+    MAX_TOTAL_FILE_BYTES,
+  });
   app.disable("x-powered-by");
   // خلف موازِن حمل/بروكسي (Cloud Run, GCLB, nginx) يجب الثقة بسلسلة X-Forwarded-For
   // ليعمل تحديد المعدّل لكل عميل فعليًا بدل انهيار كل الحركة في دلو واحد.
@@ -2059,333 +2043,7 @@ async function startServer() {
     };
     res.send(`window.__ENV__ = ${JSON.stringify(envData, null, 2)};`);
   });
-  app.post(
-    "/api/billing/webhook/stripe",
-    apiRateLimit,
-    express.raw({ type: "application/json", limit: "2mb" }),
-    async (req, res) => {
-      let webhookClaimId: string | undefined;
-      try {
-        const secret = process.env.STRIPE_WEBHOOK_SECRET;
-        if (!secret)
-          return res.status(503).json({
-            error: "Stripe webhook is not configured",
-            code: "STRIPE_WEBHOOK_NOT_CONFIGURED",
-          });
-        const signature = String(req.header("stripe-signature") || "");
-        const fields = signature
-          .split(",")
-          .map((part) => part.trim().split("=", 2));
-        const timestamp = Number(fields.find(([key]) => key === "t")?.[1] || 0),
-          provided = fields
-            .filter(([key]) => key === "v1")
-            .map(([, value]) => String(value || ""));
-        if (
-          !timestamp ||
-          !provided.length ||
-          Math.abs(Date.now() / 1000 - timestamp) > 300
-        )
-          return res.status(401).json({
-            error: "Invalid Stripe signature timestamp",
-            code: "STRIPE_SIGNATURE_INVALID",
-          });
-        const raw = Buffer.isBuffer(req.body)
-          ? req.body
-          : Buffer.from(req.body || "");
-        const expected = createHmac("sha256", secret)
-          .update(`${timestamp}.${raw.toString("utf8")}`)
-          .digest("hex");
-        const signatureValid = provided.some((value) => {
-          const a = Buffer.from(expected),
-            b = Buffer.from(value);
-          return a.length === b.length && timingSafeEqual(a, b);
-        });
-        if (!signatureValid)
-          return res.status(401).json({
-            error: "Invalid Stripe signature",
-            code: "STRIPE_SIGNATURE_INVALID",
-          });
-        const event = JSON.parse(raw.toString("utf8"));
-        const eventId = cleanField(event?.id, 240);
-        if (!eventId)
-          return res.status(400).json({
-            error: "Stripe event id is required",
-            code: "STRIPE_EVENT_ID_REQUIRED",
-          });
-        const object = event?.data?.object || {};
-        const type = String(event.type || "unknown");
-        let stripeMetadata =
-          object?.metadata || object?.subscription_details?.metadata || {};
-        const paymentIntentId = String(
-          typeof object?.payment_intent === "string"
-            ? object.payment_intent
-            : object?.payment_intent?.id || "",
-        );
-        if (
-          !stripeMetadata?.tenantId &&
-          /^pi_[A-Za-z0-9_]+$/.test(paymentIntentId) &&
-          process.env.STRIPE_SECRET_KEY
-        ) {
-          const lookup = await fetch(
-            `https://api.stripe.com/v1/payment_intents/${paymentIntentId}`,
-            {
-              headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
-              signal: AbortSignal.timeout(10_000),
-            },
-          );
-          if (lookup.ok) {
-            const paymentIntent: any = await lookup.json();
-            stripeMetadata = paymentIntent?.metadata || stripeMetadata;
-          }
-        }
-        const tenantId = String(
-          stripeMetadata?.tenantId || "",
-        );
-        const userId = String(stripeMetadata?.userId || "");
-        const projectId = String(stripeMetadata?.projectId || "");
-        const planId = String(stripeMetadata?.planId || "");
-        if (!tenantId)
-          return res.status(202).json({ received: true, ignored: true });
-        const claim = await platformStore.claimExternalWebhook(
-          "stripe",
-          eventId,
-        );
-        webhookClaimId = claim.id;
-        if (!claim.claimed)
-          return res.json({ received: true, duplicate: true });
-        const at = new Date().toISOString();
-        if (type.startsWith("customer.subscription.")) {
-          const rawStatus = String(object.status || "incomplete");
-          const status =
-            rawStatus === "canceled"
-              ? "cancelled"
-              : [
-                    "trialing",
-                    "active",
-                    "past_due",
-                    "unpaid",
-                    "paused",
-                    "incomplete",
-                    "incomplete_expired",
-                  ].includes(rawStatus)
-                ? rawStatus
-                : "expired";
-          await platformStore.create(
-            "subscriptions",
-            tenantId,
-            "stripe",
-            {
-              title: `Stripe subscription ${object.id || event.id}`,
-              status,
-              data: {
-                stripeEventId: event.id,
-                provider: "stripe",
-                externalId: object.id || null,
-                userId: userId || null,
-                customerId: object.customer || null,
-                currentPeriodEnd: object.current_period_end
-                  ? new Date(
-                      Number(object.current_period_end) * 1000,
-                    ).toISOString()
-                  : null,
-                cancelAtPeriodEnd: Boolean(object.cancel_at_period_end),
-                receivedAt: at,
-              },
-            },
-            `Stripe webhook ${type}`,
-          );
-          if (["active", "trialing"].includes(status))
-            await platformStore.recordEvent({
-              tenantId,
-              userId: userId || "stripe",
-              name: "subscription_started",
-              properties: { provider: "stripe" },
-              provenance: "server",
-            });
-        } else {
-          let status = "pending";
-          // جلسة مكتملة لا تعني دفعًا مستلَمًا: وسائل الدفع المؤجّلة تُكمل الجلسة
-          // بـ payment_status=unpaid ثم ترسل async_payment_succeeded لاحقًا.
-          const sessionPaid =
-            (type === "checkout.session.completed" && object.payment_status === "paid") ||
-            type === "checkout.session.async_payment_succeeded";
-          if (sessionPaid || type === "invoice.paid")
-            status = "paid";
-          else if (type.includes("payment_failed")) status = "failed";
-          else if (type.includes("refunded")) status = "refunded";
-          else if (type.includes("dispute")) status = "chargeback";
-          await platformStore.create(
-            "transactions",
-            tenantId,
-            "stripe",
-            {
-              title: `Stripe ${type}`,
-              status,
-              data: {
-                stripeEventId: event.id,
-                provider: "stripe",
-                externalId: object.id || null,
-                userId: userId || null,
-                amount: Number(
-                  object.amount_total ||
-                    object.amount_paid ||
-                    object.amount ||
-                    0,
-                ),
-                currency: String(object.currency || "").toUpperCase(),
-                planId: planId || null,
-                projectId: projectId || null,
-                receivedAt: at,
-              },
-            },
-            `Stripe webhook ${type}`,
-          );
-          if (sessionPaid) {
-            if (!userId || !projectId || !isPaidProjectPlan(planId))
-              throw Object.assign(new Error("Paid project metadata is incomplete"), {
-                status: 400,
-                code: "PAYMENT_METADATA_INVALID",
-              });
-            // Defense in depth: never unlock a plan the captured amount does not
-            // cover, even though the Checkout Session is created server-side.
-            // Stripe amounts are in minor units (cents) → convert to major.
-            const capturedMajor =
-              Number(
-                object.amount_total || object.amount_paid || object.amount || 0,
-              ) / 100;
-            if (
-              paymentCoversPlan({
-                planId,
-                amount: capturedMajor,
-                currency: String(object.currency || "USD"),
-              }) === false
-            )
-              throw Object.assign(
-                new Error("Captured amount does not cover the requested plan"),
-                { status: 400, code: "PAYMENT_AMOUNT_MISMATCH" },
-              );
-            await platformStore.grantProjectEntitlement({
-              tenantId,
-              userId,
-              projectId,
-              planId,
-              provider: "stripe",
-              externalId: String(object.id || paymentIntentId),
-              eventId,
-              externalRefs: [paymentIntentId],
-            });
-            await platformStore.recordEvent({
-              tenantId,
-              userId: userId || "stripe",
-              name: "project_plan_purchased",
-              projectId,
-              properties: { provider: "stripe", planId },
-              provenance: "server",
-            });
-          } else if (status === "refunded" || status === "chargeback") {
-            if (userId && projectId)
-              await platformStore.revokeProjectEntitlement({
-                tenantId,
-                userId,
-                projectId,
-                provider: "stripe",
-                externalId: String(paymentIntentId || object.id),
-                eventId,
-                reason: status,
-              });
-          }
-        }
-        await platformStore.completeExternalWebhook(
-          webhookClaimId,
-          "completed",
-        );
-        res.json({ received: true });
-      } catch (error) {
-        if (webhookClaimId)
-          await platformStore
-            .completeExternalWebhook(
-              webhookClaimId,
-              "failed",
-              error instanceof Error ? error.message : "Webhook failed",
-            )
-            .catch(() => undefined);
-        console.error("Stripe webhook failed", error);
-        res.status(400).json({
-          error: "Webhook payload could not be processed",
-          code: "STRIPE_WEBHOOK_INVALID",
-        });
-      }
-    },
-  );
-  app.post(
-    "/api/billing/webhook/tap",
-    apiRateLimit,
-    express.raw({ type: "application/json", limit: "1mb" }),
-    async (req, res) => {
-      try {
-        const raw = Buffer.isBuffer(req.body)
-          ? req.body
-          : Buffer.from(req.body || "");
-        const event = verifyTapWebhook(
-          raw,
-          String(req.header("hashstring") || ""),
-        );
-        const result = await persistVerifiedPayment(event);
-        res.json({ received: true, ...result });
-      } catch (error: any) {
-        res.status(Number(error?.status || 400)).json({
-          error: "Tap webhook could not be verified",
-          code: error?.code || "TAP_WEBHOOK_INVALID",
-        });
-      }
-    },
-  );
-  app.post(
-    "/api/billing/webhook/myfatoorah",
-    apiRateLimit,
-    express.raw({ type: "application/json", limit: "1mb" }),
-    async (req, res) => {
-      try {
-        const raw = Buffer.isBuffer(req.body)
-          ? req.body
-          : Buffer.from(req.body || "");
-        const event = verifyMyFatoorahWebhook(
-          raw,
-          String(req.header("myfatoorah-signature") || ""),
-        );
-        const result = await persistVerifiedPayment(event);
-        res.json({ received: true, ...result });
-      } catch (error: any) {
-        res.status(Number(error?.status || 400)).json({
-          error: "MyFatoorah webhook could not be verified",
-          code: error?.code || "MYFATOORAH_WEBHOOK_INVALID",
-        });
-      }
-    },
-  );
-  app.post(
-    "/api/billing/webhook/lemonsqueezy",
-    apiRateLimit,
-    express.raw({ type: "application/json", limit: "1mb" }),
-    async (req, res) => {
-      try {
-        const raw = Buffer.isBuffer(req.body)
-          ? req.body
-          : Buffer.from(req.body || "");
-        const event = verifyLemonSqueezyWebhook(
-          raw,
-          String(req.header("x-signature") || ""),
-        );
-        const result = await persistVerifiedPayment(event);
-        res.json({ received: true, ...result });
-      } catch (error: any) {
-        res.status(Number(error?.status || 400)).json({
-          error: "Lemon Squeezy webhook could not be verified",
-          code: error?.code || "LEMONSQUEEZY_WEBHOOK_INVALID",
-        });
-      }
-    },
-  );
+  registerBillingWebhookRoutes(app, routeDeps());
   const allowedOrigins = (
     process.env.ALLOWED_ORIGINS ||
     process.env.APP_URL ||
@@ -4212,87 +3870,7 @@ async function startServer() {
       }
     },
   );
-  app.post(
-    "/api/semantic",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        await assertFeature(req.actor!.tenantId, "SemanticRAG");
-        if (!externalServices.semantic.configured())
-          return res.status(503).json({
-            error:
-              "Semantic index is disabled until its tenant-scoped service is configured.",
-            code: "SEMANTIC_NOT_CONFIGURED",
-          });
-        const a = req.actor!,
-          action = String(req.body?.action || "search");
-        if (!["index", "search"].includes(action))
-          return res.status(400).json({
-            error: "Invalid semantic action",
-            code: "SEMANTIC_ACTION_INVALID",
-          });
-        const projectId = cleanField(req.body?.projectId, 180);
-        if (projectId) {
-          const project = await firestoreStore.getProject(
-            projectId,
-            a.userId,
-            a.tenantId,
-          );
-          if (!project)
-            return res
-              .status(404)
-              .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
-        }
-        const result = await externalServices.semantic.run({
-          action,
-          tenantId: a.tenantId,
-          userId: a.userId,
-          projectId: projectId || undefined,
-          query: cleanField(req.body?.query, 4000),
-          documents: Array.isArray(req.body?.documents)
-            ? req.body.documents.slice(0, 100)
-            : undefined,
-          requireCitations: true,
-        });
-        res.json({ success: true, result });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
-  app.post(
-    "/api/translate",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        if (!externalServices.translation.configured())
-          return res.status(503).json({
-            error: "Translation service is not configured",
-            code: "TRANSLATION_NOT_CONFIGURED",
-          });
-        const a = req.actor!,
-          text = cleanField(req.body?.text, 30000),
-          target = cleanField(req.body?.targetLocale, 30),
-          source = cleanField(req.body?.sourceLocale, 30) || "auto";
-        if (!text || !target)
-          return res.status(400).json({
-            error: "text and targetLocale are required",
-            code: "TRANSLATION_INPUT_REQUIRED",
-          });
-        const result = await externalServices.translation.run({
-          tenantId: a.tenantId,
-          userId: a.userId,
-          text,
-          sourceLocale: source,
-          targetLocale: target,
-          preserveCitations: true,
-        });
-        res.json({ success: true, result });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
+  registerAiServiceRoutes(app, routeDeps());
   app.get(
     "/api/dashboard",
     authenticate,
@@ -4728,278 +4306,7 @@ async function startServer() {
       }
     },
   );
-  app.post(
-    "/api/learn/intake",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        const a = req.actor!;
-        const body = req.body || {};
-        const files = (Array.isArray(body.files) ? body.files : []) as IncomingFile[];
-        const note = cleanField(body.note, 2000) || "";
-        if (!files.length && !note.trim())
-          return res.status(400).json({ error: "Provide study material or a note", code: "STUDY_MATERIAL_REQUIRED" });
-        if (files.length > MAX_ASSIGNMENT_FILES)
-          return res.status(413).json({ error: `A maximum of ${MAX_ASSIGNMENT_FILES} files can be studied together`, code: "TOO_MANY_FILES" });
-        files.forEach(validateFile);
-        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-        if (totalBytes > MAX_TOTAL_FILE_BYTES)
-          return res.status(413).json({ error: "Combined study files are too large", code: "TOTAL_FILES_TOO_LARGE" });
-        if (files.length) {
-          if (process.env.REQUIRE_VIRUS_SCAN === "true" && !externalServices.virusScan.configured())
-            return res.status(503).json({ error: "Malware scanning is required but not configured", code: "VIRUS_SCAN_REQUIRED" });
-          if (externalServices.virusScan.configured()) {
-            for (const file of files) {
-              const result: any = await externalServices.virusScan.run({
-                name: file.name,
-                mimeType: file.mimeType,
-                size: file.size,
-                sha256: createHash("sha256").update(Buffer.from(file.base64, "base64")).digest("hex"),
-                base64: file.base64,
-              });
-              if (result?.clean !== true)
-                throw Object.assign(new Error(`Upload blocked by malware scanner: ${file.name}`), { status: 422, code: "MALWARE_DETECTED" });
-            }
-          }
-        }
-
-        const parts = note.trim() ? [`--- STUDENT NOTE ---\n${note.trim()}`] : [];
-        const warnings: string[] = [];
-        const extractionBudget = createExtractionBudget(MAX_TOTAL_FILE_BYTES, 120_000);
-        for (const file of files) {
-          const extracted = extractFileText(file, extractionBudget);
-          if (extracted.text) parts.push(`--- ${file.name} ---\n${extracted.text}`);
-          if (extracted.multimodal) {
-            const ocr = await runOcr(file);
-            if (ocr?.text) {
-              parts.push(`--- ${file.name} (OCR) ---\n${ocr.text}`);
-              warnings.push(...ocr.extraction.warnings);
-            } else {
-              warnings.push(
-                txf(SRV.ocrRequired, reqLocale(req), { file: file.name }),
-              );
-            }
-          }
-        }
-        const materialText = parts.join("\n\n").trim();
-        if (!materialText)
-          return res.status(422).json({ error: "Could not extract readable study text. Configure OCR for image-only material.", code: "STUDY_TEXT_NOT_EXTRACTED" });
-
-        let guide = {
-          summary: materialText.slice(0, 900),
-          keyIdeas: materialText.split(/\n+/).map((line) => line.trim()).filter((line) => line.length > 30).slice(0, 6),
-          examPrompts: [] as string[],
-          warnings,
-        };
-        let source: "ai" | "scaffold" = "scaffold";
-        if (aiConfigured({ taskType: "exam_material_intake", complexity: "medium", risk: "low" })) {
-          const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
-          try {
-            const result = await getAIProvider({ taskType: "exam_material_intake", complexity: "medium", risk: "low" }).runAcademicTask({
-              taskType: "exam_material_intake",
-              agent: "exam_coach",
-              projectContext: { fileCount: files.length, learnerId: a.userId },
-              artifact: { module: "exam_autopilot", title: "Study material", content: materialText.slice(0, 60_000) },
-              platformInstruction: "Build an exam-prep capsule from the supplied study material only. summary = concise map of the material. findings = the most important examinable ideas. suggestions = challenging practice questions that require understanding, not rote copying. warnings = ambiguities, unreadable areas, or evidence gaps. Do not invent facts outside the material and do not claim certainty where the material is incomplete.",
-              learnerInstruction: note || "Prepare me for an exam from these materials.",
-              policySummary: "Learning and exam preparation only; do not fabricate sources or course policy.",
-            });
-            await firestoreStore.recordAIUsage(result.usage, a, "exam_autopilot");
-            guide = {
-              summary: result.output.summary,
-              keyIdeas: result.output.findings.slice(0, 10),
-              examPrompts: result.output.suggestions.slice(0, 10),
-              warnings: [...warnings, ...result.output.warnings].slice(0, 12),
-            };
-            source = "ai";
-          } finally {
-            await platformStore.releaseAiBudgetReservation(gate.reservation);
-          }
-        }
-        await recordProductEventSafe(a, "exam_material_ingested", { properties: { files: files.length, source, characters: materialText.length } });
-        res.json({ success: true, source, materialText: materialText.slice(0, 24_000), guide });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
-  app.post(
-    "/api/learn/explain",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        const a = req.actor!;
-        const body = req.body || {};
-        const topic = cleanField(body.topic, 600);
-        if (!topic)
-          return res.status(400).json({
-            error: "Provide a topic to explain",
-            code: "TOPIC_REQUIRED",
-          });
-        const language = cleanField(body.language, 40) || "English";
-        const level = cleanField(body.level, 20) || "beginner";
-        const context = cleanField(body.context, 600) || undefined;
-        if (!aiConfigured({ complexity: "medium", risk: "low" })) {
-          return res.json({
-            success: true,
-            lesson: nativeTutorScaffold(topic, language, level),
-            source: "scaffold",
-          });
-        }
-        // اتساق: نفس (الموضوع+اللغة+المستوى) داخل نفس المقرر/الجامعة => نفس الشرح.
-        const scope = cacheScope("tenant", a.tenantId);
-        const key = learnCacheKey("tutor", { topic, language, level });
-        const cached = await firestoreStore.getLearnCache(scope, key);
-        if (cached)
-          return res.json({ success: true, lesson: cached, source: "cache" });
-        const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
-        let result;
-        try {
-          result = await getAIProvider({
-            complexity: "medium",
-            risk: "low",
-          }).runAcademicTask(
-            buildTutorRequest({ topic, language, level, context }),
-          );
-        } finally {
-          await platformStore.releaseAiBudgetReservation(gate.reservation);
-        }
-        await firestoreStore.recordAIUsage(result.usage, a, "tutor");
-        const lesson = toLesson(topic, language, level, result.output);
-        await firestoreStore.setLearnCache(scope, key, lesson, {
-          kind: "tutor",
-          language,
-          level,
-        });
-        await recordProductEventSafe(a, "tutor_explained", {
-          properties: { language, level },
-        });
-        res.json({ success: true, lesson, source: "ai" });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
-  app.post(
-    "/api/learn/solve",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        const a = req.actor!;
-        const body = req.body || {};
-        const problem = cleanField(body.problem, 4000);
-        if (!problem)
-          return res.status(400).json({
-            error: "Provide a problem to solve",
-            code: "PROBLEM_REQUIRED",
-          });
-        const language = cleanField(body.language, 40) || "English";
-        const context = cleanField(body.context, 800) || undefined;
-        const courseId = cleanField(body.courseId, 180);
-        const assignmentId = cleanField(body.assignmentId, 180);
-        // إن ربط الطالب المسألة بواجب منشور، نحمّل سياسته الرسمية لتقرير الوضع.
-        let policyCtx = { linkedToAssignment: false } as Parameters<
-          typeof decideSolveMode
-        >[0];
-        if (courseId && assignmentId) {
-          const [assignment, enrollment, course] = await Promise.all([
-            firestoreStore.getCourseAssignment(
-              assignmentId,
-              courseId,
-              a.tenantId,
-            ),
-            firestoreStore.getCourseEnrollment(courseId, a.userId, a.tenantId),
-            firestoreStore.getCourse(courseId, a.tenantId),
-          ]);
-          if (!assignment || assignment.status !== "published")
-            return res.status(404).json({
-              error: "Published course assignment not found",
-              code: "PUBLISHED_ASSIGNMENT_NOT_FOUND",
-            });
-          if (!enrollment && !(course && canManageCourse(a, course)))
-            return res.status(403).json({
-              error: "Active course enrollment is required",
-              code: "COURSE_ENROLLMENT_REQUIRED",
-            });
-          const pol = normalizeAcademicPolicy(assignment.aiPolicy, reqLocale(req));
-          policyCtx = {
-            linkedToAssignment: true,
-            policyLevel: pol.level,
-            policyProhibited: pol.prohibited,
-            policyNeedsConfirmation: false,
-          };
-        }
-        const decision = decideSolveMode(policyCtx);
-        const variation = buildSolveVariation(a.userId, problem);
-        if (!aiConfigured({ complexity: "high", risk: "medium" })) {
-          return res.json({
-            success: true,
-            decision,
-            result: nativeSolveScaffold(decision.mode, language),
-            source: "scaffold",
-          });
-        }
-        // اتساق للمسائل التدريبية فقط (غير مربوطة بواجب مُقيَّم) — نتجنّب تطابق حلول التسليمات.
-        const cacheable =
-          !policyCtx.linkedToAssignment && decision.mode === "worked";
-        const solveScope = cacheScope("global", a.tenantId);
-        const solveKey = learnCacheKey("solve", {
-          problem,
-          language,
-          mode: decision.mode,
-          variationId: variation.id,
-        });
-        if (cacheable) {
-          const hit = await firestoreStore.getLearnCache(solveScope, solveKey);
-          if (hit)
-            return res.json({
-              success: true,
-              decision,
-              result: hit,
-              source: "cache",
-            });
-        }
-        const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
-        let result;
-        try {
-          result = await getAIProvider({
-            complexity: "high",
-            risk: "medium",
-          }).runAcademicTask(
-            buildSolveRequest({
-              problem,
-              language,
-              mode: decision.mode,
-              context,
-              variation,
-            }),
-          );
-        } finally {
-          await platformStore.releaseAiBudgetReservation(gate.reservation);
-        }
-        await firestoreStore.recordAIUsage(result.usage, a, "solver");
-        const solveResult = toSolveResult(decision.mode, language, result.output);
-        if (cacheable)
-          await firestoreStore.setLearnCache(solveScope, solveKey, solveResult, {
-            kind: "solve",
-            mode: decision.mode,
-            language,
-          });
-        // إفصاح مسجَّل في السجل التدقيقي (شفافية للأستاذ عند الربط بواجب).
-        await firestoreStore.writeAudit(
-          a.tenantId,
-          a.userId,
-          "learn.solve",
-          assignmentId || "practice",
-          undefined,
-          { mode: decision.mode, linked: policyCtx.linkedToAssignment, variationId: variation.id },
-        );
-        res.json({ success: true, decision, result: solveResult, source: "ai" });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
+  registerLearnRoutes(app, routeDeps());
   app.get(
     "/api/projects/:id/authorship-passport",
     authenticate,
@@ -10334,112 +9641,7 @@ async function startServer() {
       }
     },
   );
-  app.get("/api/billing/status", authenticate, (_req, res) =>
-    res.json({ success: true, billing: billingStatus() }),
-  );
-  app.get(
-    "/api/projects/:id/access",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        const a = req.actor!;
-        const project = await firestoreStore.getProject(
-          req.params.id,
-          a.userId,
-          a.tenantId,
-        );
-        if (!project)
-          return res
-            .status(404)
-            .json({ error: "Project not found", code: "PROJECT_NOT_FOUND" });
-        const access = await platformStore.projectEntitlementAccess(
-          a.tenantId,
-          a.userId,
-          project.id,
-        );
-        res.json({ success: true, access });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
-  app.post(
-    "/api/billing/checkout",
-    authenticate,
-    async (req: AuthenticatedRequest, res, next) => {
-      try {
-        const a = req.actor!;
-        const appUrl = (process.env.APP_URL || "http://localhost:3000").replace(
-          /\/$/,
-          "",
-        );
-        if (
-          process.env.NODE_ENV === "production" &&
-          !appUrl.startsWith("https://")
-        )
-          return res.status(503).json({
-            error:
-              "Production APP_URL must use HTTPS before billing can be enabled",
-            code: "BILLING_APP_URL_INVALID",
-          });
-        const idempotencyKey =
-          cleanField(req.header("x-idempotency-key"), 120) || randomUUID();
-        const selectedPlan = billingPlan(cleanField(req.body?.planId, 40));
-        if (!selectedPlan || selectedPlan.id === "preview")
-          return res.status(400).json({
-            error: "اختر باقة مدفوعة صحيحة.",
-            code: "BILLING_PLAN_INVALID",
-          });
-        const projectId = cleanField(req.body?.projectId, 180);
-        if (!projectId)
-          return res.status(400).json({
-            error: "اختر المشروع الذي تريد فتحه قبل الدفع.",
-            code: "BILLING_PROJECT_REQUIRED",
-          });
-        const project = await firestoreStore.getProject(
-          projectId,
-          a.userId,
-          a.tenantId,
-        );
-        if (!project)
-          return res.status(404).json({
-            error: "المشروع غير موجود أو لا تملكه.",
-            code: "PROJECT_NOT_FOUND",
-          });
-        if (project.collaborationMode === "group" && selectedPlan.id !== "group")
-          return res.status(400).json({
-            error: "مشروع المجموعة يحتاج باقة المجموعة.",
-            code: "GROUP_PLAN_REQUIRED",
-          });
-        const provider = getBillingProvider();
-        const result = await provider.createCheckout({
-          customerEmail: a.email,
-          customerName: a.displayName,
-          tenantId: a.tenantId,
-          userId: a.userId,
-          projectId: project.id,
-          idempotencyKey,
-          planId: selectedPlan.id,
-          amountUsd: selectedPlan.amountUsd,
-          description: `AcademicOS — ${selectedPlan.name} — ${project.title}`,
-          webhookUrl: `${appUrl}/api/billing/webhook/${provider.id}`,
-          successUrl: `${appUrl}/app/plans?billing=success&plan=${selectedPlan.id}&project=${encodeURIComponent(project.id)}`,
-          cancelUrl: `${appUrl}/app/plans?billing=cancelled&project=${encodeURIComponent(project.id)}`,
-        });
-        await firestoreStore.writeAudit(
-          a.tenantId,
-          a.userId,
-          "billing.checkout.create",
-          a.userId,
-          undefined,
-          { planId: selectedPlan.id, amountUsd: selectedPlan.amountUsd, projectId: project.id },
-        );
-        res.json({ success: true, ...result });
-      } catch (e) {
-        next(e);
-      }
-    },
-  );
+  registerBillingApiRoutes(app, routeDeps());
   // Advanced capabilities registry (router-registry pattern — see
   // docs/ARCHITECTURE_REFACTOR.md). One call mounts the eight advanced engines;
   // dependencies are injected via ctx so no engine reaches into server internals.

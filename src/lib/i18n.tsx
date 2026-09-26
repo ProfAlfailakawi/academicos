@@ -173,8 +173,7 @@ function initialLocale(): LocaleCode {
       if (normalized.startsWith("ur")) return "ur";
     }
   } catch {}
-  // Arabic-first: same fallback as public/locale-bootstrap.js.
-  return "ar";
+  return "en";
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {

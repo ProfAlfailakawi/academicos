@@ -108,7 +108,7 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
             <div className="rounded-2xl border-2 border-dashed border-insight/10 bg-gradient-to-b from-insight/10 to-transparent p-6 space-y-6">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b hairline">
                 <div><span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${verificationGood ? "bg-success/10 text-success border-success/20" : "bg-warning/10 text-warning border-warning/20"}`}><ShieldCheck size={13}/>{verifyLabel}</span><h3 className="text-lg font-bold mt-2">{capsule.project.title}</h3><p className="text-xs text-muted-foreground mt-0.5">{capsule.project.course} · {t("dossier.updated")} {formatDateTime(capsule.project.updatedAt, locale)}</p></div>
-                <button onClick={copyHash} className="text-start font-mono text-[10px] bg-[var(--bg)] p-3 rounded-xl border hairline max-w-full"><div className="text-muted-foreground mb-1">SHA-256 · {t("dossier.copyHash")}</div><div className="font-bold text-insight break-all ltr">{capsule.integrity.hash}</div></button>
+                <button onClick={copyHash} className="text-start font-mono text-[11px] bg-[var(--bg)] p-3 rounded-xl border hairline max-w-full"><div className="text-muted-foreground mb-1">SHA-256 · {t("dossier.copyHash")}</div><div className="font-bold text-insight break-all ltr">{capsule.integrity.hash}</div></button>
               </div>
 
               <div className="grid sm:grid-cols-4 gap-3">
@@ -131,10 +131,10 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
   {exporting ? <InlineLoader size={14}/> : <Download size={14}/>}
   {t("dossier.download")}
 </Button></div>
-                {shareUrl && <div className="rounded-lg bg-[var(--bg)]/70 p-2 text-[10px] break-all ltr flex gap-2 items-center"><span className="flex-1">{shareUrl}</span>{copied && <Check size={13} className="text-success shrink-0"/>}</div>}
+                {shareUrl && <div className="rounded-lg bg-[var(--bg)]/70 p-2 text-[11px] break-all ltr flex gap-2 items-center"><span className="flex-1">{shareUrl}</span>{copied && <Check size={13} className="text-success shrink-0"/>}</div>}
               </div>
             </div>
-            <div className="flex justify-between items-center gap-4 text-[10px] text-muted-foreground pt-2"><span>AcademicOS {t("ui.evidenceCapsule")} v{capsule.schemaVersion}</span><span>SHA-256{capsule.integrity.signatureStatus === "signed" ? " · Ed25519" : ` · ${t("ui.hashOnly")}`} · {t("ui.traceability")} · {t("ui.proofOfLearning")}</span></div>
+            <div className="flex justify-between items-center gap-4 text-[11px] text-muted-foreground pt-2"><span>AcademicOS {t("ui.evidenceCapsule")} v{capsule.schemaVersion}</span><span>SHA-256{capsule.integrity.signatureStatus === "signed" ? " · Ed25519" : ` · ${t("ui.hashOnly")}`} · {t("ui.traceability")} · {t("ui.proofOfLearning")}</span></div>
           </>
         )}
       </div>
@@ -143,5 +143,5 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
 }
 
 function Metric({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: number; detail: string }) {
-  return <div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="flex items-center gap-2 text-insight text-[11px] font-semibold">{icon}{label}</div><div className="text-2xl font-bold font-mono mt-2">{value}</div><p className="text-[10px] text-muted-foreground mt-1">{detail}</p></div>;
+  return <div className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="flex items-center gap-2 text-insight text-[11px] font-semibold">{icon}{label}</div><div className="text-2xl font-bold font-mono mt-2">{value}</div><p className="text-[11px] text-muted-foreground mt-1">{detail}</p></div>;
 }

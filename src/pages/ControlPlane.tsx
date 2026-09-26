@@ -139,14 +139,14 @@ export function ControlPlane() {
                 <Funnel label={t("control.paidConversion")} value={product.paidConversion} />
               </div>
               <div className="grid sm:grid-cols-3 gap-2 mt-3"><Twin label={t("control.projectCompletion")} value={`${Math.round(product.projectCompletion * 100)}%`} /><Twin label={t("control.auditUsage")} value={`${Math.round(product.submissionAuditUsage * 100)}%`} /><Twin label={t("control.vivaUsage")} value={`${Math.round(product.vivaUsage * 100)}%`} /></div>
-              <p className="text-[10px] muted leading-5 mt-3">{t("control.funnelNote")}</p>
+              <p className="text-[11px] muted leading-5 mt-3">{t("control.funnelNote")}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent>
               <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Gauge size={18} /></span><div><div className="eyebrow">{t("ui.aiCostQualityGate")}</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
-              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[10px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
-              <div className="mt-4 flex items-center gap-2 text-[10px] muted"><DollarSign size={13} /> {t("control.costCaveat")}</div>
+              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[11px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
+              <div className="mt-4 flex items-center gap-2 text-[11px] muted"><DollarSign size={13} /> {t("control.costCaveat")}</div>
             </CardContent>
           </Card>
         </section>
@@ -167,7 +167,7 @@ export function ControlPlane() {
               <Twin label={t("control.fairUseStepUp")} value={fairUse.stepUpSignals} />
               <Twin label={t("control.fairUseDevices")} value={fairUse.suspiciousDevices} />
             </div>
-            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{item.benefit}</span><span className="text-xs font-bold mono-number">{t("ui.risk")} {item.score}</span></div><div className="text-[10px] muted mt-1">{item.reasonCodes.join(" · ")}</div></div>)}</div>}
+            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{item.benefit}</span><span className="text-xs font-bold mono-number">{t("ui.risk")} {item.score}</span></div><div className="text-[11px] muted mt-1">{item.reasonCodes.join(" · ")}</div></div>)}</div>}
           </CardContent>
         </Card>
       )}
@@ -178,7 +178,7 @@ export function ControlPlane() {
             <span className="tone-chip" data-tone={command.posture === "healthy" ? "success" : command.posture === "critical" ? "danger" : "warning"}>{command.posture === "healthy" ? t('ctrl.posture.healthy') : command.posture === "critical" ? t('ctrl.posture.critical') : t('ctrl.posture.attention')}</span>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5"><Twin label={t('ctrl.twin.projects')} value={command.twin.projects}/><Twin label={t('ctrl.twin.courses')} value={command.twin.courses}/><Twin label={t('ctrl.twin.assignments')} value={command.twin.assignments}/><Twin label={t('ctrl.twin.coverage')} value={`${command.twin.outcomeCoverage}%`}/><Twin label={t('ctrl.twin.submissions')} value={command.twin.submissions}/><Twin label={t('ctrl.twin.released')} value={command.twin.released}/></div>
-          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[10px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[9px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
+          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[11px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[11px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
         </section>
       )}
       <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
@@ -212,7 +212,7 @@ export function ControlPlane() {
                     <tr key={p.id} className="border-b hairline last:border-0">
                       <td className="py-4 font-semibold">
                         {p.title}
-                        <div className="text-[10px] muted font-normal mt-1">
+                        <div className="text-[11px] muted font-normal mt-1">
                           {formatDateTime(p.updatedAt, locale)}
                         </div>
                       </td>
@@ -284,7 +284,7 @@ export function ControlPlane() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="text-xs font-semibold">{f.key}</div>
-                        <div className="text-[9px] muted mt-1 leading-4">
+                        <div className="text-[11px] muted mt-1 leading-4">
                           {f.description}
                         </div>
                       </div>
@@ -306,7 +306,7 @@ export function ControlPlane() {
                 )}
               </div>
               {!canFlags && (
-                <div className="text-[9px] muted mt-3">
+                <div className="text-[11px] muted mt-3">
                   {t('ctrl.viewOnlyRole')}
                 </div>
               )}
@@ -323,7 +323,7 @@ export function ControlPlane() {
                     className="border-b hairline pb-3 last:border-0"
                   >
                     <div className="text-xs font-semibold">{a.action}</div>
-                    <div className="text-[10px] muted mt-1">
+                    <div className="text-[11px] muted mt-1">
                       {a.target} ·{" "}
                       {formatDateTime(a.timestamp, locale)}
                     </div>
@@ -351,5 +351,5 @@ function Metric({ icon: Icon, label, value }: any) {
     </div>
   );
 }
-function Funnel({ label, value }: { label: string; value: number }) { const pct = Math.max(0, Math.min(100, (Number(value) || 0) * 100)); return <div className="rounded-xl border hairline p-3"><div className="flex items-center justify-between gap-2"><span className="text-[9px] muted">{label}</span><strong className="text-sm mono-number">{pct}%</strong></div><div className="tone-meter mt-3"><div style={{ width: `${pct}%` }} /></div></div>; }
-function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="text-lg font-semibold mono-number">{value}</div><div className="text-[9px] muted mt-1">{label}</div></div>}
+function Funnel({ label, value }: { label: string; value: number }) { const pct = Math.max(0, Math.min(100, (Number(value) || 0) * 100)); return <div className="rounded-xl border hairline p-3"><div className="flex items-center justify-between gap-2"><span className="text-[11px] muted">{label}</span><strong className="text-sm mono-number">{pct}%</strong></div><div className="tone-meter mt-3"><div style={{ width: `${pct}%` }} /></div></div>; }
+function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="text-lg font-semibold mono-number">{value}</div><div className="text-[11px] muted mt-1">{label}</div></div>}

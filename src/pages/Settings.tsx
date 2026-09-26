@@ -296,9 +296,9 @@ export function Settings() {
                     </Button>
                   </div>
                   {studyMessage && (
-                    <div className="text-[10px] muted mt-2">{studyMessage}</div>
+                    <div className="text-[11px] muted mt-2">{studyMessage}</div>
                   )}
-                  <div className="text-[10px] muted mt-2">
+                  <div className="text-[11px] muted mt-2">
                     {t("settings.focusBudgetNote")}
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export function Settings() {
                     myfatoorah: "MyFatoorah",
                   }[h?.billing?.provider as string] || t("settings.paymentGateway")}
                 </div>
-                <div className="text-[10px] muted mt-1">
+                <div className="text-[11px] muted mt-1">
                   {h?.billing?.configured
                     ? t("settings.configuredServer")
                     : t("settings.billingAwaiting")}
@@ -544,7 +544,7 @@ function Service({ label, ok, value }: any) {
           className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
         />
       </div>
-      <div className="text-[10px] muted mt-2 truncate">{value}</div>
+      <div className="text-[11px] muted mt-2 truncate">{value}</div>
     </div>
   );
 }
@@ -568,7 +568,7 @@ function Preference({
       className={`focus-ring min-h-11 rounded-xl border hairline p-3 text-xs font-semibold ${active ? "brand-soft-bg" : ""}`}
     >
       {label}
-      <span className="block text-[9px] muted mt-1">
+      <span className="block text-[11px] muted mt-1">
         {active ? t("settings.on") : t("settings.off")}
       </span>
     

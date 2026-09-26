@@ -33,7 +33,7 @@ export function Status() {
           >
             AcademicOS
           </Link>
-          <span className="text-[10px] muted">{t("status.publicStatus")}</span>
+          <span className="text-[11px] muted">{t("status.publicStatus")}</span>
         </div>
         <div className="mt-14">
           <div className="h-12 w-12 rounded-2xl tone-tile">
@@ -70,7 +70,7 @@ export function Status() {
             </Card>
           ))}
         </div>
-        <div className="mt-8 text-[10px] muted flex items-center gap-2">
+        <div className="mt-8 text-[11px] muted flex items-center gap-2">
           <ShieldCheck size={13} /> {t("status.secretsNote")}
         </div>
       </div>

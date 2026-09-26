@@ -24,14 +24,14 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
         <div className="flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-2xl bg-insight/20 text-insight grid place-items-center shrink-0"><ListChecks size={22} /></div>
           <div>
-            <div className="text-[10px] font-bold tracking-wider uppercase text-insight">{t("ui.requirementTruthMatrix")}</div>
+            <div className="text-[11px] font-bold tracking-wider uppercase text-insight">{t("ui.requirementTruthMatrix")}</div>
             <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("req.title")}</h2>
             <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">{t("req.description")}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 min-w-[220px]">
-          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[10px] text-muted-foreground">{t("req.extracted")}</div><div className="text-xl font-bold font-mono text-insight">{requirements.length}</div></div>
-          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[10px] text-muted-foreground">{t("req.rubricCriteria")}</div><div className="text-xl font-bold font-mono text-insight">{rubric.length}</div></div>
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.extracted")}</div><div className="text-xl font-bold font-mono text-insight">{requirements.length}</div></div>
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.rubricCriteria")}</div><div className="text-xl font-bold font-mono text-insight">{rubric.length}</div></div>
         </div>
       </div>
 
@@ -52,10 +52,10 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="h-6 w-6 rounded-lg bg-insight/10 text-insight grid place-items-center"><FileSearch size={14} /></span>
                   <h3 className="text-sm font-bold">{item.label}</h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground">{categoryLabel(item.category)}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] bg-muted text-muted-foreground">{categoryLabel(item.category)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-6 md:pe-8 whitespace-pre-wrap">{item.value || t("req.noDetail")}</p>
-                {item.source && <p className="text-[10px] text-muted-foreground">{t("req.source")}: {item.source}</p>}
+                {item.source && <p className="text-[11px] text-muted-foreground">{t("req.source")}: {item.source}</p>}
               </div>
               <Confidence confidence={item.confidence} label={confidenceLabel(item.confidence)} />
             </div>
@@ -78,7 +78,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
             const state = item.readiness || "not_evidenced";
             return (
               <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5 flex flex-col md:flex-row items-start justify-between gap-4">
-                <div className="min-w-0"><div className="flex items-center gap-2"><Target size={15} className="text-insight"/><h3 className="text-sm font-bold">{item.title}</h3>{item.weighting > 0 && <span className="text-[10px] text-muted-foreground">{item.weighting}%</span>}</div><p className="text-xs text-muted-foreground leading-6 mt-2">{item.description || t("req.noRubricDescription")}</p></div>
+                <div className="min-w-0"><div className="flex items-center gap-2"><Target size={15} className="text-insight"/><h3 className="text-sm font-bold">{item.title}</h3>{item.weighting > 0 && <span className="text-[11px] text-muted-foreground">{item.weighting}%</span>}</div><p className="text-xs text-muted-foreground leading-6 mt-2">{item.description || t("req.noRubricDescription")}</p></div>
                 <RubricState value={state} label={state === "covered" ? t("req.covered") : state === "partial" ? t("req.partialCoverage") : state === "needs_revision" ? t("req.needsReview") : t("req.unknown")} />
               </div>
             );
@@ -100,5 +100,5 @@ function RubricState({ value, label }: { value: string; label: string }) {
   const good = value === "covered";
   return <span className={`px-3 py-1 rounded-full text-[11px] font-semibold border shrink-0 ${good ? "bg-success/10 text-success border-success/20" : "bg-warning/10 text-warning border-warning/20"}`}>{label}</span>;
 }
-function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="font-bold text-lg">{value}</div><div className="text-[10px] text-muted-foreground mt-1">{label}</div></div>; }
+function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="font-bold text-lg">{value}</div><div className="text-[11px] text-muted-foreground mt-1">{label}</div></div>; }
 function Empty({ text }: { text: string }) { return <div className="rounded-2xl border hairline bg-[var(--panel)] p-8 text-center text-xs text-muted-foreground leading-6">{text}</div>; }

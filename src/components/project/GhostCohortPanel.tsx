@@ -46,7 +46,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
           <div className="relative">
             {live && (
               <div className="absolute -top-2 z-10 -translate-x-1/2 flex flex-col items-center" style={{ insetInlineStart: `${live.progress}%` }}>
-                <span className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white shadow" style={{ background: 'var(--brand-2)' }}>{t('adv.ghost.you').replace('{p}', String(live.progress))}</span>
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white shadow" style={{ background: 'var(--brand-2)' }}>{t('adv.ghost.you').replace('{p}', String(live.progress))}</span>
                 <span className="h-3 w-0.5" style={{ background: 'var(--brand-2)' }} />
               </div>
             )}
@@ -58,7 +58,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
                   <div className="relative h-6 rounded-lg" style={{ background: 'var(--panel-2)' }}>
                     <div className="absolute top-0 h-6 rounded-lg opacity-80" style={{ insetInlineStart: `${ph.typicalAtP25}%`, width: `${Math.max(3, ph.typicalAtP75 - ph.typicalAtP25)}%`, background: 'color-mix(in srgb,var(--brand) 30%,transparent)' }} title={t('adv.ghost.tipRange').replace('{a}', String(ph.typicalAtP25)).replace('{b}', String(ph.typicalAtP75))} />
                     <div className="absolute top-0 h-6 w-0.5" style={{ insetInlineStart: `${ph.typicalAtP50}%`, background: 'var(--brand)' }} title={t('adv.ghost.tipMedian').replace('{p}', String(ph.typicalAtP50))} />
-                    <span className="absolute inset-y-0 grid place-items-center text-[9px] muted" style={{ insetInlineStart: `${Math.min(88, ph.typicalAtP50 + 2)}%` }}>{ph.typicalAtP50}%</span>
+                    <span className="absolute inset-y-0 grid place-items-center text-[11px] muted" style={{ insetInlineStart: `${Math.min(88, ph.typicalAtP50 + 2)}%` }}>{ph.typicalAtP50}%</span>
                   </div>
                 </div>
               ))}
@@ -82,7 +82,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
             ))}
           </div>
         ) : null}
-        <p className="text-[10px] muted mt-4 leading-5">{data.privacyNote}</p>
+        <p className="text-[11px] muted mt-4 leading-5">{data.privacyNote}</p>
       </CardContent>
     </Card>
   );
@@ -102,7 +102,7 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
     <div className="rounded-2xl border hairline bg-[var(--panel)] p-3 text-center">
       <div className="grid place-items-center brand-text">{icon}</div>
       <div className="text-xl font-bold mt-1">{value}</div>
-      <div className="text-[10px] muted mt-0.5">{label}</div>
+      <div className="text-[11px] muted mt-0.5">{label}</div>
     </div>
   );
 }

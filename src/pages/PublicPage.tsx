@@ -219,7 +219,7 @@ export function PublicPage() {
           </div>
           <div>
             <div className="font-semibold">AcademicOS</div>
-            <div className="text-[9px] muted">
+            <div className="text-[11px] muted">
               {t("pub.header.tagline")}
             </div>
           </div>

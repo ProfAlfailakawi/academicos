@@ -39,7 +39,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
             <div><div className="eyebrow">{t('adv.ra.eyebrow')}</div><h2 className="section-title mt-0.5">{t('adv.ra.title')}</h2></div>
           </div>
           {brief && <p className="body-copy mt-3">{brief.instruction}</p>}
-          {brief?.targets?.length ? <div className="mt-3 flex flex-wrap gap-1.5">{brief.targets.map(t => <span key={t} className="rounded-full soft-bg px-2 py-1 text-[10px] muted">{t}</span>)}</div> : null}
+          {brief?.targets?.length ? <div className="mt-3 flex flex-wrap gap-1.5">{brief.targets.map(t => <span key={t} className="rounded-full soft-bg px-2 py-1 text-[11px] muted">{t}</span>)}</div> : null}
 
           <div className="mt-5 space-y-4">
             {questions.map((q, i) => (
@@ -85,7 +85,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
                 </div>
               ) : null}
               {result.band !== 'surface' && <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--brand-soft)' }}>{t('adv.ra.addedProof')}</div>}
-              <p className="text-[10px] muted mt-4 leading-5">{result.note}</p>
+              <p className="text-[11px] muted mt-4 leading-5">{result.note}</p>
             </>
           )}
         </CardContent>

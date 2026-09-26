@@ -86,7 +86,7 @@ export function RedTeamingArena({ project }: { project: ProjectDNA }) {
             <span className="tone-tile h-8 w-8 rounded-lg"><ShieldAlert size={16}/></span>
             <div className="min-w-0">
               <h3 className="font-bold text-sm leading-snug">{item.challengeTitle}</h3>
-              <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
                 {item.origin === "ai_review" ? <BrainCircuit size={11}/> : <ShieldCheck size={11}/>}
                 {item.origin === "ai_review" ? t("red.originAi") : t("red.originDna")}
               </span>

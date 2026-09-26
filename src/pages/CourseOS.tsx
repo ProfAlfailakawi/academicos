@@ -366,7 +366,7 @@ export function CourseOS() {
                       key={i}
                       className="rounded-xl bg-[var(--bg)] border hairline p-3 flex gap-3"
                     >
-                      <span className="h-6 w-6 rounded-lg tone-tile text-[10px] font-semibold shrink-0">
+                      <span className="h-6 w-6 rounded-lg tone-tile text-[11px] font-semibold shrink-0">
                         {i + 1}
                       </span>
                       <p className="text-xs leading-6">{o}</p>
@@ -418,7 +418,7 @@ export function CourseOS() {
               <p className="body-copy mt-2">{t("course.joinCodesDesc")}</p>
               {joinSecret && (
                 <div className="mt-3 rounded-xl brand-soft-bg p-3">
-                  <div className="text-[10px] font-semibold">
+                  <div className="text-[11px] font-semibold">
                     {t("course.copyCodeNow")}
                   </div>
                   <div className="mt-1 flex items-center gap-2">
@@ -454,7 +454,7 @@ export function CourseOS() {
                           <div dir="ltr" className="text-xs font-semibold">
                             {c.prefix}••••
                           </div>
-                          <div className="text-[9px] muted mt-1">
+                          <div className="text-[11px] muted mt-1">
                             {c.useCount}/{c.maxUses} · {t("course.expires")}{" "}
                             {formatDate(c.expiresAt, locale, { year: "numeric", month: "short", day: "numeric" })}{" "}
                             · {runtimeEnumLabel(c.status, locale)}
@@ -515,17 +515,17 @@ export function CourseOS() {
                         <div className="flex items-start justify-between gap-3">
                           <p className="text-xs leading-6 font-semibold">{o}</p>
                           <span
-                            className={`rounded-full px-2 py-1 text-[9px] shrink-0 ${linked.length ? "brand-soft-bg" : "bg-warning/12 text-warning "}`}
+                            className={`rounded-full px-2 py-1 text-[11px] shrink-0 ${linked.length ? "brand-soft-bg" : "bg-warning/12 text-warning "}`}
                           >
                             {linked.length} {t("course.assignmentUnit")}
                           </span>
                         </div>
                         {linked.length ? (
-                          <div className="mt-2 text-[10px] muted">
+                          <div className="mt-2 text-[11px] muted">
                             {linked.map((a) => a.title).join(" · ")}
                           </div>
                         ) : (
-                          <div className="mt-2 text-[10px] text-warning">
+                          <div className="mt-2 text-[11px] text-warning">
                             {t("course.noAssignmentForOutcome")}
                           </div>
                         )}
@@ -562,7 +562,7 @@ export function CourseOS() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`rounded-full px-2 py-1 text-[10px] font-semibold ${a.status === "published" ? "brand-soft-bg" : "soft-bg muted"}`}
+                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${a.status === "published" ? "brand-soft-bg" : "soft-bg muted"}`}
                           >
                             {a.status === "published"
                               ? t("course.published")
@@ -570,7 +570,7 @@ export function CourseOS() {
                                 ? t("course.archived")
                                 : t("course.draft")}
                           </span>
-                          <span className="text-[10px] muted">
+                          <span className="text-[11px] muted">
                             {a.groupMode === "group"
                               ? t("course.group")
                               : a.groupMode === "either"
@@ -641,7 +641,7 @@ export function CourseOS() {
                       <Sub label={t("ui.outcomes")} value={a.outcomes.length} />
                     </div>
                     {a.deadline && (
-                      <div className="text-[10px] muted mt-3">
+                      <div className="text-[11px] muted mt-3">
                         {t("course.deadlineLabel")} {formatDate(a.deadline, locale, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </div>
                     )}
@@ -674,16 +674,16 @@ export function CourseOS() {
                               className="rounded-lg bg-[var(--panel)]/70 p-2.5"
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-semibold">
+                                <span className="text-[11px] font-semibold">
                                   {c.label}
                                 </span>
                                 <span
-                                  className={`text-[9px] ${c.status === "pass" ? "brand-text" : c.status === "critical" ? "text-danger" : "text-warning"}`}
+                                  className={`text-[11px] ${c.status === "pass" ? "brand-text" : c.status === "critical" ? "text-danger" : "text-warning"}`}
                                 >
                                   {runtimeEnumLabel(c.status, locale)}
                                 </span>
                               </div>
-                              <p className="text-[10px] muted leading-5 mt-1">
+                              <p className="text-[11px] muted leading-5 mt-1">
                                 {c.detail}
                               </p>
                             </div>
@@ -715,7 +715,7 @@ export function CourseOS() {
             <div className="h-14 px-5 flex items-center justify-between border-b hairline">
               <div>
                 <div className="text-xs font-semibold">{t("ui.assignmentBuilder")}</div>
-                <div className="text-[10px] muted">
+                <div className="text-[11px] muted">
                   {course.code} · {course.title}
                 </div>
               </div>
@@ -994,7 +994,7 @@ function Field({
 function Mini({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl bg-[var(--bg)] border hairline p-3">
-      <div className="text-[10px] muted">{label}</div>
+      <div className="text-[11px] muted">{label}</div>
       <div className="text-xl font-semibold mt-1">{value}</div>
     </div>
   );
@@ -1003,7 +1003,7 @@ function Sub({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl bg-[var(--bg)] p-2.5 text-center">
       <div className="text-base font-semibold">{value}</div>
-      <div className="text-[9px] muted">{label}</div>
+      <div className="text-[11px] muted">{label}</div>
     </div>
   );
 }

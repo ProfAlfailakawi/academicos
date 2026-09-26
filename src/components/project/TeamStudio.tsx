@@ -127,7 +127,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <p className="body-copy mt-2">{t("team.studioDesc")}</p>
               </div>
               <span
-                className={`rounded-full px-2 py-1 text-[9px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
+                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
               >
                 {project.collaborationMode === "group"
                   ? t("ui.groupProject")
@@ -164,7 +164,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     {t("team.invite")}
                   </Button>
                 </div>
-                <p className="text-[9px] muted mt-2">{t("team.inviteHint")}</p>
+                <p className="text-[11px] muted mt-2">{t("team.inviteHint")}</p>
               </form>
             ) : (
               <div className="mt-5 rounded-xl soft-bg p-4 text-xs muted">
@@ -194,7 +194,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 presence.map((p) => (
                   <div
                     key={p.userId}
-                    className="rounded-full border hairline px-3 py-1.5 text-[10px] flex items-center gap-2"
+                    className="rounded-full border hairline px-3 py-1.5 text-[11px] flex items-center gap-2"
                   >
                     <span className="h-2 w-2 rounded-full bg-success" />
                     <span className="font-semibold">
@@ -251,7 +251,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                       <div className="text-xs font-semibold truncate">
                         {m.displayName || m.email}
                       </div>
-                      <div className="text-[9px] muted mt-1">
+                      <div className="text-[11px] muted mt-1">
                         {m.status === "pending"
                           ? t("team.pendingInvite")
                           : m.role === "leader"
@@ -308,7 +308,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold">{name}</div>
-                        <div className="text-[9px] muted mt-1">
+                        <div className="text-[11px] muted mt-1">
                           {short(c.actor)}
                         </div>
                       </div>
@@ -323,7 +323,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                         .map(([k, v]) => (
                           <span
                             key={k}
-                            className="rounded-full soft-bg px-2 py-1 text-[9px] muted"
+                            className="rounded-full soft-bg px-2 py-1 text-[11px] muted"
                           >
                             {label(k, t)} · {v}
                           </span>
@@ -360,7 +360,7 @@ function MemberRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-xs font-semibold">{name}</div>
-        <div className="text-[9px] muted mt-1">
+        <div className="text-[11px] muted mt-1">
           {owner ? t("ui.ownerLeader") : t("ui.member")} · {short(meta)}
         </div>
       </div>

@@ -471,7 +471,7 @@ function IdentityCard({
           <LogoMark variant="tile" size={30} />
           <span className="min-w-0">
             <span className="block text-[13px] font-semibold truncate">{t("onboard.cardTitle")}</span>
-            <span className="block text-[10px] muted">
+            <span className="block text-[11px] muted">
               {sealed ? t("onboard.cardSealed") : t("onboard.cardBuilding")}
             </span>
           </span>

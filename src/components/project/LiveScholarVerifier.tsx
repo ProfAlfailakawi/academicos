@@ -137,8 +137,8 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-success">{t("source.title")}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-success/15 text-success font-semibold border border-success/20 flex items-center gap-1">
+              <span className="text-[11px] font-bold tracking-wider uppercase text-success">{t("source.title")}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-success/15 text-success font-semibold border border-success/20 flex items-center gap-1">
                 <Database size={10} /> {t("ui.crossrefLive")}
               </span>
             </div>
@@ -210,7 +210,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             <AcademicLoader size={40} delay={200} label="" />
             <div className="acad-verify-chips flex flex-wrap justify-center gap-1.5">
               {["DOI", t("source.result"), t("source.copyApa"), "Crossref"].map((chip, i) => (
-                <span key={chip} className="acad-verify-chip px-2 py-0.5 rounded-full text-[10px] border border-success/25 bg-success/8 text-success font-semibold" style={{ animationDelay: `${i * 90}ms` }}>{chip}</span>
+                <span key={chip} className="acad-verify-chip px-2 py-0.5 rounded-full text-[11px] border border-success/25 bg-success/8 text-success font-semibold" style={{ animationDelay: `${i * 90}ms` }}>{chip}</span>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">{t("dossier.verifying")}…</p>
@@ -245,7 +245,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-success/10 text-success border border-success/20 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-success/10 text-success border border-success/20 flex items-center gap-1">
                     <CheckCircle2 size={11} /> {t("ui.crossrefRecordMatched")}
                   </span>
                   <span className="text-[11px] font-mono text-muted-foreground">{t("source.result")} #{index + 1}</span>
@@ -253,7 +253,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                     <span className="text-[11px] text-muted-foreground">{t("ui.crossrefCitedBy")}: {source.citedByCount}</span>
                   )}
                   {!!source.licenseUrls?.length && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] bg-info/10 text-info">{t("source.licenseAvailable")}</span>
+                    <span className="px-2 py-0.5 rounded-md text-[11px] bg-info/10 text-info">{t("source.licenseAvailable")}</span>
                   )}
                 </div>
                 <h3 className="text-sm md:text-base font-bold text-foreground leading-snug">{source.title}</h3>
@@ -281,7 +281,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t hairline text-xs">
-              <div className="text-[10px] text-muted-foreground">{t("source.metadataVerified")}: {formatDateTime(source.metadataVerifiedAt, locale)}</div>
+              <div className="text-[11px] text-muted-foreground">{t("source.metadataVerified")}: {formatDateTime(source.metadataVerifiedAt, locale)}</div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2.5" onClick={() => copyCitation(source, "apa")}>
                   {copied === `${source.doi}-apa` ? <Check size={12} className="text-success" /> : <Copy size={12} />} {t("source.copyApa")}

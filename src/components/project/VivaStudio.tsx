@@ -222,7 +222,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               <div className="eyebrow">{t("ui.liveVoiceViva")} · {t(`viva.mode.${session.mode}`)}</div>
               <h2 className="section-title mt-1">{t("viva.liveTitle")}</h2>
             </div>
-            <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-[10px] muted">{answeredCount} {t("viva.answered")}</div></div>
+            <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-[11px] muted">{answeredCount} {t("viva.answered")}</div></div>
           </div>
           <div className="tone-meter mt-4"><div style={{ width: `${progress}%` }} /></div>
 
@@ -230,7 +230,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
             <div className="rounded-2xl brand-soft-bg p-5">
               <div className="flex items-start gap-3">
                 <span className="h-9 w-9 rounded-xl bg-[var(--panel)] grid place-items-center shrink-0"><Headphones size={17} /></span>
-                <div className="flex-1"><div className="text-[10px] uppercase muted">{t("viva.currentQuestion")} · {activeQuestion.focus}</div><div className="text-base md:text-lg font-semibold leading-8 mt-2">{activeQuestion.prompt}</div></div>
+                <div className="flex-1"><div className="text-[11px] uppercase muted">{t("viva.currentQuestion")} · {activeQuestion.focus}</div><div className="text-base md:text-lg font-semibold leading-8 mt-2">{activeQuestion.prompt}</div></div>
               </div>
               <Button variant="ghost" className="mt-3" onClick={toggleSpeak}>{speaking ? <Square size={15} /> : <Volume2 size={15} />}{speaking ? t("viva.stopAudio") : t("viva.listenQuestion")}</Button>
             </div>
@@ -256,5 +256,5 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
 
 function Learning({ evidence }: { evidence: LearningEvidenceRecord[] }) {
   const { t, locale } = useI18n();
-  return <Card><CardContent><div className="flex items-center gap-2"><CheckCircle2 size={17} className="brand-text" /><h2 className="section-title">{t("ui.proofOfLearning")}</h2></div><p className="body-copy mt-2">{t('viva.learningDesc')}</p><div className="mt-5 space-y-3">{evidence.map((item) => <div key={item.id} className="rounded-xl bg-[var(--bg)] border hairline p-3"><div className="text-[10px] uppercase muted">{item.source}</div><p className="text-xs leading-6 mt-1">{item.summary}</p><div className="text-[10px] muted mt-2">{formatDateTime(item.createdAt, locale)}</div></div>)}{!evidence.length && <div className="rounded-xl soft-bg p-4 text-xs muted">{t('viva.learningEmpty')}</div>}</div></CardContent></Card>;
+  return <Card><CardContent><div className="flex items-center gap-2"><CheckCircle2 size={17} className="brand-text" /><h2 className="section-title">{t("ui.proofOfLearning")}</h2></div><p className="body-copy mt-2">{t('viva.learningDesc')}</p><div className="mt-5 space-y-3">{evidence.map((item) => <div key={item.id} className="rounded-xl bg-[var(--bg)] border hairline p-3"><div className="text-[11px] uppercase muted">{item.source}</div><p className="text-xs leading-6 mt-1">{item.summary}</p><div className="text-[11px] muted mt-2">{formatDateTime(item.createdAt, locale)}</div></div>)}{!evidence.length && <div className="rounded-xl soft-bg p-4 text-xs muted">{t('viva.learningEmpty')}</div>}</div></CardContent></Card>;
 }

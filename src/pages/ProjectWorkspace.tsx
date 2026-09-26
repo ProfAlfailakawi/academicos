@@ -446,7 +446,7 @@ export function ProjectWorkspace() {
                         <div className="text-xs font-semibold truncate">
                           {f.fileName}
                         </div>
-                        <div className="text-[10px] muted">
+                        <div className="text-[11px] muted">
                           {f.fileType || "file"}
                           {f.size ? ` · ${formatBytes(f.size)}` : ""}
                           {f.sha256
@@ -809,7 +809,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
                   <td className="py-3 muted">{t(`req.category.${r.category}`)}</td>
                   <td className="py-3">
                     <span
-                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
+                      className={`rounded-full px-2 py-1 text-[11px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
                     >
                       {r.confidence === "needs_confirmation"
                         ? t("pw.needsConfirm")
@@ -892,7 +892,7 @@ function Mini({ label, value, hint }: any) {
       <CardContent className="p-4">
         <div className="eyebrow">{label}</div>
         <div className="text-2xl font-semibold mt-3 mono-number">{value}</div>
-        <div className="text-[10px] muted mt-1">{hint}</div>
+        <div className="text-[11px] muted mt-1">{hint}</div>
       </CardContent>
     </Card>
   );
@@ -918,7 +918,7 @@ function AuditModal({
     <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
         <div className="text-[11px] muted">{t("pw.result")}</div>
-        <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[9px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
+        <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[11px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
         <p className="body-copy mt-2">
           {t("pw.auditNote")}
         </p>
@@ -938,7 +938,7 @@ function AuditModal({
             <div>
               <div className="text-sm font-semibold">{c.label}</div>
               <div className="text-xs leading-6 muted mt-1">{c.detail}</div>
-              {c.action&&<div className="text-[10px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
+              {c.action&&<div className="text-[11px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
               {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
             </div>
           </div>
@@ -971,19 +971,19 @@ function RescueModal({
       <div className="eyebrow">{t("ui.deadlineRescue")}</div>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-2">
         <div><h3 className="text-xl font-semibold">{loading ? t("pw.rescueCalculating") : severity}</h3><p className="body-copy mt-2">{plan?.summary || t("pw.rescuePrompt")}</p></div>
-        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[10px] muted">{t("pw.estimatedWork")}</div></div>}
+        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[11px] muted">{t("pw.estimatedWork")}</div></div>}
       </div>
     </div>
     <div className="mt-5">
       <label className="text-xs font-semibold">{t("pw.timeAvailable")} <span className="muted">{minutes} {t("pw.minutes")}</span></label>
       <input type="range" min={30} max={720} step={30} value={minutes} onChange={(e) => onMinutes(Number(e.target.value))} className="w-full mt-3" />
-      <div className="flex justify-between text-[10px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
+      <div className="flex justify-between text-[11px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
       <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <InlineLoader size={15}/> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
     </div>
     {plan && <div className="mt-5 space-y-3">
       {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">
         <span className="h-8 w-8 rounded-lg tone-tile text-xs font-semibold shrink-0">{index + 1}</span>
-        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[10px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
+        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[11px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
       </div>)}
       {plan.deferredTaskIds.length > 0 && <div className="rounded-xl soft-bg p-3 text-xs muted">{t("pw.deferredTasks").replace("{count}", String(plan.deferredTaskIds.length))}</div>}
       <Button className="w-full" onClick={onOpenPlan}>{t("pw.openPlan")}</Button>

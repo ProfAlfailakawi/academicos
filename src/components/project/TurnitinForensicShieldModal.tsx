@@ -125,7 +125,7 @@ export function TurnitinForensicShieldModal({
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-semibold flex items-center gap-2"><FileSearch size={15} className="brand-text" /> {t("integrity.scopeTitle")}</div>
-                <p className="text-[10px] muted mt-1">{t("integrity.scopeHint")}</p>
+                <p className="text-[11px] muted mt-1">{t("integrity.scopeHint")}</p>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" onClick={improve} disabled={improving || (!sourceText && !report)}>
@@ -179,7 +179,7 @@ export function TurnitinForensicShieldModal({
                 </div>
               )}
               <div className="mt-4 rounded-xl bg-[var(--panel)] border hairline p-4 text-sm leading-7 whitespace-pre-wrap">{improved.text}</div>
-              <div className="mt-3 flex flex-wrap gap-2">{improved.notes.map((note) => <span key={note} className="rounded-full bg-[var(--panel)] border hairline px-3 py-1 text-[10px]">{note}</span>)}</div>
+              <div className="mt-3 flex flex-wrap gap-2">{improved.notes.map((note) => <span key={note} className="rounded-full bg-[var(--panel)] border hairline px-3 py-1 text-[11px]">{note}</span>)}</div>
             </section>
           )}
 
@@ -188,13 +188,13 @@ export function TurnitinForensicShieldModal({
               <section className={`rounded-2xl border p-5 ${riskTone}`}>
                 <div className="grid md:grid-cols-[1fr_auto] gap-5 items-center">
                   <div>
-                    <div className="text-[10px] font-semibold opacity-70">{t("integrity.riskNotAi")}</div>
+                    <div className="text-[11px] font-semibold opacity-70">{t("integrity.riskNotAi")}</div>
                     <div className="text-2xl md:text-3xl font-bold mt-2">{report.verdictLabel}</div>
                     <p className="text-xs leading-6 mt-3 opacity-80">{report.disclaimer}</p>
                   </div>
                   <div className="text-center md:min-w-36">
                     <div className="text-5xl font-black mono-number">{report.styleRiskScore}</div>
-                    <div className="text-[10px] mt-1">{t("integrity.lowerBetter")}</div>
+                    <div className="text-[11px] mt-1">{t("integrity.lowerBetter")}</div>
                   </div>
                 </div>
               </section>
@@ -240,8 +240,8 @@ export function TurnitinForensicShieldModal({
                 <div className="space-y-2 max-h-[46vh] overflow-auto pe-1">
                   {report.sentenceBreakdown.map((sentence, index) => (
                     <div key={index} className={`rounded-xl border p-3 ${sentence.highlightColor === "red" ? "border-danger/25 bg-danger/8" : sentence.highlightColor === "orange" ? "border-warning/25 bg-warning/8" : "hairline"}`}>
-                      <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-[9px] font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
-                      <div className="flex flex-wrap gap-1.5 mt-2">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-[9px] muted">{reason}</span>)}</div>
+                      <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-[11px] font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
+                      <div className="flex flex-wrap gap-1.5 mt-2">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-[11px] muted">{reason}</span>)}</div>
                     </div>
                   ))}
                 </div>
@@ -249,7 +249,7 @@ export function TurnitinForensicShieldModal({
 
               {tab === "patterns" && (
                 <div className="grid md:grid-cols-2 gap-3">
-                  {report.detectedClichés.map((item) => <div key={item.phrase} className="rounded-xl border hairline p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{item.phrase}</strong><span className="text-[10px] muted">×{item.occurrences}</span></div><div className="text-[10px] muted mt-2">{t(`integrity.category.${item.category}`)}</div></div>)}
+                  {report.detectedClichés.map((item) => <div key={item.phrase} className="rounded-xl border hairline p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{item.phrase}</strong><span className="text-[11px] muted">×{item.occurrences}</span></div><div className="text-[11px] muted mt-2">{t(`integrity.category.${item.category}`)}</div></div>)}
                   {!report.detectedClichés.length && <div className="md:col-span-2 rounded-xl brand-soft-bg p-5 text-sm font-semibold flex items-center gap-2"><CheckCircle2 size={17} /> {t("integrity.noCliches")}</div>}
                 </div>
               )}
@@ -270,5 +270,5 @@ export function TurnitinForensicShieldModal({
 }
 
 function Metric({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
-  return <div className="rounded-2xl border hairline p-4 bg-[var(--panel)]"><div className="flex items-center justify-between gap-2"><span className="text-[10px] muted">{label}</span><Icon size={14} className="brand-text" /></div><div className="text-2xl font-bold mt-3 mono-number">{value}</div></div>;
+  return <div className="rounded-2xl border hairline p-4 bg-[var(--panel)]"><div className="flex items-center justify-between gap-2"><span className="text-[11px] muted">{label}</span><Icon size={14} className="brand-text" /></div><div className="text-2xl font-bold mt-3 mono-number">{value}</div></div>;
 }

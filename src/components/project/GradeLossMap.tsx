@@ -45,8 +45,8 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
                   <h3 className="text-sm font-semibold truncate">{c.title}</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
-                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
+                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
+                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
                   <span className="text-lg font-bold" style={{ color: sevColor(c.severity) }}>{c.lossProbability}%</span>
                 </div>
               </div>
@@ -60,7 +60,7 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
             </div>
           ))}
         </div>
-        <p className="text-[10px] muted mt-4 leading-5">{data.privacyNote}</p>
+        <p className="text-[11px] muted mt-4 leading-5">{data.privacyNote}</p>
       </CardContent>
     </Card>
   );

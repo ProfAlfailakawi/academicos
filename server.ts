@@ -148,6 +148,7 @@ import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/route
 import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
 import { registerRubricRoutes } from "./src/server/routes/rubric";
 import { registerInstructorRoutes } from "./src/server/routes/instructor";
+import { registerLtiRoutes } from "./src/server/routes/lti";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
@@ -2077,6 +2078,13 @@ async function startServer() {
     next();
   });
   app.use("/api", apiRateLimit);
+  // LTI 1.3 endpoints are called by the LMS, not our client, so they sit
+  // before the App Check gate (inert until LTI_* is configured).
+  registerLtiRoutes(app, {
+    ...routeDeps(),
+    apiRateLimit: (_req, _res, next) => next(),
+    adminRoles: ["university_admin", "college_admin", "department_admin", "admin", "superadmin", "root_owner", "course_coordinator", "professor"],
+  });
   app.use("/api", verifyAppCheck);
   app.use("/api", maintenanceGate);
   const defaultJson = express.json({ limit: "2mb" });
@@ -2324,6 +2332,30 @@ async function startServer() {
           description: "Course/Assignment/Rubric sync عبر Connector layer.",
           setupKeys: ["CANVAS_BASE_URL", "CANVAS_ACCESS_TOKEN"],
           env: ["CANVAS_BASE_URL", "CANVAS_ACCESS_TOKEN"],
+        },
+        {
+          key: "lti-1.3",
+          name: "LTI 1.3 (Moodle / Canvas / Blackboard)",
+          category: "lms",
+          mode: "contract",
+          description:
+            "LTI 1.3 launch (OIDC + JWKS id_token validation) and AGS grade passback. Requires institution registration.",
+          setupKeys: [
+            "LTI_ISSUER",
+            "LTI_CLIENT_ID",
+            "LTI_DEPLOYMENT_ID",
+            "LTI_JWKS_URL",
+            "LTI_AUTH_LOGIN_URL",
+            "LTI_AUTH_TOKEN_URL",
+            "LTI_TOOL_PRIVATE_KEY_PEM",
+          ],
+          env: [
+            "LTI_ISSUER",
+            "LTI_CLIENT_ID",
+            "LTI_DEPLOYMENT_ID",
+            "LTI_JWKS_URL",
+            "LTI_AUTH_LOGIN_URL",
+          ],
         },
         {
           key: "moodle",

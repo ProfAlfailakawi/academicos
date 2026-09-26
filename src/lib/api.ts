@@ -1023,6 +1023,22 @@ export const api = {
     request<{ success: true; timeMachine: AcademicTimeMachine }>(
       `/api/projects/${encodeURIComponent(projectId)}/time-machine`,
     ),
+  ltiConfig: () =>
+    request<{
+      success: true;
+      lti: {
+        configured: boolean;
+        missing: string[];
+        issuer: string;
+        clientId: string;
+        deploymentIds: string[];
+        jwksUrl: string;
+        authLoginUrl: string;
+        tokenUrl: string;
+        agsEnabled: boolean;
+        tool: { loginUrl: string; launchUrl: string; jwksUrl: string };
+      };
+    }>("/api/lti/config"),
   cohortInsight: (courseId: string, assignmentId: string) =>
     request<{ success: true; insight: CohortInsight }>(
       `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/cohort-insight`,

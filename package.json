@@ -59,7 +59,7 @@
     "secrets:generate": "node scripts/generate-secrets.mjs",
     "test:demo": "tsx --test tests/demo-firestore.test.ts",
     "test:shell": "tsx --test tests/shell.test.ts",
-    "test:evidence": "tsx --test tests/process-evidence.test.ts tests/rubric-drilldown.test.ts tests/instructor-loop.test.ts tests/offline-queue.test.ts"
+    "test:evidence": "tsx --test tests/process-evidence.test.ts tests/rubric-drilldown.test.ts tests/instructor-loop.test.ts tests/offline-queue.test.ts tests/lti.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",

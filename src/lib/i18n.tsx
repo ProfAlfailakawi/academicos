@@ -173,7 +173,8 @@ function initialLocale(): LocaleCode {
       if (normalized.startsWith("ur")) return "ur";
     }
   } catch {}
-  return "en";
+  // Owner decision: unmatched browser languages fall back to Arabic.
+  return "ar";
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {

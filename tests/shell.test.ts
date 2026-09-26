@@ -45,12 +45,12 @@ async function runBootstrap(opts: { saved?: string | null; languages?: string[];
   return root;
 }
 
-test('locale bootstrap switches direction per locale with a neutral English fallback', async () => {
+test('locale bootstrap switches direction per locale with an Arabic fallback', async () => {
   assert.deepEqual(await runBootstrap({ languages: ['en-US'] }).then((r) => [r.lang, r.dir]), ['en', 'ltr']);
   assert.deepEqual(await runBootstrap({ languages: ['fr-FR', 'en'] }).then((r) => [r.lang, r.dir]), ['fr', 'ltr']);
   assert.deepEqual(await runBootstrap({ languages: ['ur-PK'] }).then((r) => [r.lang, r.dir]), ['ur', 'rtl']);
   assert.deepEqual(await runBootstrap({ languages: ['ar-KW', 'en'] }).then((r) => [r.lang, r.dir]), ['ar', 'rtl']);
-  assert.deepEqual(await runBootstrap({ languages: ['de-DE'] }).then((r) => [r.lang, r.dir]), ['en', 'ltr']);
+  assert.deepEqual(await runBootstrap({ languages: ['de-DE'] }).then((r) => [r.lang, r.dir]), ['ar', 'rtl']);
   assert.deepEqual(await runBootstrap({ saved: 'tr', languages: ['ar'] }).then((r) => [r.lang, r.dir]), ['tr', 'ltr']);
-  assert.deepEqual(await runBootstrap({ throws: true }).then((r) => [r.lang, r.dir]), ['en', 'ltr']);
+  assert.deepEqual(await runBootstrap({ throws: true }).then((r) => [r.lang, r.dir]), ['ar', 'rtl']);
 });

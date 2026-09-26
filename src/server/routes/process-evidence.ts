@@ -1,4 +1,5 @@
 // Process Evidence routes: signed authorship timeline + public verification.
+import { routeRateLimit } from "./route-rate-limit";
 import type { Express } from "express";
 import { firestoreStore } from "../db";
 import { buildTimeMachine } from "../intelligence";
@@ -20,6 +21,7 @@ export function registerProcessEvidenceRoutes(
 
   app.get(
     "/api/projects/:id/process-evidence",
+    routeRateLimit,
     authenticate,
     async (req: AuthenticatedRequest, res, next) => {
       try {
@@ -72,7 +74,7 @@ export function registerProcessEvidenceRoutes(
     },
   );
 
-  app.post("/api/public/process-evidence/verify", async (req, res, next) => {
+  app.post("/api/public/process-evidence/verify", routeRateLimit, async (req, res, next) => {
     try {
       const body = req.body || {};
       if (JSON.stringify(body).length > 600000)

@@ -1,6 +1,7 @@
 // LTI 1.3 routes. Mounted before the App Check gate: the platform (Moodle,
 // Canvas...) calls login/launch/jwks directly from the learner's browser or
 // its own servers. Everything is inert until the LTI_* environment is set.
+import { routeRateLimit } from "./route-rate-limit";
 import express, { type Express } from "express";
 import { firestoreStore } from "../db";
 import { resolveVariationSecret } from "../variation-secret";
@@ -40,10 +41,10 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
       ltiFail(res, error);
     }
   };
-  app.get("/api/lti/login", apiRateLimit, login);
-  app.post("/api/lti/login", apiRateLimit, form, login);
+  app.get("/api/lti/login", routeRateLimit, apiRateLimit, login);
+  app.post("/api/lti/login", routeRateLimit, apiRateLimit, form, login);
 
-  app.post("/api/lti/launch", apiRateLimit, form, async (req, res) => {
+  app.post("/api/lti/launch", routeRateLimit, apiRateLimit, form, async (req, res) => {
     try {
       const config = ltiConfig();
       if (!config.configured) throw new LtiError("LTI is not configured", "LTI_NOT_CONFIGURED", 503);
@@ -71,12 +72,12 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
     }
   });
 
-  app.get("/api/lti/jwks", apiRateLimit, (_req, res) => {
+  app.get("/api/lti/jwks", routeRateLimit, apiRateLimit, (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=300");
     res.json(toolJwks());
   });
 
-  app.get("/api/lti/config", authenticate, (req: AuthenticatedRequest, res) => {
+  app.get("/api/lti/config", routeRateLimit, authenticate, (req: AuthenticatedRequest, res) => {
     if (!admins.has(req.actor!.role)) return res.status(403).json({ error: "Forbidden", code: "FORBIDDEN" });
     const config = ltiConfig();
     res.json({
@@ -100,7 +101,7 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
     });
   });
 
-  app.post("/api/lti/ags/score", authenticate, express.json({ limit: "32kb" }), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/lti/ags/score", routeRateLimit, authenticate, express.json({ limit: "32kb" }), async (req: AuthenticatedRequest, res) => {
     try {
       if (!admins.has(req.actor!.role)) return res.status(403).json({ error: "Forbidden", code: "FORBIDDEN" });
       const config = ltiConfig();
@@ -112,8 +113,11 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
       const platform = new URL(config.issuer);
       if (lineitemUrl.protocol !== "https:" || lineitemUrl.hostname !== platform.hostname)
         throw new LtiError("Line item must belong to the configured platform", "LTI_AGS_LINEITEM", 400);
+      // Rebuild the target on the configured platform's origin so the host
+      // never comes from the request body (SSRF guard); only the path is kept.
+      const safeLineitem = new URL(`${lineitemUrl.pathname}${lineitemUrl.search}`, platform.origin).toString();
       const token = await requestAgsToken(config, key);
-      const result = await postAgsScore(lineitem, token, {
+      const result = await postAgsScore(safeLineitem, token, {
         userId: String(req.body?.userId || ""),
         scoreGiven: Number(req.body?.scoreGiven),
         scoreMaximum: Number(req.body?.scoreMaximum),

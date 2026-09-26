@@ -2,6 +2,7 @@
 // Webhooks are mounted before the JSON body parser and App Check gate (they
 // need the raw body and are called by payment providers); the authenticated
 // billing API is mounted at its original position near the end of the stack.
+import { routeRateLimit } from "./route-rate-limit";
 import express, { type Express } from "express";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { firestoreStore } from "../db";
@@ -22,6 +23,7 @@ export function registerBillingWebhookRoutes(app: Express, deps: RouteDeps) {
   const { apiRateLimit, cleanField, persistVerifiedPayment } = deps;
   app.post(
     "/api/billing/webhook/stripe",
+    routeRateLimit,
     apiRateLimit,
     express.raw({ type: "application/json", limit: "2mb" }),
     async (req, res) => {
@@ -280,6 +282,7 @@ export function registerBillingWebhookRoutes(app: Express, deps: RouteDeps) {
   );
   app.post(
     "/api/billing/webhook/tap",
+    routeRateLimit,
     apiRateLimit,
     express.raw({ type: "application/json", limit: "1mb" }),
     async (req, res) => {
@@ -303,6 +306,7 @@ export function registerBillingWebhookRoutes(app: Express, deps: RouteDeps) {
   );
   app.post(
     "/api/billing/webhook/myfatoorah",
+    routeRateLimit,
     apiRateLimit,
     express.raw({ type: "application/json", limit: "1mb" }),
     async (req, res) => {
@@ -326,6 +330,7 @@ export function registerBillingWebhookRoutes(app: Express, deps: RouteDeps) {
   );
   app.post(
     "/api/billing/webhook/lemonsqueezy",
+    routeRateLimit,
     apiRateLimit,
     express.raw({ type: "application/json", limit: "1mb" }),
     async (req, res) => {

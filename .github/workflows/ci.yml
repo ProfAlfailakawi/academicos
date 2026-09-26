@@ -34,6 +34,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Accessibility / hooks lint. Warnings only and non-blocking while the
+      # pre-existing findings are worked down.
+      - name: ESLint (jsx-a11y, warnings only)
+        run: npm run lint:eslint
+        continue-on-error: true
+
       # Mirrors the Cloud Build step; fails fast on missing imports (e.g. a file that was never committed).
       - name: Build (vite + esbuild)
         run: npm run build

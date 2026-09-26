@@ -53,6 +53,7 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
       .catch((e) => setError(localizedUiError(e, t, "pe.loadError")))
       .finally(() => setLoading(false));
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [project.id]);
 
   useEffect(() => {

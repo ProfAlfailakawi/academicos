@@ -103,7 +103,6 @@ export function registerAiServiceRoutes(app: Express, deps: RouteDeps) {
 export function registerLearnRoutes(app: Express, deps: RouteDeps) {
   const {
     authenticate,
-    assertFeature,
     canManageCourse,
     cleanField,
     normalizeAcademicPolicy,

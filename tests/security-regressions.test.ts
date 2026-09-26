@@ -26,7 +26,6 @@ test('every AI gateway receives an immutable safety instruction',()=>{assert.mat
 test('Tap webhook signature must match signed payment fields and preserve project metadata',()=>{const previous=process.env.TAP_SECRET_KEY;process.env.TAP_SECRET_KEY='test-secret';try{const body={id:'chg_1',amount:10,currency:'KWD',status:'CAPTURED',transaction:{created:'1700000000000'},reference:{gateway:'gw',payment:'pay'},metadata:{tenantId:'tenant',userId:'user',projectId:'project-1',planId:'project_viva'}};const raw=Buffer.from(JSON.stringify(body)),material='x_idchg_1x_amount10.000x_currencyKWDx_gateway_referencegwx_payment_referencepayx_statusCAPTUREDx_created1700000000000',signature=createHmac('sha256','test-secret').update(material).digest('hex');const event=verifyTapWebhook(raw,signature);assert.equal(event.status,'paid');assert.equal(event.projectId,'project-1');assert.equal(event.planId,'project_viva');assert.throws(()=>verifyTapWebhook(raw,'0'.repeat(64)),/Invalid Tap/)}finally{if(previous===undefined)delete process.env.TAP_SECRET_KEY;else process.env.TAP_SECRET_KEY=previous}});
 
 test('server token verification keeps signature validation mandatory while revocation check is deployment-configurable', async () => {
-  const { readFile } = await import('node:fs/promises');
   const server = await serverSources();
   assert.match(server, /getAuth\(\)\.verifyIdToken\(token, checkRevoked\)/);
   assert.match(server, /CHECK_REVOKED_ID_TOKENS/);
@@ -93,7 +92,6 @@ test('uploads are validated by content signature, not by the client-declared typ
 });
 
 test('the upload validator runs on every file intake path', async () => {
-  const { readFile } = await import('node:fs/promises');
   const server = await serverSources();
   assert.match(server, /function validateFile\([\s\S]{0,1600}assertSupportedFileContent\(file\)/);
   assert.equal(server.split('forEach(validateFile)').length - 1, 2);

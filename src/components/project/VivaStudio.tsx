@@ -23,6 +23,20 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 import { InlineLoader } from "../ui/AcademicLoader";
+import { speechRecognitionLangs, startDictation } from "../../lib/speech";
+import { questionSeconds, type VivaTimeSetting } from "../../lib/viva-access";
+
+const ACCESS_KEY = "academicos.viva.access.v1";
+type VivaAccess = { time: VivaTimeSetting; screenReader: boolean };
+function loadAccess(): VivaAccess {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ACCESS_KEY) || "{}");
+    const time: VivaTimeSetting = ["off", "standard", "extended150", "extended200"].includes(raw.time) ? raw.time : "off";
+    return { time, screenReader: Boolean(raw.screenReader) };
+  } catch {
+    return { time: "off", screenReader: false };
+  }
+}
 
 function speak(text: string, lang = "en-US") {
   try {
@@ -42,7 +56,18 @@ function speak(text: string, lang = "en-US") {
 }
 
 export function VivaStudio({ project }: { project: ProjectDNA }) {
-  const { t, meta } = useI18n();
+  const { t, meta, locale, formatNumber } = useI18n();
+  const [access, setAccessState] = useState<VivaAccess>(loadAccess);
+  const setAccess = (patch: Partial<VivaAccess>) =>
+    setAccessState((current) => {
+      const next = { ...current, ...patch };
+      try { localStorage.setItem(ACCESS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  const [interim, setInterim] = useState("");
+  const [announcement, setAnnouncement] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const questionHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const [mode, setMode] = useState<VivaMode>("normal");
   const [session, setSession] = useState<VivaSession | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -52,7 +77,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [autoVoice, setAutoVoice] = useState(true);
+  const [autoVoice, setAutoVoice] = useState(() => !loadAccess().screenReader);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -63,7 +88,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
         setError(localizedUiError(e, t, "ui.loadError"));
       });
     return () => {
-      try { recognitionRef.current?.stop?.(); } catch {}
+      try { recognitionRef.current?.(); } catch {}
       try { window.speechSynthesis?.cancel(); } catch {}
     };
   }, [project.id]);
@@ -73,6 +98,39 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
     ? session.responses.find((response) => response.questionId === activeQuestion.id)?.answer || ""
     : "";
   const activeAnswer = activeQuestion ? (answers[activeQuestion.id] ?? existingAnswer) : "";
+
+  // Screen-reader flow: announce and focus each new question.
+  useEffect(() => {
+    if (!activeQuestion || !session || session.status === "completed") return;
+    setAnnouncement(
+      t("viva.a11y.questionOf")
+        .replace("{n}", formatNumber(currentIndex + 1))
+        .replace("{total}", formatNumber(session.questions.length))
+        .replace("{q}", activeQuestion.prompt),
+    );
+    window.setTimeout(() => questionHeadingRef.current?.focus(), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuestion?.id, session?.status]);
+
+  // Optional per-question time budget (standard or extended). Advisory only:
+  // answers are never auto-submitted when time runs out.
+  useEffect(() => {
+    if (!activeQuestion || !session || session.status === "completed") return setSecondsLeft(null);
+    const budget = questionSeconds(session.mode, access.time);
+    if (!budget) return setSecondsLeft(null);
+    setSecondsLeft(budget);
+    const timer = window.setInterval(() => {
+      setSecondsLeft((value) => {
+        if (value === null) return value;
+        const next = value - 1;
+        if (next === 60) setAnnouncement(t("viva.a11y.oneMinute"));
+        if (next === 0) setAnnouncement(t("viva.a11y.timeUp"));
+        return Math.max(0, next);
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuestion?.id, session?.status, access.time]);
 
   useEffect(() => {
     if (!activeQuestion || !autoVoice || !session || session.status === "completed") return;
@@ -148,37 +206,30 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
   function toggleListening() {
     if (!activeQuestion) return;
     if (listening) {
-      try { recognitionRef.current?.stop?.(); } catch {}
+      try { recognitionRef.current?.(); } catch {}
       setListening(false);
+      setAnnouncement(t("viva.a11y.recordingStopped"));
       return;
     }
-    const Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!Recognition) {
-      setError(t("viva.voiceUnsupported"));
-      return;
-    }
-    const recognition = new Recognition();
-    recognition.lang = meta.speech;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.onresult = (event: any) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i += 1) transcript += event.results[i][0]?.transcript || "";
-      if (transcript.trim()) {
-        setAnswers((current) => ({
-          ...current,
-          [activeQuestion.id]: `${current[activeQuestion.id] || existingAnswer}${current[activeQuestion.id] || existingAnswer ? " " : ""}${transcript}`.trim(),
-        }));
-      }
-    };
-    recognition.onerror = () => {
-      setListening(false);
-      setError(t("viva.micError"));
-    };
-    recognition.onend = () => setListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
+    const questionId = activeQuestion.id;
+    const stop = startDictation(speechRecognitionLangs(locale, meta.speech), {
+      onFinal: (text) => {
+        if (!text) return;
+        setAnswers((current) => {
+          const base = current[questionId] ?? (session?.responses.find((r) => r.questionId === questionId)?.answer || "");
+          return { ...current, [questionId]: `${base}${base ? " " : ""}${text}`.trim() };
+        });
+      },
+      onInterim: setInterim,
+      onError: (code) => {
+        setListening(false);
+        setError(code === "unsupported" ? t("viva.voiceUnsupported") : t("viva.micError"));
+      },
+      onEnd: () => setListening(false),
+    });
+    recognitionRef.current = stop;
     setListening(true);
+    setAnnouncement(t("viva.a11y.recording"));
   }
 
   if (!session || session.status === "completed") {
@@ -192,7 +243,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
             <p className="body-copy mt-3 max-w-2xl">{t("viva.heroDesc")}</p>
             <div className="grid sm:grid-cols-4 gap-2 mt-6">
               {([['easy', t('viva.modeEasy')], ['normal', t('viva.modeNormal')], ['strict', t('viva.modeStrict')], ['external', t('viva.modeExternal')]] as [VivaMode, string][]).map(([value, label]) => (
-                <button key={value} onClick={() => setMode(value)} className={`focus-ring rounded-xl border hairline p-3 text-xs font-semibold ${mode === value ? "brand-soft-bg" : ""}`}>{label}</button>
+                <button key={value} aria-pressed={mode === value} onClick={() => setMode(value)} className={`focus-ring rounded-xl border hairline p-3 text-xs font-semibold ${mode === value ? "brand-soft-bg" : ""}`}>{label}</button>
               ))}
             </div>
             <div className="mt-5 flex items-center gap-3 flex-wrap">
@@ -201,8 +252,30 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
                 <input type="checkbox" checked={autoVoice} onChange={(event) => setAutoVoice(event.target.checked)} /> {t("viva.autoVoice")}
               </label>
             </div>
+            <fieldset className="mt-5 rounded-xl border hairline p-4">
+              <legend className="px-1 text-xs font-semibold">{t("viva.a11y.title")}</legend>
+              <label className="block text-xs font-semibold" htmlFor="viva-time">{t("viva.a11y.time")}</label>
+              <select id="viva-time" className="field mt-1.5" value={access.time} onChange={(event) => setAccess({ time: event.target.value as VivaTimeSetting })}>
+                <option value="off">{t("viva.a11y.timeOff")}</option>
+                <option value="standard">{t("viva.a11y.timeStandard")}</option>
+                <option value="extended150">{t("viva.a11y.time150")}</option>
+                <option value="extended200">{t("viva.a11y.time200")}</option>
+              </select>
+              <label className="mt-3 flex items-center gap-2 text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={access.screenReader}
+                  onChange={(event) => {
+                    setAccess({ screenReader: event.target.checked });
+                    if (event.target.checked) setAutoVoice(false);
+                  }}
+                />
+                {t("viva.a11y.screenReader")}
+              </label>
+              <p className="text-xs muted mt-2">{t("viva.a11y.note")}</p>
+            </fieldset>
             {session?.status === "completed" && <div className="mt-5 rounded-xl brand-soft-bg p-4 text-sm"><strong>{t("viva.roundComplete")}</strong> {t("viva.roundCompleteDesc")}</div>}
-            {error && <p className="text-xs text-danger mt-3">{error}</p>}
+            {error && <p role="alert" className="text-xs text-danger mt-3">{error}</p>}
           </CardContent>
         </Card>
         <Learning evidence={evidence} />
@@ -224,21 +297,29 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
             </div>
             <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-[11px] muted">{answeredCount} {t("viva.answered")}</div></div>
           </div>
-          <div className="tone-meter mt-4"><div style={{ width: `${progress}%` }} /></div>
+          <div className="tone-meter mt-4" role="progressbar" aria-label={t("viva.liveTitle")} aria-valuemin={1} aria-valuemax={session.questions.length} aria-valuenow={currentIndex + 1}><div style={{ width: `${progress}%` }} /></div>
+          <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
+          {secondsLeft !== null && (
+            <div className={`mt-3 text-xs font-semibold mono-number ${secondsLeft === 0 ? "text-warning" : "muted"}`} aria-hidden="true">
+              {t("viva.a11y.remaining").replace("{time}", `${formatNumber(Math.floor(secondsLeft / 60))}:${formatNumber(secondsLeft % 60, { minimumIntegerDigits: 2 })}`)}
+            </div>
+          )}
 
           {activeQuestion && <div className="mt-7">
             <div className="rounded-2xl brand-soft-bg p-5">
               <div className="flex items-start gap-3">
                 <span className="h-9 w-9 rounded-xl bg-[var(--panel)] grid place-items-center shrink-0"><Headphones size={17} /></span>
-                <div className="flex-1"><div className="text-[11px] uppercase muted">{t("viva.currentQuestion")} · {activeQuestion.focus}</div><div className="text-base md:text-lg font-semibold leading-8 mt-2">{activeQuestion.prompt}</div></div>
+                <div className="flex-1"><div className="text-[11px] uppercase muted">{t("viva.currentQuestion")} · {activeQuestion.focus}</div><h3 ref={questionHeadingRef} tabIndex={-1} className="text-base md:text-lg font-semibold leading-8 mt-2 outline-none" dir="auto">{activeQuestion.prompt}</h3></div>
               </div>
               <Button variant="ghost" className="mt-3" onClick={toggleSpeak}>{speaking ? <Square size={15} /> : <Volume2 size={15} />}{speaking ? t("viva.stopAudio") : t("viva.listenQuestion")}</Button>
             </div>
 
             <label htmlFor={`q_${activeQuestion.id}`} className="text-xs font-semibold mt-5 block">{t("viva.yourAnswer")}</label>
-            <textarea id={`q_${activeQuestion.id}`} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeQuestion.id]: event.target.value }))} placeholder={t("viva.answerPh")} className="focus-ring mt-2 w-full min-h-40 rounded-xl border hairline bg-[var(--bg)] p-4 text-sm leading-7" />
+            <textarea id={`q_${activeQuestion.id}`} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeQuestion.id]: event.target.value }))} placeholder={t("viva.answerPh")} dir="auto" aria-describedby={`q_hint_${activeQuestion.id}`} className="focus-ring mt-2 w-full min-h-40 rounded-xl border hairline bg-[var(--bg)] p-4 text-sm leading-7" />
+            <p id={`q_hint_${activeQuestion.id}`} className="sr-only">{t("viva.a11y.answerHint")}</p>
+            {listening && <p className="mt-2 text-xs muted" aria-hidden="true">{interim ? <span dir="auto">{interim}…</span> : t("viva.a11y.recording")}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button variant={listening ? "default" : "outline"} onClick={toggleListening}>{listening ? <MicOff size={16} /> : <Mic size={16} />}{listening ? t("viva.stopRecording") : t("viva.answerVoice")}</Button>
+              <Button variant={listening ? "default" : "outline"} aria-pressed={listening} onClick={toggleListening}>{listening ? <MicOff size={16} /> : <Mic size={16} />}{listening ? t("viva.stopRecording") : t("viva.answerVoice")}</Button>
               {currentIndex < session.questions.length - 1 ? (
                 <Button onClick={nextQuestion} disabled={!activeAnswer.trim()}><SkipForward size={16} />{t("viva.saveNext")}</Button>
               ) : (
@@ -246,7 +327,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
               )}
             </div>
           </div>}
-          {error && <p className="text-xs text-danger mt-4">{error}</p>}
+          {error && <p role="alert" className="text-xs text-danger mt-4">{error}</p>}
         </CardContent>
       </Card>
       <Learning evidence={evidence} />

@@ -65,7 +65,7 @@ expect('Fair-Use requires verified email',server.includes('FREE_PREVIEW_EMAIL_VE
 expect('Device trust avoids invasive fingerprint surfaces',deviceTrust.includes('hardwareConcurrency')&&!/getContext\(|AudioContext|queryLocalFonts|enumerateDevices/i.test(deviceTrust),'use coarse signals, never MAC/canvas/audio/font fingerprinting');
 expect('Fair-Use reservations expire safely',abuse.includes('activeReservations')&&abuse.includes('reservationExpiresAt'),'crashed requests must not permanently consume a free benefit');
 
-expect('Global locale defaults are browser-first',i18n.includes('navigator.language') && !i18n.includes('return "ar"'),'language must follow the user/browser with a neutral fallback');
+expect('Global locale defaults are browser-first',i18n.includes('navigator.language') && i18n.includes('return "ar"'),'language must follow the user/browser, falling back to Arabic');
 expect('Core UI supports eight launch locales',onboarding.includes('LOCALES.map') && ['ar','en','tr','zh','hi','es','fr','ur'].every((code)=>i18n.includes(`code: \"${code}\"`)),'onboarding must expose the eight supported launch languages');
 expect('No Kuwait-only UI defaults',!/(ar-KW|د\.ك|Kuwait-only|الكويت فقط)/i.test(uiCorpus),'Kuwait may be a selectable market, never the product default');
 expect('Global billing is USD-first',billing.includes("'USD'") && !billing.includes("process.env.BILLING_CURRENCY || 'KWD'"),'global checkout must not default to KWD');

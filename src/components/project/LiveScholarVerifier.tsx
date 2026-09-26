@@ -256,8 +256,8 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                     <span className="px-2 py-0.5 rounded-md text-[11px] bg-info/10 text-info">{t("source.licenseAvailable")}</span>
                   )}
                 </div>
-                <h3 className="text-sm md:text-base font-bold text-foreground leading-snug">{source.title}</h3>
-                <div className="text-xs text-muted-foreground leading-5">
+                <h3 dir="auto" className="text-sm md:text-base font-bold text-foreground leading-snug">{source.title}</h3>
+                <div dir="auto" className="citation text-xs text-muted-foreground leading-5">
                   <span className="font-semibold">{source.authors.length ? source.authors.join(" · ") : t("source.authorUnavailable")}</span>
                   {source.year ? ` (${source.year})` : ""}
                   {source.containerTitle ? <> — <span className="italic text-foreground/80">{source.containerTitle}</span></> : null}

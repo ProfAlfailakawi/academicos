@@ -2763,4 +2763,9 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "layout.navIntegrationsShort": UI("التكاملات","Integrations","Entegrasyon","集成","एकीकरण","Integraciones","Intégrations","انضمام"),
   "layout.navSupportConsole": UI("وحدة الدعم","Support console","Destek konsolu","支持控制台","सहायता कंसोल","Consola de soporte","Console d’assistance","سپورٹ کنسول"),
 
+  "settings.numerals": UI("شكل الأرقام","Digit style","Rakam biçimi","数字样式","अंक शैली","Estilo de dígitos","Style des chiffres","ہندسوں کا انداز"),
+  "settings.numerals.auto": UI("حسب اللغة","Language default","Dil varsayılanı","跟随语言","भाषा के अनुसार","Según idioma","Selon la langue","زبان کے مطابق"),
+  "settings.numerals.latn": UI("غربية 0-9","Western 0-9","Batı 0-9","西式 0-9","पश्चिमी 0-9","Occidentales 0-9","Occidentaux 0-9","مغربی 0-9"),
+  "settings.numerals.arab": UI("مشرقية ٠-٩","Eastern Arabic ٠-٩","Doğu Arap ٠-٩","东阿拉伯 ٠-٩","पूर्वी अरबी ٠-٩","Arábigos orientales ٠-٩","Arabes orientaux ٠-٩","مشرقی ۰-۹"),
+  "settings.numeralsNote": UI("يُطبّق على التواريخ والأعداد في الواجهات العربية والأردية. مثال:","Applies to dates and numbers in Arabic and Urdu interfaces. Example:","Arapça ve Urduca arayüzlerde tarih ve sayılara uygulanır. Örnek:","适用于阿拉伯语和乌尔都语界面的日期和数字。示例：","अरबी और उर्दू इंटरफ़ेस में तिथियों और संख्याओं पर लागू। उदाहरण:","Se aplica a fechas y números en interfaces en árabe y urdu. Ejemplo:","S’applique aux dates et nombres des interfaces arabe et ourdou. Exemple :","عربی اور اردو انٹرفیس میں تاریخوں اور اعداد پر لاگو۔ مثال:"),
 };

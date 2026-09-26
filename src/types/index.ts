@@ -1583,3 +1583,33 @@ export interface ProcessEvidenceVerification {
   signatureValid: boolean;
   status: "valid" | "tampered" | "unknown_signer";
 }
+
+// ---- Rubric drill-down — mirrors src/server/rubric-drilldown.ts ----
+export type RubricGapCode =
+  | "no_workspace_item"
+  | "no_evidence"
+  | "not_marked_covered"
+  | "needs_revision"
+  | "draft_only"
+  | "cohort_loss_high";
+
+export interface RubricDrilldownCriterion {
+  rubricId: string;
+  title: string;
+  weighting: number;
+  readiness: NonNullable<RubricCriterion["readiness"]>;
+  artifacts: Array<{ id: string; title: string; module: string; status: WorkspaceArtifact["status"]; updatedAt: string }>;
+  evidence: Array<{ id: string; title: string; type: ProjectEvidence["type"]; verification: ProjectEvidence["verification"] }>;
+  gapTaskId: string;
+  gapTaskStatus?: ProjectTask["status"];
+  missing: RubricGapCode[];
+  missingText: string[];
+  weightAtRisk: number;
+  cohortLossProbability?: number;
+}
+
+export interface RubricDrilldown {
+  projectId: string;
+  criteria: RubricDrilldownCriterion[];
+  totalWeightAtRisk: number;
+}

@@ -383,7 +383,7 @@ export function ProjectWorkspace() {
         />
       )}
       {tab === "copilot" && <ProjectCopilot project={project} />}
-      {tab === "req_matrix" && <RequirementMatrixStudio project={project} />}
+      {tab === "req_matrix" && <RequirementMatrixStudio project={project} onProjectChange={setProject} onNavigate={setTab} />}
       {tab === "red_teaming" && <RedTeamingArena project={project} />}
       {tab === "scholar" && <LiveScholarVerifier project={project} />}
       {tab === "slides" && <AutoPresentationStudio project={project} />}
@@ -391,7 +391,7 @@ export function ProjectWorkspace() {
       {tab === "benchmark" && (
         <div className="space-y-6">
           <GhostCohortPanel project={project} />
-          <GradeLossMap project={project} />
+          <GradeLossMap project={project} onProjectChange={setProject} onNavigate={setTab} />
         </div>
       )}
       {tab === "reverse" && <ReverseAssessmentStudio project={project} />}

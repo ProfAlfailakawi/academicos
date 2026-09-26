@@ -2,12 +2,24 @@ import React, { useMemo, useState } from "react";
 import { ListChecks, CheckCircle2, AlertCircle, HelpCircle, Target, FileSearch } from "lucide-react";
 import type { ProjectDNA, Requirement } from "../../types";
 import { useI18n } from "../../lib/i18n";
+import { RubricCriterionDrilldown, useRubricDrilldown } from "./RubricDrilldown";
 
-export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
+export function RequirementMatrixStudio({
+  project,
+  onProjectChange,
+  onNavigate,
+  initialFilter,
+}: {
+  project: ProjectDNA;
+  onProjectChange?: (project: ProjectDNA) => void;
+  onNavigate?: (target: "writer" | "evidence" | "plan") => void;
+  initialFilter?: "rubric";
+}) {
   const { t } = useI18n();
+  const drill = useRubricDrilldown(project, onProjectChange);
   const categoryLabel = (category: Requirement["category"]) => t(`req.category.${category}`);
   const confidenceLabel = (confidence: Requirement["confidence"]) => t(`req.confidence.${confidence}`);
-  const [filter, setFilter] = useState<"all" | Requirement["category"] | "rubric">("all");
+  const [filter, setFilter] = useState<"all" | Requirement["category"] | "rubric">(initialFilter || "all");
   const requirements = project.requirements || [];
   const rubric = project.rubric || [];
   const rubricCovered = rubric.filter((item) => item.readiness === "covered").length;
@@ -67,6 +79,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
 
       {filter === "rubric" && (
         <div className="space-y-4">
+          {drill.error && <div role="alert" className="rounded-xl bg-danger/10 text-danger p-3 text-xs">{drill.error}</div>}
           {rubric.length > 0 && (
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <Metric label={t("req.covered")} value={rubricCovered} />
@@ -77,9 +90,19 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
           {rubric.length ? rubric.map((item) => {
             const state = item.readiness || "not_evidenced";
             return (
-              <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5 flex flex-col md:flex-row items-start justify-between gap-4">
-                <div className="min-w-0"><div className="flex items-center gap-2"><Target size={15} className="text-insight"/><h3 className="text-sm font-bold">{item.title}</h3>{item.weighting > 0 && <span className="text-[11px] text-muted-foreground">{item.weighting}%</span>}</div><p className="text-xs text-muted-foreground leading-6 mt-2">{item.description || t("req.noRubricDescription")}</p></div>
-                <RubricState value={state} label={state === "covered" ? t("req.covered") : state === "partial" ? t("req.partialCoverage") : state === "needs_revision" ? t("req.needsReview") : t("req.unknown")} />
+              <div key={item.id} className="rounded-2xl border hairline bg-[var(--panel)] p-5">
+                <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                  <div className="min-w-0"><div className="flex items-center gap-2"><Target size={15} className="text-insight"/><h3 className="text-sm font-bold">{item.title}</h3>{item.weighting > 0 && <span className="text-[11px] text-muted-foreground">{item.weighting}%</span>}</div><p className="text-xs text-muted-foreground leading-6 mt-2">{item.description || t("req.noRubricDescription")}</p></div>
+                  <RubricState value={state} label={state === "covered" ? t("req.covered") : state === "partial" ? t("req.partialCoverage") : state === "needs_revision" ? t("req.needsReview") : t("req.unknown")} />
+                </div>
+                {drill.byId(item.id) && (
+                  <RubricCriterionDrilldown
+                    criterion={drill.byId(item.id)!}
+                    busy={drill.busyId === item.id}
+                    onCreateTask={drill.createTask}
+                    onOpenWorkspace={onNavigate}
+                  />
+                )}
               </div>
             );
           }) : <Empty text={t("req.noRubric")} />}
@@ -90,7 +113,7 @@ export function RequirementMatrixStudio({ project }: { project: ProjectDNA }) {
 }
 
 function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button onClick={onClick} className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${active ? "bg-insight text-white border-insight font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}>{children}</button>;
+  return <button aria-pressed={active} onClick={onClick} className={`px-3 py-1.5 rounded-xl border hairline transition-colors ${active ? "bg-insight text-white border-insight font-semibold" : "bg-[var(--panel)] text-muted-foreground"}`}>{children}</button>;
 }
 function Confidence({ confidence, label }: { confidence: Requirement["confidence"]; label: string }) {
   const strong = confidence === "high", uncertain = confidence === "needs_confirmation";

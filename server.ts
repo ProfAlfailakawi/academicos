@@ -146,6 +146,7 @@ import { registerAdvancedRoutes } from "./src/server/advanced/routes";
 import { registerBillingApiRoutes, registerBillingWebhookRoutes } from "./src/server/routes/billing";
 import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/routes/ai";
 import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
+import { registerRubricRoutes } from "./src/server/routes/rubric";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
@@ -8068,6 +8069,7 @@ async function startServer() {
     },
   );
   registerProcessEvidenceRoutes(app, { ...routeDeps(), loadProjectIntelligence });
+  registerRubricRoutes(app, routeDeps());
   app.get(
     "/api/projects/:id/trust-graph",
     authenticate,

@@ -2,6 +2,8 @@ import type {
   AcademicTimeMachine,
   ProcessEvidenceReport,
   ProcessEvidenceVerification,
+  RubricDrilldown,
+  ProjectTask,
   AcademicSourceRecord,
   AcademicTrustGraph,
   AdminUserRecord,
@@ -994,6 +996,15 @@ export const api = {
   projectTimeMachine: (projectId: string) =>
     request<{ success: true; timeMachine: AcademicTimeMachine }>(
       `/api/projects/${encodeURIComponent(projectId)}/time-machine`,
+    ),
+  rubricDrilldown: (projectId: string) =>
+    request<{ success: true; drilldown: RubricDrilldown }>(
+      `/api/projects/${encodeURIComponent(projectId)}/rubric-drilldown`,
+    ),
+  createRubricGapTask: (projectId: string, criterionId: string) =>
+    request<{ success: true; project: ProjectDNA; task: ProjectTask }>(
+      `/api/projects/${encodeURIComponent(projectId)}/rubric/${encodeURIComponent(criterionId)}/gap-task`,
+      { method: "POST", body: JSON.stringify({}) },
     ),
   processEvidence: (projectId: string) =>
     request<{ success: true; report: ProcessEvidenceReport }>(

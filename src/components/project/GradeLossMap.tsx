@@ -5,10 +5,13 @@ import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
 import { AcademicLoader } from "../ui/AcademicLoader";
+import { RubricCriterionDrilldown, useRubricDrilldown } from './RubricDrilldown';
 
 // Predictive Grade-Loss Map — where the cohort actually lost points, matched to your readiness.
-export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; assignmentId?: string }) {
+export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigate }: { project: ProjectDNA; assignmentId?: string; onProjectChange?: (project: ProjectDNA) => void; onNavigate?: (target: 'writer' | 'evidence' | 'plan') => void }) {
   const { t } = useI18n();
+  const drill = useRubricDrilldown(project, onProjectChange);
+  const [openId, setOpenId] = useState('');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -57,6 +60,14 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
                 <span>{t('adv.gl.lostHere').replace('{p}', String(c.averageLostPercent))}</span>
                 {c.commonReason && <span className="inline-flex items-center gap-1"><Eye size={11} />{c.commonReason}</span>}
               </div>
+              {drill.byId(c.rubricId) && (
+                <div className="mt-2">
+                  <button type="button" aria-expanded={openId === c.rubricId} onClick={() => setOpenId(openId === c.rubricId ? '' : c.rubricId)} className="focus-ring text-xs font-semibold brand-text">
+                    {openId === c.rubricId ? t('drill.hide') : t('drill.show')}
+                  </button>
+                  {openId === c.rubricId && <RubricCriterionDrilldown criterion={drill.byId(c.rubricId)!} busy={drill.busyId === c.rubricId} onCreateTask={drill.createTask} onOpenWorkspace={onNavigate} />}
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1,5 +1,11 @@
 import type {
   AcademicTimeMachine,
+  ProcessEvidenceReport,
+  ProcessEvidenceVerification,
+  RubricDrilldown,
+  CohortInsight,
+  ClarificationThreadRecord,
+  ProjectTask,
   AcademicSourceRecord,
   AcademicTrustGraph,
   AdminUserRecord,
@@ -177,6 +183,30 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       result.payload.errorId,
     );
   return result.payload as T;
+}
+
+/**
+ * Replay a queued offline write. The stored idempotency key is reused so a
+ * write that reached the server before the connection dropped is not applied
+ * twice when the queue is flushed.
+ */
+export function sendQueuedRequest<T = unknown>(entry: {
+  path: string;
+  method: string;
+  body?: unknown;
+  idempotencyKey: string;
+}) {
+  return request<T>(entry.path, {
+    method: entry.method,
+    headers: { "X-Idempotency-Key": entry.idempotencyKey },
+    ...(entry.body === undefined ? {} : { body: JSON.stringify(entry.body) }),
+  });
+}
+
+/** True when a request failed because the device is offline / the network dropped. */
+export function isNetworkFailure(error: unknown) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+  return error instanceof TypeError && !(error instanceof ApiError);
 }
 
 async function download(path: string) {
@@ -993,6 +1023,62 @@ export const api = {
     request<{ success: true; timeMachine: AcademicTimeMachine }>(
       `/api/projects/${encodeURIComponent(projectId)}/time-machine`,
     ),
+  ltiConfig: () =>
+    request<{
+      success: true;
+      lti: {
+        configured: boolean;
+        missing: string[];
+        issuer: string;
+        clientId: string;
+        deploymentIds: string[];
+        jwksUrl: string;
+        authLoginUrl: string;
+        tokenUrl: string;
+        agsEnabled: boolean;
+        tool: { loginUrl: string; launchUrl: string; jwksUrl: string };
+      };
+    }>("/api/lti/config"),
+  cohortInsight: (courseId: string, assignmentId: string) =>
+    request<{ success: true; insight: CohortInsight }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/cohort-insight`,
+    ),
+  clarifications: (courseId: string, assignmentId: string) =>
+    request<{ success: true; threads: ClarificationThreadRecord[] }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications`,
+    ),
+  sendClarification: (
+    courseId: string,
+    assignmentId: string,
+    body: { question: string; answer?: string; addRequirements?: string[] },
+  ) =>
+    request<{ success: true; thread: ClarificationThreadRecord; notified: number }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  answerCourseClarification: (courseId: string, assignmentId: string, threadId: string, answer: string) =>
+    request<{ success: true; thread: ClarificationThreadRecord; notified: number }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications/${encodeURIComponent(threadId)}/answer`,
+      { method: "POST", body: JSON.stringify({ answer }) },
+    ),
+  rubricDrilldown: (projectId: string) =>
+    request<{ success: true; drilldown: RubricDrilldown }>(
+      `/api/projects/${encodeURIComponent(projectId)}/rubric-drilldown`,
+    ),
+  createRubricGapTask: (projectId: string, criterionId: string) =>
+    request<{ success: true; project: ProjectDNA; task: ProjectTask }>(
+      `/api/projects/${encodeURIComponent(projectId)}/rubric/${encodeURIComponent(criterionId)}/gap-task`,
+      { method: "POST", body: JSON.stringify({}) },
+    ),
+  processEvidence: (projectId: string) =>
+    request<{ success: true; report: ProcessEvidenceReport }>(
+      `/api/projects/${encodeURIComponent(projectId)}/process-evidence`,
+    ),
+  verifyProcessEvidence: (body: { report?: ProcessEvidenceReport; contentHash?: string; signature?: string }) =>
+    request<{ success: true; verification: ProcessEvidenceVerification }>(
+      "/api/public/process-evidence/verify",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
   projectTrustGraph: (projectId: string) =>
     request<{ success: true; trustGraph: AcademicTrustGraph }>(
       `/api/projects/${encodeURIComponent(projectId)}/trust-graph`,
@@ -1077,24 +1163,10 @@ export const api = {
       `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
       { method: "POST", body: JSON.stringify({ text, locale }) },
     ),
-  improveStyle: (projectId: string, text: string, locale?: string) =>
-    request<{
-      success: true;
-      improvedText: string;
-      improvementsMade: string[];
-    }>(`/api/projects/${encodeURIComponent(projectId)}/improve-style`, {
-      method: "POST",
-      body: JSON.stringify({ text, locale }),
-    }),
   // Compatibility aliases for older callers. No authorship detection/evasion is performed.
   detectAI: (projectId: string, text?: string) =>
     request<{ success: true; report: DeepAIDetectionReport }>(
       `/api/projects/${encodeURIComponent(projectId)}/style-integrity`,
-      { method: "POST", body: JSON.stringify({ text }) },
-    ),
-  humanize: (projectId: string, text: string) =>
-    request<{ success: true; humanizedText: string; improvementsMade: string[] }>(
-      `/api/projects/${encodeURIComponent(projectId)}/improve-style`,
       { method: "POST", body: JSON.stringify({ text }) },
     ),
   exportBundleUrl: (projectId: string) =>

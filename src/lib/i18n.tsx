@@ -27,8 +27,13 @@ export function localeMeta(code: LocaleCode): LocaleMeta {
   return LOCALES.find((l) => l.code === code) || LOCALES.find((l) => l.code === "en") || LOCALES[0];
 }
 
+// Digit preference applied to every Intl date/number formatter. Updated by the
+// provider; "auto" keeps each locale's CLDR default (the previous behaviour).
+let activeNumerals: NumeralStyle = "auto";
+
 export function localeIntlTag(code: LocaleCode): string {
-  return localeMeta(code).speech;
+  const system = numberingSystemFor(code, activeNumerals);
+  return system ? `${localeMeta(code).speech}-u-nu-${system}` : localeMeta(code).speech;
 }
 
 export function formatDateTime(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {
@@ -101,11 +106,46 @@ const DICT: Record<string, Record<LocaleCode, string>> = {
   ...MESSAGES,
 };
 
+export type NumeralStyle = "auto" | "latn" | "arab";
+
 interface I18nCtx {
   locale: LocaleCode;
   meta: LocaleMeta;
   setLocale: (code: LocaleCode) => void;
   t: (key: keyof typeof DICT | string) => string;
+  /** Digit style for Arabic-script locales: locale default, Western (0-9) or Eastern Arabic. */
+  numerals: NumeralStyle;
+  setNumerals: (style: NumeralStyle) => void;
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+}
+
+const NUMERALS_KEY = "academicos.numerals.v1";
+
+/**
+ * Numbering system for a locale + preference. "auto" returns "" (use the
+ * locale default). Eastern digits only apply to Arabic-script UIs.
+ */
+export function numberingSystemFor(locale: LocaleCode, numerals: NumeralStyle): string {
+  if (numerals === "auto") return "";
+  if (numerals === "latn") return "latn";
+  if (locale === "ar") return "arab";
+  if (locale === "ur") return "arabext";
+  return "latn";
+}
+
+export function formatNumberFor(value: number, locale: LocaleCode, numerals: NumeralStyle, options?: Intl.NumberFormatOptions) {
+  if (!Number.isFinite(value)) return String(value);
+  const system = numberingSystemFor(locale, numerals);
+  return new Intl.NumberFormat(localeMeta(locale).speech, { ...options, ...(system ? { numberingSystem: system } : {}) }).format(value);
+}
+
+function initialNumerals(): NumeralStyle {
+  try {
+    const saved = localStorage.getItem(NUMERALS_KEY);
+    return saved === "arab" || saved === "latn" ? saved : "auto";
+  } catch {
+    return "auto";
+  }
 }
 
 const Ctx = createContext<I18nCtx | null>(null);
@@ -138,7 +178,19 @@ function initialLocale(): LocaleCode {
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<LocaleCode>(initialLocale);
+  const [numerals, setNumeralsState] = useState<NumeralStyle>(initialNumerals);
   const meta = useMemo(() => localeMeta(locale), [locale]);
+
+  activeNumerals = numerals;
+  useEffect(() => {
+    if (typeof document !== "undefined") document.documentElement.dataset.numerals = numerals;
+    try { localStorage.setItem(NUMERALS_KEY, numerals); } catch {}
+  }, [numerals]);
+  const setNumerals = useCallback((style: NumeralStyle) => setNumeralsState(style === "arab" || style === "latn" ? style : "auto"), []);
+  const formatNumber = useCallback(
+    (value: number, options?: Intl.NumberFormatOptions) => formatNumberFor(value, locale, numerals, options),
+    [locale, numerals],
+  );
 
   useEffect(() => {
     applyDocumentLocale(locale);
@@ -158,7 +210,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [locale],
   );
 
-  return <Ctx.Provider value={{ locale, meta, setLocale, t }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ locale, meta, setLocale, t, numerals, setNumerals, formatNumber }}>{children}</Ctx.Provider>;
 }
 
 export function useI18n(): I18nCtx {

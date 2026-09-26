@@ -1526,3 +1526,123 @@ export interface StyleIntegrityReport {
 }
 
 export type DeepAIDetectionReport = StyleIntegrityReport;
+
+// ---- Process Evidence (authorship timeline) — mirrors src/server/process-evidence.ts ----
+export type ProcessEvidenceKind =
+  | "created"
+  | "draft"
+  | "revision"
+  | "viva"
+  | "source_check"
+  | "evidence"
+  | "ai_assist"
+  | "submission"
+  | "plan"
+  | "review"
+  | "other";
+
+export interface ProcessEvidenceEntry {
+  id: string;
+  at: string;
+  kind: ProcessEvidenceKind;
+  title: string;
+  detail: string;
+  actorType: "human" | "ai" | "system";
+  version?: number;
+}
+
+export interface ProcessEvidenceReport {
+  schema: "academicos.process-evidence/1";
+  projectId: string;
+  projectTitle: string;
+  course: string;
+  generatedAt: string;
+  entries: ProcessEvidenceEntry[];
+  summary: {
+    drafts: number;
+    revisions: number;
+    vivaAnswers: number;
+    sourceChecks: number;
+    aiAssists: number;
+    totalEntries: number;
+    activeDays: number;
+    firstAt?: string;
+    latestAt?: string;
+  };
+  integrity: {
+    algorithm: "SHA-256+HMAC-SHA256";
+    contentHash: string;
+    signature: string;
+    keyId: string;
+    verificationCode: string;
+  };
+}
+
+export interface ProcessEvidenceVerification {
+  hashValid: boolean;
+  signatureValid: boolean;
+  status: "valid" | "tampered" | "unknown_signer";
+}
+
+// ---- Rubric drill-down — mirrors src/server/rubric-drilldown.ts ----
+export type RubricGapCode =
+  | "no_workspace_item"
+  | "no_evidence"
+  | "not_marked_covered"
+  | "needs_revision"
+  | "draft_only"
+  | "cohort_loss_high";
+
+export interface RubricDrilldownCriterion {
+  rubricId: string;
+  title: string;
+  weighting: number;
+  readiness: NonNullable<RubricCriterion["readiness"]>;
+  artifacts: Array<{ id: string; title: string; module: string; status: WorkspaceArtifact["status"]; updatedAt: string }>;
+  evidence: Array<{ id: string; title: string; type: ProjectEvidence["type"]; verification: ProjectEvidence["verification"] }>;
+  gapTaskId: string;
+  gapTaskStatus?: ProjectTask["status"];
+  missing: RubricGapCode[];
+  missingText: string[];
+  weightAtRisk: number;
+  cohortLossProbability?: number;
+}
+
+export interface RubricDrilldown {
+  projectId: string;
+  criteria: RubricDrilldownCriterion[];
+  totalWeightAtRisk: number;
+}
+
+// ---- Instructor loop — mirrors src/server/cohort-insight.ts & clarification-room.ts ----
+export interface CohortStuckPoint {
+  kind: "rubric" | "requirement" | "task" | "deliverable";
+  label: string;
+  percent: number;
+  detail: "not_evidenced" | "needs_revision" | "needs_confirmation" | "blocked" | "not_started" | "pending";
+}
+
+export interface CohortInsight {
+  available: boolean;
+  cohortSize: number;
+  kAnonymityMin: number;
+  averageProgress?: number;
+  stageDistribution?: Record<"not_started" | "in_progress" | "blocked" | "completed", number>;
+  stuckPoints: CohortStuckPoint[];
+  generatedAt: string;
+}
+
+export interface ClarificationThreadRecord {
+  id: string;
+  assignmentId: string;
+  tenantId: string;
+  courseId?: string;
+  question: string;
+  origin: "ambiguity_detected" | "student_asked";
+  status: "open" | "answered" | "dismissed";
+  answer?: string;
+  upvotes: number;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+}

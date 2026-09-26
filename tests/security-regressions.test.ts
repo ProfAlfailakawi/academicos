@@ -7,6 +7,17 @@ import { ACADEMIC_FACULTY_SYSTEM_INSTRUCTION } from '../src/server/ai';
 import { assignableRolesFor, canManageUserRole, canSupportImpersonate, normalizeRateRoute, privilegedMfaRequired } from '../src/server/security-controls';
 import { verifyTapWebhook } from '../src/server/billing';
 
+// server.ts is being split by domain into src/server/routes/*. Source-level
+// guards read the server entry point together with its route modules.
+async function serverSources() {
+  const { readFile, readdir } = await import('node:fs/promises');
+  const routesDir = new URL('../src/server/routes/', import.meta.url);
+  const files = (await readdir(routesDir)).filter((name) => name.endsWith('.ts')).sort();
+  const parts = [await readFile(new URL('../server.ts', import.meta.url), 'utf8')];
+  for (const name of files) parts.push(await readFile(new URL(name, routesDir), 'utf8'));
+  return parts.join('\n');
+}
+
 test('privileged roles require MFA and hierarchy blocks privilege escalation',()=>{assert.equal(privilegedMfaRequired('support_agent',{NODE_ENV:'production',REQUIRE_ADMIN_MFA:'true'} as NodeJS.ProcessEnv),true);assert.equal(canManageUserRole('university_admin','root_owner'),false);assert.equal(assignableRolesFor('admin').includes('root_owner'),false);assert.equal(canSupportImpersonate('student'),true);assert.equal(canSupportImpersonate('professor'),false)});
 test('rate limiter keys collapse high-cardinality ids',()=>{assert.equal(normalizeRateRoute('/api/projects/1234567890abcdef1234567890abcdef/comments'),'/api/projects');assert.equal(normalizeRateRoute('/api/platform/credentials'),'/api/platform')});
 test('CSV export neutralizes spreadsheet formulas',()=>{for(const value of ['=HYPERLINK("x")',' +SUM(1,2)','\t@cmd','-2+3'])assert.match(safeCsvCell(value),/^"'/);assert.equal(safeCsvCell('normal'), '"normal"')});
@@ -15,8 +26,7 @@ test('every AI gateway receives an immutable safety instruction',()=>{assert.mat
 test('Tap webhook signature must match signed payment fields and preserve project metadata',()=>{const previous=process.env.TAP_SECRET_KEY;process.env.TAP_SECRET_KEY='test-secret';try{const body={id:'chg_1',amount:10,currency:'KWD',status:'CAPTURED',transaction:{created:'1700000000000'},reference:{gateway:'gw',payment:'pay'},metadata:{tenantId:'tenant',userId:'user',projectId:'project-1',planId:'project_viva'}};const raw=Buffer.from(JSON.stringify(body)),material='x_idchg_1x_amount10.000x_currencyKWDx_gateway_referencegwx_payment_referencepayx_statusCAPTUREDx_created1700000000000',signature=createHmac('sha256','test-secret').update(material).digest('hex');const event=verifyTapWebhook(raw,signature);assert.equal(event.status,'paid');assert.equal(event.projectId,'project-1');assert.equal(event.planId,'project_viva');assert.throws(()=>verifyTapWebhook(raw,'0'.repeat(64)),/Invalid Tap/)}finally{if(previous===undefined)delete process.env.TAP_SECRET_KEY;else process.env.TAP_SECRET_KEY=previous}});
 
 test('server token verification keeps signature validation mandatory while revocation check is deployment-configurable', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const server = await serverSources();
   assert.match(server, /getAuth\(\)\.verifyIdToken\(token, checkRevoked\)/);
   assert.match(server, /CHECK_REVOKED_ID_TOKENS/);
   assert.doesNotMatch(server, /return\s+\{[\s\S]{0,700}uid:\s*String\(p\.user_id/);
@@ -82,15 +92,14 @@ test('uploads are validated by content signature, not by the client-declared typ
 });
 
 test('the upload validator runs on every file intake path', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const server = await serverSources();
   assert.match(server, /function validateFile\([\s\S]{0,1600}assertSupportedFileContent\(file\)/);
   assert.equal(server.split('forEach(validateFile)').length - 1, 2);
 });
 
 test('demo uploads remain isolated from production storage and health probes the real bucket', async () => {
   const { readFile } = await import('node:fs/promises');
-  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const server = await serverSources();
   const storage = await readFile(new URL('../src/server/storage.ts', import.meta.url), 'utf8');
   assert.match(server, /incomingFiles\.length && !DemoSandbox\.isDemoRequest\(\)/);
   assert.match(server, /probeStorageBucket\(\)/);
@@ -100,10 +109,10 @@ test('demo uploads remain isolated from production storage and health probes the
 
 test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchable', async () => {
   const { readFile } = await import('node:fs/promises');
-  const server = await readFile(new URL('../server.ts', import.meta.url), 'utf8');
+  const server = await serverSources();
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  // script-src-attr 'none' kills injected onclick=/onerror= payloads even while
-  // 'unsafe-inline' stays for the inline <script> blocks index.html depends on.
+  // script-src-attr 'none' kills injected onclick=/onerror= payloads; production
+  // script-src has no 'unsafe-inline' (see tests/shell.test.ts).
   assert.match(server, /script-src-attr 'none'/);
   assert.match(server, /CSP_ALLOW_UNSAFE_EVAL/);
   // No inline event-handler attribute may creep into the shell, or the

@@ -29,6 +29,7 @@ import {
   Sparkles,
   UsersRound,
   ShieldCheck,
+  History,
   X,
 } from "lucide-react";
 import { api } from "../lib/api";
@@ -36,13 +37,14 @@ import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, Submiss
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
+import { DialogShell } from "../components/AppDialog";
 import { EvidenceStudio } from "../components/project/EvidenceStudio";
 import { VivaStudio } from "../components/project/VivaStudio";
 import { TeamStudio } from "../components/project/TeamStudio";
 import { ProjectWriterStudio } from "../components/project/ProjectWriterStudio";
 import { ProjectCopilot } from "../components/project/ProjectCopilot";
 import { AcademicDossierModal } from "../components/project/AcademicDossierModal";
-import { TurnitinForensicShieldModal } from "../components/project/TurnitinForensicShieldModal";
+import { AuthorshipIntegrityModal } from "../components/project/AuthorshipIntegrityModal";
 import { LiveScholarVerifier } from "../components/project/LiveScholarVerifier";
 import { DynamicDataVisualizer } from "../components/project/DynamicDataVisualizer";
 import { RedTeamingArena } from "../components/project/RedTeamingArena";
@@ -53,8 +55,13 @@ import { CrossStyleFormatter } from "../components/project/CrossStyleFormatter";
 import { GhostCohortPanel } from "../components/project/GhostCohortPanel";
 import { GradeLossMap } from "../components/project/GradeLossMap";
 import { ReverseAssessmentStudio } from "../components/project/ReverseAssessmentStudio";
+import { ProcessEvidenceTimeline } from "../components/project/ProcessEvidenceTimeline";
+import { AssignmentClarifications } from "../components/project/AssignmentClarifications";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
+import { cacheProject, getCachedProject } from "../lib/offline-store";
+import { writeOrQueue } from "../lib/offline-sync";
+import { isNetworkFailure } from "../lib/api";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 import {
   Fingerprint,
@@ -80,22 +87,24 @@ const tabs = [
   ["portfolio", "pw.tabPortfolio", Award],
   ["plan", "pw.tabPlan", ListChecks],
   ["evidence", "pw.tabEvidence", Database],
+  ["timeline", "pw.tabTimeline", History],
   ["viva", "pw.tabViva", GraduationCap],
   ["team", "pw.tabTeam", UsersRound],
 ] as const;
 type Tab = (typeof tabs)[number][0];
 
 export function ProjectWorkspace() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { id = "" } = useParams();
   const location = useLocation();
   const [project, setProject] = useState<ProjectDNA | null>(null);
   const [tab, setTab] = useState<Tab>("writer");
   const [error, setError] = useState("");
+  const [offlineCopy, setOfflineCopy] = useState("");
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
-  const [showForensicRadar, setShowForensicRadar] = useState(false);
+  const [showIntegrityCheck, setShowIntegrityCheck] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [showMoreTools, setShowMoreTools] = useState(false);
   const [showRescue, setShowRescue] = useState(false);
@@ -122,8 +131,19 @@ export function ProjectWorkspace() {
   useEffect(() => {
     api
       .project(id)
-      .then((r) => setProject(r.project))
-      .catch((e) => setError(localizedUiError(e, t, "ui.actionError")));
+      .then((r) => {
+        setProject(r.project);
+        setOfflineCopy("");
+        void cacheProject(r.project);
+      })
+      .catch(async (e) => {
+        // Offline: fall back to the last cached copy of this project.
+        const cached = isNetworkFailure(e) ? await getCachedProject(id) : null;
+        if (cached) {
+          setProject(cached.project);
+          setOfflineCopy(cached.cachedAt);
+        } else setError(localizedUiError(e, t, "ui.actionError"));
+      });
     api
       .featureFlags()
       .then((r) =>
@@ -137,9 +157,13 @@ export function ProjectWorkspace() {
       });
   }, [id]);
   useEffect(() => {
+    if (project) void cacheProject(project);
+  }, [project]);
+  useEffect(() => {
     const focus = new URLSearchParams(location.search).get("focus");
     if (focus === "viva") setTab("viva");
     else if (focus === "plan" || focus === "tasks") setTab("plan");
+    else if (focus === "timeline") setTab("timeline");
     else setTab("writer");
   }, [location.search]);
   if (error)
@@ -170,7 +194,11 @@ export function ProjectWorkspace() {
       tasks: old.tasks.map((t) => (t.id === task.id ? { ...t, status } : t)),
     });
     try {
-      setProject((await api.updateTask(old.id, task.id, status)).project);
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "task", label: task.title, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/tasks/${encodeURIComponent(task.id)}`, body: { status } },
+        () => api.updateTask(old.id, task.id, status),
+      );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -186,9 +214,11 @@ export function ProjectWorkspace() {
       ),
     });
     try {
-      setProject(
-        (await api.updateDeliverable(old.id, deliverableId, status)).project,
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "deliverable", label: deliverableId, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/deliverables/${encodeURIComponent(deliverableId)}`, body: { status } },
+        () => api.updateDeliverable(old.id, deliverableId, status),
       );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -204,9 +234,11 @@ export function ProjectWorkspace() {
       ),
     });
     try {
-      setProject(
-        (await api.updateRubric(old.id, criterionId, readiness)).project,
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "rubric", label: criterionId, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/rubric/${encodeURIComponent(criterionId)}`, body: { readiness } },
+        () => api.updateRubric(old.id, criterionId, readiness),
       );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -272,6 +304,11 @@ export function ProjectWorkspace() {
           </div>
         </div>
       )}
+      {offlineCopy && (
+        <div role="status" className="rounded-xl bg-warning/10 text-warning px-4 py-3 text-sm">
+          {t("offline.projectCopy").replace("{date}", formatDate(offlineCopy, locale, { dateStyle: "medium", timeStyle: "short" }))}
+        </div>
+      )}
       <header className="panel-flat rounded-2xl p-5 md:p-6">
         <div className="flex flex-col lg:flex-row lg:items-start gap-5 justify-between">
           <div className="min-w-0">
@@ -322,7 +359,7 @@ export function ProjectWorkspace() {
                 <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                   <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                 </a>
-                <button onClick={() => setShowForensicRadar(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                <button onClick={() => setShowIntegrityCheck(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
                   <Fingerprint size={15} /> {t("pw.styleIntegrity")}
                 </button>
                 <button onClick={() => setShowDossier(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
@@ -362,7 +399,7 @@ export function ProjectWorkspace() {
                 )
                 .map(([key, label, Icon]) => (
                   <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
-                    <Icon size={14} />{label}
+                    <Icon size={14} />{t(label)}
                   </button>
                 ))}
             </div>
@@ -378,7 +415,7 @@ export function ProjectWorkspace() {
         />
       )}
       {tab === "copilot" && <ProjectCopilot project={project} />}
-      {tab === "req_matrix" && <RequirementMatrixStudio project={project} />}
+      {tab === "req_matrix" && <RequirementMatrixStudio project={project} onProjectChange={setProject} onNavigate={setTab} />}
       {tab === "red_teaming" && <RedTeamingArena project={project} />}
       {tab === "scholar" && <LiveScholarVerifier project={project} />}
       {tab === "slides" && <AutoPresentationStudio project={project} />}
@@ -386,7 +423,7 @@ export function ProjectWorkspace() {
       {tab === "benchmark" && (
         <div className="space-y-6">
           <GhostCohortPanel project={project} />
-          <GradeLossMap project={project} />
+          <GradeLossMap project={project} onProjectChange={setProject} onNavigate={setTab} />
         </div>
       )}
       {tab === "reverse" && <ReverseAssessmentStudio project={project} />}
@@ -401,6 +438,7 @@ export function ProjectWorkspace() {
         />
       )}
       {tab === "evidence" && <EvidenceStudio project={project} />}
+      {tab === "timeline" && <ProcessEvidenceTimeline project={project} />}
       {tab === "viva" && <VivaStudio project={project} />}
       {tab === "team" && <TeamStudio project={project} />}
 
@@ -411,10 +449,14 @@ export function ProjectWorkspace() {
         />
       )}
 
-      {showForensicRadar && (
-        <TurnitinForensicShieldModal
+      {showIntegrityCheck && (
+        <AuthorshipIntegrityModal
           project={project}
-          onClose={() => setShowForensicRadar(false)}
+          onClose={() => setShowIntegrityCheck(false)}
+          onOpenTimeline={() => {
+            setShowIntegrityCheck(false);
+            setTab("timeline");
+          }}
         />
       )}
 
@@ -446,7 +488,7 @@ export function ProjectWorkspace() {
                         <div className="text-xs font-semibold truncate">
                           {f.fileName}
                         </div>
-                        <div className="text-[10px] muted">
+                        <div className="text-[11px] muted">
                           {f.fileType || "file"}
                           {f.size ? ` · ${formatBytes(f.size)}` : ""}
                           {f.sha256
@@ -505,6 +547,7 @@ function StudentPlan({
         <Mini label={t("ui.rubric")} value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
       </section>
       <Tasks project={project} onChange={onTask} />
+      <AssignmentClarifications project={project} />
       <Requirements project={project} />
       <Rubric project={project} onChange={onRubric} />
       <Deliverables project={project} onChange={onDeliverable} />
@@ -809,7 +852,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
                   <td className="py-3 muted">{t(`req.category.${r.category}`)}</td>
                   <td className="py-3">
                     <span
-                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
+                      className={`rounded-full px-2 py-1 text-[11px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
                     >
                       {r.confidence === "needs_confirmation"
                         ? t("pw.needsConfirm")
@@ -892,7 +935,7 @@ function Mini({ label, value, hint }: any) {
       <CardContent className="p-4">
         <div className="eyebrow">{label}</div>
         <div className="text-2xl font-semibold mt-3 mono-number">{value}</div>
-        <div className="text-[10px] muted mt-1">{hint}</div>
+        <div className="text-[11px] muted mt-1">{hint}</div>
       </CardContent>
     </Card>
   );
@@ -918,7 +961,7 @@ function AuditModal({
     <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
         <div className="text-[11px] muted">{t("pw.result")}</div>
-        <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[9px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
+        <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[11px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
         <p className="body-copy mt-2">
           {t("pw.auditNote")}
         </p>
@@ -938,7 +981,7 @@ function AuditModal({
             <div>
               <div className="text-sm font-semibold">{c.label}</div>
               <div className="text-xs leading-6 muted mt-1">{c.detail}</div>
-              {c.action&&<div className="text-[10px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
+              {c.action&&<div className="text-[11px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
               {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
             </div>
           </div>
@@ -971,19 +1014,19 @@ function RescueModal({
       <div className="eyebrow">{t("ui.deadlineRescue")}</div>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-2">
         <div><h3 className="text-xl font-semibold">{loading ? t("pw.rescueCalculating") : severity}</h3><p className="body-copy mt-2">{plan?.summary || t("pw.rescuePrompt")}</p></div>
-        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[10px] muted">{t("pw.estimatedWork")}</div></div>}
+        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[11px] muted">{t("pw.estimatedWork")}</div></div>}
       </div>
     </div>
     <div className="mt-5">
       <label className="text-xs font-semibold">{t("pw.timeAvailable")} <span className="muted">{minutes} {t("pw.minutes")}</span></label>
       <input type="range" min={30} max={720} step={30} value={minutes} onChange={(e) => onMinutes(Number(e.target.value))} className="w-full mt-3" />
-      <div className="flex justify-between text-[10px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
+      <div className="flex justify-between text-[11px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
       <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <InlineLoader size={15}/> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
     </div>
     {plan && <div className="mt-5 space-y-3">
       {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">
         <span className="h-8 w-8 rounded-lg tone-tile text-xs font-semibold shrink-0">{index + 1}</span>
-        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[10px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
+        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[11px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
       </div>)}
       {plan.deferredTaskIds.length > 0 && <div className="rounded-xl soft-bg p-3 text-xs muted">{t("pw.deferredTasks").replace("{count}", String(plan.deferredTaskIds.length))}</div>}
       <Button className="w-full" onClick={onOpenPlan}>{t("pw.openPlan")}</Button>
@@ -1000,38 +1043,14 @@ function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const { t } = useI18n();
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <button
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        aria-label={t("pw.close")}
-        onClick={onClose}
-      />
-      <div className="relative panel rounded-2xl w-full max-w-2xl max-h-[88vh] overflow-hidden">
-        <div className="h-14 px-5 flex items-center justify-between border-b hairline">
-          <h2 className="font-semibold">{title}</h2>
-          <Button
-            size="icon"
-            variant="ghost"
-            aria-label={t("pw.closeWindow")}
-            onClick={onClose}
-          >
-            <X size={18} />
-          </Button>
-        </div>
-        <div className="p-5 overflow-auto max-h-[calc(88vh-56px)]">
-          {children}
-        </div>
-      </div>
-    </div>
+    <DialogShell
+      title={title}
+      onClose={onClose}
+      className="relative panel rounded-2xl w-full max-w-2xl max-h-[88vh] overflow-hidden flex flex-col"
+    >
+      {children}
+    </DialogShell>
   );
 }
 function moduleName(value: string) {

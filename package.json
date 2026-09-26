@@ -20,6 +20,7 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "lint:eslint": "eslint . --max-warnings=-1",
     "bootstrap:root": "node scripts/bootstrap-root.mjs",
     "emulators": "firebase emulators:start --project academicos-local",
     "emulators:seed": "node scripts/seed-emulator.mjs",
@@ -32,7 +33,7 @@
     "test:billing": "tsx --test tests/lemonsqueezy.test.ts",
     "test:advanced": "tsx --test tests/advanced.test.ts",
     "verify:launch-gates": "node scripts/verify-launch-gates.mjs",
-    "test": "npm run typecheck && npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing && npm run test:advanced && npm run test:demo && npm run test:scale",
+    "test": "npm run typecheck && npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing && npm run test:advanced && npm run test:demo && npm run test:shell && npm run test:evidence && npm run test:scale",
     "test:core": "tsx --test tests/core.test.ts",
     "test:writer": "tsx --test tests/project-writer.test.ts",
     "test:access": "tsx --test tests/project-access.test.ts",
@@ -45,7 +46,7 @@
     "test:learncache": "tsx --test tests/learn-cache.test.ts",
     "test:copilot": "tsx --test tests/copilot.test.ts",
     "test:retrieval": "tsx --test tests/retrieval.test.ts",
-    "test:ci": "npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing && npm run test:advanced && npm run test:demo",
+    "test:ci": "npm run test:core && npm run test:writer && npm run test:access && npm run test:intelligence && npm run test:experience && npm run test:frontier && npm run test:roleplay && npm run test:tutor && npm run test:solver && npm run test:learncache && npm run test:copilot && npm run test:retrieval && npm run test:security && npm run test:billing && npm run test:advanced && npm run test:demo && npm run test:shell && npm run test:evidence",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
     "ai:configure": "bash scripts/set-ai-provider.sh",
     "firebase:iam": "bash scripts/configure-firebase-runtime-iam.sh",
@@ -56,12 +57,15 @@
     "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
     "secrets:generate": "node scripts/generate-secrets.mjs",
-    "test:demo": "tsx --test tests/demo-firestore.test.ts"
+    "test:demo": "tsx --test tests/demo-firestore.test.ts",
+    "test:shell": "tsx --test tests/shell.test.ts",
+    "test:evidence": "tsx --test tests/process-evidence.test.ts tests/rubric-drilldown.test.ts tests/instructor-loop.test.ts tests/offline-queue.test.ts tests/lti.test.ts tests/viva-access.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.6.2",
     "firebase": "^12.17.1",
     "firebase-admin": "^14.2.0",
     "jszip": "^3.10.1",
@@ -71,6 +75,7 @@
     "react-router": "^8.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/vite": "^4.1.14",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
@@ -80,10 +85,15 @@
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "firebase-tools": "^15.28.1",
+    "globals": "^17.12.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.70.1",
     "vite": "^6.2.3"
   }
 }

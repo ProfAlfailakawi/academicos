@@ -67,6 +67,9 @@ const SearchWorkspace = lazy(() =>
 const Support = lazy(() =>
   import("./pages/Support").then((m) => ({ default: m.Support })),
 );
+const VerifyEvidence = lazy(() =>
+  import("./pages/VerifyEvidence").then((m) => ({ default: m.VerifyEvidence })),
+);
 const PublicShare = lazy(() =>
   import("./pages/PublicShare").then((m) => ({ default: m.PublicShare })),
 );
@@ -243,6 +246,7 @@ export default function App() {
           <Route path="/security-report" element={<SecurityReport />} />
           <Route path="/p/:slug" element={<PublicPage />} />
           <Route path="/share/:token" element={<PublicShare />} />
+          <Route path="/verify-evidence" element={<VerifyEvidence />} />
           <Route path="/login" element={<Login />} />
           <Route path="/mfa-setup" element={<MfaSetup />} />
           <Route path="/app" element={<ProtectedLayout />}>

@@ -25,7 +25,7 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 export function Settings() {
   const location = useLocation();
-  const { t, meta } = useI18n();
+  const { t, meta, numerals, setNumerals, formatNumber } = useI18n();
   const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
   const { theme, setTheme, accessibility, setAccessibility } =
@@ -246,6 +246,25 @@ export function Settings() {
               <span dir="ltr">{meta.dir.toUpperCase()} · {meta.speech}</span>
             </div>
             <p className="body-copy mt-3">{t("settings.languageNote")}</p>
+            <fieldset className="mt-4">
+              <legend className="text-xs font-semibold">{t("settings.numerals")}</legend>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {(["auto", "latn", "arab"] as const).map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    aria-pressed={numerals === style}
+                    onClick={() => setNumerals(style)}
+                    className={`focus-ring rounded-xl border hairline px-3 py-2 text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
+                  >
+                    {t(`settings.numerals.${style}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs muted mt-2">
+                {t("settings.numeralsNote")} <span className="mono-number">{formatNumber(2026)}</span>
+              </p>
+            </fieldset>
           </CardContent>
         </Card>
         <Card>
@@ -296,9 +315,9 @@ export function Settings() {
                     </Button>
                   </div>
                   {studyMessage && (
-                    <div className="text-[10px] muted mt-2">{studyMessage}</div>
+                    <div className="text-[11px] muted mt-2">{studyMessage}</div>
                   )}
-                  <div className="text-[10px] muted mt-2">
+                  <div className="text-[11px] muted mt-2">
                     {t("settings.focusBudgetNote")}
                   </div>
                 </div>
@@ -355,7 +374,7 @@ export function Settings() {
                     myfatoorah: "MyFatoorah",
                   }[h?.billing?.provider as string] || t("settings.paymentGateway")}
                 </div>
-                <div className="text-[10px] muted mt-1">
+                <div className="text-[11px] muted mt-1">
                   {h?.billing?.configured
                     ? t("settings.configuredServer")
                     : t("settings.billingAwaiting")}
@@ -544,7 +563,7 @@ function Service({ label, ok, value }: any) {
           className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
         />
       </div>
-      <div className="text-[10px] muted mt-2 truncate">{value}</div>
+      <div className="text-[11px] muted mt-2 truncate">{value}</div>
     </div>
   );
 }
@@ -568,7 +587,7 @@ function Preference({
       className={`focus-ring min-h-11 rounded-xl border hairline p-3 text-xs font-semibold ${active ? "brand-soft-bg" : ""}`}
     >
       {label}
-      <span className="block text-[9px] muted mt-1">
+      <span className="block text-[11px] muted mt-1">
         {active ? t("settings.on") : t("settings.off")}
       </span>
     

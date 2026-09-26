@@ -165,11 +165,11 @@ export function Support() {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`rounded-full px-2 py-1 text-[9px] font-semibold ${ticket.status === "resolved" || ticket.status === "closed" ? "brand-soft-bg" : "soft-bg muted"}`}
+                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${ticket.status === "resolved" || ticket.status === "closed" ? "brand-soft-bg" : "soft-bg muted"}`}
                           >
                             {statusLabel(t, ticket.status)}
                           </span>
-                          <span className="text-[9px] muted">
+                          <span className="text-[11px] muted">
                             {categoryLabel(t, ticket.category)} ·{" "}
                             {priorityLabel(t, ticket.priority)}
                           </span>
@@ -178,14 +178,14 @@ export function Support() {
                           {ticket.subject}
                         </h3>
                       </div>
-                      <time className="text-[9px] muted shrink-0">
+                      <time className="text-[11px] muted shrink-0">
                         {formatDate(ticket.updatedAt, locale)}
                       </time>
                     </div>
                     <p className="text-xs leading-6 muted mt-3 whitespace-pre-wrap">
                       {ticket.message}
                     </p>
-                    <div className="text-[9px] muted mt-3 mono-number">
+                    <div className="text-[11px] muted mt-3 mono-number">
                       {t("ui.ticket")} {ticket.id.slice(0, 8)}
                     </div>
                   </div>

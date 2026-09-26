@@ -367,7 +367,7 @@ tbody tr:hover { background: color-mix(in srgb, var(--panel-2) 70%, transparent)
 *::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 44%, transparent); }
 
 /* Make very small metadata readable without changing information density. */
-[class~="text-[9px]"] { font-size: 11px; }
+[class~="text-[11px]"] { font-size: 11px; }
 
 .paper-grid {
   background-image:
@@ -388,7 +388,7 @@ tbody tr:hover { background: color-mix(in srgb, var(--panel-2) 70%, transparent)
   .academic-card { border-radius: 18px; }
   .panel, .panel-flat { box-shadow: var(--shadow-xs); }
   .body-copy { line-height: 1.8; }
-  [class~="text-[10px]"] { font-size: 10.5px; }
+  [class~="text-[11px]"] { font-size: 10.5px; }
   [class~="text-[11px]"] { font-size: 11.5px; }
 }
 
@@ -430,7 +430,7 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
   .public-header .ui-button { height: 38px; padding-inline: 9px; gap: 5px; font-size: 11px; border-radius: 11px; }
   .public-hero h1 { font-size: clamp(2.45rem, 11.8vw, 4.75rem); }
 }
-[class~="text-[8px]"] { font-size: 9.5px; }
+[class~="text-[11px]"] { font-size: 9.5px; }
 
 /* Predictive navigation — a quiet, local next-screen cue that learns repeated transitions. */
 .predictive-chip,
@@ -483,8 +483,8 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
 
 /* Explicit accessibility preferences complement OS-level settings. */
 .a11y-large-text { font-size: 112.5%; }
-.a11y-large-text [class~="text-[9px]"],
-.a11y-large-text [class~="text-[10px]"],
+.a11y-large-text [class~="text-[11px]"],
+.a11y-large-text [class~="text-[11px]"],
 .a11y-large-text [class~="text-[11px]"] { font-size: .75rem; }
 .a11y-high-contrast {
   --muted: #3e4650;
@@ -789,4 +789,47 @@ html[dir="rtl"] .acad-loader__p1 { --tx: 15px; }
 @media (prefers-reduced-motion: reduce) {
   .acad-verify-panel { animation: none; opacity: 1; }
   .acad-verify-chip { animation: none; opacity: 1; transform: none; }
+}
+
+
+/* ---------------------------------------------------------------------------
+   Keyboard focus: every interactive element gets a visible ring, including
+   ones that do not opt into .focus-ring / .field (which draw their own).
+   --------------------------------------------------------------------------- */
+:where(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"]), [role="button"], [role="tab"]):focus-visible:not(.focus-ring):not(.field) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+[role="dialog"]:focus { outline: none; }
+
+/* ---------------------------------------------------------------------------
+   Arabic academic typography: comfortable reading size and line height for
+   Arabic prose, isolated bidi runs for Latin citations, DOIs and formulas.
+   --------------------------------------------------------------------------- */
+html[data-locale="ar"] :is(p, li, dd, blockquote, .body-copy, .academic-text) { line-height: 1.8; }
+html[data-locale="ar"] :is(.body-copy, .academic-text, .writer-canvas, textarea.field) { font-size: max(14px, 1em); }
+html[data-locale="ar"] :is(p, li, dd, blockquote):is(.text-xs, [class~="text-[11px]"]) { font-size: 13px; }
+html[data-locale="ar"] [class~="text-[11px]"] { font-size: 12px; }
+html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height: 1.9; }
+.academic-text { unicode-bidi: plaintext; text-wrap: pretty; }
+:is(bdi, .citation, .formula, code, kbd, samp, .mono-number) { unicode-bidi: isolate; }
+.formula, .citation-ltr { direction: ltr; }
+
+/* ---------------------------------------------------------------------------
+   Process Evidence print view (rendered into <body> only while printing).
+   --------------------------------------------------------------------------- */
+.pe-print { display: none; }
+@media print {
+  body.pe-printing > *:not(.pe-print) { display: none !important; }
+  body.pe-printing { background: #fff !important; color: #111 !important; }
+  body.pe-printing .pe-print { display: block; font-size: 11pt; line-height: 1.7; color: #111; padding: 0; }
+  .pe-print h1 { font-size: 18pt; margin: 4pt 0 6pt; }
+  .pe-print__brand { font-size: 9pt; letter-spacing: .02em; color: #0c5d49; font-weight: 700; }
+  .pe-print table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+  .pe-print th, .pe-print td { border: 1px solid #c9ccc9; padding: 4pt 6pt; text-align: start; vertical-align: top; }
+  .pe-print__entries tr { break-inside: avoid; }
+  .pe-print footer { margin-top: 14pt; border-top: 1px solid #c9ccc9; padding-top: 8pt; font-size: 9.5pt; }
+  .pe-print__mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5pt; word-break: break-all; }
+  @page { margin: 16mm; }
 }

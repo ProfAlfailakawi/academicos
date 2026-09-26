@@ -17,6 +17,9 @@
         if (code) break;
       }
     }
+    // Browser-first with a neutral English fallback (release invariant). The
+    // static <html lang="ar" dir="rtl"> default in index.html only applies
+    // when this script cannot run (no-JS crawlers, blocked storage + scripts).
     code = code || "en";
     document.documentElement.lang = code;
     document.documentElement.dir = rtl[code] ? "rtl" : "ltr";

@@ -43,6 +43,8 @@ import { formatDateTime, useI18n } from "../lib/i18n";
 import { LogoMark, Wordmark } from "./brand/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { roleTranslationKey } from "../lib/role-labels";
+import { useDialogA11y } from "./AppDialog";
+import { OfflineBanner } from "./OfflineBanner";
 
 type NavItem = {
   to: string;
@@ -109,6 +111,8 @@ export function Layout() {
   const previousPath = useRef<string | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(paletteRef, { open: paletteOpen, onClose: () => setPaletteOpen(false) });
   const menuWasOpen = useRef(false);
 
   useEffect(() => {
@@ -531,7 +535,7 @@ export function Layout() {
           >
             <Search size={15} />
             <span>{t("layout.searchAndNavigate")}</span>
-            <span className="ms-4 rounded-md border hairline px-1.5 py-0.5 text-[10px]">
+            <span className="ms-4 rounded-md border hairline px-1.5 py-0.5 text-[11px]">
               <Command size={10} className="inline" /> K
             </span>
           </button>
@@ -545,7 +549,7 @@ export function Layout() {
                 <Sparkles size={14} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[9px] font-bold uppercase tracking-[.12em] muted">
+                <span className="block text-[11px] font-bold uppercase tracking-[.12em] muted">
                   {t("layout.predictedNow")}
                 </span>
                 <span className="block truncate text-xs font-semibold">
@@ -583,7 +587,7 @@ export function Layout() {
                 <div className="text-xs font-semibold truncate">
                   {user?.displayName}
                 </div>
-                <div className="text-[10px] muted">
+                <div className="text-[11px] muted">
                   {t(roleTranslationKey(user?.role))}
                 </div>
               </div>
@@ -704,11 +708,11 @@ export function Layout() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-[.12em] muted">
+                  <span className="text-[11px] font-bold uppercase tracking-[.12em] muted">
                     {t("layout.predictedNow")}
                   </span>
                   {prediction.strength === "strong" && (
-                    <span className="prediction-learned rounded-full px-1.5 py-0.5 text-[9px] font-semibold">
+                    <span className="prediction-learned rounded-full px-1.5 py-0.5 text-[11px] font-semibold">
                       {t("layout.learnedFromUsage")}
                     </span>
                   )}
@@ -728,6 +732,7 @@ export function Layout() {
           className="app-main px-4 py-6 md:px-7 md:py-8 lg:px-9 lg:py-10 pb-32 lg:pb-12"
         >
           <div className="mx-auto w-full max-w-[1440px]">
+            <OfflineBanner />
             <Outlet />
           </div>
         </main>
@@ -749,7 +754,7 @@ export function Layout() {
             <span className="mobile-add-button h-12 w-12 rounded-2xl brand-bg flex items-center justify-center">
               {academicWorkMode ? <Plus size={22} /> : <LogoMark variant="seal" size={24} inverted />}
             </span>
-            <span className="text-[10px] font-semibold mt-1">
+            <span className="text-[11px] font-semibold mt-1">
               {academicWorkMode ? t("layout.add") : t("layout.work")}
             </span>
           </NavLink>
@@ -761,12 +766,14 @@ export function Layout() {
 
       {paletteOpen && (
         <div
+          ref={paletteRef}
           className="fixed inset-0 z-[70] flex items-start justify-center px-4 pt-[12vh]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="command-title"
         >
           <button
+            tabIndex={-1}
             className="absolute inset-0 bg-black/25 backdrop-blur-sm"
             aria-label={t("layout.closeSearch")}
             onClick={() => setPaletteOpen(false)}
@@ -783,7 +790,7 @@ export function Layout() {
                 placeholder={t("layout.searchPlaceholder")}
                 className="h-14 flex-1 bg-transparent outline-none text-sm"
               />
-              <kbd className="text-[10px] muted">ESC</kbd>
+              <kbd className="text-[11px] muted">ESC</kbd>
             </div>
             <div className="p-2 max-h-80 overflow-auto">
               {prediction && (
@@ -798,7 +805,7 @@ export function Layout() {
                     <Sparkles size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-bold muted">
+                    <div className="text-[11px] font-bold muted">
                       {t("layout.predictedNow")} · {prediction.label}
                     </div>
                     {/* أسباب التنبؤ مكتوبة بالعربية فقط؛ لا تُعرض بلغةٍ أخرى. */}
@@ -895,7 +902,7 @@ export function Layout() {
                         </span>
                         <span className="min-w-0">
                           <span className="block text-sm font-semibold">{t(item.label)}</span>
-                          <span className="block text-[10px] muted">{t(item.short)}</span>
+                          <span className="block text-[11px] muted">{t(item.short)}</span>
                         </span>
                       </button>
                     );
@@ -948,7 +955,7 @@ function SidebarContent({
             >
               {branding.institutionName || <Wordmark size={17} />}
             </div>
-            <div className="text-[10px] muted truncate">
+            <div className="text-[11px] muted truncate">
               {branding.institutionName
                 ? `AcademicOS · ${t("layout.tagline")}`
                 : t("brand.tagline")}
@@ -992,7 +999,7 @@ function SidebarContent({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold truncate">{userName}</div>
-              <div className="text-[10px] muted">
+              <div className="text-[11px] muted">
                 {t("layout.verifiedAccount")}
               </div>
             </div>
@@ -1041,7 +1048,7 @@ function MobileNav({ item }: { item: NavItem }) {
       end={item.end}
       className={({ isActive }) =>
         cn(
-          "mobile-nav-link focus-ring min-w-0 min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px]",
+          "mobile-nav-link focus-ring min-w-0 min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[11px]",
           isActive ? "brand-text font-semibold" : "muted",
         )
       }

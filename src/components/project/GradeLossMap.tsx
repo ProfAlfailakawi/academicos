@@ -5,10 +5,13 @@ import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
 import { AcademicLoader } from "../ui/AcademicLoader";
+import { RubricCriterionDrilldown, useRubricDrilldown } from './RubricDrilldown';
 
 // Predictive Grade-Loss Map — where the cohort actually lost points, matched to your readiness.
-export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; assignmentId?: string }) {
+export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigate }: { project: ProjectDNA; assignmentId?: string; onProjectChange?: (project: ProjectDNA) => void; onNavigate?: (target: 'writer' | 'evidence' | 'plan') => void }) {
   const { t } = useI18n();
+  const drill = useRubricDrilldown(project, onProjectChange);
+  const [openId, setOpenId] = useState('');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,8 +48,8 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
                   <h3 className="text-sm font-semibold truncate">{c.title}</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
-                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
+                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
+                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
                   <span className="text-lg font-bold" style={{ color: sevColor(c.severity) }}>{c.lossProbability}%</span>
                 </div>
               </div>
@@ -57,10 +60,18 @@ export function GradeLossMap({ project, assignmentId }: { project: ProjectDNA; a
                 <span>{t('adv.gl.lostHere').replace('{p}', String(c.averageLostPercent))}</span>
                 {c.commonReason && <span className="inline-flex items-center gap-1"><Eye size={11} />{c.commonReason}</span>}
               </div>
+              {drill.byId(c.rubricId) && (
+                <div className="mt-2">
+                  <button type="button" aria-expanded={openId === c.rubricId} onClick={() => setOpenId(openId === c.rubricId ? '' : c.rubricId)} className="focus-ring text-xs font-semibold brand-text">
+                    {openId === c.rubricId ? t('drill.hide') : t('drill.show')}
+                  </button>
+                  {openId === c.rubricId && <RubricCriterionDrilldown criterion={drill.byId(c.rubricId)!} busy={drill.busyId === c.rubricId} onCreateTask={drill.createTask} onOpenWorkspace={onNavigate} />}
+                </div>
+              )}
             </div>
           ))}
         </div>
-        <p className="text-[10px] muted mt-4 leading-5">{data.privacyNote}</p>
+        <p className="text-[11px] muted mt-4 leading-5">{data.privacyNote}</p>
       </CardContent>
     </Card>
   );

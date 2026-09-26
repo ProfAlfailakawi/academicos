@@ -185,12 +185,6 @@ export function improveScholarlyStyle(rawText: string, localeInput = "en"): {
   return { improvedText: cleaned, improvementsMade: improvements };
 }
 
-// Backward-compatible name for older server imports. It no longer attempts to evade detection.
-export function humanizeScholarlyText(rawText: string, localeInput = "en") {
-  const result = improveScholarlyStyle(rawText, localeInput);
-  return { humanizedText: result.improvedText, improvementsMade: result.improvementsMade };
-}
-
 export function runStyleIntegrityAnalysis(rawText: string, localeInput = "en"): StyleIntegrityReport {
   const locale = styleLocale(localeInput);
   const text = String(rawText || "").trim();

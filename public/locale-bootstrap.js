@@ -5,7 +5,7 @@
     var saved = localStorage.getItem("academicos.locale.v1");
     var code = supported.indexOf(saved) >= 0 ? saved : "";
     if (!code) {
-      var candidates = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"]);
+      var candidates = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "ar"]);
       for (var i = 0; i < candidates.length; i += 1) {
         var normalized = String(candidates[i] || "").toLowerCase();
         for (var j = 0; j < supported.length; j += 1) {
@@ -17,12 +17,13 @@
         if (code) break;
       }
     }
-    code = code || "en";
+    // Arabic-first product: fall back to Arabic when nothing matches.
+    code = code || "ar";
     document.documentElement.lang = code;
     document.documentElement.dir = rtl[code] ? "rtl" : "ltr";
     document.documentElement.dataset.locale = code;
   } catch (_) {
-    document.documentElement.lang = "en";
-    document.documentElement.dir = "ltr";
+    document.documentElement.lang = "ar";
+    document.documentElement.dir = "rtl";
   }
 })();

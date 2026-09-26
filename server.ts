@@ -116,6 +116,7 @@ import {
 import { externalServices } from "./src/server/external-adapters";
 import {
   assignableRolesFor,
+  buildScriptSrc,
   canManageUserRole,
   canSupportImpersonate,
   normalizeRateRoute,
@@ -1992,9 +1993,12 @@ async function startServer() {
     );
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
     // CSP notes (see SECURITY-TODO.md):
-    //  - 'unsafe-inline' is load-bearing: index.html ships two inline <script>
-    //    blocks (theme-flash guard and boot splash) and an inline <style>, and
-    //    the UI uses React inline style props. Removing it blanks the app.
+    //  - Production script-src has NO 'unsafe-inline': index.html loads its
+    //    theme guard and boot splash from /theme-bootstrap.js and
+    //    /boot-splash.js instead of inline <script> blocks. Development keeps
+    //    'unsafe-inline' only because the Vite React refresh preamble is inline.
+    //  - style-src keeps 'unsafe-inline' for the inline boot <style> and React
+    //    style props; script-src-attr 'none' still blocks onclick= payloads.
     //  - 'unsafe-eval' is kept for Google reCAPTCHA Enterprise, which backs
     //    Firebase App Check and phone-auth RecaptchaVerifier. None of our own
     //    bundles use eval/new Function, so set CSP_ALLOW_UNSAFE_EVAL=false to
@@ -2002,11 +2006,10 @@ async function startServer() {
     const allowUnsafeEval =
       String(process.env.CSP_ALLOW_UNSAFE_EVAL || "").trim().toLowerCase() !==
       "false";
-    const evalSource = allowUnsafeEval ? " 'unsafe-eval'" : "";
-    const devScript =
-      process.env.NODE_ENV === "production"
-        ? `'self' 'unsafe-inline'${evalSource} https://www.google.com https://www.gstatic.com https://www.recaptcha.net`
-        : `'self' 'unsafe-inline'${evalSource}`;
+    const devScript = buildScriptSrc(
+      process.env.NODE_ENV === "production",
+      allowUnsafeEval,
+    );
     const configuredEmulator = String(
         process.env.VITE_FIREBASE_AUTH_EMULATOR_URL || "",
       ),

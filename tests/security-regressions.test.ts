@@ -113,8 +113,8 @@ test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchabl
   const { readFile } = await import('node:fs/promises');
   const server = await serverSources();
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  // script-src-attr 'none' kills injected onclick=/onerror= payloads even while
-  // 'unsafe-inline' stays for the inline <script> blocks index.html depends on.
+  // script-src-attr 'none' kills injected onclick=/onerror= payloads; production
+  // script-src has no 'unsafe-inline' (see tests/shell.test.ts).
   assert.match(server, /script-src-attr 'none'/);
   assert.match(server, /CSP_ALLOW_UNSAFE_EVAL/);
   // No inline event-handler attribute may creep into the shell, or the

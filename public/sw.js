@@ -3,7 +3,7 @@
    المفتوحة بشيء. */
 const BUILD = '__BUILD_ID__';
 const CACHE = 'academicos-shell-' + BUILD;
-const SHELL = ['/', '/app', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg', '/icon-mono.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
+const SHELL = ['/', '/app', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg', '/icon-mono.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/locale-bootstrap.js', '/theme-bootstrap.js', '/boot-splash.js'];
 /* الأصول المبصومة بهاش في اسمها هي وحدها التي تُقدَّم من الكاش مباشرة: اسمها يتغيّر
    مع بايتاتها، فالنسخة القديمة مستحيلة بالبناء. ما عداها شبكةٌ أولاً وكاشٌ احتياط. */
 const HASHED = /\/assets\/.+[-.][A-Za-z0-9_]{8,}\.[a-z0-9]+$/i;

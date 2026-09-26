@@ -38,3 +38,12 @@ export function validFutureIso(value: string, now = Date.now()) {
   const time = Date.parse(value);
   return Number.isFinite(time) && time > now;
 }
+
+// script-src for the Content-Security-Policy. Covered by tests/csp.test.ts. Production never allows inline scripts; reCAPTCHA hosts are
+// allowed so Firebase App Check / phone auth keep working.
+export function buildScriptSrc(production: boolean, allowUnsafeEval: boolean) {
+  const evalSource = allowUnsafeEval ? " 'unsafe-eval'" : "";
+  return production
+    ? `'self'${evalSource} https://www.google.com https://www.gstatic.com https://www.recaptcha.net`
+    : `'self' 'unsafe-inline'${evalSource}`;
+}

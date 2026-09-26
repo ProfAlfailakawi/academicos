@@ -86,17 +86,15 @@
 
 ## ثانيًا: ما بقي ولماذا
 
-### ⏸️ 5. `unsafe-inline` في `script-src` و`style-src` — **تُركت عمدًا**
+### ✅ 5. `unsafe-inline` — **أُزيلت من `script-src` في الإنتاج؛ باقية في `style-src`**
 
-ليست قابلة للإزالة اليوم؛ الاعتماد عليها **موثَّق بالأدلة** لا بالحدس:
-
-- `index.html` فيه **كتلتا `<script>` مضمّنتان**: حارس وميض السمة (theme flash) وشاشة الإقلاع
-  (`acos-booting`). إزالة `'unsafe-inline'` من `script-src` تُعطّلهما فتُترك شاشة الإقلاع معلّقة.
-- `index.html` فيه **كتلة `<style>` مضمّنة**، وفي الواجهة **٤٠ موضع `style={{…}}`** في JSX. سمات النمط
-  المضمّنة تخضع لـ`style-src-attr` الذي يرث `style-src`، فإزالتها تكسر التنسيق.
-- **الطريق الصحيح لاحقًا:** nonce أو hash يُحقن وقت البناء لكتل `index.html` الثلاث، مع الانتباه إلى أن
-  خادم التطوير (Vite في وضع middleware) يحقن سكربتات مضمّنة خاصة به تحتاج معالجة منفصلة. يحتاج تحقّقًا
-  بصريًا في متصفّح.
+- سكربتا `index.html` المضمّنان (حارس السمة وشاشة الإقلاع) نُقلا إلى ملفين خارجيين:
+  `public/theme-bootstrap.js` و`public/boot-splash.js`. لم يعد في `index.html` أي `<script>` بلا `src`
+  (يحرسه `tests/shell.test.ts`).
+- `script-src` في الإنتاج: `'self'` + مضيفو reCAPTCHA (+ `'unsafe-eval'` المشروط أدناه) — بلا `'unsafe-inline'`.
+  في التطوير تبقى `'unsafe-inline'` لأن Vite يحقن مقدّمة React Refresh مضمّنة.
+- `style-src` يبقي `'unsafe-inline'`: كتلة `<style>` لشاشة الإقلاع وسمات `style={{…}}` في JSX.
+  الطريق لاحقًا: hash لكتلة `<style>` ونقل أنماط JSX إلى متغيّرات CSS.
 
 ### ⏸️ 6. `unsafe-eval` — **تُركت مفعّلة افتراضيًا (قابلة للإطفاء بمتغيّر)**
 

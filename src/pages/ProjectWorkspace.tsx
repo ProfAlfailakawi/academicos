@@ -59,6 +59,9 @@ import { ProcessEvidenceTimeline } from "../components/project/ProcessEvidenceTi
 import { AssignmentClarifications } from "../components/project/AssignmentClarifications";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
+import { cacheProject, getCachedProject } from "../lib/offline-store";
+import { writeOrQueue } from "../lib/offline-sync";
+import { isNetworkFailure } from "../lib/api";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 import {
   Fingerprint,
@@ -91,12 +94,13 @@ const tabs = [
 type Tab = (typeof tabs)[number][0];
 
 export function ProjectWorkspace() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { id = "" } = useParams();
   const location = useLocation();
   const [project, setProject] = useState<ProjectDNA | null>(null);
   const [tab, setTab] = useState<Tab>("writer");
   const [error, setError] = useState("");
+  const [offlineCopy, setOfflineCopy] = useState("");
   const [audit, setAudit] = useState<SubmissionAudit | null>(null);
   const [auditing, setAuditing] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
@@ -127,8 +131,19 @@ export function ProjectWorkspace() {
   useEffect(() => {
     api
       .project(id)
-      .then((r) => setProject(r.project))
-      .catch((e) => setError(localizedUiError(e, t, "ui.actionError")));
+      .then((r) => {
+        setProject(r.project);
+        setOfflineCopy("");
+        void cacheProject(r.project);
+      })
+      .catch(async (e) => {
+        // Offline: fall back to the last cached copy of this project.
+        const cached = isNetworkFailure(e) ? await getCachedProject(id) : null;
+        if (cached) {
+          setProject(cached.project);
+          setOfflineCopy(cached.cachedAt);
+        } else setError(localizedUiError(e, t, "ui.actionError"));
+      });
     api
       .featureFlags()
       .then((r) =>
@@ -141,6 +156,9 @@ export function ProjectWorkspace() {
         setError((current) => current || localizedUiError(e, t, "ui.loadError"));
       });
   }, [id]);
+  useEffect(() => {
+    if (project) void cacheProject(project);
+  }, [project]);
   useEffect(() => {
     const focus = new URLSearchParams(location.search).get("focus");
     if (focus === "viva") setTab("viva");
@@ -176,7 +194,11 @@ export function ProjectWorkspace() {
       tasks: old.tasks.map((t) => (t.id === task.id ? { ...t, status } : t)),
     });
     try {
-      setProject((await api.updateTask(old.id, task.id, status)).project);
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "task", label: task.title, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/tasks/${encodeURIComponent(task.id)}`, body: { status } },
+        () => api.updateTask(old.id, task.id, status),
+      );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -192,9 +214,11 @@ export function ProjectWorkspace() {
       ),
     });
     try {
-      setProject(
-        (await api.updateDeliverable(old.id, deliverableId, status)).project,
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "deliverable", label: deliverableId, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/deliverables/${encodeURIComponent(deliverableId)}`, body: { status } },
+        () => api.updateDeliverable(old.id, deliverableId, status),
       );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -210,9 +234,11 @@ export function ProjectWorkspace() {
       ),
     });
     try {
-      setProject(
-        (await api.updateRubric(old.id, criterionId, readiness)).project,
+      const outcome = await writeOrQueue(
+        { projectId: old.id, kind: "rubric", label: criterionId, method: "PATCH", path: `/api/projects/${encodeURIComponent(old.id)}/rubric/${encodeURIComponent(criterionId)}`, body: { readiness } },
+        () => api.updateRubric(old.id, criterionId, readiness),
       );
+      if ("result" in outcome) setProject(outcome.result.project);
       setError("");
     } catch (e: any) {
       setProject(old);
@@ -276,6 +302,11 @@ export function ProjectWorkspace() {
                 t("pw.compiledSummaryDefault")}
             </div>
           </div>
+        </div>
+      )}
+      {offlineCopy && (
+        <div role="status" className="rounded-xl bg-warning/10 text-warning px-4 py-3 text-sm">
+          {t("offline.projectCopy").replace("{date}", formatDate(offlineCopy, locale, { dateStyle: "medium", timeStyle: "short" }))}
         </div>
       )}
       <header className="panel-flat rounded-2xl p-5 md:p-6">

@@ -30,6 +30,9 @@ import type {
 } from "../../types";
 import { Button } from "../ui/button";
 import { useDialogA11y } from "../AppDialog";
+import { cacheDocument, clearDraft, getCachedDocument, getDraft, saveDraft } from "../../lib/offline-store";
+import { writeOrQueue } from "../../lib/offline-sync";
+import { isNetworkFailure } from "../../lib/api";
 import { Card, CardContent } from "../ui/card";
 import { useI18n } from "../../lib/i18n";
 import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
@@ -103,6 +106,7 @@ export function ProjectWriterStudio({
         if (!active) return;
         setAccess(response.access);
         if (response.document) {
+          void cacheDocument(project.id, response.document);
           setDocument(response.document);
           setSelectedId(response.document.sections[0]?.id || "");
           return;
@@ -112,8 +116,15 @@ export function ProjectWriterStudio({
           void generate(initialRequest);
         }
       })
-      .catch((caught) => {
-        if (active) setError(localizedUiError(caught, t, "writer.openError"));
+      .catch(async (caught) => {
+        if (!active) return;
+        // Offline: reopen the last cached document so drafting can continue.
+        const cached = isNetworkFailure(caught) ? await getCachedDocument(project.id) : null;
+        if (cached && active) {
+          setDocument(cached);
+          setSelectedId(cached.sections[0]?.id || "");
+          setNotice(t("offline.writerCopy"));
+        } else if (active) setError(localizedUiError(caught, t, "writer.openError"));
       });
     return () => {
       active = false;
@@ -124,7 +135,34 @@ export function ProjectWriterStudio({
     () => document?.sections.find((item) => item.id === selectedId) || document?.sections[0],
     [document, selectedId],
   );
-  useEffect(() => setDraft(section?.content || ""), [section?.id, section?.content]);
+  useEffect(() => {
+    const base = section?.content || "";
+    setDraft(base);
+    if (!section?.artifactId) return;
+    let active = true;
+    // Restore an unsaved local draft (e.g. typed while offline) for this section.
+    void getDraft(project.id, section.artifactId).then((local) => {
+      if (active && local && local.content !== base && local.baseContent === base) {
+        setDraft(local.content);
+        setNotice(t("offline.draftRestored"));
+      }
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section?.id, section?.content]);
+  useEffect(() => {
+    if (!section?.artifactId) return;
+    const timer = window.setTimeout(() => {
+      if (draft !== section.content)
+        void saveDraft({ projectId: project.id, artifactId: section.artifactId!, content: draft, baseContent: section.content || "" });
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [draft, section?.artifactId, section?.content, project.id]);
+  useEffect(() => {
+    if (document) void cacheDocument(project.id, document);
+  }, [document, project.id]);
 
   async function generate(request: ProjectWriterRequest) {
     setBusy(true);
@@ -153,11 +191,20 @@ export function ProjectWriterStudio({
     setActionBusy("save");
     setError("");
     try {
-      const response = await api.updateArtifact(project.id, section.artifactId, {
-        content: draft,
-      });
-      updateSection(section.id, response.artifact.content);
-      setNotice(t("writer.savedNotice"));
+      const artifactId = section.artifactId;
+      const outcome = await writeOrQueue(
+        { projectId: project.id, kind: "artifact", label: section.title, method: "PATCH", path: `/api/projects/${encodeURIComponent(project.id)}/artifacts/${encodeURIComponent(artifactId)}`, body: { content: draft } },
+        () => api.updateArtifact(project.id, artifactId, { content: draft }),
+      );
+      if ("result" in outcome) {
+        updateSection(section.id, outcome.result.artifact.content);
+        void clearDraft(project.id, artifactId);
+        setNotice(t("writer.savedNotice"));
+      } else {
+        updateSection(section.id, draft);
+        void clearDraft(project.id, artifactId);
+        setNotice(t("offline.savedQueued"));
+      }
     } catch (caught: any) {
       setError(localizedUiError(caught, t, "writer.saveError"));
     } finally {

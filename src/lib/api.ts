@@ -185,6 +185,30 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return result.payload as T;
 }
 
+/**
+ * Replay a queued offline write. The stored idempotency key is reused so a
+ * write that reached the server before the connection dropped is not applied
+ * twice when the queue is flushed.
+ */
+export function sendQueuedRequest<T = unknown>(entry: {
+  path: string;
+  method: string;
+  body?: unknown;
+  idempotencyKey: string;
+}) {
+  return request<T>(entry.path, {
+    method: entry.method,
+    headers: { "X-Idempotency-Key": entry.idempotencyKey },
+    ...(entry.body === undefined ? {} : { body: JSON.stringify(entry.body) }),
+  });
+}
+
+/** True when a request failed because the device is offline / the network dropped. */
+export function isNetworkFailure(error: unknown) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+  return error instanceof TypeError && !(error instanceof ApiError);
+}
+
 async function download(path: string) {
   const headers = await authHeaders();
   const response = await fetch(path, { headers });

@@ -44,6 +44,7 @@ import { LogoMark, Wordmark } from "./brand/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { roleTranslationKey } from "../lib/role-labels";
 import { useDialogA11y } from "./AppDialog";
+import { OfflineBanner } from "./OfflineBanner";
 
 type NavItem = {
   to: string;
@@ -731,6 +732,7 @@ export function Layout() {
           className="app-main px-4 py-6 md:px-7 md:py-8 lg:px-9 lg:py-10 pb-32 lg:pb-12"
         >
           <div className="mx-auto w-full max-w-[1440px]">
+            <OfflineBanner />
             <Outlet />
           </div>
         </main>

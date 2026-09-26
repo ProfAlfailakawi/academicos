@@ -115,7 +115,10 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
         throw new LtiError("Line item must belong to the configured platform", "LTI_AGS_LINEITEM", 400);
       // Rebuild the target on the configured platform's origin so the host
       // never comes from the request body (SSRF guard); only the path is kept.
-      const safeLineitem = new URL(`${lineitemUrl.pathname}${lineitemUrl.search}`, platform.origin).toString();
+      const lineitemPath = `${lineitemUrl.pathname}${lineitemUrl.search}`;
+      if (!/^\/[A-Za-z0-9\-._~%/]*(\?[A-Za-z0-9\-._~%=&]*)?$/.test(lineitemPath))
+        throw new LtiError("Line item path is not valid", "LTI_AGS_LINEITEM", 400);
+      const safeLineitem = `${platform.origin}${lineitemPath}`;
       const token = await requestAgsToken(config, key);
       const result = await postAgsScore(safeLineitem, token, {
         userId: String(req.body?.userId || ""),

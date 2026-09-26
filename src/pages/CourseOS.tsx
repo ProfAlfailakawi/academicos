@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Target,
   X,
+  Users,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { formatDate, useI18n } from "../lib/i18n";
@@ -32,6 +33,7 @@ import type {
 } from "../types";
 import { Button } from "../components/ui/button";
 import { DialogFrame } from "../components/AppDialog";
+import { CohortInsightDialog } from "../components/course/CohortInsightDialog";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { localizedUiError } from "../lib/ui-error";
@@ -66,6 +68,7 @@ export function CourseOS() {
     >
   >({});
   const [joinCodes, setJoinCodes] = useState<CourseJoinCodeRecord[]>([]);
+  const [insightFor, setInsightFor] = useState<CourseAssignmentRecord | null>(null);
   const [joinSecret, setJoinSecret] = useState("");
   const [joinBusy, setJoinBusy] = useState("");
   const [form, setForm] = useState({
@@ -604,6 +607,14 @@ export function CourseOS() {
                         </Button>
                         <Button
                           size="sm"
+                          variant="outline"
+                          onClick={() => setInsightFor(a)}
+                        >
+                          <Users size={14} />
+                          {t("cohort.open")}
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={() => cloneAssignment(a)}
                           disabled={Boolean(cloning)}
@@ -705,6 +716,14 @@ export function CourseOS() {
           </CardContent>
         </Card>
       </div>
+      {insightFor && course && (
+        <CohortInsightDialog
+          courseId={course.id}
+          assignmentId={insightFor.id}
+          assignmentTitle={insightFor.title}
+          onClose={() => setInsightFor(null)}
+        />
+      )}
       {builder && (
         <DialogFrame
           onClose={() => setBuilder(false)}

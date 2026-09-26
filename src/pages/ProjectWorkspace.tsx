@@ -56,6 +56,7 @@ import { GhostCohortPanel } from "../components/project/GhostCohortPanel";
 import { GradeLossMap } from "../components/project/GradeLossMap";
 import { ReverseAssessmentStudio } from "../components/project/ReverseAssessmentStudio";
 import { ProcessEvidenceTimeline } from "../components/project/ProcessEvidenceTimeline";
+import { AssignmentClarifications } from "../components/project/AssignmentClarifications";
 import { formatDate, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
@@ -515,6 +516,7 @@ function StudentPlan({
         <Mini label={t("ui.rubric")} value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
       </section>
       <Tasks project={project} onChange={onTask} />
+      <AssignmentClarifications project={project} />
       <Requirements project={project} />
       <Rubric project={project} onChange={onRubric} />
       <Deliverables project={project} onChange={onDeliverable} />

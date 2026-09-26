@@ -3,6 +3,8 @@ import type {
   ProcessEvidenceReport,
   ProcessEvidenceVerification,
   RubricDrilldown,
+  CohortInsight,
+  ClarificationThreadRecord,
   ProjectTask,
   AcademicSourceRecord,
   AcademicTrustGraph,
@@ -996,6 +998,28 @@ export const api = {
   projectTimeMachine: (projectId: string) =>
     request<{ success: true; timeMachine: AcademicTimeMachine }>(
       `/api/projects/${encodeURIComponent(projectId)}/time-machine`,
+    ),
+  cohortInsight: (courseId: string, assignmentId: string) =>
+    request<{ success: true; insight: CohortInsight }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/cohort-insight`,
+    ),
+  clarifications: (courseId: string, assignmentId: string) =>
+    request<{ success: true; threads: ClarificationThreadRecord[] }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications`,
+    ),
+  sendClarification: (
+    courseId: string,
+    assignmentId: string,
+    body: { question: string; answer?: string; addRequirements?: string[] },
+  ) =>
+    request<{ success: true; thread: ClarificationThreadRecord; notified: number }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  answerCourseClarification: (courseId: string, assignmentId: string, threadId: string, answer: string) =>
+    request<{ success: true; thread: ClarificationThreadRecord; notified: number }>(
+      `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/clarifications/${encodeURIComponent(threadId)}/answer`,
+      { method: "POST", body: JSON.stringify({ answer }) },
     ),
   rubricDrilldown: (projectId: string) =>
     request<{ success: true; drilldown: RubricDrilldown }>(

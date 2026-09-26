@@ -35,6 +35,7 @@ import type {
   WorkspaceArtifactVersion,
 } from "../types";
 import type { AIUsage } from "./ai";
+import type { ClarificationThread } from "./advanced/clarification-room";
 
 export const COLLECTIONS = {
   users: "users",
@@ -67,6 +68,7 @@ export const COLLECTIONS = {
   toolRuns: "toolRuns",
   comments: "comments",
   vivaSessions: "vivaSessions",
+  clarificationThreads: "clarificationThreads",
   vivaResponses: "vivaResponses",
   learningEvidence: "learningEvidence",
   projectEvidence: "projectEvidence",
@@ -1174,6 +1176,44 @@ export const firestoreStore = {
       { status: course.status },
     );
     return course;
+  },
+  /** Projects students created from one published course assignment. */
+  async listAssignmentProjects(
+    tenantId: string,
+    assignmentId: string,
+    limit = 500,
+  ): Promise<ProjectDNA[]> {
+    const snap = await db()
+      .collection(COLLECTIONS.projects)
+      .where("tenantId", "==", tenantId)
+      .where("aiPolicy.assignmentId", "==", assignmentId)
+      .limit(Math.min(1000, Math.max(1, limit)))
+      .get();
+    return snap.docs.map((d) => d.data() as ProjectDNA);
+  },
+  async saveClarificationThread(thread: ClarificationThread) {
+    await db()
+      .collection(COLLECTIONS.clarificationThreads)
+      .doc(thread.id)
+      .set(firestoreSafe(thread));
+    return thread;
+  },
+  async getClarificationThread(tenantId: string, id: string) {
+    const doc = await db().collection(COLLECTIONS.clarificationThreads).doc(id).get();
+    if (!doc.exists) return null;
+    const thread = doc.data() as ClarificationThread;
+    return thread.tenantId === tenantId ? thread : null;
+  },
+  async listClarificationThreads(tenantId: string, assignmentId: string) {
+    const snap = await db()
+      .collection(COLLECTIONS.clarificationThreads)
+      .where("tenantId", "==", tenantId)
+      .where("assignmentId", "==", assignmentId)
+      .limit(200)
+      .get();
+    return snap.docs
+      .map((d) => d.data() as ClarificationThread)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
   async listCourseAssignments(
     courseId: string,

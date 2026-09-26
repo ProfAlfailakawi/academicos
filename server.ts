@@ -147,6 +147,7 @@ import { registerBillingApiRoutes, registerBillingWebhookRoutes } from "./src/se
 import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/routes/ai";
 import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
 import { registerRubricRoutes } from "./src/server/routes/rubric";
+import { registerInstructorRoutes } from "./src/server/routes/instructor";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
 import { ingestRetrievalIndex, projectRawSources, semanticFileSearch } from "./src/server/retrieval-service";
@@ -8070,6 +8071,7 @@ async function startServer() {
   );
   registerProcessEvidenceRoutes(app, { ...routeDeps(), loadProjectIntelligence });
   registerRubricRoutes(app, routeDeps());
+  registerInstructorRoutes(app, { ...routeDeps(), facultyRoles: [...FACULTY_ROLES, "teaching_assistant"] });
   app.get(
     "/api/projects/:id/trust-graph",
     authenticate,
@@ -9693,13 +9695,21 @@ async function startServer() {
         };
         await firestoreStore.saveLearningEvidence(record);
       },
-      // The engines below are mounted but not yet UI-wired; their data sources
-      // are backed as they are built out. Empty/null results degrade cleanly
-      // (404 / empty ledger) instead of fabricating state.
-      getClarificationThread: async () => null,
-      saveClarificationThread: async () => {},
-      listAffectedProjectOwners: async () => [],
-      applyDnaPatchToProject: async () => {},
+      // Clarification Room is backed by Firestore (clarificationThreads). The
+      // remaining engines below are mounted but not yet UI-wired; empty/null
+      // results degrade cleanly (404 / empty ledger) instead of fabricating state.
+      getClarificationThread: (tenantId, threadId) =>
+        firestoreStore.getClarificationThread(tenantId, threadId),
+      saveClarificationThread: async (thread) => {
+        await firestoreStore.saveClarificationThread(thread);
+      },
+      listAffectedProjectOwners: async (tenantId, assignmentId) =>
+        (await firestoreStore.listAssignmentProjects(tenantId, assignmentId)).map(
+          (project) => ({ userId: project.userId, projectId: project.id }),
+        ),
+      applyDnaPatchToProject: async (_tenantId, _projectId, userId, patched) => {
+        await firestoreStore.updateProject(recalculateProject(patched), userId, "Clarification patch");
+      },
       getPeerCreditLedger: async () => [],
       savePeerExplanation: async () => {},
       savePeerCreditLedger: async () => {},

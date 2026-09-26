@@ -1613,3 +1613,36 @@ export interface RubricDrilldown {
   criteria: RubricDrilldownCriterion[];
   totalWeightAtRisk: number;
 }
+
+// ---- Instructor loop — mirrors src/server/cohort-insight.ts & clarification-room.ts ----
+export interface CohortStuckPoint {
+  kind: "rubric" | "requirement" | "task" | "deliverable";
+  label: string;
+  percent: number;
+  detail: "not_evidenced" | "needs_revision" | "needs_confirmation" | "blocked" | "not_started" | "pending";
+}
+
+export interface CohortInsight {
+  available: boolean;
+  cohortSize: number;
+  kAnonymityMin: number;
+  averageProgress?: number;
+  stageDistribution?: Record<"not_started" | "in_progress" | "blocked" | "completed", number>;
+  stuckPoints: CohortStuckPoint[];
+  generatedAt: string;
+}
+
+export interface ClarificationThreadRecord {
+  id: string;
+  assignmentId: string;
+  tenantId: string;
+  courseId?: string;
+  question: string;
+  origin: "ambiguity_detected" | "student_asked";
+  status: "open" | "answered" | "dismissed";
+  answer?: string;
+  upvotes: number;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+}

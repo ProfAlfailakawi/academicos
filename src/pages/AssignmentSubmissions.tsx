@@ -12,6 +12,7 @@ import {
   PenLine,
 } from "lucide-react";
 import { DnaRing, DnaStepper, type DnaStepState } from "../components/dna/DnaKit";
+import { useDnaStepStateText } from "../components/dna/useDnaStepStateText";
 import { Link, useParams } from "react-router";
 import { api } from "../lib/api";
 import type {
@@ -408,6 +409,7 @@ function Status({ status }: { status: CourseSubmissionRecord["status"] }) {
 }
 function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) {
   const { t } = useI18n();
+  const stateText = useDnaStepStateText();
   const order = ["submitted", "grading", "graded", "released"] as const;
   const at = status === "returned" ? 1 : order.indexOf(status);
   const steps = [
@@ -426,7 +428,7 @@ function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) 
           ? "current"
           : "pending") as DnaStepState,
   }));
-  return <DnaStepper className="mt-4" size="sm" steps={steps} ariaLabel={steps.map((step) => step.label).join(" · ")} />;
+  return <DnaStepper className="mt-4" size="sm" stateText={stateText} steps={steps} ariaLabel={steps.map((step) => step.label).join(" · ")} />;
 }
 function Mini({ label, value }: { label: string; value: number }) {
   return (

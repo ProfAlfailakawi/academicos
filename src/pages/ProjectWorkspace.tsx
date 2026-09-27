@@ -317,9 +317,10 @@ export function ProjectWorkspace() {
           {t("offline.projectCopy").replace("{date}", formatDate(offlineCopy, locale, { dateStyle: "medium", timeStyle: "short" }))}
         </div>
       )}
-      <header className="workspace-head dna-surface p-5 md:p-6">
+      <header className="workspace-head">
         <DnaStatusHeader
           as="div"
+          divider="dashed"
           headingLevel={2}
           icon={<BookOpenCheck size={22} />}
           title={<span className="workspace-head__title">{project.title}</span>}
@@ -349,8 +350,8 @@ export function ProjectWorkspace() {
               </Button>
             </div>
           }
-        />
-        <div className="mt-5 pt-4 border-t border-dashed hairline">
+        >
+        <div>
           <div className="flex flex-wrap gap-2 items-center">
             {tabs
               .filter(([key]) => ["writer", "evidence", "viva"].includes(key))
@@ -405,6 +406,7 @@ export function ProjectWorkspace() {
             </details>
           </div>
         </div>
+        </DnaStatusHeader>
       </header>
       {tab === "writer" && (
         <ProjectWriterStudio

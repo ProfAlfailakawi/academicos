@@ -31,12 +31,14 @@
 .dna svg { flex-shrink: 0; }
 
 /* Student home: living learning map in place of the decorative illustration. */
-.student-hub { background: color-mix(in srgb, var(--brand-soft) 38%, var(--panel)); }
+.student-hub { background: var(--panel); }
+.student-hub .dna-hub { border: 0; box-shadow: none; }
 .student-hub__initial { font-size: 30px; font-weight: 700; line-height: 1; }
 .student-hub__note { background: var(--panel); }
 
 /* Project workspace header */
-.workspace-head .dna-headrow { flex-wrap: wrap; }
+.workspace-head .dna-head { padding: 20px 22px; }
+.workspace-head .dna-headrow { flex-wrap: wrap; align-items: flex-start; }
 .workspace-head__title { font-size: clamp(1.35rem, 2.4vw, 1.85rem); font-weight: 650; letter-spacing: -0.03em; }
 .workspace-more[open] .workspace-more__chev { transform: rotate(180deg); }
 .workspace-more__current { max-inline-size: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

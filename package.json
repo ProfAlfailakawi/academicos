@@ -57,7 +57,7 @@
     "firebase:repair-runtime": "bash scripts/repair-cloud-run-firebase-access.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
     "secrets:generate": "node scripts/generate-secrets.mjs",
-    "test:demo": "tsx --test tests/demo-firestore.test.ts",
+    "test:demo": "tsx --test tests/demo-firestore.test.ts tests/demo-seed.test.ts",
     "test:shell": "tsx --test tests/shell.test.ts",
     "test:evidence": "tsx --test tests/process-evidence.test.ts tests/rubric-drilldown.test.ts tests/instructor-loop.test.ts tests/offline-queue.test.ts tests/lti.test.ts tests/viva-access.test.ts"
   },

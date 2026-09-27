@@ -25,13 +25,18 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomBytes } from "node:crypto";
 import { createDemoFirestore, type DemoFirestore } from "./demoFirestore";
+import { seedDemoDepth } from "./demoSeedDepth";
 import type {
   AIUsagePolicy,
   CourseAssignmentRecord,
   CourseEnrollmentRecord,
   CourseRecord,
   CourseSubmissionRecord,
+  Deliverable,
   ProjectDNA,
+  ProjectTask,
+  Requirement,
+  RubricCriterion,
   UserProfile,
 } from "../types";
 
@@ -155,6 +160,28 @@ const SUBMISSION_STATUSES: CourseSubmissionRecord["status"][] = [
   "submitted", "grading", "graded", "released", "returned",
 ];
 
+const DEMO_LEARNING_SUMMARIES = [
+  "شرح في جلسة الشفهي لماذا اختار العيّنة العشوائية الطبقية بدل الملائمة.",
+  "أعاد كتابة الفرضية الثانية بعد ملاحظة الأستاذ وربطها بالبيانات.",
+  "حسم تعارضًا بين مصدرين حول أثر التعلّم المدمج مستندًا إلى حجم العينة.",
+  "وثّق قرار استبعاد 14 استجابة ناقصة وأثره على النتائج.",
+  "بنى جدولًا يربط كل معيار في الـRubric بقسم في التقرير.",
+];
+
+const DEMO_VIVA_QUESTIONS: ReadonlyArray<readonly [string, string, string]> = [
+  ["اشرح بكلماتك سؤال البحث الرئيسي، ولماذا يهمّ في السياق الكويتي؟", "فهم المشكلة", "السؤال عن أثر التعلّم المدمج على الحضور، ويهمّ لأن جامعات الكويت توسّعت فيه بعد 2020."],
+  ["لماذا اخترت هذه المنهجية دون غيرها؟", "المنهجية", "لأن البيانات كمية ومتاحة من نظام الحضور، فالتحليل الإحصائي أنسب من المقابلات."],
+  ["ما أضعف نقطة في نتائجك، وكيف تعاملت معها؟", "التفكير النقدي", "حجم العينة في الشعبة المسائية صغير، فذكرته صراحةً في حدود الدراسة."],
+  ["أين استعنت بالذكاء الاصطناعي، وكيف تحقّقت من مخرجاته؟", "النزاهة", "في المراجعة اللغوية فقط، وراجعت كل تعديل يدويًا وأفصحت عنه في الملحق."],
+];
+
+const DEMO_TICKET_BODIES = [
+  "حاولت رفع التقرير بصيغة PDF أكثر من مرة وتظهر رسالة انتهاء المهلة عند 90٪.",
+  "أرجو تمديد موعد التسليم يومين بسبب عذر طبي مرفق من المستوصف.",
+  "هل يُسمح باستخدام أداة ذكاء اصطناعي لتلخيص المصادر في التسليم الثاني؟",
+  "رمز الانضمام الذي أرسله الأستاذ يظهر أنه منتهي الصلاحية.",
+];
+
 function aiPolicy(level: AIUsagePolicy["level"]): AIUsagePolicy {
   return {
     level,
@@ -166,6 +193,102 @@ function aiPolicy(level: AIUsagePolicy["level"]): AIUsagePolicy {
     prohibited: level <= 1 ? ["أي توليد نص", "أي تحليل آلي"] : level <= 3 ? ["توليد نص التسليم النهائي"] : [],
     disclosureRequired: level >= 1,
     provenance: "published_assignment",
+  };
+}
+
+/*
+ * بنية المشروع: المتطلبات والمخرجات والمعايير والمهام.
+ *
+ * كانت هذه الحقول فارغة في كل مشروع، فتفتح تبويبات الخطة والمتطلبات والمعايير
+ * على فراغ، وتبقى صفحة المهارات والجواز خاليةً لأنها تُبنى من المهام المكتملة.
+ * تُشتق هنا من التكليف المنشور نفسه، وتتدرّج حالتها مع نسبة التقدّم، فيبقى ما
+ * يراه الزائر متّسقًا بين المشروع وتسليمه ودرجته.
+ */
+const DEMO_TASKS: ReadonlyArray<readonly [string, string, ProjectTask["module"], number]> = [
+  ["تحليل كراسة التكليف", "استخراج المتطلبات ومعايير التقييم وسياسة الذكاء الاصطناعي.", "research", 60],
+  ["جمع المصادر وتوثيقها", "ثمانية مصادر محكّمة على الأقل، منها مصدران خليجيان.", "research", 150],
+  ["بناء المنهجية", "تحديد أداة جمع البيانات وحجم العينة وحدود الدراسة.", "writing", 120],
+  ["تحليل النتائج", "تحليل البيانات وربط كل نتيجة بالسؤال البحثي.", "data", 180],
+  ["كتابة المسودة الأولى", "المقدمة والمنهجية والنتائج مع الإحالات.", "writing", 240],
+  ["تجهيز العرض التقديمي", "عشر شرائح تلخّص المشكلة والمنهجية وأهم النتائج.", "presentation", 90],
+  ["المراجعة النهائية والإفصاح", "مراجعة الاستشهادات وكتابة إفصاح استخدام الذكاء الاصطناعي.", "writing", 45],
+];
+
+function demoProjectStructure(
+  projectId: string,
+  assignment: CourseAssignmentRecord,
+  progress: number,
+  ownerId: string,
+): Pick<ProjectDNA, "workspaceModules" | "requirements" | "deliverables" | "rubric" | "tasks" | "originalAssignment"> {
+  const done = Math.round((progress / 100) * DEMO_TASKS.length);
+  const final = assignment.deadline || ahead(14);
+  const tasks: ProjectTask[] = DEMO_TASKS.map(([title, description, module, minutes], i) => ({
+    id: `task_${projectId}_${i + 1}`,
+    title,
+    description,
+    module,
+    estimatedMinutes: minutes,
+    assigneeId: ownerId,
+    status: i < done ? "completed" : i === done ? "in_progress" : i === done + 1 ? "ready" : "not_started",
+    dueDate: new Date(Date.parse(final) - (DEMO_TASKS.length - i) * 2 * day).toISOString(),
+    ...(i > 0 ? { dependencyIds: [`task_${projectId}_${i}`] } : {}),
+  }));
+  const deliverables: Deliverable[] = assignment.deliverables.map((d, i) => ({
+    id: d.id,
+    title: d.title,
+    format: d.format,
+    deadline: final,
+    ownerId,
+    requirementSource: "كراسة التكليف",
+    validationRules: d.format === "PDF" ? ["صيغة PDF", "لا يتجاوز 20 صفحة", "إفصاح الذكاء الاصطناعي في الملحق"] : [`صيغة ${d.format}`],
+    status: progress >= 100 ? "completed" : progress >= 60 - i * 10 ? "ready" : progress > 0 ? "in_progress" : "pending",
+  }));
+  const readiness: RubricCriterion["readiness"][] =
+    progress >= 100 ? ["covered", "covered", "covered"]
+    : progress >= 50 ? ["covered", "partial", "not_evidenced"]
+    : progress > 0 ? ["partial", "not_evidenced", "needs_revision"]
+    : ["not_evidenced", "not_evidenced", "not_evidenced"];
+  const rubric: RubricCriterion[] = assignment.rubric.map((r, i) => ({
+    ...r,
+    readiness: readiness[i % readiness.length],
+    evidenceIds: progress > 0 ? [`demo_pevidence_${projectId}_${(i % 4) + 1}`] : [],
+    levels: [
+      { title: "متميّز", description: "يستوفي المعيار بعمق ومع أدلة واضحة.", points: r.weighting },
+      { title: "جيد", description: "يستوفي المعيار مع بعض الثغرات.", points: Math.round(r.weighting * 0.75) },
+      { title: "مقبول", description: "استيفاء جزئي يحتاج مراجعة.", points: Math.round(r.weighting * 0.5) },
+    ],
+  }));
+  const requirements: Requirement[] = [
+    { id: `req_${projectId}_1`, label: "الموعد النهائي", value: new Date(final).toLocaleDateString("ar-KW", { timeZone: "Asia/Kuwait" }), category: "deadline", confidence: "high", source: "كراسة التكليف — الصفحة 1" },
+    { id: `req_${projectId}_2`, label: "صيغة التسليم", value: assignment.deliverables.map((d) => `${d.title} (${d.format})`).join("، "), category: "format", confidence: "high", source: "كراسة التكليف — قسم المخرجات" },
+    { id: `req_${projectId}_3`, label: "المصادر", value: "ثمانية مصادر محكّمة على الأقل بأسلوب توثيق موحّد", category: "source", confidence: "medium", source: "كراسة التكليف — قسم التقييم" },
+    { id: `req_${projectId}_4`, label: "سياسة الذكاء الاصطناعي", value: assignment.aiPolicy.summary, category: "policy", confidence: "high", source: "سياسة المقرر المنشورة" },
+    { id: `req_${projectId}_5`, label: "طريقة العمل", value: assignment.groupMode === "group" ? "عمل جماعي (3–4 طلاب) مع توزيع أدوار موثّق" : "عمل فردي", category: "team", confidence: assignment.groupMode === "group" ? "high" : "needs_confirmation", source: "كراسة التكليف" },
+  ];
+  return {
+    workspaceModules: ["research", "writing", "data", "presentation"],
+    requirements,
+    deliverables,
+    rubric,
+    tasks,
+    // نص الكراسة الأصلي، حتى يعمل زر «عرض الكراسة الأصلية» بدل أن يبقى معطّلًا.
+    originalAssignment: {
+      fileName: `${assignment.title}.pdf`,
+      fileType: "application/pdf",
+      text: [
+        assignment.title,
+        "",
+        assignment.instructions,
+        "",
+        "المخرجات المطلوبة:",
+        ...assignment.deliverables.map((d) => `• ${d.title} (${d.format})`),
+        "",
+        "معايير التقييم:",
+        ...assignment.rubric.map((r) => `• ${r.title} — ${r.weighting}٪: ${r.description}`),
+        "",
+        `سياسة الذكاء الاصطناعي: ${assignment.aiPolicy.summary}`,
+      ].join("\n"),
+    },
   };
 }
 
@@ -234,7 +357,9 @@ function buildSandbox(): DemoFirestore {
       specialization: pick(["علوم الحاسب", "إدارة الأعمال", "التربية", "القانون", "علم البيانات"], index),
       studyYear: String(2 + (index % 3)),
       academicTerm: "الفصل الأول 2026/2027",
-      onboardingCompleted: index % 9 !== 0,
+      onboardingCompleted: index % 9 !== 0 || index === 0,
+      // جواز الطالب الأول يعرض مشروعيه المنجزَين بدل قائمة فارغة.
+      ...(index === 0 ? { passportProjectIds: ["demo_project_1_3", "demo_project_1_2"], passportVisibility: "shared_link" as const, dailyStudyMinutes: 150 } : {}),
       updatedAt: ago(index % 14),
     };
     profiles.push({ id: userId, data: profile as unknown as Record<string, unknown> });
@@ -270,7 +395,8 @@ function buildSandbox(): DemoFirestore {
       title,
       term: "الفصل الأول 2026/2027",
       description,
-      outcomes: [...outcomes],
+      // «التفكير النقدي» مشترك بين ثلاثة مقررات، فيظهر تكراره في التوأم الأكاديمي.
+      outcomes: courseIndex < 3 ? [...outcomes, "التفكير النقدي"] : [...outcomes],
       aiPolicy: aiPolicy((courseIndex % 5) as AIUsagePolicy["level"]),
       status: courseIndex === COURSES.length - 1 ? "draft" : "active",
       createdAt: ago(120 - courseIndex * 5),
@@ -297,19 +423,27 @@ function buildSandbox(): DemoFirestore {
 
     // A believable roster: most students in most courses, not all in all.
     students.forEach(({ userId }, studentIndex) => {
-      if ((studentIndex + courseIndex) % 3 === 0) return;
+      // الطالب الأول مسجَّل في كل المقررات: مشاريعه موزّعة عليها، ولولا ذلك لرُفضت
+      // توضيحات تكليفاته داخل المشروع لأنه «غير مسجّل».
+      if (studentIndex !== 0 && (studentIndex + courseIndex) % 3 === 0) return;
       const enrollment: CourseEnrollmentRecord = {
         id: `${courseId}__${userId}`,
         tenantId: DEMO_TENANT_ID,
         courseId,
         userId,
-        role: studentIndex === 0 && courseIndex === 0 ? "teaching_assistant" : "student",
-        status: studentIndex % 17 === 0 ? "withdrawn" : "active",
+        role: "student",
+        status: studentIndex !== 0 && studentIndex % 17 === 0 ? "withdrawn" : "active",
         source: pick(["join_code", "invite", "roster", "sis"] as const, studentIndex + courseIndex),
         createdAt: ago(90 - studentIndex),
         updatedAt: ago(studentIndex % 20),
       };
       enrollments.push({ id: enrollment.id, data: enrollment as unknown as Record<string, unknown> });
+    });
+
+    // المساعد التدريسي مسجَّل مساعدًا في كل مقرر، فيرى تكليفاته وتوضيحاتها.
+    enrollments.push({
+      id: `${courseId}__demo_user_ta`,
+      data: { id: `${courseId}__demo_user_ta`, tenantId: DEMO_TENANT_ID, courseId, userId: "demo_user_ta", role: "teaching_assistant", status: "active", source: "roster", createdAt: ago(100), updatedAt: ago(5) },
     });
 
     // Two or three assignments per course, one still in draft.
@@ -363,7 +497,9 @@ function buildSandbox(): DemoFirestore {
   );
 
   students.forEach(({ userId, name }, studentIndex) => {
-    const projectCount = 1 + (studentIndex % 3);
+    /* الطالب الأول هو من تفتح عليه شاشة الطالب، فيُعطى ثلاثة مشاريع في مراحل
+     * مختلفة (جارٍ، بانتظار المراجعة، مكتمل) بدل مشروعٍ واحدٍ لم يبدأ. */
+    const projectCount = studentIndex === 0 ? 3 : 1 + (studentIndex % 3);
     for (let n = 0; n < projectCount; n += 1) {
       const index = studentIndex * 3 + n;
       const assignmentRow = pick(publishedAssignments, index);
@@ -371,9 +507,13 @@ function buildSandbox(): DemoFirestore {
       const courseRow = courses.find((row) => row.id === assignment.courseId)!;
       const course = courseRow.data as unknown as CourseRecord;
       const projectId = `demo_project_${studentIndex + 1}_${n + 1}`;
-      const status = pick(PROJECT_STATUSES, index);
+      const status =
+        studentIndex === 0
+          ? (["in_progress", "needs_review", "completed"] as const)[n]
+          : pick(PROJECT_STATUSES, index);
       const progress =
-        status === "completed" ? 100 : status === "not_started" ? 0 : 15 + Math.floor(random() * 70);
+        studentIndex === 0 && n === 0 ? 58
+        : status === "completed" ? 100 : status === "not_started" ? 0 : 15 + Math.floor(random() * 70);
 
       const project: ProjectDNA = {
         id: projectId,
@@ -391,11 +531,7 @@ function buildSandbox(): DemoFirestore {
         requiredSkills: [...course.outcomes].slice(0, 3),
         learningOutcomes: [...assignment.outcomes],
         requiredActions: ["جمع المصادر", "بناء المنهجية", "تحليل النتائج", "كتابة التقرير"],
-        workspaceModules: [],
-        requirements: [],
-        deliverables: [],
-        rubric: [],
-        tasks: [],
+        ...demoProjectStructure(projectId, assignment, progress, userId),
         deadlines: {
           final: assignment.deadline,
           timezone: "Asia/Kuwait",
@@ -406,11 +542,14 @@ function buildSandbox(): DemoFirestore {
           ],
         },
         citationStyle: pick(["APA 7", "IEEE", "Harvard"], index),
-        aiPolicy: assignment.aiPolicy,
+        // مربوط بالتكليف المنشور، فتعمل «مقارنة الفوج» وتوضيحات التكليف داخل المشروع.
+        aiPolicy: { ...assignment.aiPolicy, assignmentId: assignment.id, courseId: assignment.courseId },
         // Risk flags are what the instructor dashboard is for. A board with no
         // flags anywhere would hide the feature entirely.
         riskFlags:
-          index % 5 === 0 ? ["اقتراب الموعد النهائي مع تقدم منخفض"]
+          // نمطٌ متكرّر لدى الطالب الأول، فيظهر في «الأنماط المتكررة» بالدماغ التعلّمي.
+          studentIndex === 0 && n < 2 ? ["مصادر غير موثقة", "اقتراب الموعد النهائي مع تقدم منخفض"]
+          : index % 5 === 0 ? ["اقتراب الموعد النهائي مع تقدم منخفض"]
           : index % 7 === 0 ? ["استخدام ذكاء اصطناعي بدون إفصاح", "مصادر غير موثقة"]
           : [],
         estimatedWorkloadHours: 12 + (index % 28),
@@ -424,7 +563,7 @@ function buildSandbox(): DemoFirestore {
 
       projectMembers.push({
         id: `${projectId}__${userId}`,
-        data: { id: `${projectId}__${userId}`, tenantId: DEMO_TENANT_ID, projectId, userId, displayName: name, role: "owner", status: "active", createdAt: project.createdAt, updatedAt: project.updatedAt },
+        data: { id: `${projectId}__${userId}`, tenantId: DEMO_TENANT_ID, projectId, userId, email: `${userId}@demo.academicos.test`, displayName: name, role: "leader", status: "active", invitedBy: userId, createdAt: project.createdAt, updatedAt: project.updatedAt },
       });
 
       /* Project activity is read out of the audit log, keyed on `tenant`/`target`
@@ -493,7 +632,13 @@ function buildSandbox(): DemoFirestore {
           userId,
           skill: pick(["التحليل النقدي", "المنهجية البحثية", "الكتابة الأكاديمية", "العمل الجماعي", "تصوير البيانات"], index),
           level: pick(["emerging", "developing", "proficient", "advanced"], index),
-          summary: "دليل تعلّم مستخرج من نشاط الطالب داخل المشروع.",
+          summary: pick(DEMO_LEARNING_SUMMARIES, index),
+          // شكل LearningEvidenceRecord الذي تقرؤه شاشات الشفهي والدماغ التعلّمي.
+          source: pick(["viva", "revision", "decision", "manual"] as const, index),
+          evidence: [
+            { label: "المهارة", value: pick(["التحليل النقدي", "المنهجية البحثية", "الكتابة الأكاديمية", "العمل الجماعي", "تصوير البيانات"], index) },
+            { label: "الدليل", value: pick(["شرح اختيار حجم العينة بلغته الخاصة", "عدّل الفرضية بعد ملاحظة الأستاذ", "قارن بين مصدرين متعارضين وحسم بينهما", "وثّق توزيع الأدوار داخل الفريق"], index) },
+          ],
           confidence: Number((0.6 + random() * 0.38).toFixed(2)),
           createdAt: ago(index % 30),
           updatedAt: ago(index % 12),
@@ -508,8 +653,12 @@ function buildSandbox(): DemoFirestore {
             tenantId: DEMO_TENANT_ID,
             projectId,
             userId,
-            status: pick(["scheduled", "in_progress", "completed"], index),
-            questionCount: 6,
+            status: index % 12 === 0 ? "completed" : "active",
+            mode: pick(["normal", "strict", "easy"] as const, index),
+            questions: DEMO_VIVA_QUESTIONS.map(([prompt, focus], q) => ({ id: `vq_${index + 1}_${q + 1}`, prompt, focus })),
+            responses: DEMO_VIVA_QUESTIONS.slice(0, index % 12 === 0 ? 4 : 2).map(([, , answer], q) => ({ questionId: `vq_${index + 1}_${q + 1}`, answer, updatedAt: ago(index % 8) })),
+            ...(index % 12 === 0 ? { completedAt: ago(index % 8) } : {}),
+            questionCount: 4,
             score: index % 3 === 0 ? Number((60 + random() * 38).toFixed(1)) : undefined,
             createdAt: ago(index % 20),
             updatedAt: ago(index % 8),
@@ -543,11 +692,7 @@ function buildSandbox(): DemoFirestore {
       requiredSkills: [...course.outcomes].slice(0, 2),
       learningOutcomes: [...course.outcomes].slice(0, 3),
       requiredActions: ["مراجعة الأدبيات", "بناء المعايير", "تجريب على شعبة", "التوثيق"],
-      workspaceModules: [],
-      requirements: [],
-      deliverables: [],
-      rubric: [],
-      tasks: [],
+      ...demoProjectStructure(projectId, pick(publishedAssignments, n).data as unknown as CourseAssignmentRecord, 30 + n * 15, DEMO_INSTRUCTOR_ID),
       deadlines: {
         final: ahead(9 + n * 6),
         timezone: "Asia/Kuwait",
@@ -569,7 +714,7 @@ function buildSandbox(): DemoFirestore {
     projects.push({ id: projectId, data: project as unknown as Record<string, unknown> });
     projectMembers.push({
       id: `${projectId}__${DEMO_INSTRUCTOR_ID}`,
-      data: { id: `${projectId}__${DEMO_INSTRUCTOR_ID}`, tenantId: DEMO_TENANT_ID, projectId, userId: DEMO_INSTRUCTOR_ID, displayName: "د. سارة الخالد", role: "owner", status: "active", createdAt: project.createdAt, updatedAt: project.updatedAt },
+      data: { id: `${projectId}__${DEMO_INSTRUCTOR_ID}`, tenantId: DEMO_TENANT_ID, projectId, userId: DEMO_INSTRUCTOR_ID, email: `${DEMO_INSTRUCTOR_ID}@demo.academicos.test`, displayName: "د. سارة الخالد", role: "leader", status: "active", invitedBy: DEMO_INSTRUCTOR_ID, createdAt: project.createdAt, updatedAt: project.updatedAt },
     });
     ["أنشأ المشروع", "حدّث المعايير", "أضاف نتائج التجريب"].forEach((action, a) => {
       const id = `demo_activity_staff_${n + 1}_${a + 1}`;
@@ -584,7 +729,9 @@ function buildSandbox(): DemoFirestore {
         userId: DEMO_INSTRUCTOR_ID,
         skill: pick(["تصميم التقويم", "المنهجية البحثية", "تحليل السياسات"], n),
         level: "advanced",
-        summary: "دليل تعلّم مستخرج من نشاط المشروع.",
+        summary: "صاغ معايير تقويم قابلة للقياس وجرّبها على شعبة فعلية.",
+        source: "decision",
+        evidence: [{ label: "المهارة", value: pick(["تصميم التقويم", "المنهجية البحثية", "تحليل السياسات"], n) }, { label: "الدليل", value: "نسخة المعايير المعتمدة ونتائج التجريب" }],
         confidence: 0.88,
         createdAt: ago(n + 3),
         updatedAt: ago(n),
@@ -610,15 +757,23 @@ function buildSandbox(): DemoFirestore {
         tenantId: DEMO_TENANT_ID,
         userId: pick(students, index).userId,
         userName: pick(students, index).name,
+        displayName: pick(students, index).name,
+        email: `${pick(students, index).userId}@demo.academicos.test`,
+        category: pick(["technical", "academic", "academic", "account"] as const, index),
         subject: pick(["تعذر رفع ملف التسليم", "طلب تمديد الموعد النهائي", "سؤال عن سياسة الذكاء الاصطناعي", "مشكلة في رمز الانضمام"], index),
-        body: "رسالة دعم مصطنعة في البيئة التجريبية.",
+        body: pick(DEMO_TICKET_BODIES, index),
+        message: pick(DEMO_TICKET_BODIES, index),
         status: pick(["open", "in_progress", "resolved"], index),
-        priority: pick(["low", "normal", "high"], index),
+        priority: pick(["normal", "important", "critical"], index),
+        ...(index % 3 === 1 ? { assignedTo: "demo_user_admin" } : {}),
         createdAt: ago(index % 25),
         updatedAt: ago(index % 9),
       },
     })),
   );
+
+  // الطبقة الثانية: كل ما تقرؤه الشاشات خارج الهيكل الأساسي (انظر demoSeedDepth.ts).
+  seedDemoDepth(store, { tenantId: DEMO_TENANT_ID, students, courses, assignments, projects });
 
   return store;
 }

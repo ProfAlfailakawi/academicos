@@ -833,3 +833,112 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .pe-print__mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5pt; word-break: break-all; }
   @page { margin: 16mm; }
 }
+
+/* ─── Mobile & tablet pass (≤1023px) ────────────────────────────────────────
+   Desktop (≥1024px) is untouched: every rule below is scoped to the phone /
+   tablet breakpoint. Goals: nothing below 12px, 44px touch targets, names
+   and labels that wrap instead of hiding behind an ellipsis, and flex rows
+   that never crush a word into a column of single letters. */
+@media (max-width: 1023px) {
+  /* Legibility floor: labels, chips and meta lines were 9–11px. */
+  .eyebrow, .status-pill, .student-proof-chip,
+  .text-\[9px\], .text-\[10px\], .text-\[11px\], [class~="text-[11px]"],
+  .acos-lockup__caption, .acos-splash__status, .identity-card__foot > span, .onboard-hint, .onboard-hint kbd,
+  .tone-chip, .hero-el, .proof-mini, .understanding-step small, .understanding-step__number, .quality-badge,
+  .xray-score span, .price-orbit__currency, .plan-card__popular, .plan-price span, .plan-card > p, .plan-card li,
+  .quality-ring__dial span, .choice-card__sample, .public-header .ui-button { font-size: 12px !important; }
+  .public-header .ui-button { height: auto !important; min-height: 44px; }
+  .eyebrow { letter-spacing: .06em; }
+
+  /* `overflow-wrap:anywhere` shrinks an element's min-content width to one
+     glyph, so squeezed flex items (chips, buttons, names) collapsed into a
+     vertical stack of letters. `break-word` still breaks a long token when it
+     truly does not fit, but keeps whole words together otherwise. */
+  .app-main :where(h1,h2,h3,p,dd,dt,label,button,a,span,div) { overflow-wrap: break-word; }
+  .app-main :where(pre,code,[dir="ltr"]) { overflow-wrap: anywhere; }
+  .app-main .break-all { word-break: break-all; }
+
+  /* Names and titles wrap on phones rather than hiding behind an ellipsis. */
+  .app-main .truncate:not(.keep-truncate) {
+    white-space: normal;
+    text-overflow: clip;
+    overflow: visible;
+  }
+  .app-main .line-clamp-2, .app-main .line-clamp-1, .app-main .line-clamp-3 {
+    -webkit-line-clamp: unset; display: block; overflow: visible;
+  }
+
+  /* Touch targets. */
+  .ui-button, .ui-button:not([data-size="icon"]) { min-height: 44px !important; }
+  .ui-button[data-size="icon"] { min-width: 44px; min-height: 44px; }
+  .app-main summary { min-height: 44px; }
+  .field, .app-main select, .app-main textarea { min-height: 44px; }
+  /* iOS zooms the page when a focused field is under 16px. */
+  .app-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app-main select, .app-main textarea, .field { font-size: 16px; }
+  .app-main input[type="checkbox"], .app-main input[type="radio"] { min-width: 20px; min-height: 20px; }
+  .app-main input[type="checkbox"]:not(.sr-only), .app-main input[type="radio"]:not(.sr-only) { margin: 12px; }
+  .app-main :where(button, a[href], [role="button"], [role="tab"]):not(.ui-button):not(.inline-link) { min-height: 44px; }
+  .app-main :where(button, [role="button"], [role="tab"]):not(.ui-button) { min-width: 44px; }
+
+  /* Skip link stays keyboard-only; off-screen it must not count as a target. */
+  .skip-link { min-height: 44px; display: inline-flex; align-items: center; }
+
+  /* Top bar: fewer, bigger controls. Theme + logout live in the drawer below 640px. */
+  .app-topbar { height: auto !important; min-height: 64px; padding-top: env(safe-area-inset-top); }
+  .app-topbar .language-switcher { position: relative; min-height: 44px; min-width: 56px; justify-content: center; padding-inline: .55rem; }
+  .app-topbar .language-switcher svg { display: inline-block !important; }
+  .app-topbar .language-switcher__code { display: inline; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+  .app-topbar .language-switcher select { position: absolute; inset: 0; opacity: 0; max-width: none; width: 100%; min-height: 44px; font-size: 16px; }
+  .demo-pill { padding: 0 .35rem !important; min-height: 44px; }
+  .demo-pill__role { height: 44px !important; min-height: 44px; font-size: 13px !important; padding-inline: .4rem !important; }
+  .demo-pill__reset { height: 44px !important; width: 40px !important; }
+
+  /* Bottom dock: the full label, on up to two lines, never an ellipsis. */
+  .mobile-nav-link { min-height: 52px; padding-block: 4px; font-size: 12px !important; }
+  .mobile-nav-link__label {
+    white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+    text-align: center; line-height: 1.15;
+  }
+
+  /* Dialogs fit the viewport and scroll inside themselves. */
+  [role="dialog"], [aria-modal="true"] { max-height: 100dvh; }
+  [role="dialog"] > * { max-width: 100%; }
+
+  /* Wide tables become horizontally scrollable panels instead of pushing the page. */
+  .app-main table:not(.mobile-cards) { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+.language-switcher__code { display: none; }
+@media (max-width: 639px) {
+  .app-topbar .topbar-theme, .app-topbar .topbar-logout { display: none !important; }
+  .demo-pill__flask, .demo-pill__reset { display: none !important; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .demo-pill__flask { display: none !important; }
+}
+
+/* Data tables become stacked cards on phones: each row is a card, each cell
+   carries its column name (data-label), so nothing hides off-screen. */
+@media (max-width: 767px) {
+  table.mobile-cards { min-width: 0 !important; display: block; }
+  .mobile-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .mobile-cards tbody, .mobile-cards tr, .mobile-cards td { display: block; width: 100%; }
+  .mobile-cards tr {
+    border: 1px solid var(--line) !important; border-radius: 16px; padding: 10px 14px; margin-bottom: 12px;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+  }
+  .mobile-cards td { padding: 7px 0 !important; text-align: start !important; max-width: none !important; }
+  .mobile-cards td[data-label] {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border-top: 1px dashed color-mix(in srgb, var(--line) 80%, transparent);
+  }
+  .mobile-cards td[data-label]::before {
+    content: attr(data-label); flex-shrink: 0; color: var(--muted); font-size: 12px; font-weight: 600;
+  }
+  .mobile-cards td[data-label] > * { max-width: 65%; }
+  .mobile-cards td .field { width: auto; }
+}
+@media (max-width: 1023px) {
+  .app-sidebar--mobile .sidebar-nav-link { min-height: 44px; }
+  .app-main label:has(> input, > select, > textarea) { min-height: 0; }
+}

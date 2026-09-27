@@ -196,7 +196,7 @@ export function ControlPlane() {
               </span>
             </div>
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="mobile-cards w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="text-[11px] muted border-b hairline">
                     <th className="text-start py-3 font-medium">{t('ctrl.col.project')}</th>
@@ -216,11 +216,11 @@ export function ControlPlane() {
                           {formatDateTime(p.updatedAt, locale)}
                         </div>
                       </td>
-                      <td>{p.course}</td>
-                      <td>
+                      <td data-label={t('ctrl.col.course')}>{p.course}</td>
+                      <td data-label={t('ctrl.col.status')}>
                         <StatusPill status={p.status} />
                       </td>
-                      <td>
+                      <td data-label={t('ctrl.col.progress')}>
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 rounded-full bg-[var(--line)] overflow-hidden">
                             <div style={{ width: `${p.progress}%` }}
@@ -229,8 +229,8 @@ export function ControlPlane() {
                           <span className="text-xs">{p.progress}%</span>
                         </div>
                       </td>
-                      <td>{p.riskCount}</td>
-                      <td>L{p.aiPolicyLevel}</td>
+                      <td data-label={t('ctrl.col.risks')}>{p.riskCount}</td>
+                      <td data-label={t("ui.aiPolicy")}>L{p.aiPolicyLevel}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -255,7 +255,7 @@ export function ControlPlane() {
                     className="flex items-center justify-between rounded-xl bg-[var(--bg)] border hairline p-3"
                   >
                     <span className="text-xs font-semibold">{k}</span>
-                    <span className="text-[11px] muted max-w-40 truncate">
+                    <span className="text-[11px] muted max-w-40 truncate" title={String(v)}>
                       {String(v)}
                     </span>
                   </div>

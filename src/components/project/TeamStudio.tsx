@@ -127,7 +127,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <p className="body-copy mt-2">{t("team.studioDesc")}</p>
               </div>
               <span
-                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
+                className={`shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
               >
                 {project.collaborationMode === "group"
                   ? t("ui.groupProject")
@@ -143,7 +143,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <label className="text-[11px] font-semibold muted">
                   {t("team.inviteLabel")}
                 </label>
-                <div className="mt-1.5 flex gap-2">
+                <div className="mt-1.5 flex flex-col gap-2 sm:flex-row">
                   <input
                     type="email"
                     className="field"
@@ -154,6 +154,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                   />
                   <Button
                     type="submit"
+                    className="shrink-0"
                     disabled={busy === "invite" || !email.trim()}
                   >
                     {busy === "invite" ? (
@@ -244,11 +245,11 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     key={m.id}
                     className="rounded-xl border hairline p-3 flex items-center gap-3"
                   >
-                    <div className="h-9 w-9 rounded-xl soft-bg grid place-items-center">
+                    <div className="h-9 w-9 shrink-0 rounded-xl soft-bg grid place-items-center">
                       <Mail size={15} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold truncate">
+                      <div className="text-xs font-semibold break-words" title={m.displayName || m.email}>
                         {m.displayName || m.email}
                       </div>
                       <div className="text-[11px] muted mt-1">
@@ -256,14 +257,19 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                           ? t("team.pendingInvite")
                           : m.role === "leader"
                             ? t("team.roleLeader")
-                            : t("team.roleMember")}{" "}
-                        · {m.email}
+                            : t("team.roleMember")}
+                        <span className="hidden sm:inline">{" "}· {m.email}</span>
+                      </div>
+                      {/* البريد في سطرٍ مستقل باتجاه LTR: كان يتداخل مع اسم العضو وزر الإزالة على الهاتف. */}
+                      <div dir="ltr" className="sm:hidden text-[11px] muted mt-0.5 break-all text-start" title={m.email}>
+                        {m.email}
                       </div>
                     </div>
                     {isOwner && (
                       <Button
                         size="icon"
                         variant="ghost"
+                        className="shrink-0"
                         aria-label={t("team.revokeMembership")}
                         disabled={busy === m.id}
                         onClick={() => revoke(m)}
@@ -355,13 +361,13 @@ function MemberRow({
   const { t } = useI18n();
   return (
     <div className="rounded-xl border hairline p-3 flex items-center gap-3">
-      <div className="h-9 w-9 rounded-xl tone-tile">
+      <div className="h-9 w-9 shrink-0 rounded-xl tone-tile">
         <UsersRound size={15} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-xs font-semibold">{name}</div>
-        <div className="text-[11px] muted mt-1">
-          {owner ? t("ui.ownerLeader") : t("ui.member")} · {short(meta)}
+        <div className="text-xs font-semibold break-words">{name}</div>
+        <div className="text-[11px] muted mt-1" title={meta}>
+          {owner ? t("ui.ownerLeader") : t("ui.member")} · <bdi dir="ltr">{short(meta)}</bdi>
         </div>
       </div>
     </div>

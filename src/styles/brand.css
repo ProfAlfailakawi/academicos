@@ -545,10 +545,9 @@ html[dir="rtl"] .onboarding-invite__fill {
   gap: 1rem;
   border-radius: 20px;
   padding: 1.15rem 1.2rem;
-  border: 1px solid color-mix(in srgb, var(--tone, var(--brand)) 20%, var(--line));
-  background:
-    linear-gradient(115deg, color-mix(in srgb, var(--tone, var(--brand)) 12%, transparent), transparent 62%),
-    var(--panel);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow-xs);
 }
 @media (min-width: 768px) {
   .studio-head {

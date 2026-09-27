@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { DnaStepper } from "../dna/DnaKit";
+import { useDnaStepStateText } from "../dna/useDnaStepStateText";
 import {
   AlertTriangle,
   ArrowRight,
@@ -506,13 +508,15 @@ function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
 
 function ProjectFlow({ document }: { document: ProjectDocument }) {
   const { t } = useI18n();
+  const stateText = useDnaStepStateText();
   const steps = [
     { label: t("writer.flowAssignment"), icon: FileSearch, done: true },
     { label: t("writer.flowProject"), icon: BookOpenCheck, done: document.sections.length > 0 },
     { label: t("writer.flowSources"), icon: ShieldCheck, done: document.quality.sourceConfidence >= 60 },
     { label: t("writer.flowViva"), icon: Mic2, done: document.quality.discussability >= 75 },
   ];
-  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><div className="grid grid-cols-4 gap-2">{steps.map(({ label, icon: Icon, done }, index) => <div key={label} className={`project-flow-step ${done ? "is-done" : ""}`}><span className="project-flow-icon"><Icon size={16} /></span><span className="hidden sm:block text-[11px] font-semibold">{label}</span>{index < steps.length - 1 && <ArrowRight size={13} className="project-flow-arrow directional-icon" />}</div>)}</div></section>;
+  const firstOpen = steps.findIndex((step) => !step.done);
+  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><DnaStepper size="sm" stateText={stateText} ariaLabel={steps.map((step) => step.label).join(" · ")} steps={steps.map(({ label, icon: Icon, done }, index) => ({ key: String(index), label, icon: done ? undefined : <Icon size={16} />, state: done ? "done" : index === firstOpen ? "current" : "pending" }))} /></section>;
 }
 
 function QualityCard({ document }: { document: ProjectDocument }) {

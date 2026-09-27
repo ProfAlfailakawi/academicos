@@ -71,7 +71,9 @@ import {
   Presentation,
   Award,
   ArrowRightLeft,
+  Layers,
 } from "lucide-react";
+import { DnaRing, DnaStatusHeader } from "../components/dna/DnaKit";
 
 const tabs = [
   ["copilot", "pw.tabCopilot", Bot],
@@ -106,7 +108,6 @@ export function ProjectWorkspace() {
   const [showDossier, setShowDossier] = useState(false);
   const [showIntegrityCheck, setShowIntegrityCheck] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [showMoreTools, setShowMoreTools] = useState(false);
   const [showRescue, setShowRescue] = useState(false);
   const [rescueMinutes, setRescueMinutes] = useState(180);
   const [rescueLoading, setRescueLoading] = useState(false);
@@ -316,70 +317,41 @@ export function ProjectWorkspace() {
           {t("offline.projectCopy").replace("{date}", formatDate(offlineCopy, locale, { dateStyle: "medium", timeStyle: "short" }))}
         </div>
       )}
-      <header className="panel-flat rounded-2xl p-5 md:p-6">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-5 justify-between">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap text-xs muted">
-              <Button
-                asChild
-                size="icon"
-                variant="ghost"
-                className="-ms-2"
-                aria-label={t("pw.backToProjectsAria")}
-              >
+      <header className="workspace-head">
+        <DnaStatusHeader
+          as="div"
+          divider="dashed"
+          headingLevel={2}
+          icon={<BookOpenCheck size={22} />}
+          title={<span className="workspace-head__title">{project.title}</span>}
+          subtitle={
+            <span className="flex items-center gap-2 flex-wrap">
+              <Button asChild size="icon" variant="ghost" className="-ms-2" aria-label={t("pw.backToProjectsAria")}>
                 <Link to="/app/projects">
                   <ArrowLeft size={18} className="directional-icon" />
                 </Link>
               </Button>
               <span>{project.course}</span>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <span>{project.academicDomain}</span>
               <StatusPill status={project.status} />
+            </span>
+          }
+          actions={
+            <div className="flex gap-2 flex-wrap items-center">
+              <DnaRing value={project.progress} size={48} ariaLabel={`${project.progress}%`} />
+              <Button onClick={runAudit} disabled={auditing} className="dna-btnp shadow-sm">
+                {auditing ? <InlineLoader size={16}/> : <ClipboardCheck size={16} />}
+                {t("pw.submissionReady")}
+              </Button>
+              <Button variant="outline" onClick={() => runRescue()} disabled={rescueLoading}>
+                {rescueLoading ? <InlineLoader size={16}/> : <Clock3 size={16} />}
+                {t("pw.rescueMe")}
+              </Button>
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-[-0.03em] mt-2">
-              {project.title}
-            </h1>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="tone-meter max-w-md flex-1">
-                <div style={{ width: `${project.progress}%` }}
-                />
-              </div>
-              <span className="text-xs muted mono-number">
-                {project.progress}%
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <Button onClick={runAudit} disabled={auditing} className="shadow-sm">
-              {auditing ? <InlineLoader size={16}/> : <ClipboardCheck size={16} />}
-              {t("pw.submissionReady")}
-            </Button>
-            <Button variant="outline" onClick={() => runRescue()} disabled={rescueLoading}>
-              {rescueLoading ? <InlineLoader size={16}/> : <Clock3 size={16} />}
-              {t("pw.rescueMe")}
-            </Button>
-            <details className="relative max-sm:open:basis-full">
-              <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border hairline bg-[var(--panel)] hover:bg-[var(--panel-2)]">
-                {t("pw.submissionTools")} <ChevronDown size={14} />
-              </summary>
-              <div className="absolute z-30 start-0 max-sm:static max-sm:w-full mt-2 w-64 max-w-[calc(100vw-1.5rem)] panel rounded-xl border hairline shadow-xl p-2 space-y-1">
-                <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
-                  <FileCheck2 size={15} /> {t("pw.submissionBundle")}
-                </a>
-                <button onClick={() => setShowIntegrityCheck(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
-                  <Fingerprint size={15} /> {t("pw.styleIntegrity")}
-                </button>
-                <button onClick={() => setShowDossier(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
-                  <ShieldCheck size={15} /> {t("pw.defenseDossier")}
-                </button>
-                <button onClick={openOriginal} disabled={!project.originalAssignment?.text && !project.originalAssignment?.fileName && !project.originalAssignment?.attachments?.length} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] disabled:opacity-40 text-start">
-                  <FileText size={15} /> {t("pw.originalAssignment")}
-                </button>
-              </div>
-            </details>
-          </div>
-        </div>
-        <div className="mt-5 pt-4 border-t hairline">
+          }
+        >
+        <div>
           <div className="flex flex-wrap gap-2 items-center">
             {tabs
               .filter(([key]) => ["writer", "evidence", "viva"].includes(key))
@@ -388,30 +360,53 @@ export function ProjectWorkspace() {
                 (key !== "evidence" || featureFlags.EvidenceStudio !== false),
               )
               .map(([key, label, Icon]) => (
-                <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
+                <button key={key} onClick={() => setTab(key)} aria-pressed={tab === key} className={`focus-ring rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
                   <Icon size={16} />{t(label)}
                 </button>
               ))}
-            <button onClick={() => setShowMoreTools((v) => !v)} className={`focus-ring rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${showMoreTools || !["writer","evidence","viva"].includes(tab) ? "soft-bg" : "muted hover:bg-[var(--panel-2)]"}`}>
-              <Sparkles size={16} /> {t("pw.more")} <ChevronDown size={14} className={showMoreTools ? "rotate-180 transition" : "transition"} />
-            </button>
-          </div>
-          {(showMoreTools || !["writer","evidence","viva"].includes(tab)) && (
-            <div className="workspace-tools-strip mt-3 pt-3 border-t hairline flex flex-wrap gap-1 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:-mx-1 max-sm:px-1 max-sm:pb-1 max-sm:snap-x">
-              {tabs
-                .filter(([key]) => !["writer", "evidence", "viva"].includes(key))
-                .filter(([key]) =>
-                  (key !== "copilot" || featureFlags.ProjectCopilot !== false) &&
-                  (key !== "team" || project.collaborationMode === "group"),
-                )
-                .map(([key, label, Icon]) => (
-                  <button key={key} onClick={() => setTab(key)} aria-pressed={tab === key} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 max-sm:shrink-0 max-sm:whitespace-nowrap max-sm:snap-start max-sm:border max-sm:hairline ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
-                    <Icon size={14} />{t(label)}
+            <details className="workspace-more relative max-sm:open:basis-full">
+              <summary className={`focus-ring list-none cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2 ${!["writer","evidence","viva"].includes(tab) ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
+                <Layers size={16} /> {t("pw.more")}
+                {!["writer","evidence","viva"].includes(tab) && (() => { const active = tabs.find(([key]) => key === tab); return active ? <span className="workspace-more__current">· {t(active[1])}</span> : null; })()}
+                <ChevronDown size={14} className="workspace-more__chev" />
+              </summary>
+              <div
+                className="absolute z-30 end-0 max-sm:static max-sm:w-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] panel rounded-2xl border hairline shadow-xl p-2"
+                onClick={(event) => { if ((event.target as HTMLElement).closest("button,a")) (event.currentTarget.parentElement as HTMLDetailsElement).open = false; }}
+              >
+                <div className="grid grid-cols-1 gap-0.5">
+                  {tabs
+                    .filter(([key]) => !["writer", "evidence", "viva"].includes(key))
+                    .filter(([key]) =>
+                      (key !== "copilot" || featureFlags.ProjectCopilot !== false) &&
+                      (key !== "team" || project.collaborationMode === "group"),
+                    )
+                    .map(([key, label, Icon]) => (
+                      <button key={key} onClick={() => setTab(key)} aria-pressed={tab === key} className={`focus-ring w-full rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 text-start ${tab === key ? "brand-soft-bg brand-text" : "hover:bg-[var(--panel-2)]"}`}>
+                        <Icon size={15} />{t(label)}
+                      </button>
+                    ))}
+                </div>
+                <div className="mt-2 pt-2 border-t border-dashed hairline space-y-0.5">
+                  <div className="px-3 pb-1 text-[11px] font-semibold muted">{t("pw.submissionTools")}</div>
+                  <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
+                    <FileCheck2 size={15} /> {t("pw.submissionBundle")}
+                  </a>
+                  <button onClick={() => setShowIntegrityCheck(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                    <Fingerprint size={15} /> {t("pw.styleIntegrity")}
                   </button>
-                ))}
-            </div>
-          )}
+                  <button onClick={() => setShowDossier(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">
+                    <ShieldCheck size={15} /> {t("pw.defenseDossier")}
+                  </button>
+                  <button onClick={openOriginal} disabled={!project.originalAssignment?.text && !project.originalAssignment?.fileName && !project.originalAssignment?.attachments?.length} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] disabled:opacity-40 text-start">
+                    <FileText size={15} /> {t("pw.originalAssignment")}
+                  </button>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
+        </DnaStatusHeader>
       </header>
       {tab === "writer" && (
         <ProjectWriterStudio

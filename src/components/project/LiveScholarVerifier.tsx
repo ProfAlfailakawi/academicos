@@ -130,19 +130,19 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-success/10 via-success/8 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="studio-head">
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-success/20 text-success grid place-items-center shrink-0">
+          <div className="h-11 w-11 rounded-2xl brand-soft-bg brand-text grid place-items-center shrink-0">
             <ShieldCheck size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold tracking-wider uppercase text-success">{t("source.title")}</span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-success/15 text-success font-semibold border border-success/20 flex items-center gap-1">
+              <span className="eyebrow text-brand">{t("source.title")}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-brand/15 text-brand font-semibold border border-brand/20 flex items-center gap-1">
                 <Database size={10} /> {t("ui.crossrefLive")}
               </span>
             </div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("source.title")}</h2>
+            <h2 className="studio-head__title">{t("source.title")}</h2>
             <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">
               {t("source.description")}
             </p>

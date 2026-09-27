@@ -32,18 +32,18 @@ export function RequirementMatrixStudio({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-insight/10 via-insight/8 to-transparent p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="studio-head">
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-insight/20 text-insight grid place-items-center shrink-0"><ListChecks size={22} /></div>
+          <div className="h-11 w-11 rounded-2xl brand-soft-bg brand-text grid place-items-center shrink-0"><ListChecks size={22} /></div>
           <div>
-            <div className="text-[11px] font-bold tracking-wider uppercase text-insight">{t("ui.requirementTruthMatrix")}</div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("req.title")}</h2>
+            <div className="eyebrow text-brand">{t("ui.requirementTruthMatrix")}</div>
+            <h2 className="studio-head__title">{t("req.title")}</h2>
             <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">{t("req.description")}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 min-w-[220px]">
-          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.extracted")}</div><div className="text-xl font-bold font-mono text-insight">{requirements.length}</div></div>
-          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.rubricCriteria")}</div><div className="text-xl font-bold font-mono text-insight">{rubric.length}</div></div>
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.extracted")}</div><div className="text-xl font-bold font-mono text-brand">{requirements.length}</div></div>
+          <div className="rounded-xl border hairline bg-[var(--panel)] p-3"><div className="text-[11px] text-muted-foreground">{t("req.rubricCriteria")}</div><div className="text-xl font-bold font-mono text-brand">{rubric.length}</div></div>
         </div>
       </div>
 

@@ -223,7 +223,7 @@ export function ControlPlane() {
                       <td data-label={t('ctrl.col.progress')}>
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 rounded-full bg-[var(--line)] overflow-hidden">
-                            <div style={{ width: `${p.progress}%` }}
+                            <div className="h-full rounded-full bg-[var(--brand)]" style={{ width: `${p.progress}%` }}
                             />
                           </div>
                           <span className="text-xs">{p.progress}%</span>

@@ -35,7 +35,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
       <Card>
         <CardContent>
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0" style={{ background: 'linear-gradient(135deg,var(--accent-soft),transparent)' }}><Repeat size={20} style={{ color: 'var(--accent)' }} /></div>
+            <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0 brand-soft-bg brand-text"><Repeat size={20} /></div>
             <div><div className="eyebrow">{t('adv.ra.eyebrow')}</div><h2 className="section-title mt-0.5">{t('adv.ra.title')}</h2></div>
           </div>
           {brief && <p className="body-copy mt-3">{brief.instruction}</p>}

@@ -128,6 +128,13 @@ export function ProjectWorkspace() {
     EvidenceStudio: true,
   });
 
+  // On phones the extra tools are a horizontal strip; keep the active one in view.
+  useEffect(() => {
+    const active = document.querySelector<HTMLElement>('.workspace-tools-strip [aria-pressed="true"]');
+    const strip = active?.parentElement;
+    if (active && strip && strip.scrollWidth > strip.clientWidth)
+      active.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [tab]);
   useEffect(() => {
     api
       .project(id)
@@ -351,11 +358,11 @@ export function ProjectWorkspace() {
               {rescueLoading ? <InlineLoader size={16}/> : <Clock3 size={16} />}
               {t("pw.rescueMe")}
             </Button>
-            <details className="relative">
+            <details className="relative max-sm:open:basis-full">
               <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border hairline bg-[var(--panel)] hover:bg-[var(--panel-2)]">
                 {t("pw.submissionTools")} <ChevronDown size={14} />
               </summary>
-              <div className="absolute z-30 start-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] panel rounded-xl border hairline shadow-xl p-2 space-y-1">
+              <div className="absolute z-30 start-0 max-sm:static max-sm:w-full mt-2 w-64 max-w-[calc(100vw-1.5rem)] panel rounded-xl border hairline shadow-xl p-2 space-y-1">
                 <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                   <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                 </a>
@@ -390,7 +397,7 @@ export function ProjectWorkspace() {
             </button>
           </div>
           {(showMoreTools || !["writer","evidence","viva"].includes(tab)) && (
-            <div className="mt-3 pt-3 border-t hairline flex flex-wrap gap-1">
+            <div className="workspace-tools-strip mt-3 pt-3 border-t hairline flex flex-wrap gap-1 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:-mx-1 max-sm:px-1 max-sm:pb-1 max-sm:snap-x">
               {tabs
                 .filter(([key]) => !["writer", "evidence", "viva"].includes(key))
                 .filter(([key]) =>
@@ -398,7 +405,7 @@ export function ProjectWorkspace() {
                   (key !== "team" || project.collaborationMode === "group"),
                 )
                 .map(([key, label, Icon]) => (
-                  <button key={key} onClick={() => setTab(key)} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
+                  <button key={key} onClick={() => setTab(key)} aria-pressed={tab === key} className={`focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2 max-sm:shrink-0 max-sm:whitespace-nowrap max-sm:snap-start max-sm:border max-sm:hairline ${tab === key ? "brand-soft-bg brand-text" : "muted hover:bg-[var(--panel-2)]"}`}>
                     <Icon size={14} />{t(label)}
                   </button>
                 ))}
@@ -834,7 +841,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
           </span>
         </div>
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="mobile-cards w-full text-sm min-w-[700px]">
             <thead>
               <tr className="text-start text-[11px] muted border-b hairline">
                 <th className="text-start py-3 font-semibold">{t("pw.requirement")}</th>
@@ -848,9 +855,9 @@ function Requirements({ project }: { project: ProjectDNA }) {
               {project.requirements.map((r) => (
                 <tr key={r.id} className="border-b hairline last:border-0">
                   <td className="py-3 font-semibold">{r.label}</td>
-                  <td className="py-3">{r.value}</td>
-                  <td className="py-3 muted">{t(`req.category.${r.category}`)}</td>
-                  <td className="py-3">
+                  <td data-label={t("pw.value")} className="py-3">{r.value}</td>
+                  <td data-label={t("pw.category")} className="py-3 muted">{t(`req.category.${r.category}`)}</td>
+                  <td data-label={t("pw.confidence")} className="py-3">
                     <span
                       className={`rounded-full px-2 py-1 text-[11px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
                     >
@@ -859,7 +866,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
                         : t(`req.confidence.${r.confidence}`)}
                     </span>
                   </td>
-                  <td className="py-3 muted max-w-xs truncate">
+                  <td data-label={t("pw.source")} className="py-3 muted max-w-xs truncate" title={r.source || undefined}>
                     {r.source || "—"}
                   </td>
                 </tr>

@@ -498,9 +498,26 @@ export function Layout() {
               userName={user?.displayName || "AcademicOS"}
               role={user?.role || "student"}
               nav={nav}
-              onLogout={logout}
+              onLogout={demo ? endDemo : logout}
+              logoutLabel={demo ? t("demo.exit") : undefined}
               branding={branding}
               academicWorkMode={academicWorkMode}
+              quickSettings={
+                /* على الهاتف ينتقل مبدّل المظهر وإعادة تعيين العرض إلى الدرج كي
+                   يتّسع الشريط العلوي لأزرارٍ بمقاس اللمس (44px) بلا ازدحام. */
+                <div className="drawer-quick sm:hidden mt-3 grid gap-2">
+                  <button type="button" onClick={cycleTheme} className="focus-ring sidebar-nav-link flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm muted hover:bg-[var(--panel-2)]">
+                    {theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
+                    {t("layout.changeTheme")}
+                  </button>
+                  {demo && (
+                    <button type="button" onClick={() => void resetDemo()} className="focus-ring sidebar-nav-link flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-amber-600 hover:bg-amber-500/10">
+                      <RefreshCw size={17} aria-hidden="true" />
+                      {t("demo.reset")}
+                    </button>
+                  )}
+                </div>
+              }
             />
           </aside>
         </div>
@@ -522,10 +539,10 @@ export function Layout() {
             <Menu size={21} />
           </Button>
           <div className="min-w-0 flex-1">
-            <div dir="auto" className="text-xs font-semibold truncate">
+            <div dir="auto" className="text-xs font-semibold truncate" title={branding.institutionName || "AcademicOS"}>
               {branding.institutionName || "AcademicOS"}
             </div>
-            <div className="text-[11px] muted truncate">
+            <div className="text-[11px] muted truncate" title={t("layout.tagline")}>
               {t("layout.tagline")}
             </div>
           </div>
@@ -575,6 +592,7 @@ export function Layout() {
             variant="ghost"
             onClick={cycleTheme}
             aria-label={t("layout.changeTheme")}
+            className="topbar-theme"
           >
             {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
           </Button>
@@ -584,7 +602,7 @@ export function Layout() {
                 <UserRound size={15} />
               </div>
               <div className="max-w-28">
-                <div className="text-xs font-semibold truncate">
+                <div className="text-xs font-semibold truncate" title={user?.displayName || undefined}>
                   {user?.displayName}
                 </div>
                 <div className="text-[11px] muted">
@@ -597,12 +615,12 @@ export function Layout() {
                  كانت البيئة تفتح على الأستاذ وحده فلا تُرى شاشة الطالب — وهي
                  نصف المنتج وأوّل ما يُسأل عنه. والوصف في title/aria-label
                  فيبلغ قارئ الشاشة ولا يزاحم شريطًا مزدحمًا أصلًا. */
-              <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-1.5 py-0.5 text-amber-500">
+              <div className="demo-pill inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-1.5 py-0.5 text-amber-500">
                 <span
                   role="status"
                   title={t("demo.badgeAria")}
                   aria-label={t("demo.badgeAria")}
-                  className="grid h-6 w-6 place-items-center"
+                  className="demo-pill__flask grid h-6 w-6 place-items-center"
                 >
                   <FlaskConical size={13} aria-hidden="true" />
                 </span>
@@ -611,7 +629,7 @@ export function Layout() {
                   onChange={(event) => setDemoRole(event.target.value)}
                   title={t("demo.role")}
                   aria-label={t("demo.role")}
-                  className="focus-ring h-6 rounded-full bg-transparent px-1 text-[11px] font-bold text-amber-500 outline-none"
+                  className="demo-pill__role focus-ring h-6 rounded-full bg-transparent px-1 text-[11px] font-bold text-amber-500 outline-none"
                 >
                   <option value="professor">{t("demo.role.professor")}</option>
                   <option value="student">{t("demo.role.student")}</option>
@@ -623,7 +641,7 @@ export function Layout() {
                   onClick={() => void resetDemo()}
                   title={t("demo.reset")}
                   aria-label={t("demo.reset")}
-                  className="focus-ring grid h-6 w-6 place-items-center rounded-full hover:bg-amber-500/25"
+                  className="demo-pill__reset focus-ring grid h-6 w-6 place-items-center rounded-full hover:bg-amber-500/25"
                 >
                   <RefreshCw size={12} aria-hidden="true" />
                 </button>
@@ -635,7 +653,7 @@ export function Layout() {
               onClick={() => (demo ? void endDemo() : logout())}
               title={demo ? t("demo.exit") : t("layout.logout")}
               aria-label={demo ? t("demo.exit") : t("layout.logout")}
-              className="text-danger hover:bg-danger/10"
+              className="topbar-logout text-danger hover:bg-danger/10"
             >
               <LogOut size={18} />
             </Button>
@@ -922,13 +940,17 @@ function SidebarContent({
   role,
   nav,
   onLogout,
+  logoutLabel,
   branding,
   academicWorkMode,
+  quickSettings,
 }: {
   userName: string;
   role: string;
   nav: NavItem[];
   onLogout: () => Promise<void>;
+  logoutLabel?: string;
+  quickSettings?: React.ReactNode;
   branding: { institutionName?: string; logoUrl?: string };
   academicWorkMode: boolean;
 }) {
@@ -955,7 +977,7 @@ function SidebarContent({
             >
               {branding.institutionName || <Wordmark size={17} />}
             </div>
-            <div className="text-[11px] muted truncate">
+            <div className="text-[11px] muted truncate" title={branding.institutionName ? `AcademicOS · ${t("layout.tagline")}` : t("brand.tagline")}>
               {branding.institutionName
                 ? `AcademicOS · ${t("layout.tagline")}`
                 : t("brand.tagline")}
@@ -992,13 +1014,14 @@ function SidebarContent({
           <Settings size={17} />
           {t("layout.navSettings")}
         </NavLink>
+        {quickSettings}
         <div className="mt-3 rounded-xl border hairline p-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg soft-bg flex items-center justify-center">
               <UserRound size={15} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold truncate">{userName}</div>
+              <div className="text-xs font-semibold truncate" title={userName}>{userName}</div>
               <div className="text-[11px] muted">
                 {t("layout.verifiedAccount")}
               </div>
@@ -1009,7 +1032,7 @@ function SidebarContent({
             className="focus-ring mt-3 w-full rounded-xl py-2 text-xs font-semibold text-danger hover:bg-danger/10 flex items-center justify-center gap-2 border border-danger/45 transition-colors"
           >
             <LogOut size={15} />
-            <span>{t("layout.logout")}</span>
+            <span>{logoutLabel || t("layout.logout")}</span>
           </button>
         </div>
       </div>
@@ -1054,7 +1077,7 @@ function MobileNav({ item }: { item: NavItem }) {
       }
     >
       <Icon size={18} className="shrink-0" />
-      <span className="max-w-full truncate px-0.5">{t(item.short)}</span>
+      <span className="mobile-nav-link__label max-w-full truncate px-0.5">{t(item.short)}</span>
     </NavLink>
   );
 }

@@ -8,6 +8,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     <label className={`language-switcher ${compact ? "language-switcher--compact" : ""}`}>
       <span className="sr-only">{t("app.language")}</span>
       <Languages size={14} aria-hidden="true" />
+      <span className="language-switcher__code" aria-hidden="true">{locale.toUpperCase()}</span>
       <select
         value={locale}
         dir={meta.dir}

@@ -65,3 +65,60 @@ test("institution admin screens have records", () =>
     assert.ok(metrics.ai.runs > 0 && metrics.activation > 0, "control plane metrics");
     assert.ok((await fairUseMetrics()).recent.length >= 1, "fair use");
   }));
+
+/*
+ * A notification that opens "Course not found" is worse than no notification.
+ * Every seeded link must resolve for the very actor it was sent to, using the
+ * same ownership / membership rules the API routes apply.
+ */
+const COURSE_ADMIN_ROLES = new Set(["department_admin", "college_admin", "university_admin", "admin", "superadmin", "root_owner"]);
+for (const [key, actor] of Object.entries(DEMO_ACTORS)) {
+  test(`every demo notification link resolves for "${key}"`, () =>
+    inSandbox(async () => {
+      const { userId, role } = actor;
+      const notifications = await listNotifications(DEMO_TENANT_ID, userId, role as any);
+      for (const n of notifications as any[]) {
+        const target = String(n.targetPath || "");
+        if (!target) continue;
+        const path = target.split("?")[0];
+        const course = path.match(/^\/app\/course\/([^/]+)(?:\/assignment\/([^/]+)\/submissions)?$/);
+        if (course) {
+          const record = await firestoreStore.getCourse(course[1], DEMO_TENANT_ID);
+          assert.ok(record, `${target}: course exists`);
+          assert.ok(record!.ownerId === userId || COURSE_ADMIN_ROLES.has(role), `${target}: readable by ${userId}`);
+          if (course[2]) {
+            const assignments = await firestoreStore.listCourseAssignments(course[1], DEMO_TENANT_ID);
+            assert.ok(assignments.some((a: any) => a.id === course[2]), `${target}: assignment exists`);
+          }
+          continue;
+        }
+        const project = path.match(/^\/app\/project\/([^/]+)$/);
+        if (project) {
+          assert.ok(await firestoreStore.getProject(project[1], userId, DEMO_TENANT_ID), `${target}: project readable by ${userId}`);
+          continue;
+        }
+        assert.match(path, /^\/app(\/[a-z-]+)?$/, `${target}: known static screen`);
+      }
+    }));
+}
+
+test("sandboxes share the frozen seed and copy only on write", () => {
+  const a = DemoSandbox.create();
+  const b = DemoSandbox.create();
+  try {
+    let wrote = false;
+    DemoSandbox.run(a, 60_000, () => {
+      const store = DemoSandbox.currentFirestore()!;
+      store.collection("courses").doc("demo_course_1").updateSync({ title: "changed in A" });
+      wrote = store.collection("courses").doc("demo_course_1").readSync().data()!.title === "changed in A";
+    });
+    assert.ok(wrote, "write visible in its own sandbox");
+    DemoSandbox.run(b, 60_000, () => {
+      const title = DemoSandbox.currentFirestore()!.collection("courses").doc("demo_course_1").readSync().data()!.title;
+      assert.notEqual(title, "changed in A", "write must not leak into another sandbox");
+    });
+  } finally {
+    DemoSandbox.destroy(a);
+    DemoSandbox.destroy(b);
+  }
+});

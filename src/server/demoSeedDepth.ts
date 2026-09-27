@@ -522,7 +522,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     [PROFESSOR.userId]: [
       ["assignment", "important", "12 تسليمًا بانتظار التصحيح", "هندسة البرمجيات — التسليم 1.", "/app/course/demo_course_1/assignment/demo_assignment_1_1/submissions", true],
       ["audit", "critical", "مؤشر نزاهة يحتاج مراجعة", "مشروعان باستخدام ذكاء اصطناعي دون إفصاح في DS240.", "/app/professor", true],
-      ["comment", "normal", "سؤال توضيحي جديد", "دانة العتيبي تسأل عن عدد الصفحات المسموح في التسليم 2.", "/app/course/demo_course_2", false],
+      ["comment", "normal", "سؤال توضيحي جديد", "دانة العتيبي تسأل عن عدد الصفحات المسموح في التسليم 2.", "/app/course/demo_course_1", false],
       ["team", "normal", "دعوة لمراجعة مشروع", "دانة العتيبي دعتك مراجِعةً لمشروعها.", "/app/invitations", true],
       ["system", "normal", "اكتمل تصدير أرشيف المقرر", "أرشيف BUS420 جاهز للتنزيل.", "/app/jobs", false],
     ],

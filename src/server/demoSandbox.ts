@@ -778,6 +778,22 @@ function buildSandbox(): DemoFirestore {
   return store;
 }
 
+/*
+ * كل صندوق كان نسخةً مزروعة كاملة (~3.3 MiB). البذرة الآن تُبنى مرةً وتُجمَّد،
+ * ويأخذ كل زائر «تفرّعًا» يشاركها المستندات ولا ينسخ إلا ما يكتبه (نسخ عند الكتابة).
+ * تُعاد البذرة كل ربع ساعة كي تبقى التواريخ النسبية (قبل يومين، بعد 3 أيام) صادقة.
+ */
+const TEMPLATE_TTL_MS = 15 * 60_000;
+let template: { store: DemoFirestore; builtAt: number } | null = null;
+function forkSandbox(): DemoFirestore {
+  if (!template || Date.now() - template.builtAt > TEMPLATE_TTL_MS) {
+    const store = buildSandbox();
+    store.freeze();
+    template = { store, builtAt: Date.now() };
+  }
+  return template.store.fork();
+}
+
 type SandboxRecord = { store: DemoFirestore; expiresAt: number };
 const context = new AsyncLocalStorage<{ sessionId: string; store: DemoFirestore }>();
 const sandboxes = new Map<string, SandboxRecord>();
@@ -800,13 +816,13 @@ export const DemoSandbox = {
     if (sandboxes.size >= MAX_SANDBOXES)
       throw Object.assign(new Error("Demo is at capacity, try again shortly"), { status: 503, code: "DEMO_CAPACITY" });
     const sessionId = `${DEMO_TOKEN_PREFIX}${randomBytes(32).toString("hex")}`;
-    sandboxes.set(sessionId, { store: buildSandbox(), expiresAt: Date.now() + ttlMs });
+    sandboxes.set(sessionId, { store: forkSandbox(), expiresAt: Date.now() + ttlMs });
     return sessionId;
   },
 
   reset(sessionId: string, ttlMs: number = DEMO_SESSION_TTL_MS): boolean {
     if (!sessionId.startsWith(DEMO_TOKEN_PREFIX) || !sandboxes.has(sessionId)) return false;
-    sandboxes.set(sessionId, { store: buildSandbox(), expiresAt: Date.now() + ttlMs });
+    sandboxes.set(sessionId, { store: forkSandbox(), expiresAt: Date.now() + ttlMs });
     return true;
   },
 

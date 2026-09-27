@@ -31,7 +31,7 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
     <Card>
       <CardContent>
         <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--danger) 16%, transparent), transparent)' }}><Droplet size={20} style={{ color: 'var(--danger)' }} /></div>
+          <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0 brand-soft-bg brand-text"><Droplet size={20} /></div>
           <div>
             <div className="eyebrow">{t('adv.gl.analyzing').replace('{n}', String(data.cohortSize))}</div>
             <h2 className="section-title mt-0.5">{t('adv.gl.title')}</h2>

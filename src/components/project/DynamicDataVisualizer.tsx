@@ -123,18 +123,18 @@ export function DynamicDataVisualizer({ project }: { project: ProjectDNA }) {
   };
 
   return <div className="space-y-6">
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border hairline bg-[var(--panel)]">
-      <div><div className="text-[11px] font-bold tracking-wider uppercase text-info">{t("ui.evidenceBoundVisualStudio")}</div><h2 className="text-lg font-bold tracking-tight mt-0.5">{t("visual.title")}</h2><p className="text-xs text-muted-foreground mt-1 max-w-2xl">{t("visual.description")}</p></div>
+    <div className="studio-head">
+      <div><div className="eyebrow text-brand">{t("ui.evidenceBoundVisualStudio")}</div><h2 className="studio-head__title">{t("visual.title")}</h2><p className="text-xs text-muted-foreground mt-1 max-w-2xl">{t("visual.description")}</p></div>
       <div className="flex items-center gap-2 flex-wrap"><div className="flex rounded-xl border hairline p-1 bg-[var(--bg)]">
-        <button onClick={() => setChartType("bar")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "bar" ? "bg-info text-white" : "text-muted-foreground"}`}><BarChart2 size={13}/>{t("visual.readiness")}</button>
-        <button onClick={() => setChartType("flowchart")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "flowchart" ? "bg-info text-white" : "text-muted-foreground"}`}><GitGraph size={13}/>{t("visual.workflow")}</button>
-        <button onClick={() => setChartType("timeline")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "timeline" ? "bg-info text-white" : "text-muted-foreground"}`}><TrendingUp size={13}/>{t("visual.timeline")}</button>
+        <button onClick={() => setChartType("bar")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "bar" ? "bg-brand text-[var(--on-brand)]" : "text-muted-foreground"}`}><BarChart2 size={13}/>{t("visual.readiness")}</button>
+        <button onClick={() => setChartType("flowchart")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "flowchart" ? "bg-brand text-[var(--on-brand)]" : "text-muted-foreground"}`}><GitGraph size={13}/>{t("visual.workflow")}</button>
+        <button onClick={() => setChartType("timeline")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${chartType === "timeline" ? "bg-brand text-[var(--on-brand)]" : "text-muted-foreground"}`}><TrendingUp size={13}/>{t("visual.timeline")}</button>
       </div><Button size="sm" variant="outline" className="text-xs gap-1" onClick={downloadSvg}><Download size={13}/>{t("visual.export")}</Button></div>
     </div>
 
     <Card><CardContent className="p-6 md:p-8 space-y-6">
       {chartType === "bar" && <div className="space-y-5"><div><h3 className="font-bold text-sm">{t("visual.readinessTitle")}</h3><p className="text-xs text-muted-foreground mt-1">{t("visual.readinessDesc")}</p></div>
-        {barData.length ? <div className="space-y-4">{barData.map(item => <div key={item.label} className="space-y-1.5"><div className="flex justify-between gap-4 text-xs"><span className="font-medium truncate">{item.label}</span><span className="font-mono font-bold shrink-0">{item.value}% · {item.status}</span></div><div className="h-3 w-full rounded-full bg-info/10 overflow-hidden"><div className="h-full rounded-full bg-info transition-all" style={{ width: `${item.value}%` }}/></div></div>)}</div> : <div className="rounded-2xl border hairline p-8 text-center text-sm text-muted-foreground"><CircleDashed className="mx-auto mb-3"/>{t("visual.noDrawable")}</div>}
+        {barData.length ? <div className="space-y-4">{barData.map(item => <div key={item.label} className="space-y-1.5"><div className="flex justify-between gap-4 text-xs"><span className="font-medium truncate">{item.label}</span><span className="font-mono font-bold shrink-0">{item.value}% · {item.status}</span></div><div className="h-3 w-full rounded-full bg-brand/10 overflow-hidden"><div className="h-full rounded-full bg-brand transition-all" style={{ width: `${item.value}%` }}/></div></div>)}</div> : <div className="rounded-2xl border hairline p-8 text-center text-sm text-muted-foreground"><CircleDashed className="mx-auto mb-3"/>{t("visual.noDrawable")}</div>}
         <div className="flex items-start gap-2 rounded-xl bg-success/8 border border-success/20 p-3 text-xs"><ShieldCheck size={15} className="text-success shrink-0"/><span>{t("visual.noFakeStats")}</span></div>
       </div>}
 

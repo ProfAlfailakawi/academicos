@@ -29,7 +29,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
       <CardContent>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0" style={{ background: 'linear-gradient(135deg,var(--brand-soft),transparent)' }}>
+            <div className="h-11 w-11 rounded-2xl grid place-items-center shrink-0 brand-soft-bg">
               <Ghost size={20} className="brand-text" />
             </div>
             <div>

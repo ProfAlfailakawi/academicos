@@ -64,9 +64,9 @@ export function CrossStyleFormatter({ project }: { project: ProjectDNA }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border hairline bg-gradient-to-r from-insight/10 via-insight/8 to-transparent p-5 md:p-6 flex items-start gap-3.5">
-        <div className="h-11 w-11 rounded-2xl bg-insight/20 text-insight grid place-items-center shrink-0"><ArrowRightLeft size={22}/></div>
-        <div><div className="text-[11px] font-bold tracking-wider uppercase text-insight">{t("ui.verifiedMetadataFormatter")}</div><h2 className="text-lg md:text-xl font-bold tracking-tight mt-0.5">{t("formatter.title")}</h2><p className="text-[11px] text-muted-foreground mt-1 leading-5 max-w-2xl">{t("formatter.description")}</p></div>
+      <div className="studio-head">
+        <div className="h-11 w-11 rounded-2xl brand-soft-bg brand-text grid place-items-center shrink-0"><ArrowRightLeft size={22}/></div>
+        <div><div className="eyebrow text-brand">{t("ui.verifiedMetadataFormatter")}</div><h2 className="studio-head__title">{t("formatter.title")}</h2><p className="text-[11px] text-muted-foreground mt-1 leading-5 max-w-2xl">{t("formatter.description")}</p></div>
       </div>
 
       <div className="rounded-2xl border hairline bg-[var(--panel)] p-5 space-y-3">

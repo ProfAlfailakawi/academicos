@@ -164,7 +164,6 @@ export function AssignmentSubmissions() {
                 <button
                   key={item.id}
                   onClick={() => open(item)}
-                  title={item.receiptHash}
                   className={`focus-ring w-full text-start rounded-xl border p-3 ${selected === item.id ? "border-[var(--brand)] brand-soft-bg" : "hairline bg-[var(--bg)]"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -177,7 +176,12 @@ export function AssignmentSubmissions() {
                     {t("subm.attempt")} {item.attempt} ·{" "}
                     {formatDateTime(item.submittedAt, locale)}
                   </div>
-                  <span className="dna-sr">{item.receiptHash}</span>
+                  <div
+                    dir="ltr"
+                    className="text-[11px] font-mono muted mt-1 truncate"
+                  >
+                    {item.receiptHash}
+                  </div>
                 </button>
               ))}
               {!submissions.length && (

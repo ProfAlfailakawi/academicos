@@ -411,10 +411,27 @@ export interface DemoFirestore {
   /** Direct seeding hook — not part of the Firestore API. */
   seed(collectionName: string, docs: { id: string; data: Doc }[]): void;
   stats(): Record<string, number>;
+  /**
+   * A new, independent store whose documents start out *shared* with this one.
+   * Safe because no code path mutates a stored document in place: every write
+   * replaces the bucket entry with a fresh clone, and every read hands out a
+   * clone. `freeze()` turns that invariant into a hard guarantee.
+   */
+  fork(): DemoFirestore;
+  /** Deep-freezes every stored document so it can be shared across forks. */
+  freeze(): void;
 }
 
-export function createDemoFirestore(): DemoFirestore {
+function deepFreeze(value: unknown): void {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return;
+  Object.freeze(value);
+  for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
+}
+
+export function createDemoFirestore(base?: Store): DemoFirestore {
   const store = new Store();
+  // Copy-on-write fork: new Maps (so adds/deletes stay private), same frozen docs.
+  base?.collections.forEach((bucket, name) => store.collections.set(name, new Map(bucket)));
   // One visitor per sandbox, so a plain serial queue is enough to keep
   // read-modify-write sequences correct.
   let lock: Promise<unknown> = Promise.resolve();
@@ -437,6 +454,10 @@ export function createDemoFirestore(): DemoFirestore {
     seed(collectionName, docs) {
       const bucket = store.bucket(collectionName);
       docs.forEach(({ id, data }) => bucket.set(id, clone(data)));
+    },
+    fork: () => createDemoFirestore(store),
+    freeze() {
+      store.collections.forEach((bucket) => bucket.forEach((doc) => deepFreeze(doc)));
     },
     stats() {
       const out: Record<string, number> = {};

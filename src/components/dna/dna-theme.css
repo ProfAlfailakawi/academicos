@@ -1,0 +1,50 @@
+/* Maps the DNA kit tokens onto AcademicOS's own palette (light + .dark). */
+:root:root {
+  --dna-canvas: var(--bg);
+  --dna-surface: var(--panel);
+  --dna-surface-2: var(--panel-2);
+  --dna-ink: var(--ink);
+  --dna-muted: var(--muted);
+  --dna-line: var(--line);
+  --dna-line-2: var(--line-strong);
+  --dna-accent: var(--brand);
+  --dna-accent-soft: var(--brand-soft);
+  --dna-on-accent: var(--on-brand);
+  --dna-core: var(--brand-2);
+  --dna-on-core: var(--on-brand);
+  --dna-warn: var(--warning);
+  --dna-warn-soft: color-mix(in srgb, var(--warning) 14%, var(--panel));
+  --dna-danger: var(--danger);
+  --dna-danger-soft: color-mix(in srgb, var(--danger) 12%, var(--panel));
+  --dna-info: var(--info);
+  --dna-info-soft: color-mix(in srgb, var(--info) 12%, var(--panel));
+  --dna-shadow: var(--shadow-xs), 0 12px 30px -18px rgba(20, 32, 27, 0.2);
+}
+
+/* Site dark selector joins the kit's dark tone scope. */
+.dark [data-dna-tone],
+[data-dna-tone].dark {
+  --t-bg: color-mix(in srgb, var(--t-fg) 20%, transparent);
+  --t-fgc: color-mix(in srgb, var(--t-fg) 55%, #ffffff);
+}
+/* Kit tokens load in lazy chunks; the doubled :root keeps these aliases winning. */
+.dna svg { flex-shrink: 0; }
+
+/* Student home: living learning map in place of the decorative illustration. */
+.student-hub { background: color-mix(in srgb, var(--brand-soft) 38%, var(--panel)); }
+.student-hub__initial { font-size: 30px; font-weight: 700; line-height: 1; }
+.student-hub__note { background: var(--panel); }
+
+/* Project workspace header */
+.workspace-head .dna-headrow { flex-wrap: wrap; }
+.workspace-head__title { font-size: clamp(1.35rem, 2.4vw, 1.85rem); font-weight: 650; letter-spacing: -0.03em; }
+.workspace-more[open] .workspace-more__chev { transform: rotate(180deg); }
+.workspace-more__current { max-inline-size: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Grading desk: status dot follows the submission status. */
+.subm-status__dot { inline-size: 7px; block-size: 7px; border-radius: 999px; background: var(--muted); }
+.subm-status[data-status='submitted'] .subm-status__dot { background: var(--info); }
+.subm-status[data-status='grading'] .subm-status__dot { background: var(--warning); }
+.subm-status[data-status='graded'] .subm-status__dot { background: var(--brand); opacity: 0.6; }
+.subm-status[data-status='released'] .subm-status__dot { background: var(--brand); }
+.subm-status[data-status='returned'] .subm-status__dot { background: var(--danger); }

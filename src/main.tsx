@@ -6,6 +6,7 @@ import { AppPreferencesProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { I18nProvider } from './lib/i18n';
 import './index.css';
+import './components/dna/dna-theme.css';
 import { installAppUpdate } from './lib/app-update';
 
 declare global {

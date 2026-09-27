@@ -7,7 +7,11 @@ import {
   RotateCcw,
   Send,
   ShieldCheck,
+  Inbox,
+  Lock,
+  PenLine,
 } from "lucide-react";
+import { DnaRing, DnaStepper, type DnaStepState } from "../components/dna/DnaKit";
 import { Link, useParams } from "react-router";
 import { api } from "../lib/api";
 import type {
@@ -159,6 +163,7 @@ export function AssignmentSubmissions() {
                 <button
                   key={item.id}
                   onClick={() => open(item)}
+                  title={item.receiptHash}
                   className={`focus-ring w-full text-start rounded-xl border p-3 ${selected === item.id ? "border-[var(--brand)] brand-soft-bg" : "hairline bg-[var(--bg)]"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -171,12 +176,7 @@ export function AssignmentSubmissions() {
                     {t("subm.attempt")} {item.attempt} ·{" "}
                     {formatDateTime(item.submittedAt, locale)}
                   </div>
-                  <div
-                    dir="ltr"
-                    className="text-[11px] font-mono muted mt-1 truncate"
-                  >
-                    {item.receiptHash}
-                  </div>
+                  <span className="dna-sr">{item.receiptHash}</span>
                 </button>
               ))}
               {!submissions.length && (
@@ -204,12 +204,22 @@ export function AssignmentSubmissions() {
                       {current.audit.evidenceCoverage ?? 0}%
                     </p>
                   </div>
-                  <div className="rounded-xl brand-soft-bg px-3 py-2 text-xs font-semibold">
-                    {current.totalScore === undefined
-                      ? t("subm.gradeNotLocked")
-                      : `${current.totalScore}/${current.maxScore}`}
-                  </div>
+                  {current.totalScore === undefined ? (
+                    <div className="rounded-xl bg-[var(--panel-2)] muted px-3 py-2 text-xs font-semibold">
+                      {t("subm.gradeNotLocked")}
+                    </div>
+                  ) : (
+                    <DnaRing
+                      value={current.totalScore}
+                      max={current.maxScore}
+                      size={64}
+                      stroke={5}
+                      label={<span className="mono-number text-xs font-bold" dir="ltr">{`${current.totalScore}/${current.maxScore}`}</span>}
+                      ariaLabel={`${current.totalScore}/${current.maxScore}`}
+                    />
+                  )}
                 </div>
+                <GradingSteps status={current.status} />
                 {immutable && (
                   <div
                     role="status"
@@ -390,10 +400,33 @@ function Status({ status }: { status: CourseSubmissionRecord["status"] }) {
     released: t("subm.statusReleased"),
   };
   return (
-    <span className="rounded-full brand-soft-bg px-2 py-1 text-[11px] font-semibold">
+    <span className="subm-status inline-flex items-center gap-1.5 rounded-full bg-[var(--panel-2)] px-2 py-1 text-[11px] font-semibold" data-status={status}>
+      <span className="subm-status__dot" aria-hidden="true" />
       {labels[status]}
     </span>
   );
+}
+function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) {
+  const { t } = useI18n();
+  const order = ["submitted", "grading", "graded", "released"] as const;
+  const at = status === "returned" ? 1 : order.indexOf(status);
+  const steps = [
+    { key: "submitted", label: t("subm.statusSubmitted"), icon: <Inbox size={15} /> },
+    { key: "grading", label: status === "returned" ? t("subm.statusReturned") : t("subm.statusGrading"), icon: status === "returned" ? <RotateCcw size={15} /> : <PenLine size={15} /> },
+    { key: "graded", label: t("subm.statusGraded"), icon: <Lock size={15} /> },
+    { key: "released", label: t("subm.statusReleased"), icon: <Send size={15} /> },
+  ].map((step, index) => ({
+    ...step,
+    icon: index < at || (status === "released" && index === at) ? undefined : step.icon,
+    state: (status === "returned" && index === 1
+      ? "returned"
+      : index < at || (status === "released" && index === at)
+        ? "done"
+        : index === at
+          ? "current"
+          : "pending") as DnaStepState,
+  }));
+  return <DnaStepper className="mt-4" size="sm" steps={steps} ariaLabel={steps.map((step) => step.label).join(" · ")} />;
 }
 function Mini({ label, value }: { label: string; value: number }) {
   return (

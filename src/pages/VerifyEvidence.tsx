@@ -54,7 +54,7 @@ export function VerifyEvidence() {
   return (
     <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10">
       <div className="max-w-2xl mx-auto">
-        <Link to="/" className="text-xs muted">AcademicOS</Link>
+        <Link to="/" className="tap-link text-xs muted">AcademicOS</Link>
         <div className="mt-10 h-12 w-12 rounded-2xl tone-tile"><ShieldCheck size={20} /></div>
         <h1 className="text-3xl font-semibold mt-4">{t("pe.verifyTitle")}</h1>
         <p className="body-copy mt-3">{t("pe.verifyIntro")}</p>

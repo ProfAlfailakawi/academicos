@@ -922,6 +922,17 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .app-topbar .topbar-theme, .app-topbar .topbar-logout { display: none !important; }
   .demo-pill__flask, .demo-pill__reset { display: none !important; }
 }
+/* Narrow phones: the longest single word ("assignments") fits its dock cell. */
+@media (max-width: 400px) {
+  .mobile-nav-link__label {
+    font-size: clamp(10.5px, 2.85vw, 12px); letter-spacing: -0.02em;
+    padding-inline: 0; hyphens: auto;
+  }
+}
+/* Phones: small text back-links get a 44px tap area without moving the text. */
+@media (max-width: 639px) {
+  .tap-link { display: inline-block; padding: 14px 12px; margin: -14px -12px; }
+}
 @media (min-width: 640px) and (max-width: 1023px) {
   .demo-pill__flask { display: none !important; }
 }

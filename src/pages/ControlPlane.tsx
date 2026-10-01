@@ -22,6 +22,7 @@ import { StatusPill } from "../components/StatusPill";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { AcademicLoader } from "../components/ui/AcademicLoader";
+import { ArcGauge, TaperFunnel } from "../components/Infographics";
 
 /* تسميات عربية موجودة سلفًا لمفاتيح حالة البنية بدل عرض أسماء المتغيرات. */
 const SYSTEM_KEY_LABELS: Record<string, string> = {
@@ -141,11 +142,15 @@ export function ControlPlane() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Route size={18} /></span><div><div className="eyebrow">{t("ui.productFunnel")}</div><h2 className="section-title mt-1">{t("control.funnelTitle")}</h2></div></div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">
-                <Funnel label={t("ui.activation")} value={product.activation} />
-                <Funnel label={t("control.firstAssignment")} value={product.firstAssignmentSuccess} />
-                <Funnel label={t("control.secondProject")} value={product.secondProjectRetention} />
-                <Funnel label={t("control.paidConversion")} value={product.paidConversion} />
+              <div className="mt-5">
+                <TaperFunnel
+                  stages={[
+                    { label: t("ui.activation"), value: product.activation },
+                    { label: t("control.firstAssignment"), value: product.firstAssignmentSuccess },
+                    { label: t("control.secondProject"), value: product.secondProjectRetention },
+                    { label: t("control.paidConversion"), value: product.paidConversion },
+                  ].map((st) => ({ label: st.label, pct: Math.max(0, Math.min(100, (Number(st.value) || 0) * 100)) }))}
+                />
               </div>
               <div className="grid sm:grid-cols-3 gap-2 mt-3"><Twin label={t("control.projectCompletion")} value={`${Math.round(product.projectCompletion * 100)}%`} /><Twin label={t("control.auditUsage")} value={`${Math.round(product.submissionAuditUsage * 100)}%`} /><Twin label={t("control.vivaUsage")} value={`${Math.round(product.vivaUsage * 100)}%`} /></div>
               <p className="text-[11px] muted leading-5 mt-3">{t("control.funnelNote")}</p>
@@ -154,7 +159,7 @@ export function ControlPlane() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3"><span className="h-11 w-11 rounded-2xl tone-tile"><Gauge size={18} /></span><div><div className="eyebrow">{t("ui.aiCostQualityGate")}</div><h2 className="section-title mt-1">{t("control.aiHealthTitle")}</h2></div></div>
-              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[11px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
+              {(() => { const failureRate = product.ai.runs ? (product.ai.failures / product.ai.runs) * 100 : 0; const costPerRun = product.ai.runs ? product.ai.costUsd / product.ai.runs : 0; const gate = failureRate >= 5 ? "critical" : failureRate >= 2 ? "attention" : "healthy"; return <><div className="grid grid-cols-3 gap-2 mt-5"><Twin label={t("ui.aiRuns")} value={product.ai.runs} /><Twin label={t("ui.cost")} value={`$${product.ai.costUsd.toFixed(2)}`} /><Twin label={t("ui.costPerRun")} value={`$${costPerRun.toFixed(3)}`} /></div><div className="mt-4"><ArcGauge value={failureRate} max={10} zones={[{ to: 2, tone: "success" }, { to: 5, tone: "warning" }, { to: 10, tone: "danger" }]} label={`${t("ui.failures")} ${failureRate.toFixed(1)}%`}><div className="text-xl font-semibold mono-number">{failureRate.toFixed(1)}%</div><div className="text-[11px] muted">{t("ui.failures")}</div></ArcGauge></div><div className={`mt-4 rounded-xl p-4 ${gate === "healthy" ? "brand-soft-bg" : gate === "critical" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}><div className="flex items-center justify-between gap-3"><strong className="text-xs">{t("control.reliabilityGate")}</strong><span className="text-xs font-bold mono-number">{failureRate.toFixed(1)}% {t("ui.failures")}</span></div><p className="text-[11px] leading-5 mt-2">{gate === "healthy" ? t("control.aiHealthy") : gate === "critical" ? t("control.aiCritical") : t("control.aiAttention")}</p></div></>; })()}
               <div className="mt-4 flex items-center gap-2 text-[11px] muted"><DollarSign size={13} /> {t("control.costCaveat")}</div>
             </CardContent>
           </Card>
@@ -367,5 +372,4 @@ function Metric({ icon: Icon, label, value }: any) {
     </div>
   );
 }
-function Funnel({ label, value }: { label: string; value: number }) { const pct = Math.max(0, Math.min(100, (Number(value) || 0) * 100)); return <div className="rounded-xl border hairline p-3"><div className="flex items-center justify-between gap-2"><span className="text-[11px] muted">{label}</span><strong className="text-sm mono-number">{pct}%</strong></div><div className="tone-meter mt-3"><div style={{ width: `${pct}%` }} /></div></div>; }
 function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="text-lg font-semibold mono-number">{value}</div><div className="text-[11px] muted mt-1">{label}</div></div>}

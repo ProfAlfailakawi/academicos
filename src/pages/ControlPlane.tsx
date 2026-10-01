@@ -178,7 +178,7 @@ export function ControlPlane() {
             <span className="tone-chip" data-tone={command.posture === "healthy" ? "success" : command.posture === "critical" ? "danger" : "warning"}>{command.posture === "healthy" ? t('ctrl.posture.healthy') : command.posture === "critical" ? t('ctrl.posture.critical') : t('ctrl.posture.attention')}</span>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5"><Twin label={t('ctrl.twin.projects')} value={command.twin.projects}/><Twin label={t('ctrl.twin.courses')} value={command.twin.courses}/><Twin label={t('ctrl.twin.assignments')} value={command.twin.assignments}/><Twin label={t('ctrl.twin.coverage')} value={`${command.twin.outcomeCoverage}%`}/><Twin label={t('ctrl.twin.submissions')} value={command.twin.submissions}/><Twin label={t('ctrl.twin.released')} value={command.twin.released}/></div>
-          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[11px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[11px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
+          <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[11px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[11px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
         </section>
       )}
       <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
@@ -226,7 +226,7 @@ export function ControlPlane() {
                             <div className="h-full rounded-full bg-[var(--brand)]" style={{ width: `${p.progress}%` }}
                             />
                           </div>
-                          <span className="text-xs">{p.progress}%</span>
+                          <span className="text-xs mono-number whitespace-nowrap">{p.progress}%</span>
                         </div>
                       </td>
                       <td data-label={t('ctrl.col.risks')}>{p.riskCount}</td>
@@ -292,11 +292,13 @@ export function ControlPlane() {
                         disabled={!canFlags || Boolean(flagBusy)}
                         onClick={() => toggleFlag(f)}
                         aria-label={t('ctrl.toggleFlag').replace('{key}', f.key)}
-                        className={`focus-ring relative h-6 w-11 rounded-full transition-colors ${f.enabled ? "brand-bg" : "soft-bg"}`}
+                        className="focus-ring grid h-11 w-14 shrink-0 place-items-center rounded-full disabled:cursor-not-allowed"
                       >
-                        <span
-                          className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${f.enabled ? "end-6" : "end-1"}`}
-                        />
+                        <span aria-hidden="true" className={`relative block h-6 w-11 rounded-full border hairline transition-colors ${f.enabled ? "brand-bg" : "soft-bg"}`}>
+                          <span
+                            className={`absolute top-[3px] h-4 w-4 rounded-full bg-white shadow-sm transition-all ${f.enabled ? "end-6" : "end-1"}`}
+                          />
+                        </span>
                       </button>
                     </div>
                   </div>

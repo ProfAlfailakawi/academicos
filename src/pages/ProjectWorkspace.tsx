@@ -780,7 +780,7 @@ function Deliverables({
 }) {
   const { t } = useI18n();
   return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid md:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
       {project.deliverables.map((d) => (
         <Card key={d.id}>
           <CardContent className="h-full flex flex-col">
@@ -883,7 +883,7 @@ function Rubric({
 }) {
   const { t } = useI18n();
   return project.rubric.length ? (
-    <div className="grid lg:grid-cols-2 gap-4">
+    <div className="grid lg:grid-cols-2 gap-4 lg:[&>*:last-child:nth-child(odd)]:col-span-2">
       {project.rubric.map((r) => (
         <Card key={r.id}>
           <CardContent>

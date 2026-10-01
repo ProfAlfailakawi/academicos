@@ -529,6 +529,13 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .journey-card { position: relative; display: flex; align-items: center; gap: 16px; min-height: 180px; padding: 24px; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow-sm); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
 .journey-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--brand) 28%, var(--line)); }
 .journey-card > .ui-card { width: 100%; border: 0; box-shadow: none; background: transparent; }
+/* MissionControl wraps a toned <Card> (.academic-card) inside the link: let it fill
+   the tile instead of shrinking to a narrow box-in-a-box. */
+.journey-card:has(> .academic-card) { padding: 0; align-items: stretch; }
+.journey-card > .academic-card { width: 100%; border: 0; box-shadow: none; border-radius: inherit; }
+/* Demo pill: amber-500 on a 15% amber wash read at ~2:1 in light mode. */
+:root:not(.dark) .demo-pill { color: #92400e; }
+:root:not(.dark) .demo-pill .demo-pill__role { color: #92400e; }
 .journey-card__icon, .journey-icon { display: grid; place-items: center; flex: 0 0 auto; width: 62px; height: 62px; border-radius: 20px; color: var(--brand-2); background: rgba(255,255,255,.7); box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); }
 .dark .journey-card__icon, .dark .journey-icon { color: var(--brand); background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
 .journey-card h3 { font-size: 19px; font-weight: 800; }

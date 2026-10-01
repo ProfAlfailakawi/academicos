@@ -463,7 +463,8 @@ export function Layout() {
           userName={user?.displayName || "AcademicOS"}
           role={user?.role || "student"}
           nav={nav}
-          onLogout={logout}
+          onLogout={demo ? endDemo : logout}
+          logoutLabel={demo ? t("demo.exit") : undefined}
           branding={branding}
           academicWorkMode={academicWorkMode}
         />
@@ -538,12 +539,17 @@ export function Layout() {
           >
             <Menu size={21} />
           </Button>
+          {/* الشعار والشعار اللفظي في الشريط الجانبي من 1024px فما فوق؛
+              فلا يتكرّران هنا. تبقى الحاضنة لتدفع بقية الأدوات. */}
           <div className="min-w-0 flex-1">
-            <div dir="auto" className="text-xs font-semibold truncate" title={branding.institutionName || "AcademicOS"}>
-              {branding.institutionName || "AcademicOS"}
-            </div>
-            <div className="text-[11px] muted truncate" title={t("layout.tagline")}>
-              {t("layout.tagline")}
+            <LogoMark variant="tile" size={34} className="sm:hidden rounded-xl" />
+            <div className="hidden sm:block lg:hidden">
+              <div dir="auto" className="text-xs font-semibold truncate" title={branding.institutionName || "AcademicOS"}>
+                {branding.institutionName || "AcademicOS"}
+              </div>
+              <div className="text-[11px] muted truncate" title={t("layout.tagline")}>
+                {t("layout.tagline")}
+              </div>
             </div>
           </div>
           <button
@@ -601,8 +607,8 @@ export function Layout() {
               <div className="h-8 w-8 rounded-full tone-tile">
                 <UserRound size={15} />
               </div>
-              <div className="max-w-28">
-                <div className="text-xs font-semibold truncate" title={user?.displayName || undefined}>
+              <div className="max-w-[16rem]">
+                <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={user?.displayName || undefined}>
                   {user?.displayName}
                 </div>
                 <div className="text-[11px] muted">
@@ -654,7 +660,7 @@ export function Layout() {
               onClick={() => (demo ? void endDemo() : logout())}
               title={demo ? t("demo.exit") : t("layout.logout")}
               aria-label={demo ? t("demo.exit") : t("layout.logout")}
-              className="topbar-logout text-danger hover:bg-danger/10"
+              className="topbar-logout lg:hidden text-danger hover:bg-danger/10"
             >
               <LogOut size={18} />
             </Button>
@@ -717,26 +723,24 @@ export function Layout() {
         )}
 
         {prediction && (
-          <div className="predictive-mobile-wrap 2xl:hidden px-4 md:px-7 pt-3">
+          <div className="predictive-mobile-wrap 2xl:hidden px-4 md:px-7 pt-2.5">
             <button
               onClick={goToPrediction}
-              className="predictive-mobile focus-ring mx-auto w-full max-w-[1440px] flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-start"
+              className="predictive-mobile focus-ring mx-auto w-full max-w-[1440px] flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-start"
             >
-              <span className="predictive-chip__spark h-8 w-8 shrink-0 rounded-xl flex items-center justify-center">
-                <Sparkles size={15} />
+              <span className="predictive-chip__spark h-7 w-7 shrink-0 rounded-lg flex items-center justify-center">
+                <Sparkles size={14} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-[.12em] muted">
-                    {t("layout.predictedNow")}
-                  </span>
-                  {prediction.strength === "strong" && (
-                    <span className="prediction-learned rounded-full px-1.5 py-0.5 text-[11px] font-semibold">
-                      {t("layout.learnedFromUsage")}
-                    </span>
-                  )}
+              <span className="min-w-0 flex-1 flex items-center gap-2">
+                <span className="shrink-0 text-[11px] font-bold uppercase tracking-[.12em] muted">
+                  {t("layout.predictedNow")}
                 </span>
-                <span className="block truncate text-xs font-semibold mt-0.5">
+                {prediction.strength === "strong" && (
+                  <span className="prediction-learned shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold">
+                    {t("layout.learnedFromUsage")}
+                  </span>
+                )}
+                <span className="min-w-0 truncate text-xs font-semibold">
                   {prediction.label}
                 </span>
               </span>
@@ -748,7 +752,7 @@ export function Layout() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="app-main px-4 py-6 md:px-7 md:py-8 lg:px-9 lg:py-10 pb-32 lg:pb-12"
+          className="app-main px-4 py-6 md:px-7 md:py-8 lg:px-9 lg:py-10 pb-[calc(8.5rem+env(safe-area-inset-bottom))] lg:pb-12"
         >
           <div className="mx-auto w-full max-w-[1440px]">
             <OfflineBanner />
@@ -1028,7 +1032,7 @@ function SidebarContent({
               <UserRound size={15} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold truncate" title={userName}>{userName}</div>
+              <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={userName}>{userName}</div>
               <div className="text-[11px] muted">
                 {t("layout.verifiedAccount")}
               </div>

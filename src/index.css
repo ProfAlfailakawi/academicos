@@ -317,7 +317,7 @@ html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 32, 27, .035); 
   border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
   border-radius: 22px;
   padding: 7px 8px 6px !important;
-  background: color-mix(in srgb, var(--panel) 90%, transparent) !important;
+  background: var(--panel) !important;
   box-shadow: 0 14px 40px rgba(18, 31, 25, .16), inset 0 1px 0 color-mix(in srgb, white 45%, transparent);
   backdrop-filter: blur(22px) saturate(1.25);
 }
@@ -459,7 +459,7 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
   background: color-mix(in srgb, var(--brand-soft) 72%, transparent);
 }
 .predictive-mobile-wrap { position: relative; z-index: 2; }
-.predictive-mobile { min-height: 52px; }
+.predictive-mobile { min-height: 40px; }
 
 .skip-link {
   position: fixed;
@@ -478,7 +478,7 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
 
 @media (max-width: 639px) {
   .predictive-mobile-wrap { padding-top: 10px; padding-inline: 12px; }
-  .predictive-mobile { border-radius: 15px; }
+  .predictive-mobile { border-radius: 12px; }
 }
 
 /* Explicit accessibility preferences complement OS-level settings. */
@@ -895,9 +895,9 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
 
   /* Top bar: fewer, bigger controls. Theme + logout live in the drawer below 640px. */
   .app-topbar { height: auto !important; min-height: 64px; padding-top: env(safe-area-inset-top); }
-  .app-topbar .language-switcher { position: relative; min-height: 44px; min-width: 56px; justify-content: center; padding-inline: .55rem; }
+  .app-topbar .language-switcher { position: relative; min-height: 44px; min-width: 44px; justify-content: center; padding-inline: .4rem; }
   .app-topbar .language-switcher svg { display: inline-block !important; }
-  .app-topbar .language-switcher__code { display: inline; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+  .app-topbar .language-switcher__code { display: none; }
   .app-topbar .language-switcher select { position: absolute; inset: 0; opacity: 0; max-width: none; width: 100%; min-height: 44px; font-size: 16px; }
   .demo-pill { padding: 0 .35rem !important; min-height: 44px; }
   .demo-pill__role { height: 44px !important; min-height: 44px; font-size: 13px !important; padding-inline: .4rem !important; }
@@ -971,3 +971,16 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .dossier-print-root [role="dialog"] { max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; max-width: none !important; padding: 0 !important; }
   .dossier-print-root button { display: none !important; }
 }
+
+/* Dark mode: primary buttons were pale mint with a white label (read as
+   disabled). Solid brand green with a white label instead — pure colour. */
+:root.dark .brand-bg:not(.rounded-full),
+:root.dark .ui-button[data-variant="default"],
+:root.dark .plan-card__popular {
+  background: #1d7459;
+  color: #ffffff;
+}
+:root.dark .ui-button[data-variant="default"] {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .28), var(--shadow-xs);
+}
+:root.dark .ui-button[data-variant="default"]:disabled { opacity: .55; }

@@ -418,11 +418,11 @@ function buildSandbox(): DemoFirestore {
         id: `demo_join_${courseIndex + 1}`,
         tenantId: DEMO_TENANT_ID,
         courseId,
-        code: `${code}-${String(1000 + courseIndex * 37)}`,
+        prefix: String(code).slice(0, 6),
         createdBy: course.ownerId,
-        status: courseIndex % 4 === 0 ? "revoked" : "active",
-        maxRedemptions: 60,
-        redemptions: 18 + courseIndex * 3,
+        status: courseIndex % 4 === 3 ? "revoked" : "active",
+        maxUses: 60,
+        useCount: 18 + courseIndex * 3,
         expiresAt: ahead(30),
         createdAt: ago(100),
         updatedAt: ago(courseIndex),
@@ -465,7 +465,7 @@ function buildSandbox(): DemoFirestore {
         createdBy: course.ownerId,
         title: `${title} — التسليم ${n + 1}`,
         instructions: `اقرأ كراسة المشروع بعناية، وسلّم المخرجات المطلوبة قبل الموعد النهائي. ${description}`,
-        deadline: n === 0 ? ago(10) : ahead(7 + n * 10),
+        deadline: n === 0 ? ago(10) : n === 1 && courseIndex < 3 ? ahead(3 + courseIndex) : ahead(7 + n * 10),
         deliverables: [
           { id: `dl_${assignmentId}_1`, title: "التقرير النهائي", format: "PDF" },
           { id: `dl_${assignmentId}_2`, title: "العرض التقديمي", format: "PPTX" },
@@ -474,10 +474,10 @@ function buildSandbox(): DemoFirestore {
         rubric: [
           { id: `rb_${assignmentId}_1`, title: "جودة التحليل", description: "عمق التحليل ودقة الاستنتاجات.", weighting: 40 },
           { id: `rb_${assignmentId}_2`, title: "المنهجية", description: "وضوح المنهجية وملاءمتها.", weighting: 30 },
-          { id: `rb_${assignmentId}_3`, title: "العرض والتوثيق", description: "التنظيم والاستشهاد الصحيح.", weighting: 30 },
+          { id: `rb_${assignmentId}_3`, title: "العرض والتوثيق", description: "التنظيم والاستشهاد الصحيح.", weighting: courseIndex === 5 && n === 0 ? 20 : 30 },
         ],
         outcomes: [...outcomes].slice(0, 3),
-        aiPolicy: aiPolicy(((courseIndex + n) % 5) as AIUsagePolicy["level"]),
+        aiPolicy: { ...aiPolicy(((courseIndex + n) % 5) as AIUsagePolicy["level"]), ...(courseIndex === 3 && n === 2 ? { needsConfirmation: true } : {}) },
         groupMode: n % 3 === 0 ? "group" : "individual",
         status: courseIndex === COURSES.length - 1 && n === 0 ? "draft" : "published",
         createdAt: ago(80 - courseIndex * 4 - n),
@@ -523,6 +523,12 @@ function buildSandbox(): DemoFirestore {
         studentIndex === 0 && n === 0 ? 58
         : status === "completed" ? 100 : status === "not_started" ? 0 : 15 + Math.floor(random() * 70);
 
+      /* مشروعٌ قائم لا يحمل موعدًا فات: يُنقل إلى الأيام القادمة، والمكتمل يبقى على موعده. */
+      const projectDeadline =
+        status !== "completed" && assignment.deadline && new Date(assignment.deadline).getTime() < Date.now()
+          ? ahead(studentIndex === 0 && n === 0 ? 3 : 3 + (index % 9))
+          : assignment.deadline;
+
       const project: ProjectDNA = {
         id: projectId,
         revision: 1 + (index % 5),
@@ -539,14 +545,14 @@ function buildSandbox(): DemoFirestore {
         requiredSkills: [...course.outcomes].slice(0, 3),
         learningOutcomes: [...assignment.outcomes],
         requiredActions: ["جمع المصادر", "بناء المنهجية", "تحليل النتائج", "كتابة التقرير"],
-        ...demoProjectStructure(projectId, assignment, progress, userId),
+        ...demoProjectStructure(projectId, { ...assignment, deadline: projectDeadline }, progress, userId),
         deadlines: {
-          final: assignment.deadline,
+          final: projectDeadline,
           timezone: "Asia/Kuwait",
           milestones: [
             { id: `ms_${projectId}_1`, title: "اعتماد الخطة", date: ago(20) },
             { id: `ms_${projectId}_2`, title: "المسودة الأولى", date: ago(6) },
-            { id: `ms_${projectId}_3`, title: "التسليم النهائي", date: assignment.deadline || ahead(14) },
+            { id: `ms_${projectId}_3`, title: "التسليم النهائي", date: projectDeadline },
           ],
         },
         citationStyle: pick(["APA 7", "IEEE", "Harvard"], index),
@@ -563,7 +569,7 @@ function buildSandbox(): DemoFirestore {
         estimatedWorkloadHours: 12 + (index % 28),
         status,
         progress,
-        nextAction: status === "completed" ? undefined : "إكمال قسم النتائج ومراجعة المصادر",
+        nextAction: status === "completed" ? "المشروع مُسلَّم ومُقيَّم — راجع الملاحظات النهائية للمشرف" : "إكمال قسم النتائج ومراجعة المصادر",
         createdAt: ago(70 - (index % 60)),
         updatedAt: ago(index % 12),
       };
@@ -759,9 +765,9 @@ function buildSandbox(): DemoFirestore {
   store.seed(
     "supportTickets",
     Array.from({ length: 14 }, (_, index) => ({
-      id: `demo_ticket_${index + 1}`,
+      id: `TKT-${2000 + index}`,
       data: {
-        id: `demo_ticket_${index + 1}`,
+        id: `TKT-${2000 + index}`,
         tenantId: DEMO_TENANT_ID,
         userId: pick(students, index).userId,
         userName: pick(students, index).name,

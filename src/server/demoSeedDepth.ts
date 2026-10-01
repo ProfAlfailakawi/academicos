@@ -183,7 +183,7 @@ function seedProjectDepth(
     bibliography: BIBLIOGRAPHY,
     disclosure: "استُخدم الذكاء الاصطناعي في المراجعة اللغوية واقتراح هيكل الأقسام فقط، وراجع الطالب كل مخرج يدويًا. لم يُولَّد أي نص نهائي آليًا.",
     integrityWarnings: completed ? [] : ["قسم النتائج يحتاج إحالة للجدول 3 قبل التسليم."],
-    variation: { id: `var_${pid.slice(-6)}`, argumentShape: "من المشكلة إلى الدليل", structureRhythm: "فقرات متوسطة", explanationStyle: "تحليلي", exampleLens: "بيانات الجامعة" },
+    variation: { id: "نمط: من المشكلة إلى الدليل", argumentShape: "من المشكلة إلى الدليل", structureRhythm: "فقرات متوسطة", explanationStyle: "تحليلي", exampleLens: "بيانات الجامعة" },
     accessTier: "paid",
     planId: "project_viva",
     targetPages: 12,
@@ -475,6 +475,18 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
       });
     });
 
+  // 1-ج) حوادث أمنية مفتوحة ومغلقة تغذّي عدّاد «حوادث مفتوحة» في لوحة التحكم.
+  [
+    ["high", "open", "محاولات دخول فاشلة متكررة", "5 محاولات فاشلة لحساب إداري من عنوان واحد خلال 10 دقائق؛ حُظر العنوان مؤقتًا.", 1],
+    ["medium", "open", "تصدير بيانات بحجم غير معتاد", "طلب تصدير 1,200 سجلًا من حساب أستاذ خارج ساعات الدوام المعتادة.", 2],
+    ["medium", "open", "مفتاح API قارب على الانتهاء", "مفتاح تكامل نظام الطلبة ينتهي خلال 5 أيام ويحتاج تدويرًا.", 3],
+    ["low", "resolved", "جهاز جديد لحساب مشرف", "أُكّد الجهاز مع صاحب الحساب وأُغلق الحادث.", 9],
+  ].forEach(([severity, status, title, detail, days], k) =>
+    push("securityEvents", `demo_security_event_${k + 1}`, {
+      tenantId, severity, status, title, detail, description: detail, type: "security", createdAt: ago(days as number), updatedAt: ago(Math.max(0, (days as number) - 1)),
+    }),
+  );
+
   // 2) فريق المشروع الجماعي للطالب الأول + المساعد والمشرفة كمراجعَين.
   //    هذا ما يجعل صفحات المشاريع والتقويم لدى المساعد والإدارة غير فارغة.
   const teamProjects = ["demo_project_1_1", "demo_project_1_2", "demo_project_1_3"];
@@ -614,7 +626,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     [ADMIN, "security", "critical", "مراجعة صلاحيات الأدمن", "طلب مراجعة دورية لصلاحيات 6 حسابات إدارية.", "in_progress"],
   ].forEach(([who, category, priority, subject, message, status], k) => {
     const person = who as typeof student1;
-    push("supportTickets", `demo_ticket_staff_${k + 1}`, {
+    push("supportTickets", `TKT-${2100 + k}`, {
       tenantId, userId: person.userId, displayName: person.name, userName: person.name, email: emailOf(person.userId),
       category, priority, subject, message, body: message, status, createdAt: ago(6 - k), updatedAt: ago(Math.max(0, 3 - k)),
     });
@@ -626,7 +638,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     ["account", "normal", "تحديث البريد الجامعي في الملف الشخصي", "تغيّر بريدي الجامعي وأحتاج تحديثه ليصلني الإشعار.", "resolved", 14],
     ["academic", "important", "طلب تمديد موعد تسليم DS240", "ظرف صحي طارئ؛ أرجو تمديد الموعد ثلاثة أيام مع إرفاق التقرير.", "in_progress", 4],
   ].forEach(([category, priority, subject, message, status, days], k) =>
-    push("supportTickets", `demo_ticket_student_${k + 1}`, {
+    push("supportTickets", `TKT-${2200 + k}`, {
       tenantId, userId: student1.userId, displayName: student1.name, userName: student1.name, email: emailOf(student1.userId),
       category, priority, subject, message, body: message, status, createdAt: ago(days as number), updatedAt: ago(Math.max(0, (days as number) - 2)),
     }),

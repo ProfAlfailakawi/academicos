@@ -9541,20 +9541,37 @@ async function startServer() {
           limit = Math.min(200, Math.max(20, Number(req.query.limit || 100))),
           pageToken = cleanField(req.query.pageToken, 1000) || undefined;
         // الزائر التجريبي لا يبلغ Firebase Auth الحقيقي أبدًا: يرى أعضاء صندوقه فقط.
-        if (DemoSandbox.isDemoRequest())
-          return res.json({
-            success: true,
-            users: Object.values(DEMO_ACTORS).map((actor) => ({
-              id: actor.userId,
-              email: actor.email,
-              displayName: actor.displayName,
-              role: actor.role,
+        if (DemoSandbox.isDemoRequest()) {
+          const actorUsers = Object.values(DEMO_ACTORS).map((actor) => ({
+            id: actor.userId,
+            email: actor.email,
+            displayName: actor.displayName,
+            role: actor.role,
+            tenantId: DEMO_TENANT_ID,
+            disabled: false,
+            emailVerified: true,
+          }));
+          // بقية طلبة الصندوق التجريبي: يظهر الدليل بحجم جامعةٍ لا بخمسة حسابات.
+          const seen = new Set(actorUsers.map((u) => u.id));
+          const snap = await DemoSandbox.currentFirestore()!
+            .collection("users")
+            .where("tenantId", "==", DEMO_TENANT_ID)
+            .limit(100)
+            .get();
+          const students = snap.docs
+            .map((d: any) => d.data())
+            .filter((u: any) => !seen.has(String(u.id)))
+            .map((u: any) => ({
+              id: String(u.id),
+              email: String(u.email || ""),
+              displayName: String(u.displayName || u.id),
+              role: "student",
               tenantId: DEMO_TENANT_ID,
               disabled: false,
               emailVerified: true,
-            })),
-            nextPageToken: null,
-          });
+            }));
+          return res.json({ success: true, users: [...actorUsers, ...students], nextPageToken: null });
+        }
         const page = await getAuth().listUsers(limit, pageToken);
         const isPlatformAdmin = isPlatformScopeActor(a);
         // Only a platform-scope admin may target another tenant via ?tenantId.

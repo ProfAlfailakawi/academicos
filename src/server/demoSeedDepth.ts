@@ -173,7 +173,7 @@ function seedProjectDepth(
   const document: ProjectDocument = {
     id: `demo_doc_${pid}`,
     projectId: pid,
-    generationSource: "safe_scaffold",
+    generationSource: "ai",
     mode: "write",
     assistanceMode: "disclosed_submission",
     language: "ar",
@@ -203,7 +203,7 @@ function seedProjectDepth(
     updatedBy: owner.userId,
     module: "writing",
     kind: "academic-document-manifest",
-    title: `AcademicOS Project Document · ${document.variation.id}`,
+    title: `مستند المشروع — ${project.title}`,
     content: JSON.stringify(document),
     status: "in_progress",
     isCanonical: false,

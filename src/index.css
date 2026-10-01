@@ -962,3 +962,12 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .app-sidebar--mobile .sidebar-nav-link { min-height: 44px; }
   .app-main label:has(> input, > select, > textarea) { min-height: 0; }
 }
+
+/* Dossier dialog print: print only the dialog, flowing on the page, without the
+   dimmed backdrop, the app shell behind it, or the Print/Close buttons. */
+@media print {
+  body:has(.dossier-print-root) > *:not(.dossier-print-root) { display: none !important; }
+  .dossier-print-root { position: static !important; inset: auto !important; background: #fff !important; padding: 0 !important; backdrop-filter: none !important; display: block !important; }
+  .dossier-print-root [role="dialog"] { max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; max-width: none !important; padding: 0 !important; }
+  .dossier-print-root button { display: none !important; }
+}

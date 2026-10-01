@@ -999,21 +999,27 @@ function SidebarContent({
         ))}
       </nav>
       <div className="mt-auto pt-5">
-        <div className="eyebrow px-3 mb-2">{t("layout.system")}</div>
-        <NavLink
-          to="/app/settings"
-          className={({ isActive }) =>
-            cn(
-              "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
-              isActive
-                ? "brand-soft-bg font-semibold"
-                : "muted hover:bg-[var(--panel-2)] hover:text-[var(--ink)]",
-            )
-          }
-        >
-          <Settings size={17} />
-          {t("layout.navAccountSettings")}
-        </NavLink>
+        {/* الطالب لا يجد الإعدادات في قائمته الرئيسية فيبقى رابطها هنا له؛
+            بقية الأدوار تصلها من «الإعدادات والسياسات» فلا يتكرّر الرابط. */}
+        {(academicWorkMode || quickSettings) && (
+          <div className="eyebrow px-3 mb-2">{t("layout.system")}</div>
+        )}
+        {academicWorkMode && (
+          <NavLink
+            to="/app/settings"
+            className={({ isActive }) =>
+              cn(
+                "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
+                isActive
+                  ? "brand-soft-bg font-semibold"
+                  : "muted hover:bg-[var(--panel-2)] hover:text-[var(--ink)]",
+              )
+            }
+          >
+            <Settings size={17} />
+            {t("layout.navAccountSettings")}
+          </NavLink>
+        )}
         {quickSettings}
         <div className="mt-3 rounded-xl border hairline p-3">
           <div className="flex items-center gap-2">

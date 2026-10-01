@@ -635,6 +635,7 @@ export function Layout() {
                   <option value="student">{t("demo.role.student")}</option>
                   <option value="teaching_assistant">{t("demo.role.teaching_assistant")}</option>
                   <option value="university_admin">{t("demo.role.university_admin")}</option>
+                  <option value="support_agent">{t("demo.role.support_agent")}</option>
                 </select>
                 <button
                   type="button"

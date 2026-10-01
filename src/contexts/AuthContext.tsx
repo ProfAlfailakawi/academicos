@@ -98,6 +98,7 @@ const DEMO_USER: User = {
 const DEMO_ROLE_USERS: Record<string, Pick<User, "id" | "email" | "displayName" | "role">> = {
   teaching_assistant: { id: "demo_user_ta", email: "demo_user_ta@demo.academicos.test", displayName: "م. عبدالعزيز الشايع (بيئة تجريبية)", role: "teaching_assistant" },
   university_admin: { id: "demo_user_admin", email: "demo_user_admin@demo.academicos.test", displayName: "د. محمد البدر (بيئة تجريبية)", role: "university_admin" },
+  support_agent: { id: "demo_user_support", email: "demo_user_support@demo.academicos.test", displayName: "أ. هند المطيري (بيئة تجريبية)", role: "support_agent" },
   student: { id: "demo_user_student_1", email: "demo_user_student_1@demo.academicos.test", displayName: "عبدالله الفيلكاوي (بيئة تجريبية)", role: "student" },
 };
 

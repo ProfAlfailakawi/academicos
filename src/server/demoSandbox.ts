@@ -57,7 +57,7 @@ export const DEMO_INSTRUCTOR_ID = "demo_user_instructor";
  */
 export interface DemoActorProfile {
   userId: string;
-  role: "professor" | "teaching_assistant" | "university_admin" | "student";
+  role: "professor" | "teaching_assistant" | "university_admin" | "support_agent" | "student";
   displayName: string;
   email: string;
 }
@@ -80,6 +80,13 @@ export const DEMO_ACTORS: Record<string, DemoActorProfile> = {
     role: "university_admin",
     displayName: "د. محمد البدر (بيئة تجريبية)",
     email: "demo_user_admin@demo.academicos.test",
+  },
+  support_agent: {
+    // دورٌ خامس يفتح صندوق الدعم (/app/support-console) على تذاكر البذرة نفسها.
+    userId: "demo_user_support",
+    role: "support_agent",
+    displayName: "أ. هند المطيري (بيئة تجريبية)",
+    email: "demo_user_support@demo.academicos.test",
   },
   student: {
     // أول طالبٍ في البذرة: مسجَّل في المقررات ولديه تسليمات وأدلّة تعلّم،
@@ -134,6 +141,7 @@ const STAFF = [
   ["demo_user_instructor", "د. سارة الخالد", "professor"],
   ["demo_user_ta", "م. عبدالعزيز الشايع", "teaching_assistant"],
   ["demo_user_admin", "د. محمد البدر", "university_admin"],
+  ["demo_user_support", "أ. هند المطيري", "support_agent"],
 ] as const;
 
 const COURSES: ReadonlyArray<readonly [string, string, string, string[]]> = [

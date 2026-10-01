@@ -1745,6 +1745,7 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "demo.role.professor": { ar:"أستاذ", en:"Professor", tr:"Öğretim üyesi", zh:"教授", hi:"प्रोफ़ेसर", es:"Profesor", fr:"Professeur", ur:"پروفیسر" },
   "demo.role.teaching_assistant": { ar:"مساعد تدريس", en:"Teaching assistant", tr:"Araştırma görevlisi", zh:"助教", hi:"शिक्षण सहायक", es:"Ayudante docente", fr:"Assistant d'enseignement", ur:"معاونِ تدریس" },
   "demo.role.university_admin": { ar:"إدارة الجامعة", en:"University admin", tr:"Üniversite yönetimi", zh:"校方管理员", hi:"विश्वविद्यालय प्रशासक", es:"Administración universitaria", fr:"Administration", ur:"یونیورسٹی منتظم" },
+  "demo.role.support_agent": { ar:"فريق الدعم", en:"Support team", tr:"Destek ekibi", zh:"支持团队", hi:"सहायता टीम", es:"Equipo de soporte", fr:"Équipe d'assistance", ur:"سپورٹ ٹیم" },
   "demo.role.student": { ar:"طالب", en:"Student", tr:"Öğrenci", zh:"学生", hi:"छात्र", es:"Estudiante", fr:"Étudiant", ur:"طالب علم" },
   "demo.badge": { ar:"بيئة تجريبية", en:"Demo", tr:"Demo", zh:"演示环境", hi:"डेमो", es:"Demostración", fr:"Démonstration", ur:"ڈیمو" },
   "demo.badgeAria": { ar:"بيئة تجريبية معزولة", en:"Isolated demo environment", tr:"Yalıtılmış demo ortamı", zh:"隔离的演示环境", hi:"पृथक डेमो वातावरण", es:"Entorno de demostración aislado", fr:"Environnement de démonstration isolé", ur:"الگ تھلگ ڈیمو ماحول" },

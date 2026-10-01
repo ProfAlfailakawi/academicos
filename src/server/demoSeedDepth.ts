@@ -37,6 +37,7 @@ export interface DemoDepthContext {
 const PROFESSOR = { userId: "demo_user_instructor", name: "د. سارة الخالد" };
 const TA = { userId: "demo_user_ta", name: "م. عبدالعزيز الشايع" };
 const ADMIN = { userId: "demo_user_admin", name: "د. محمد البدر" };
+const SUPPORT = { userId: "demo_user_support", name: "أ. هند المطيري" };
 const emailOf = (userId: string) => `${userId}@demo.academicos.test`;
 
 /* ------------------------------------------------------------------ */
@@ -456,6 +457,24 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     if (flagship || (p.status !== "not_started" && i % 3 === 0)) seedProjectDepth(p, owner, tenantId, sink, flagship ? "full" : "light");
   });
 
+  // 1-ب) استحقاق مشروع مفتوح لمشاريع الطالب الأول والأستاذة: بدونه تردّ واجهات
+  //      التصدير بـ«يلزم فتح المشروع الكامل» ولا يُرى أيٌّ من ملفات التسليم. سجلٌ
+  //      تجريبي داخل الصندوق المعزول فقط، لا دفعة حقيقية ولا مزوّد دفع.
+  ctx.projects
+    .filter((row) => {
+      const p = row.data as unknown as ProjectDNA;
+      return p.userId === student1.userId || p.userId === PROFESSOR.userId;
+    })
+    .forEach((row) => {
+      const p = row.data as unknown as ProjectDNA;
+      push("platform_entitlements", `demo_project_entitlement_${row.id}`, {
+        resource: "entitlements", tenantId, ownerId: p.userId, status: "active",
+        title: "استحقاق مشروع تجريبي — مشروع كامل مع الشفهي",
+        data: { kind: "project", projectId: row.id, planId: "project_viva", provider: "demo", externalId: `demo_entitlement_${row.id}`, activatedAt: ago(30) },
+        version: 1, createdBy: ADMIN.userId, updatedBy: ADMIN.userId, createdAt: ago(30), updatedAt: ago(30),
+      });
+    });
+
   // 2) فريق المشروع الجماعي للطالب الأول + المساعد والمشرفة كمراجعَين.
   //    هذا ما يجعل صفحات المشاريع والتقويم لدى المساعد والإدارة غير فارغة.
   const teamProjects = ["demo_project_1_1", "demo_project_1_2", "demo_project_1_3"];
@@ -479,10 +498,12 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
       );
   });
   ["demo_project_staff_2", "demo_project_staff_4"].forEach((pid) =>
-    push("projectMembers", `${pid}__${ADMIN.userId}`, {
-      projectId: pid, tenantId, userId: ADMIN.userId, email: emailOf(ADMIN.userId), displayName: ADMIN.name,
-      role: "reviewer", status: "active", invitedBy: PROFESSOR.userId, createdAt: ago(30), updatedAt: ago(2),
-    }),
+    [ADMIN, SUPPORT].forEach((who) =>
+      push("projectMembers", `${pid}__${who.userId}`, {
+        projectId: pid, tenantId, userId: who.userId, email: emailOf(who.userId), displayName: who.name,
+        role: "reviewer", status: "active", invitedBy: PROFESSOR.userId, createdAt: ago(30), updatedAt: ago(2),
+      }),
+    ),
   );
   ["demo_project_staff_1", "demo_project_staff_3"].forEach((pid) =>
     push("projectMembers", `${pid}__${TA.userId}`, {
@@ -500,6 +521,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     ["demo_project_3_1", TA, "reviewer", students[2]],
     ["demo_project_8_1", TA, "reviewer", students[7]],
     ["demo_project_staff_1", ADMIN, "reviewer", PROFESSOR],
+    ["demo_project_staff_3", SUPPORT, "reviewer", PROFESSOR],
   ];
   invites.forEach(([pid, who, role, by], k) => {
     if (!project(pid)) return;
@@ -538,6 +560,12 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
       ["system", "normal", "اكتملت مزامنة القوائم الليلية", "تمت مزامنة 2,340 تسجيلًا من نظام الطلبة.", "/app/jobs", false],
       ["audit", "important", "تقرير النزاهة الفصلي جاهز", "انخفضت حالات عدم الإفصاح 31٪ مقارنة بالفصل الماضي.", "/app/curriculum-twin", false],
     ],
+    [SUPPORT.userId]: [
+      ["system", "critical", "تذكرة حرجة بانتظار الرد", "«مراجعة صلاحيات الأدمن» — أولوية حرجة منذ أيام.", "/app/support-console", true],
+      ["system", "important", "تذكرتان جديدتان اليوم", "فاتورة وحدة الشفهي وصلاحية التصحيح في DS240.", "/app/support-console", true],
+      ["system", "normal", "اكتمل تصدير سجل التذاكر", "ملف التذاكر الأسبوعي جاهز للتنزيل.", "/app/jobs", false],
+      ["team", "normal", "دعوة لمراجعة مشروع", "د. سارة الخالد دعتك مراجعةً لمشروعها.", "/app/invitations", true],
+    ],
   };
   Object.entries(notices).forEach(([userId, items]) =>
     items.forEach(([type, priority, title, body, targetPath, requiresAction], k) =>
@@ -558,7 +586,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     ["roster_sync", "مزامنة القوائم", "failed", 40],
     ["viva_report", "تقرير جلسة الشفهي", "queued", 0],
   ];
-  [student1, PROFESSOR, TA, ADMIN].forEach((who, w) =>
+  [student1, PROFESSOR, TA, ADMIN, SUPPORT].forEach((who, w) =>
     jobKinds.slice(w % 2, (w % 2) + 3).forEach(([type, label, state, progress], k) =>
       push("jobs", `demo_job_${who.userId}_${k + 1}`, {
         tenantId, userId: who.userId, type, state, progress,
@@ -582,6 +610,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     [PROFESSOR, "technical", "normal", "تصدير الدرجات إلى نظام الطلبة", "زر التصدير يُنتج ملفًا بترميز لا يقرؤه النظام.", "resolved"],
     [TA, "account", "normal", "صلاحية التصحيح في DS240", "لا أرى تسليمات الشعبة الثانية ضمن قائمتي.", "open"],
     [ADMIN, "billing", "important", "فاتورة وحدة الشفهي", "نحتاج نسخة ضريبية من فاتورة سبتمبر باسم الجامعة.", "open"],
+    [SUPPORT, "account", "normal", "تفعيل التحقق الثنائي لحساب الدعم", "أحتاج تفعيل التحقق الثنائي قبل مراجعة التذاكر الحساسة.", "open"],
     [ADMIN, "security", "critical", "مراجعة صلاحيات الأدمن", "طلب مراجعة دورية لصلاحيات 6 حسابات إدارية.", "in_progress"],
   ].forEach(([who, category, priority, subject, message, status], k) => {
     const person = who as typeof student1;

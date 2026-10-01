@@ -169,7 +169,7 @@ export function AuthorshipIntegrityModal({
                 ["sentences", `${t("integrity.tabSentences")} (${report.sentenceBreakdown.length})`],
                 ["patterns", `${t("integrity.tabPatterns")} (${report.detectedClichés.length})`],
               ] as const).map(([key, label]) => (
-                <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={`focus-ring rounded-xl px-3 py-2 text-xs font-semibold whitespace-nowrap ${tab === key ? "brand-soft-bg" : "muted"}`}>{label}</button>
+                <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={`focus-ring shrink-0 rounded-xl px-3 py-2 text-xs font-semibold whitespace-nowrap ${tab === key ? "brand-soft-bg" : "muted"}`}>{label}</button>
               ))}
             </div>
 

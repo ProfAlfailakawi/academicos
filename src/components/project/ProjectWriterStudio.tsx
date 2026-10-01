@@ -442,7 +442,7 @@ export function ProjectWriterStudio({
               </div>
               <div className="writer-toolbar px-3 md:px-5 py-3 border-b hairline flex gap-2 overflow-x-auto">
                 {actionButtons.map(({ action, labelKey, icon: Icon, apply }) => (
-                  <button key={action} type="button" onClick={() => runAction(action, apply)} disabled={Boolean(actionBusy)} className="writer-action focus-ring rounded-xl border hairline px-3 py-2 inline-flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap">
+                  <button key={action} type="button" onClick={() => runAction(action, apply)} disabled={Boolean(actionBusy)} className="writer-action focus-ring rounded-xl border hairline px-3 py-2 shrink-0 inline-flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap">
                     {actionBusy === action ? <InlineLoader size={14}/> : !access?.canWriteFull ? <LockKeyhole size={14} /> : <Icon size={14} />}{t(labelKey)}
                   </button>
                 ))}

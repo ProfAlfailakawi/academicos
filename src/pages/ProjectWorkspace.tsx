@@ -35,6 +35,7 @@ import {
 import { api } from "../lib/api";
 import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
+import { ProgressRing, SeverityDot } from "../components/Infographics";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { DialogShell } from "../components/AppDialog";
@@ -962,33 +963,47 @@ function AuditModal({
   return (
     <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
-        <div className="text-[11px] muted">{t("pw.result")}</div>
-        <div className="flex items-end justify-between gap-4"><div className="text-2xl font-semibold mt-1">{label}</div><div className="text-end"><div className="text-2xl font-semibold mono-number">{audit.score??0}%</div><div className="text-[11px] muted">{audit.blockingIssues??0} {t("pw.blocking")} · {audit.warnings??0} {t("pw.warning")}</div></div></div>
-        <p className="body-copy mt-2">
+        <div className="flex items-center gap-4">
+          <ProgressRing pct={audit.score ?? 0} size={88} stroke={9} tone={audit.status === "ready" || audit.status === "mostly_ready" ? "success" : audit.status === "needs_attention" ? "warning" : "danger"} label={`${audit.score ?? 0}%`}>
+            <span className="text-xl font-semibold mono-number">{audit.score ?? 0}%</span>
+          </ProgressRing>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] muted">{t("pw.result")}</div>
+            <div className="text-2xl font-semibold mt-1">{label}</div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] muted">
+              <span className="inline-flex items-center gap-1.5"><SeverityDot tone="danger" />{audit.blockingIssues ?? 0} {t("pw.blocking")}</span>
+              <span className="inline-flex items-center gap-1.5"><SeverityDot tone="warning" />{audit.warnings ?? 0} {t("pw.warning")}</span>
+            </div>
+          </div>
+        </div>
+        <p className="body-copy mt-3">
           {t("pw.auditNote")}
         </p>
       </div>
-      <div className="mt-4 space-y-2">
-        {audit.checks.map((c) => (
-          <div key={c.id} className="rounded-xl border hairline p-3 flex gap-3">
-            <div
-              className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${c.status === "pass" ? "brand-soft-bg" : c.status === "critical" ? "bg-danger/12 text-danger " : "bg-warning/12 text-warning "}`}
-            >
-              {c.status === "pass" ? (
-                <Check size={15} />
-              ) : (
-                <AlertTriangle size={15} />
-              )}
-            </div>
-            <div>
-              <div className="text-sm font-semibold">{c.label}</div>
-              <div className="text-xs leading-6 muted mt-1">{c.detail}</div>
-              {c.action&&<div className="text-[11px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
-              {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ul className="mt-4 space-y-2">
+        {audit.checks.map((c) => {
+          const pass = c.status === "pass";
+          const tone = pass ? "brand-soft-bg" : c.status === "critical" ? "bg-danger/12 text-danger" : "bg-warning/12 text-warning";
+          return (
+            <li key={c.id} className="rounded-xl border hairline">
+              <details open={c.status === "critical"} className="group">
+                <summary className="focus-ring flex cursor-pointer list-none items-center gap-3 p-3 [&::-webkit-details-marker]:hidden">
+                  <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
+                    {pass ? <Check size={15} /> : <AlertTriangle size={15} />}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-semibold">{c.label}</span>
+                  <ChevronDown size={15} className="muted shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="px-3 pb-3 ps-14">
+                  <div className="text-xs leading-6 muted">{c.detail}</div>
+                  {c.action&&<div className="text-[11px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
+                  {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
+                </div>
+              </details>
+            </li>
+          );
+        })}
+      </ul>
     </Modal>
   );
 }

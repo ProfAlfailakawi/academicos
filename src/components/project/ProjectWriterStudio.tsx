@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DnaStepper } from "../dna/DnaKit";
+import { MiniBar } from "../Infographics";
 import { useDnaStepStateText } from "../dna/useDnaStepStateText";
 import {
   AlertTriangle,
@@ -422,7 +423,7 @@ export function ProjectWriterStudio({
               {document.sections.map((item, index) => (
                 <button key={item.id} type="button" onClick={() => setSelectedId(item.id)} className={`section-nav focus-ring w-full rounded-xl p-3 text-start flex items-start gap-3 ${item.id === section?.id ? "is-selected" : ""}`}>
                   <span className="h-7 w-7 rounded-lg soft-bg grid place-items-center text-[11px] font-semibold mono-number">{index + 1}</span>
-                  <span className="min-w-0 flex-1"><strong className="block text-xs leading-5">{item.title}</strong><span className="block text-[11px] muted mt-1">{item.wordCount} {t("writer.words")}</span></span>
+                  <span className="min-w-0 flex-1"><strong className="block text-xs leading-5">{item.title}</strong><span className="block text-[11px] muted mt-1">{item.wordCount} {t("writer.words")}</span><span className="block mt-1.5"><MiniBar value={item.wordCount} max={Math.max(1, ...document.sections.map((x) => x.wordCount))} tone={item.status === "verified" ? "success" : "brand"} /></span></span>
                   {item.status === "verified" ? <ShieldCheck size={13} className="text-success" /> : <span className="h-2 w-2 rounded-full bg-warning mt-1.5" />}
                 </button>
               ))}

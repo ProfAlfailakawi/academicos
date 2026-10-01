@@ -3,8 +3,10 @@ import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDialogA11y } from "../AppDialog";
 import { Fingerprint, Download, ShieldCheck, FileCheck2, BrainCircuit, Copy, Check, ExternalLink, AlertTriangle, History } from "lucide-react";
 import type { EvidenceCapsule, ProjectDNA } from "../../types";
+import { createPortal } from "react-dom";
 import { api } from "../../lib/api";
 import { formatDateTime, useI18n } from "../../lib/i18n";
+import { runtimeEnumLabel } from "../../lib/platform-locale";
 import { Button } from "../ui/button";
 import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
 
@@ -96,12 +98,12 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
           : t("dossier.verifying"), [verification?.status, t]);
   const verificationGood = verification && verification.status !== "invalid";
 
-  return (
-    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+  return createPortal(
+    <div role="presentation" className="dossier-print-root fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border hairline bg-[var(--panel)] shadow-2xl p-6 md:p-8 space-y-6">
-        <div className="flex items-start justify-between gap-4 border-b hairline pb-5">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b hairline pb-5">
           <div className="flex items-center gap-3 min-w-0"><div className="h-12 w-12 rounded-2xl tone-tile text-insight shrink-0"><Fingerprint size={26}/></div><div className="min-w-0"><div className="text-[11px] font-semibold uppercase tracking-wider text-insight">{t("ui.evidenceCapsule")}</div><h2 id={titleId} className="text-xl md:text-2xl font-bold tracking-tight mt-0.5">{t("dossier.title")}</h2><p className="text-[11px] text-muted-foreground mt-1">{t("dossier.description")}</p></div></div>
-          <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => window.print()}><Download size={15}/>{t("common.print")}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t("common.close")}</Button></div>
+          <div className="flex items-center gap-2 shrink-0"><Button size="sm" variant="outline" onClick={() => window.print()}><Download size={15}/>{t("common.print")}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t("common.close")}</Button></div>
         </div>
 
         {loading && <div className="min-h-56 grid place-items-center" aria-busy="true"><div className="text-center"><AcademicLoader size={48} label={t("dossier.building")} className="mx-auto"/><p className="text-xs text-muted-foreground mt-3">{t("dossier.building")}</p></div></div>}
@@ -123,8 +125,8 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <section className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-xs font-bold mb-3">{t("dossier.rubricState")}</div><div className="space-y-2">{capsule.rubric.length ? capsule.rubric.map((item, i) => <div key={`${item.title}-${i}`} className="flex items-start justify-between gap-3 text-[11px]"><span className="min-w-0">{item.title}</span><span className="text-muted-foreground shrink-0">{item.readiness || t("dossier.notEvidenced")}{item.weighting ? ` · ${item.weighting}%` : ""}</span></div>) : <div className="text-[11px] text-muted-foreground">{t("dossier.noRubric")}</div>}</div></section>
-                <section className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-xs font-bold mb-3">{t("dossier.learningProofs")}</div><div className="space-y-2">{capsule.proofOfLearning.length ? capsule.proofOfLearning.slice(0,6).map((item) => <div key={item.id} className="text-[11px] leading-5"><strong>{item.source}</strong><div className="text-muted-foreground">{item.summary}</div></div>) : <div className="text-[11px] text-muted-foreground">{t("dossier.noLearningProof")}</div>}</div></section>
+                <section className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-xs font-bold mb-3">{t("dossier.rubricState")}</div><div className="space-y-2">{capsule.rubric.length ? capsule.rubric.map((item, i) => <div key={`${item.title}-${i}`} className="flex items-start justify-between gap-3 text-[11px]"><span className="min-w-0">{item.title}</span><span className="text-muted-foreground shrink-0">{item.readiness ? runtimeEnumLabel(item.readiness, locale) : t("dossier.notEvidenced")}{item.weighting ? ` · ${item.weighting}%` : ""}</span></div>) : <div className="text-[11px] text-muted-foreground">{t("dossier.noRubric")}</div>}</div></section>
+                <section className="rounded-xl border hairline bg-[var(--bg)] p-4"><div className="text-xs font-bold mb-3">{t("dossier.learningProofs")}</div><div className="space-y-2">{capsule.proofOfLearning.length ? capsule.proofOfLearning.slice(0,6).map((item) => <div key={item.id} className="text-[11px] leading-5"><strong>{runtimeEnumLabel(String(item.source || ""), locale)}</strong><div className="text-muted-foreground">{item.summary}</div></div>) : <div className="text-[11px] text-muted-foreground">{t("dossier.noLearningProof")}</div>}</div></section>
               </div>
 
               <div className="rounded-xl border hairline bg-[var(--bg)] p-4 text-xs leading-6"><strong>{t("dossier.disclosure")}:</strong> {capsule.disclosure}</div>
@@ -142,7 +144,8 @@ export function AcademicDossierModal({ project, onClose }: { project: ProjectDNA
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

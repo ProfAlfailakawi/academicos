@@ -6061,6 +6061,29 @@ async function startServer() {
           locale: cleanField(project.language || profile?.language || "en", 24) || "en",
         };
         if (format === "pdf") {
+          /* العرض التجريبي لا يملك مُصيّر PDF خارجيًا (لا شبكة ولا أسرار). يُسلَّم
+             بديلٌ محلّي بحت: صفحة HTML جاهزة للطباعة تُفتح فيها نافذة الطباعة
+             ليحفظها الزائر PDF من المتصفح. خارج الصندوق التجريبي لا يتغيّر شيء. */
+          if (!externalServices.pdf.configured() && a.tenantId === DEMO_TENANT_ID) {
+            const safe =
+              project.title.replace(/[^\p{L}\p{N}._ -]+/gu, "_").slice(0, 80) ||
+              "AcademicOS-project";
+            const banner =
+              '<style>@media print{.demo-print-banner{display:none}}</style>' +
+              '<div class="demo-print-banner" dir="ltr" style="font:14px sans-serif;background:#fff7e0;border:1px solid #e0c060;padding:10px 14px;margin:0 0 12px">Demo preview — the print dialog opens automatically; choose "Save as PDF". / معاينة تجريبية: اختر «حفظ كـ PDF» من نافذة الطباعة.</div>' +
+              '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},400)})</script>';
+            const html = projectExportHtml(project, workspaceArtifacts, branding);
+            const withBanner = /<body[^>]*>/i.test(html)
+              ? html.replace(/<body[^>]*>/i, (m) => m + banner)
+              : banner + html;
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            res.setHeader(
+              "Content-Disposition",
+              `attachment; filename*=UTF-8''${encodeURIComponent(`${safe}-print.html`)}`,
+            );
+            res.setHeader("Cache-Control", "private, no-store");
+            return res.send(withBanner);
+          }
           if (!externalServices.pdf.configured())
             return res.status(503).json({
               error:

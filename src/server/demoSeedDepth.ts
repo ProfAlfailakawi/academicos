@@ -562,6 +562,7 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
     jobKinds.slice(w % 2, (w % 2) + 3).forEach(([type, label, state, progress], k) =>
       push("jobs", `demo_job_${who.userId}_${k + 1}`, {
         tenantId, userId: who.userId, type, state, progress,
+        title: `${label} — ${who.name}`,
         stages: [
           { key: "queued", label: "في الانتظار", state: "completed", at: hoursAgo(10 + k) },
           { key: "process", label, state: state === "completed" ? "completed" : state === "failed" ? "failed" : state === "running" ? "running" : "pending", at: hoursAgo(9 + k) },
@@ -589,6 +590,18 @@ export function seedDemoDepth(store: DemoFirestore, ctx: DemoDepthContext): void
       category, priority, subject, message, body: message, status, createdAt: ago(6 - k), updatedAt: ago(Math.max(0, 3 - k)),
     });
   });
+
+  // تذاكر إضافية للطالب الأول كي لا يبدو سجل الدعم في شاشته وحيدًا.
+  [
+    ["academic", "normal", "استفسار عن معيار التوثيق في CS310", "هل يُقبل أسلوب APA 7 بدل IEEE في تقرير المرحلة الثانية؟", "resolved", 21],
+    ["account", "normal", "تحديث البريد الجامعي في الملف الشخصي", "تغيّر بريدي الجامعي وأحتاج تحديثه ليصلني الإشعار.", "resolved", 14],
+    ["academic", "important", "طلب تمديد موعد تسليم DS240", "ظرف صحي طارئ؛ أرجو تمديد الموعد ثلاثة أيام مع إرفاق التقرير.", "in_progress", 4],
+  ].forEach(([category, priority, subject, message, status, days], k) =>
+    push("supportTickets", `demo_ticket_student_${k + 1}`, {
+      tenantId, userId: student1.userId, displayName: student1.name, userName: student1.name, email: emailOf(student1.userId),
+      category, priority, subject, message, body: message, status, createdAt: ago(days as number), updatedAt: ago(Math.max(0, (days as number) - 2)),
+    }),
+  );
 
   // 7) شهادات الجواز وروابط المشاركة للطالب الأول.
   [

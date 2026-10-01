@@ -1129,6 +1129,8 @@ export interface JobRecord {
     state: "pending" | "running" | "completed" | "failed";
     at?: string;
   }>;
+  /** Optional human-readable name shown instead of the raw id. */
+  title?: string;
   idempotencyKey?: string;
   inputHash?: string;
   resultRef?: string;

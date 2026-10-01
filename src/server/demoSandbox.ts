@@ -499,9 +499,9 @@ function buildSandbox(): DemoFirestore {
   students.forEach(({ userId, name }, studentIndex) => {
     /* الطالب الأول هو من تفتح عليه شاشة الطالب، فيُعطى ثلاثة مشاريع في مراحل
      * مختلفة (جارٍ، بانتظار المراجعة، مكتمل) بدل مشروعٍ واحدٍ لم يبدأ. */
-    const projectCount = studentIndex === 0 ? 3 : 1 + (studentIndex % 3);
+    const projectCount = studentIndex === 0 ? 5 : 1 + (studentIndex % 3);
     for (let n = 0; n < projectCount; n += 1) {
-      const index = studentIndex * 3 + n;
+      const index = studentIndex === 0 && n >= 3 ? 100 + n : studentIndex * 3 + n;
       const assignmentRow = pick(publishedAssignments, index);
       const assignment = assignmentRow.data as unknown as CourseAssignmentRecord;
       const courseRow = courses.find((row) => row.id === assignment.courseId)!;
@@ -509,7 +509,7 @@ function buildSandbox(): DemoFirestore {
       const projectId = `demo_project_${studentIndex + 1}_${n + 1}`;
       const status =
         studentIndex === 0
-          ? (["in_progress", "needs_review", "completed"] as const)[n]
+          ? (["in_progress", "needs_review", "completed", "completed", "completed"] as const)[n]
           : pick(PROJECT_STATUSES, index);
       const progress =
         studentIndex === 0 && n === 0 ? 58
@@ -671,11 +671,11 @@ function buildSandbox(): DemoFirestore {
   /* The demo actor is the professor, and `buildDashboard` is scoped to projects
    * a user owns or belongs to. Without work of their own, the first screen a
    * visitor lands on would be empty while the rest of the tenant is full. */
-  ["تطوير كراسة مشروع هندسة البرمجيات", "دراسة أثر سياسات الذكاء الاصطناعي على جودة التسليم", "إعادة تصميم تقويم مقرر تحليل البيانات", "مراجعة معايير النزاهة الأكاديمية"].forEach((title, n) => {
+  ["تطوير كراسة مشروع هندسة البرمجيات", "دراسة أثر سياسات الذكاء الاصطناعي على جودة التسليم", "إعادة تصميم تقويم مقرر تحليل البيانات", "مراجعة معايير النزاهة الأكاديمية", "دراسة جودة التغذية الراجعة في المقررات التطبيقية", "تقييم أثر المناقشات الشفهية على الفهم العميق"].forEach((title, n) => {
     const projectId = `demo_project_staff_${n + 1}`;
     const courseRow = courses[n % courses.length];
     const course = courseRow.data as unknown as CourseRecord;
-    const status = pick(PROJECT_STATUSES, n + 2);
+    const status: ProjectDNA["status"] = n >= 4 ? "completed" : pick(PROJECT_STATUSES, n + 2);
     const project: ProjectDNA = {
       id: projectId,
       revision: 2 + n,

@@ -541,10 +541,11 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .journey-card h3 { font-size: 19px; font-weight: 800; }
 .journey-card p { margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.75; }
 .journey-card__arrow { margin-inline-start: auto; color: var(--brand); }
-.journey-card--mint, .journey-card--brand { background: linear-gradient(145deg, color-mix(in srgb, var(--brand-soft) 78%, var(--panel)), var(--panel)); }
-.journey-card--sand { background: linear-gradient(145deg, color-mix(in srgb, var(--accent-soft) 84%, var(--panel)), var(--panel)); }
-.journey-card--blue { background: linear-gradient(145deg, color-mix(in srgb, #dcecff 68%, var(--panel)), var(--panel)); }
-.dark .journey-card--blue { background: linear-gradient(145deg, color-mix(in srgb, #18304b 72%, var(--panel)), var(--panel)); }
+/* سطح هادئ واحد للبطاقات الثلاث؛ اللون يبقى إشارة خفيفة في الزاوية فقط. */
+.journey-card--mint, .journey-card--brand { background: linear-gradient(160deg, color-mix(in srgb, var(--brand-soft) 32%, var(--panel)), var(--panel) 55%); }
+.journey-card--sand { background: linear-gradient(160deg, color-mix(in srgb, var(--accent-soft) 34%, var(--panel)), var(--panel) 55%); }
+.journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #dcecff 30%, var(--panel)), var(--panel) 55%); }
+.dark .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #18304b 34%, var(--panel)), var(--panel) 55%); }
 
 .understanding-card { background: linear-gradient(145deg, var(--brand-soft), color-mix(in srgb, var(--panel) 60%, var(--brand-soft))); }
 .understanding-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }

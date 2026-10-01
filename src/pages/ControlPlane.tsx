@@ -23,6 +23,15 @@ import { formatDateTime, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { AcademicLoader } from "../components/ui/AcademicLoader";
 
+/* تسميات عربية موجودة سلفًا لمفاتيح حالة البنية بدل عرض أسماء المتغيرات. */
+const SYSTEM_KEY_LABELS: Record<string, string> = {
+  aiConfigured: "ui.aiGateway",
+  storageConfigured: "ui.storage",
+  billingConfigured: "settings.paymentGateway",
+  dataRegion: "ui.dataRegion",
+  maintenance: "layout.maintenanceMode",
+};
+
 export function ControlPlane() {
   const { t, locale } = useI18n();
   const { user } = useAuth();
@@ -254,9 +263,14 @@ export function ControlPlane() {
                     key={k}
                     className="flex items-center justify-between rounded-xl bg-[var(--bg)] border hairline p-3"
                   >
-                    <span className="text-xs font-semibold">{k}</span>
-                    <span className="text-[11px] muted max-w-40 truncate" title={String(v)}>
-                      {String(v)}
+                    <span className="text-xs font-semibold">{SYSTEM_KEY_LABELS[k] ? t(SYSTEM_KEY_LABELS[k]) : k === "firebase" ? "Firestore" : k}</span>
+                    <span className="text-[11px] muted max-w-40 truncate inline-flex items-center gap-1.5" title={String(v)}>
+                      {typeof v === "boolean" && <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${(k === "maintenance" ? !v : v) ? "bg-success" : "bg-warning"}`} />}
+                      {typeof v === "boolean"
+                        ? k === "maintenance"
+                          ? t(v ? "settings.on" : "settings.off")
+                          : t(v ? "ui.configured" : "ui.notConfigured")
+                        : String(v)}
                     </span>
                   </div>
                 ))}

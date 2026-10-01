@@ -394,11 +394,11 @@ export function Settings() {
               <h2 className="section-title">{t("settings.servicesStatus")}</h2>
             </div>
             {h ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-5">
+              <div className="grid sm:grid-cols-3 gap-3 mt-5">
                 <Service
                   label={t("settings.server")}
                   ok={h.status === "ok"}
-                  value={h.status}
+                  value={h.status === "ok" ? t("ctrl.posture.healthy") : h.status}
                 />
                 <Service
                   label="Firestore"
@@ -493,7 +493,7 @@ export function Settings() {
             <p className="body-copy mt-3">{t("settings.academicSecurityNote")}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="lg:col-span-2">
           <CardContent>
             <div className="flex items-center gap-2">
               <KeyRound size={17} className="brand-text" />

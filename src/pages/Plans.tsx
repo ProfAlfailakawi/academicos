@@ -113,7 +113,7 @@ export function Plans() {
         const popular = plan.id === "project";
         const groupMismatch = Boolean(selected?.collaborationMode === "group" && paid && plan.id !== "group");
         const key = `plans.plan.${plan.id}`;
-        return <article key={plan.id} className={`plan-card ${popular ? "is-popular" : ""} ${groupMismatch ? "opacity-55" : ""}`}>
+        return <article key={plan.id} className={`plan-card ${popular ? "is-popular" : ""} ${groupMismatch ? "opacity-80" : ""}`}>
           {popular && <span className="plan-card__popular">{t("plans.popular")}</span>}
           <span className="plan-card__icon"><Icon size={22} /></span>
           <h2>{t(`${key}.name`)}</h2>

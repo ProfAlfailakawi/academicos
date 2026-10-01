@@ -1990,6 +1990,8 @@ export const firestoreStore = {
         incidentQuery.limit(100).get(),
         supportQuery.limit(250).get(),
       ]);
+    // الهدف في السجل معرّف مشروع؛ يُعرض بعنوانه متى عُرف بدل المعرّف الخام.
+    const projectTitleById = new Map(projects.map((p) => [p.id, p.title] as const));
     const now = Date.now();
     const sevenDays = now + 7 * 86400000;
     const aiCostUsd = aiSnap.docs.reduce(
@@ -2021,7 +2023,7 @@ export const firestoreStore = {
             id: d.id,
             actor: String(x.actor || ""),
             action: String(x.action || ""),
-            target: String(x.target || ""),
+            target: projectTitleById.get(String(x.target || "")) || String(x.target || ""),
             timestamp: String(x.timestamp || ""),
             reason: x.reason ? String(x.reason) : undefined,
           };

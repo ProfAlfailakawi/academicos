@@ -117,7 +117,7 @@ export function Plans() {
           {popular && <span className="plan-card__popular">{t("plans.popular")}</span>}
           <span className="plan-card__icon"><Icon size={22} /></span>
           <h2>{t(`${key}.name`)}</h2>
-          <div className="plan-price"><strong>{formatMoney(plan.amountUsd, currency, locale)}</strong></div>
+          <div className="plan-price"><strong><bdi dir="ltr">{formatMoney(plan.amountUsd, currency, locale)}</bdi></strong></div>
           <p>{t(`${key}.description`)}</p>
           <ul><li><Check size={14} /> {t("plans.featureNoRenewal")}</li><li><Check size={14} /> {t("plans.featureEvidence")}</li><li><Check size={14} /> {t("plans.featureLanguages")}</li></ul>
           <Button className="w-full mt-auto" variant={paid ? "default" : "outline"} disabled={busy === plan.id || groupMismatch || (paid && access?.unlocked && access.planId === plan.id)} onClick={() => paid ? checkout(plan.id as "project" | "project_viva" | "group") : selected ? window.location.assign(`/app/project/${selected.id}`) : window.location.assign("/app/upload")}>{busy === plan.id ? <InlineLoader size={15}/> : access?.unlocked && access.planId === plan.id ? <Check size={15} /> : paid ? <LockKeyhole size={15} /> : <Sparkles size={15} />}{access?.unlocked && access.planId === plan.id ? t("plans.active") : groupMismatch ? t("plans.individualOnly") : paid ? t("plans.choose") : t("plans.startPreview")}</Button>

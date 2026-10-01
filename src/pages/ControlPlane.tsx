@@ -205,7 +205,7 @@ export function ControlPlane() {
               </span>
             </div>
             <div className="mt-5 overflow-x-auto">
-              <table className="mobile-cards w-full min-w-[720px] text-sm">
+              <table className="mobile-cards w-full min-w-[720px] xl:min-w-0 text-sm">
                 <thead>
                   <tr className="text-[11px] muted border-b hairline">
                     <th className="text-start py-3 font-medium">{t('ctrl.col.project')}</th>

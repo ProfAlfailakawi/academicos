@@ -1012,7 +1012,7 @@ function SidebarContent({
           }
         >
           <Settings size={17} />
-          {t("layout.navSettings")}
+          {t("layout.navAccountSettings")}
         </NavLink>
         {quickSettings}
         <div className="mt-3 rounded-xl border hairline p-3">

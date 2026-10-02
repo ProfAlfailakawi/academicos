@@ -749,10 +749,10 @@ export function Layout() {
           <div className="predictive-mobile-wrap 2xl:hidden px-4 md:px-7 pt-2.5">
             <button
               onClick={goToPrediction}
-              className="predictive-mobile focus-ring mx-auto w-full max-w-[1440px] flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-start"
+              className="predictive-mobile predictive-mobile--chip focus-ring flex w-fit max-w-full items-center gap-2 rounded-full px-2 py-1 text-start"
             >
-              <span className="predictive-chip__spark h-7 w-7 shrink-0 rounded-lg flex items-center justify-center">
-                <Sparkles size={14} />
+              <span className="predictive-chip__spark h-6 w-6 shrink-0 rounded-full flex items-center justify-center">
+                <Sparkles size={12} />
               </span>
               <span className="min-w-0 flex-1 flex items-center gap-2">
                 <span className="shrink-0 text-[11px] font-bold uppercase tracking-[.12em] muted">
@@ -767,7 +767,7 @@ export function Layout() {
                   {prediction.label}
                 </span>
               </span>
-              <ArrowRight size={15} className="shrink-0 muted directional-icon" />
+              <ArrowRight size={13} className="shrink-0 muted directional-icon" />
             </button>
           </div>
         )}

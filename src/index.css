@@ -542,6 +542,16 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
    the tile instead of shrinking to a narrow box-in-a-box. */
 .journey-card:has(> .academic-card) { padding: 0; align-items: stretch; }
 .journey-card > .academic-card { width: 100%; border: 0; box-shadow: none; border-radius: inherit; }
+/* Phones: the three shortcut tiles read as one compact row each (icon beside
+   title and hint) instead of ~300px-tall cards that were mostly empty. */
+@media (max-width: 767px) {
+  .journey-card:has(> .academic-card) { min-height: 0; }
+  .journey-body { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+  .journey-body .journey-icon { grid-row: 1 / span 3; width: 44px; height: 44px; border-radius: 14px; }
+  .journey-body h3 { margin-top: 0; font-size: 16px; }
+  .journey-body p { margin-top: 2px; }
+  .journey-body > div { margin-top: 6px; }
+}
 /* Demo pill: amber-500 on a 15% amber wash read at ~2:1 in light mode. */
 :root:not(.dark) .demo-pill { color: #92400e; }
 :root:not(.dark) .demo-pill .demo-pill__role { color: #92400e; }

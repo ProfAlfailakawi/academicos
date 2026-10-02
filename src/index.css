@@ -138,6 +138,8 @@ svg.lucide {
     color: var(--ink);
     text-wrap: balance;
   }
+  /* Role landing headline: same text, capped so it stops outweighing the page. */
+  .role-home .page-title { @apply md:text-[34px] md:leading-[1.2]; }
   .section-title {
     @apply text-lg md:text-xl font-semibold;
     letter-spacing: -.018em;

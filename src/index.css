@@ -1005,3 +1005,11 @@ button.brand-bg:disabled,
   box-shadow: none;
 }
 :root.dark .ui-button[data-variant="default"]:disabled { opacity: .5; }
+
+/* Phones: decorative hero shield tile hidden; more room above the bottom dock. */
+@media (max-width: 639px) {
+  .hero-shield { display: none; }
+}
+@media (max-width: 1023px) {
+  .app-main { padding-bottom: calc(9.75rem + env(safe-area-inset-bottom)) !important; }
+}

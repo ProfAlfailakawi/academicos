@@ -349,7 +349,7 @@ export function CourseOS() {
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6 pt-5 border-t hairline">
           <Mini label={t("ui.courseOutcomes")} value={course.outcomes.length} />
           <Mini label={t("ui.assignments")} value={assignments.length} />
-          <Mini label={t("ui.defaultAiPolicy")} value={`L${course.aiPolicy.level}`} />
+          <Mini label={t("ui.defaultAiPolicy")} value={locale === "ar" ? `${t("ui.level")} ${course.aiPolicy.level}` : `L${course.aiPolicy.level}`} />
         </div>
       </header>
       {error && (

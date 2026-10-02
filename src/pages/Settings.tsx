@@ -23,9 +23,20 @@ import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
+type SettingsTab = "look" | "profile" | "billing" | "security";
+const SETTINGS_TABS: ReadonlyArray<readonly [SettingsTab, string]> = [
+  ["look", "settings.appearance"],
+  ["profile", "settings.academicProfile"],
+  ["billing", "settings.projectBilling"],
+  ["security", "settings.academicSecurity"],
+];
+
 export function Settings() {
   const location = useLocation();
   const { t, locale, meta, numerals, setNumerals, formatNumber } = useI18n();
+  // تنظيم العرض فقط: كل البطاقات تبقى مركّبة وحقولها وحالتها كما هي، وتُخفى غير النشطة.
+  const [tab, setTab] = useState<SettingsTab>(() => (typeof window !== "undefined" && /(^|[#&])join=/.test(window.location.hash) ? "profile" : "look"));
+  const tabCls = (k: SettingsTab) => (k === tab ? "" : "hidden");
   const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
   const { theme, setTheme, accessibility, setAccessibility } =
@@ -48,6 +59,7 @@ export function Settings() {
   useEffect(() => {
     const invitedCode = new URLSearchParams(location.hash.replace(/^#/, "")).get("join");
     if (invitedCode) {
+      setTab("profile");
       setJoinCode(invitedCode.toUpperCase());
       setJoinMessage(t("settings.reviewJoin"));
     }
@@ -168,8 +180,15 @@ export function Settings() {
           {h.incidentBanner}
         </div>
       )}
+      <div className="segmented responsive-scroll" role="group" aria-label={t("settings.title")}>
+        {SETTINGS_TABS.map(([key, label]) => (
+          <button key={key} type="button" aria-pressed={tab === key} onClick={() => setTab(key)} className="focus-ring">
+            {t(label)}
+          </button>
+        ))}
+      </div>
       <div className="grid lg:grid-cols-2 gap-5">
-        <Card>
+        <Card className={` ${tabCls("look")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Sun size={17} className="brand-text" />
@@ -192,7 +211,7 @@ export function Settings() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("look")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Eye size={17} className="brand-text" />
@@ -235,7 +254,7 @@ export function Settings() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("look")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Languages size={17} className="brand-text" />
@@ -267,7 +286,7 @@ export function Settings() {
             </fieldset>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("profile")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <UserRound size={17} className="brand-text" />
@@ -334,7 +353,7 @@ export function Settings() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("profile")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <KeyRound size={17} className="brand-text" />
@@ -359,7 +378,7 @@ export function Settings() {
             {joinMessage && <p className="text-xs muted mt-3">{joinMessage}</p>}
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("billing")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <CreditCard size={17} className="brand-text" />
@@ -387,7 +406,7 @@ export function Settings() {
             <Button className="mt-4" asChild><Link to="/app/plans">{t("settings.viewPlans")}</Link></Button>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2">
+        <Card className={`lg:col-span-2 ${tabCls("billing")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Server size={17} className="brand-text" />
@@ -464,7 +483,7 @@ export function Settings() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("security")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Download size={17} className="brand-text" />
@@ -484,7 +503,7 @@ export function Settings() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className={` ${tabCls("security")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <ShieldCheck size={17} className="brand-text" />
@@ -493,7 +512,7 @@ export function Settings() {
             <p className="body-copy mt-3">{t("settings.academicSecurityNote")}</p>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2">
+        <Card className={`lg:col-span-2 ${tabCls("security")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <KeyRound size={17} className="brand-text" />
@@ -513,7 +532,7 @@ export function Settings() {
             )}
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2">
+        <Card className={`lg:col-span-2 ${tabCls("security")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
               <Trash2 size={17} className="text-danger" />

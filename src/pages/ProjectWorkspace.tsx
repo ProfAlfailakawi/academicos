@@ -35,7 +35,8 @@ import {
 import { api } from "../lib/api";
 import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
-import { ProgressRing, SeverityDot } from "../components/Infographics";
+import { ProgressRing, SeverityDot, type Tone } from "../components/Infographics";
+import { FoldText, LevelMeter, StackedBar, StepTrack } from "../components/VisualBits";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { DialogShell } from "../components/AppDialog";
@@ -545,9 +546,9 @@ function StudentPlan({
   return (
     <div className="space-y-5">
       <section className="grid sm:grid-cols-3 gap-3">
-        <Mini label={t("pw.tasksMetric")} value={String(project.tasks.length)} hint={t("pw.tasksMetricHint")} />
-        <Mini label={t("pw.deliverablesMetric")} value={String(project.deliverables.length)} hint={t("pw.deliverablesMetricHint")} />
-        <Mini label={t("ui.rubric")} value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
+        <Mini icon={<ListChecks size={15} />} label={t("pw.tasksMetric")} value={String(project.tasks.length)} hint={t("pw.tasksMetricHint")} />
+        <Mini icon={<FileCheck2 size={15} />} label={t("pw.deliverablesMetric")} value={String(project.deliverables.length)} hint={t("pw.deliverablesMetricHint")} />
+        <Mini icon={<ClipboardCheck size={15} />} label={t("ui.rubric")} value={String(project.rubric.length)} hint={t("pw.rubricMetricHint")} />
       </section>
       <Tasks project={project} onChange={onTask} />
       <AssignmentClarifications project={project} />
@@ -557,6 +558,8 @@ function StudentPlan({
     </div>
   );
 }
+
+const AI_LEVEL_MAX = 5;
 
 function Overview({
   project,
@@ -576,7 +579,7 @@ function Overview({
         <section className="relative overflow-hidden rounded-[22px] brand-hero p-6 md:p-8">
           <div className="absolute inset-0 opacity-10 paper-grid" />
           <div className="relative">
-            <div className="text-xs text-white/70 flex items-center gap-2">
+            <div className="text-xs muted flex items-center gap-2">
               <Sparkles size={15} />
               {t("ui.whatNext")}
             </div>
@@ -584,7 +587,7 @@ function Overview({
               {next?.title || project.nextAction}
             </h2>
             {next?.description && (
-              <p className="text-white/70 text-sm leading-7 mt-2 max-w-2xl">
+              <p className="muted text-sm leading-7 mt-2 max-w-2xl">
                 {next.description}
               </p>
             )}
@@ -600,18 +603,29 @@ function Overview({
         </section>
         <div className="grid md:grid-cols-3 gap-3">
           <Mini
+            icon={<FileCheck2 size={15} />}
             label={t("pw.deliverables")}
             value={`${project.deliverables.filter((d) => d.status === "ready" || d.status === "completed").length}/${project.deliverables.length}`}
             hint={t("pw.readyHint")}
           />
           <Mini
+            icon={<ClipboardCheck size={15} />}
             label={t("ui.rubric")}
             value={`${project.rubric.filter((r) => r.readiness === "covered").length}/${project.rubric.length || 0}`}
             hint={t("pw.criteriaCovered")}
           />
           <Mini
+            icon={<Bot size={15} />}
             label={t("pw.policy")}
-            value={`L${project.aiPolicy.level}`}
+            value={
+              <span className="inline-flex flex-col gap-2">
+                <span dir="ltr">
+                  {project.aiPolicy.level}
+                  <span className="text-sm muted font-normal">/{AI_LEVEL_MAX}</span>
+                </span>
+                <LevelMeter level={project.aiPolicy.level} max={AI_LEVEL_MAX} />
+              </span>
+            }
             hint={
               project.aiPolicy.needsConfirmation ? t("pw.needsConfirm") : t("pw.defined")
             }
@@ -622,9 +636,9 @@ function Overview({
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="section-title">{t("pw.adaptiveWorkspace")}</h2>
-                <p className="body-copy mt-1">
-                  {t("pw.modulesNote")}
-                </p>
+                <div className="mt-1">
+                  <FoldText text={t("pw.modulesNote")} limit={60} />
+                </div>
               </div>
               <GitBranch className="brand-text" />
             </div>
@@ -680,7 +694,15 @@ function Overview({
               <ShieldCheck size={17} className="brand-text" />
               <h2 className="text-sm font-semibold">{t("ui.aiPolicy")}</h2>
             </div>
-            <p className="body-copy mt-3">{project.aiPolicy.summary}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <LevelMeter level={project.aiPolicy.level} max={AI_LEVEL_MAX} />
+              <span className="text-[11px] muted mono-number" dir="ltr">
+                {project.aiPolicy.level}/{AI_LEVEL_MAX}
+              </span>
+            </div>
+            <div className="mt-3">
+              <FoldText text={project.aiPolicy.summary} />
+            </div>
             {project.aiPolicy.needsConfirmation && (
               <div className="mt-3 rounded-xl bg-warning/12 text-warning text-xs p-3 flex gap-2">
                 <AlertTriangle size={15} />
@@ -772,6 +794,8 @@ function Tasks({
   );
 }
 
+const DELIVERABLE_FLOW = ["pending", "in_progress", "ready", "completed"];
+
 function Deliverables({
   project,
   onChange,
@@ -793,10 +817,20 @@ function Deliverables({
             </div>
             <h2 className="section-title mt-5">{d.title}</h2>
             <p className="body-copy mt-2">{t("pw.format")}: {d.format}</p>
+            <div className="mt-4">
+              <StepTrack
+                ariaLabel={d.title}
+                index={Math.max(0, DELIVERABLE_FLOW.indexOf(d.status))}
+                steps={[t("pw.pending"), t("pw.inProgress"), t("pw.readyForSubmit"), t("pw.submittedArchived")]}
+              />
+            </div>
             {d.validationRules?.length ? (
-              <ul className="mt-4 space-y-1 text-xs muted">
+              <ul className="mt-4 space-y-1.5 text-xs muted">
                 {d.validationRules.map((v) => (
-                  <li key={v}>• {v}</li>
+                  <li key={v} className="flex gap-2">
+                    <ListChecks size={13} className="mt-0.5 shrink-0 brand-text" aria-hidden="true" />
+                    <span>{v}</span>
+                  </li>
                 ))}
               </ul>
             ) : null}
@@ -883,7 +917,37 @@ function Rubric({
   onChange: (id: string, status: string) => void;
 }) {
   const { t } = useI18n();
+  const readinessTone = (s?: string): Tone =>
+    s === "covered" ? "success" : s === "partial" || s === "needs_revision" ? "warning" : "muted";
+  const legend: Array<[string, Tone]> = [
+    [t("pw.covered"), "success"],
+    [t("pw.partial") + " / " + t("pw.needsRevision"), "warning"],
+    [t("pw.notEvidenced"), "muted"],
+  ];
   return project.rubric.length ? (
+    <div className="space-y-4">
+    <Card>
+      <CardContent className="p-4">
+        <StackedBar
+          ariaLabel={`${t("ui.rubric")}: ${project.rubric.map((r) => `${r.title} ${r.weighting}%`).join("، ")}`}
+          segments={project.rubric.map((r) => ({
+            key: r.id,
+            value: r.weighting,
+            tone: readinessTone(r.readiness),
+            label: `${r.title} · ${r.weighting}%`,
+            text: `${r.weighting}%`,
+          }))}
+        />
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] muted">
+          {legend.map(([label, tone]) => (
+            <span key={label} className="inline-flex items-center gap-1.5">
+              <SeverityDot tone={tone} />
+              {label}
+            </span>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
     <div className="grid lg:grid-cols-2 gap-4 lg:[&>*:last-child:nth-child(odd)]:col-span-2">
       {project.rubric.map((r) => (
         <Card key={r.id}>
@@ -893,7 +957,8 @@ function Rubric({
                 <h2 className="section-title">{r.title}</h2>
                 <p className="body-copy mt-2">{r.description}</p>
               </div>
-              <div className="h-11 w-11 rounded-xl soft-bg flex items-center justify-center text-xs font-semibold mono-number shrink-0">
+              <div className="inline-flex items-center gap-1.5 shrink-0 text-xs font-semibold mono-number" dir="ltr">
+                <SeverityDot tone={readinessTone(r.readiness)} />
                 {r.weighting}%
               </div>
             </div>
@@ -920,6 +985,7 @@ function Rubric({
         </Card>
       ))}
     </div>
+    </div>
   ) : (
     <Card>
       <CardContent>
@@ -932,11 +998,14 @@ function Rubric({
   );
 }
 
-function Mini({ label, value, hint }: any) {
+function Mini({ label, value, hint, icon }: any) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="eyebrow">{label}</div>
+        <div className="eyebrow flex items-center gap-1.5">
+          {icon}
+          {label}
+        </div>
         <div className="text-2xl font-semibold mt-3 mono-number">{value}</div>
         <div className="text-[11px] muted mt-1">{hint}</div>
       </CardContent>

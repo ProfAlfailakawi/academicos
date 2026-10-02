@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { Card, CardContent } from "../components/ui/card";
 import { useI18n } from "../lib/i18n";
@@ -51,15 +51,42 @@ export function Status() {
             {h.incidentBanner}
           </div>
         )}
-        <div className="grid sm:grid-cols-2 gap-3 mt-8">
+        {h === null && (
+          <div className="grid sm:grid-cols-2 gap-3 mt-8" role="status" aria-busy="true" aria-label={t("app.loading")}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-24 rounded-2xl soft-bg animate-pulse" />
+            ))}
+          </div>
+        )}
+        {h?.status === "error" && (
+          <div role="alert" className="mt-6 rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-danger flex items-center gap-2">
+            <AlertTriangle size={16} className="shrink-0" />
+            {t("ui.loadError")}
+          </div>
+        )}
+        {services.length > 0 && (
+          <div className="mt-8 flex items-center gap-1.5" dir="ltr" role="img" aria-label={`${services.filter(([, ok]: any) => ok).length}/${services.length}`}>
+            {services.map(([label, ok]: any) => (
+              <span
+                key={label}
+                title={label}
+                className="h-3 flex-1 rounded-full"
+                style={{ background: ok ? "var(--success)" : "var(--warning)" }}
+              />
+            ))}
+          </div>
+        )}
+        <div className="grid sm:grid-cols-2 gap-3 mt-4">
           {services.map(([label, ok]: any) => (
             <Card key={label}>
               <CardContent>
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-sm">{label}</div>
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
-                  />
+                  {ok ? (
+                    <CheckCircle2 size={16} className="text-success" aria-hidden="true" />
+                  ) : (
+                    <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
+                  )}
                 </div>
                 <div className="text-[11px] muted mt-2">
                   {ok

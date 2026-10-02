@@ -2,13 +2,14 @@ import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ArrowRight, Award, Bell, BookOpenCheck, BrainCircuit, CalendarDays, Camera, CheckCircle2, Clock3, FileHeart, FilePenLine, FileText, FolderOpen, GraduationCap, LoaderCircle, Mic2, Paperclip, ScanSearch, ShieldCheck, Sparkles, Target, WandSparkles, X, Zap } from "lucide-react";
-import { DnaHubMap, type DnaHubNode } from "../components/dna/DnaKit";
+import { DnaHubMap, DnaRing, type DnaHubNode } from "../components/dna/DnaKit";
 import { api } from "../lib/api";
 import type { LearningBrain, MissionControlPlan, ProjectDNA, UserProfile } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { useI18n } from "../lib/i18n";
+import { FoldText } from "../components/VisualBits";
 import { InlineLoader } from "../components/ui/AcademicLoader";
 
 const MAX = 20 * 1024 * 1024;
@@ -222,7 +223,7 @@ export function MissionControl() {
       <div className="p-6 md:p-9 lg:p-11">
         <div className="inline-flex items-center gap-2 rounded-full brand-soft-bg px-3 py-1.5 text-[11px] font-semibold"><Sparkles size={14}/>{t("mission.smartInbox")}</div>
         <h1 className="text-3xl md:text-5xl font-semibold tracking-[-.05em] leading-[1.12] mt-5">{t("mission.hello")} {firstName},<br/>{t("mission.whatToday")}</h1>
-        <p className="body-copy mt-4 max-w-2xl">{t("mission.heroDesc")}</p>
+        <div className="mt-4 max-w-2xl"><FoldText text={t("mission.heroDesc")} limit={100}/></div>
         <div className="academic-inbox mt-6 rounded-[26px] border hairline bg-[var(--panel)] p-3 md:p-4 shadow-sm">
           <textarea value={text} onChange={(e)=>setText(e.target.value)} className="w-full min-h-28 bg-transparent resize-none outline-none px-2 pt-2 text-sm md:text-base leading-7" placeholder={t("mission.placeholder")} aria-label={t("mission.whatToday")}/>
           {!!files.length && <div className="flex flex-wrap gap-2 px-2 pb-2">{files.map((file,index)=><span key={`${file.name}-${index}`} className="inline-flex items-center gap-2 rounded-full soft-bg px-3 py-1.5 text-[11px]"><FileText size={12}/><span className="max-w-48 truncate">{file.name}</span><button aria-label={`${t("mission.remove")} ${file.name}`} onClick={()=>setFiles((current)=>current.filter((_,i)=>i!==index))}><X size={11}/></button></span>)}</div>}
@@ -232,7 +233,7 @@ export function MissionControl() {
             <ToolButton icon={Paperclip} label={t("mission.upload")} onClick={()=>fileInput.current?.click()}/><ToolButton icon={Camera} label={t("mission.camera")} onClick={()=>cameraInput.current?.click()}/><ToolButton icon={listening?LoaderCircle:Mic2} label={listening?t("mission.listening"):t("mission.speak")} onClick={voiceInput} spin={listening} disabled={listening}/>
           </div><Button onClick={launch} disabled={!canGo||busy} className="min-w-40">{busy?<InlineLoader size={16}/>:<WandSparkles size={16}/>} {busy?t("mission.processing"):t("mission.start")}<ArrowRight size={15} className="directional-icon"/></Button></div>
         </div>
-        <div className="flex gap-2 flex-wrap mt-3" aria-label={t("mission.optionalRouting")}>{(["auto","write","rescue","exam"] as Intent[]).map((value)=><button key={value} onClick={()=>setIntent(value)} className={`focus-ring rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all ${intent===value?"bg-[var(--brand)] text-white border-[var(--brand)] shadow-xs":"bg-[var(--panel)] text-[var(--ink)] border-[var(--line-strong)] hover:bg-[var(--panel-2)]"}`}>{t(`mission.intent.${value}`)}{value==="auto"&&canGo?` · ${t("mission.routesTo")} ${intentLabel(resolvedIntent)}`:""}</button>)}</div>
+        <div className="flex gap-2 flex-wrap mt-3" aria-label={t("mission.optionalRouting")}>{(["auto","write","rescue","exam"] as Intent[]).map((value)=><button key={value} onClick={()=>setIntent(value)} className={`focus-ring rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all ${intent===value?"bg-[var(--brand)] text-[color:var(--on-brand)] border-[var(--brand)] shadow-xs":"bg-[var(--panel)] text-[var(--ink)] border-[var(--line-strong)] hover:bg-[var(--panel-2)]"}`}>{t(`mission.intent.${value}`)}{value==="auto"&&canGo?` · ${t("mission.routesTo")} ${intentLabel(resolvedIntent)}`:""}</button>)}</div>
         {error&&<div role="alert" className="mt-3 rounded-xl bg-danger/15 border border-danger/30 text-danger p-3.5 text-xs font-medium leading-relaxed">{error}</div>}
       </div>
       <div className="journey-illustration student-hub relative min-h-[330px] overflow-hidden flex flex-col justify-between p-3 md:p-5" role="group" aria-label={t("mission.imageAlt")}><DnaHubMap animate={false} ariaLabel={t("mission.brainTitle")} center={{icon:firstInitial?<span className="student-hub__initial">{firstInitial}</span>:<BrainCircuit size={30}/>,ariaLabel:firstName}} nodes={brainNodes} overline={t("ui.learningBrain")} title={t("mission.brainTitle")} minHeight={300}/><div className="student-hub__note rounded-2xl p-4 border hairline"><div className="flex items-center gap-2 text-xs font-semibold"><Zap size={14} className="brand-text"/>{t("mission.valueFirst")}</div><p className="text-[11px] muted leading-5 mt-1">{t("mission.valueFirstDesc")}</p></div></div>
@@ -247,15 +248,12 @@ export function MissionControl() {
             <div className="eyebrow">{t("mission.profileInviteEyebrow")}</div>
           </div>
           <h2 id="personalize-title" className="section-title mt-4">{t("mission.profileInviteTitle")}</h2>
-          <p className="body-copy mt-2 max-w-2xl">{t("mission.profileInviteDesc")}</p>
+          <div className="mt-2 max-w-2xl"><FoldText text={t("mission.profileInviteDesc")} limit={100}/></div>
         </div>
         <div className="min-w-0 hairline lg:border-s lg:ps-6">
-          <div className="flex items-baseline justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <DnaRing value={onboardingDone} max={ONBOARDING_FIELDS.length} size={64} stroke={6} tone="accent" label={<span className="mono-number" style={{color:"var(--accent-ink)"}}>{onboardingDone}/{ONBOARDING_FIELDS.length}</span>} ariaLabel={`${onboardingDone}/${ONBOARDING_FIELDS.length}`}/>
             <span className="text-[11px] font-semibold muted">{t("mission.profileInviteProgress").replace("{done}",String(onboardingDone)).replace("{total}",String(ONBOARDING_FIELDS.length))}</span>
-            <span className="mono-number text-sm font-bold" style={{color:"var(--accent)"}}>{onboardingDone}/{ONBOARDING_FIELDS.length}</span>
-          </div>
-          <div className="onboarding-invite__track mt-2 h-1.5 w-full overflow-hidden rounded-full" role="presentation">
-            <span className="onboarding-invite__fill block h-full rounded-full" style={{inlineSize:`${Math.max(4,(onboardingDone/ONBOARDING_FIELDS.length)*100)}%`}}/>
           </div>
           <Button asChild className="mt-5 w-full"><Link to="/app/onboarding">{t("mission.profileInviteCta")}<ArrowRight size={15} className="directional-icon"/></Link></Button>
           <p className="text-[11px] muted leading-5 mt-2.5 text-center">{t("mission.profileInviteTime")}</p>
@@ -278,11 +276,11 @@ export function MissionControl() {
 
     <section aria-labelledby="academic-toolkit-title" className="rounded-[28px] border hairline bg-[var(--panel)] p-5 md:p-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
-        <div><div className="eyebrow">{t("layout.academicTools")}</div><h2 id="academic-toolkit-title" className="section-title mt-1">{t("mission.toolkitTitle")}</h2><p className="body-copy mt-2 max-w-2xl">{t("mission.toolkitDesc")}</p></div>
+        <div><div className="eyebrow">{t("layout.academicTools")}</div><h2 id="academic-toolkit-title" className="section-title mt-1">{t("mission.toolkitTitle")}</h2><div className="mt-2 max-w-2xl"><FoldText text={t("mission.toolkitDesc")} limit={80}/></div></div>
         <button type="button" onClick={()=>window.dispatchEvent(new Event("academicos:open-palette"))} className="hidden md:inline-flex focus-ring items-center gap-2 rounded-xl border hairline px-3 py-2 text-[11px] font-semibold muted"><Sparkles size={13}/>{t("layout.searchAndNavigate")}</button>
       </div>
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3 mt-5">
-        {ACADEMIC_TOOLS.map((tool)=>{const Icon=tool.icon;return <Link key={tool.to} to={tool.to} className="focus-ring group rounded-2xl border hairline p-4 bg-[var(--bg)] hover:bg-[var(--panel-2)] transition-colors"><span className="h-10 w-10 rounded-xl brand-soft-bg brand-text grid place-items-center"><Icon size={17}/></span><div className="mt-4 flex items-center justify-between gap-2"><strong className="text-sm">{t(tool.label)}</strong><ArrowRight size={14} className="muted directional-icon transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"/></div><p className="text-[11px] muted leading-5 mt-1.5">{t(tool.detail)}</p></Link>})}
+        {ACADEMIC_TOOLS.map((tool)=>{const Icon=tool.icon;return <Link key={tool.to} to={tool.to} className="focus-ring group rounded-2xl border hairline p-4 bg-[var(--bg)] hover:bg-[var(--panel-2)] transition-colors"><span className="h-10 w-10 rounded-xl brand-soft-bg brand-text grid place-items-center"><Icon size={17}/></span><div className="mt-4 flex items-center justify-between gap-2"><strong className="text-sm">{t(tool.label)}</strong><ArrowRight size={14} className="muted directional-icon transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"/></div><p className="sr-only">{t(tool.detail)}</p></Link>})}
       </div>
     </section>
   </div>;

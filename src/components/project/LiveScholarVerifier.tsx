@@ -171,7 +171,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               className="w-full rounded-xl border hairline bg-[var(--panel)] ps-10 pe-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-success/40"
             />
           </div>
-          <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-success hover:bg-success text-white shrink-0">
+          <Button onClick={handleSearch} disabled={searching || query.trim().length < 2} className="bg-success hover:bg-success text-[color:var(--on-brand)] shrink-0">
             {searching ? <InlineLoader size={15}/> : <Sparkles size={15} />} {t("source.searchAction")}
           </Button>
         </div>
@@ -188,7 +188,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                 placeholder="10.xxxx/xxxxx · https://doi.org/…"
                 className="flex-1 rounded-xl border hairline bg-[var(--bg)] px-3.5 py-2 text-xs font-mono ltr"
               />
-              <Button size="sm" onClick={handleDoiCheck} disabled={searching || !doiInput.trim()} className="bg-success hover:bg-success text-white">
+              <Button size="sm" onClick={handleDoiCheck} disabled={searching || !doiInput.trim()} className="bg-success hover:bg-success text-[color:var(--on-brand)]">
                 {searching ? <InlineLoader size={14}/> : <ShieldCheck size={14} />} {t("source.verifyRecord")}
               </Button>
             </div>
@@ -291,7 +291,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
                 </Button>
                 <Button
                   size="sm"
-                  className="h-7 text-[11px] px-3 bg-success hover:bg-success text-white gap-1"
+                  className="h-7 text-[11px] px-3 bg-success hover:bg-success text-[color:var(--on-brand)] gap-1"
                   disabled={addingDoi === source.doi || addedDois.has(source.doi)}
                   onClick={() => addToProject(source)}
                 >

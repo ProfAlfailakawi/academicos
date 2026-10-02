@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FoldText } from "../VisualBits";
 import { DnaStepper } from "../dna/DnaKit";
 import { MiniBar } from "../Infographics";
 import { useDnaStepStateText } from "../dna/useDnaStepStateText";
@@ -360,7 +361,7 @@ export function ProjectWriterStudio({
         <CardContent className="py-12 text-center">
           <span className="h-16 w-16 rounded-[22px] tone-tile mx-auto"><WandSparkles size={26} /></span>
           <h2 className="text-2xl font-semibold mt-5">{t("writer.readyTitle")}</h2>
-          <p className="body-copy mt-2 max-w-xl mx-auto">{t("writer.readyDesc")}</p>
+          <div className="mt-2 max-w-xl mx-auto"><FoldText text={t("writer.readyDesc")} limit={90} className="body-copy" /></div>
           {aiReady === false && (
             <div role="alert" className="mx-auto mt-5 max-w-2xl rounded-2xl border border-warning/30 bg-warning/10 p-4 text-start">
               <div className="flex items-start gap-3">
@@ -401,7 +402,7 @@ export function ProjectWriterStudio({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <span className="h-12 w-12 rounded-2xl bg-[var(--panel)] grid place-items-center shrink-0"><LockKeyhole size={20} /></span>
-              <div><div className="eyebrow">{t("writer.previewEyebrow")}</div><h2 className="section-title mt-1">{t("writer.previewTitle")}</h2><p className="text-xs leading-6 muted mt-2">{t("writer.previewDesc")}</p></div>
+              <div><div className="eyebrow">{t("writer.previewEyebrow")}</div><h2 className="section-title mt-1">{t("writer.previewTitle")}</h2><div className="mt-2"><FoldText text={t("writer.previewDesc")} limit={90} className="text-xs leading-6 muted" /></div></div>
             </div>
             {access?.unlocked ? <Button onClick={completePaidProject} disabled={busy}><Sparkles size={15} /> {t("writer.completePages").replace("{count}", String(document.targetPages || 12))}</Button> : <Button onClick={() => window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)}><CreditCard size={15} /> {t("writer.unlockFull")}</Button>}
           </div>
@@ -479,7 +480,7 @@ export function ProjectWriterStudio({
           <Card>
             <CardContent>
               <div className="flex items-center gap-2"><ScanSearch size={17} className="brand-text" /><h3 className="text-sm font-semibold">{t("ui.projectXray")}</h3></div>
-              <p className="text-[11px] leading-5 muted mt-2">{t("writer.xrayDesc")}</p>
+              <div className="mt-2"><FoldText text={t("writer.xrayDesc")} limit={70} className="text-[11px] leading-5 muted" /></div>
               <Button className="w-full mt-4" variant="outline" onClick={runXRay} disabled={actionBusy === "xray"}>{actionBusy === "xray" ? <InlineLoader size={15}/> : <ScanSearch size={15} />} {t("writer.runXray")}</Button>
             </CardContent>
           </Card>

@@ -47,6 +47,8 @@
   /* لون النص فوق أي سطح مملوء بلون العلامة — يجب أن ينقلب مع السمة
      لأن --brand فاتح في الوضع الليلي. */
   --on-brand: #ffffff;
+  /* ظل أغمق من --accent للنصوص الصغيرة فقط (≥4.5:1 على اللوحة). */
+  --accent-ink: color-mix(in srgb, var(--accent) 72%, black);
 }
 
 :root.dark {
@@ -73,6 +75,7 @@
   --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.38), 0 10px 30px rgba(0, 0, 0, 0.22);
   --ring: color-mix(in srgb, var(--brand) 38%, transparent);
   --on-brand: #07120e;
+  --accent-ink: var(--accent);
 }
 
 * { box-sizing: border-box; }

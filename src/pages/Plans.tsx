@@ -119,11 +119,43 @@ export function Plans() {
           <h2>{t(`${key}.name`)}</h2>
           <div className="plan-price"><strong><bdi dir="ltr">{formatMoney(plan.amountUsd, currency, locale)}</bdi></strong></div>
           <p>{t(`${key}.description`)}</p>
-          <ul><li><Check size={14} /> {t("plans.featureNoRenewal")}</li><li><Check size={14} /> {t("plans.featureEvidence")}</li><li><Check size={14} /> {t("plans.featureLanguages")}</li></ul>
           <Button className="w-full mt-auto" variant={paid ? "default" : "outline"} disabled={busy === plan.id || groupMismatch || (paid && access?.unlocked && access.planId === plan.id)} onClick={() => paid ? checkout(plan.id as "project" | "project_viva" | "group") : selected ? window.location.assign(`/app/project/${selected.id}`) : window.location.assign("/app/upload")}>{busy === plan.id ? <InlineLoader size={15}/> : access?.unlocked && access.planId === plan.id ? <Check size={15} /> : paid ? <LockKeyhole size={15} /> : <Sparkles size={15} />}{access?.unlocked && access.planId === plan.id ? t("plans.active") : groupMismatch ? t("plans.individualOnly") : paid ? t("plans.choose") : t("plans.startPreview")}</Button>
         </article>;
       })}
     </div>
+
+    <section className="panel-flat rounded-[24px] p-4 md:p-5">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[520px]">
+          <thead>
+            <tr className="text-[11px] muted border-b hairline">
+              <th scope="col" className="text-start py-3 font-semibold"><span className="sr-only">{t("plans.title")}</span></th>
+              {plans.map((plan) => <th key={plan.id} scope="col" className="py-3 font-semibold text-center">{t(`plans.plan.${plan.id}.name`)}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b hairline">
+              <th scope="row" className="text-start py-3 font-semibold">{t("upload2.pages")}</th>
+              {plans.map((plan) => <td key={plan.id} className="py-3 text-center mono-number"><bdi dir="ltr">{plan.pages}</bdi></td>)}
+            </tr>
+            {([["pw.tabWriter", "full_writer"], ["pw.tabViva", "viva"], ["pw.tabTeam", "collaboration"]] as const).map(([label, feature]) => (
+              <tr key={feature} className="border-b hairline last:border-0">
+                <th scope="row" className="text-start py-3 font-semibold">{t(label)}</th>
+                {plans.map((plan) => {
+                  const on = plan.id !== "preview" && (feature === "full_writer" || (feature === "viva" ? plan.id === "project_viva" || plan.id === "group" : plan.id === "group"));
+                  return <td key={plan.id} className="py-3 text-center">{on ? <><Check size={16} className="inline brand-text" aria-hidden="true" /><span className="sr-only">✓</span></> : <span className="muted" aria-label="—">—</span>}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ul className="mt-4 grid sm:grid-cols-3 gap-2 text-[11px] muted">
+        <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureNoRenewal")}</li>
+        <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureEvidence")}</li>
+        <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureLanguages")}</li>
+      </ul>
+    </section>
 
     <div className="rounded-2xl border hairline p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"><span><strong>{t("plans.connection")}</strong> {configured ? `${t("plans.connectedVia")} ${provider}` : t("plans.waitingKeys")}</span><span className="muted">{t("plans.serverPriceNote")}</span></div>
   </div>;

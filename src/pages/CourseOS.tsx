@@ -36,6 +36,8 @@ import { DialogFrame } from "../components/AppDialog";
 import { CohortInsightDialog } from "../components/course/CohortInsightDialog";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
+import { DnaHeat } from "../components/dna/DnaKit";
+import { FoldText } from "../components/VisualBits";
 import { localizedUiError } from "../lib/ui-error";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 
@@ -505,9 +507,9 @@ export function CourseOS() {
                 <ClipboardCheck size={17} className="brand-text" />
                 <h2 className="section-title">{t("ui.outcomeMapping")}</h2>
               </div>
-              <p className="body-copy mt-2">
-                {t("ui.courseOutcomeMapDesc")}
-              </p>
+              <div className="mt-2">
+                <FoldText text={t("ui.courseOutcomeMapDesc")} limit={90} />
+              </div>
               <div className="mt-4 space-y-2">
                 {course.outcomes.length ? (
                   course.outcomes.map((o, i) => {
@@ -524,6 +526,20 @@ export function CourseOS() {
                             {linked.length} {t("course.assignmentUnit")}
                           </span>
                         </div>
+                        {assignments.length > 1 && assignments.length <= 16 && (
+                          <div className="mt-2 max-w-xs" dir="ltr">
+                            <DnaHeat
+                              tone="mint"
+                              columns={assignments.length}
+                              ariaLabel={`${o}: ${linked.length}/${assignments.length}`}
+                              cells={assignments.map((a) => ({
+                                key: a.id,
+                                value: linked.some((l) => l.id === a.id) ? 1 : 0,
+                                label: a.title,
+                              }))}
+                            />
+                          </div>
+                        )}
                         {linked.length ? (
                           <div className="mt-2 text-[11px] muted">
                             {linked.map((a) => a.title).join(" · ")}

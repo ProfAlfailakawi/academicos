@@ -413,7 +413,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   height: 54px;
   border-radius: 999px;
   border: 1.5px dashed color-mix(in srgb, var(--accent) 52%, transparent);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.07em;

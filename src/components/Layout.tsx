@@ -511,6 +511,27 @@ export function Layout() {
                     {theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
                     {t("layout.changeTheme")}
                   </button>
+                  <div className="drawer-lang flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm muted">
+                    <span>{t("app.language")}</span>
+                    <LanguageSwitcher compact />
+                  </div>
+                  {demo && (
+                    <label className="drawer-role flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm text-amber-600">
+                      <span>{t("demo.role")}</span>
+                      <select
+                        value={demoRole}
+                        onChange={(event) => setDemoRole(event.target.value)}
+                        aria-label={t("demo.role")}
+                        className="focus-ring h-9 rounded-lg border border-amber-400/40 bg-transparent px-2 text-sm font-bold text-amber-600"
+                      >
+                        <option value="professor">{t("demo.role.professor")}</option>
+                        <option value="student">{t("demo.role.student")}</option>
+                        <option value="teaching_assistant">{t("demo.role.teaching_assistant")}</option>
+                        <option value="university_admin">{t("demo.role.university_admin")}</option>
+                        <option value="support_agent">{t("demo.role.support_agent")}</option>
+                      </select>
+                    </label>
+                  )}
                   {demo && (
                     <button type="button" onClick={() => void resetDemo()} className="focus-ring sidebar-nav-link flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-amber-600 hover:bg-amber-500/10">
                       <RefreshCw size={17} aria-hidden="true" />
@@ -582,7 +603,9 @@ export function Layout() {
               <ArrowRight size={14} className="shrink-0 muted directional-icon" />
             </button>
           )}
-          <LanguageSwitcher compact />
+          <div className="topbar-lang hidden sm:block">
+            <LanguageSwitcher compact />
+          </div>
           <Button
             size="icon"
             variant="ghost"
@@ -611,7 +634,7 @@ export function Layout() {
                 <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={user?.displayName || undefined}>
                   {user?.displayName}
                 </div>
-                <div className="text-[11px] muted">
+                <div className="text-[11px] muted lg:hidden">
                   {t(roleTranslationKey(user?.role))}
                 </div>
               </div>
@@ -621,7 +644,7 @@ export function Layout() {
                  كانت البيئة تفتح على الأستاذ وحده فلا تُرى شاشة الطالب — وهي
                  نصف المنتج وأوّل ما يُسأل عنه. والوصف في title/aria-label
                  فيبلغ قارئ الشاشة ولا يزاحم شريطًا مزدحمًا أصلًا. */
-              <div className="demo-pill inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-1.5 py-0.5 text-amber-500">
+              <div className="demo-pill hidden sm:inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-1.5 py-0.5 text-amber-500">
                 <span
                   role="status"
                   title={t("demo.badgeAria")}

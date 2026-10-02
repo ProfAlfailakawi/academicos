@@ -382,7 +382,7 @@ export function ProjectWriterStudio({
 
   return (
     <div className="space-y-5">
-      <ProjectFlow document={document} />
+      <ProjectFlow document={document} progress={project.progress} />
       {(document.generationSource === "safe_scaffold" || (!document.generationSource && aiReady === false)) && (
         <section role="alert" className="rounded-[24px] border border-warning/30 bg-warning/10 p-4 md:p-5">
           <div className="flex items-start gap-3">
@@ -507,15 +507,17 @@ function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
   return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center" aria-busy="true"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><AcademicLoader size={48} delay={0} label={mode === "rescue" ? t("writer.rebuilding") : t("writer.building")} /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">{stages.map((stage, index) => <div key={stage} className="rounded-2xl bg-[var(--bg)] border hairline p-4"><span className="h-8 w-8 rounded-xl tone-tile mx-auto text-xs font-semibold">{index + 1}</span><div className="text-xs font-semibold mt-3">{stage}</div></div>)}</div><p className="text-[11px] muted mt-6">{t("writer.buildingNote")}</p></CardContent></Card>;
 }
 
-function ProjectFlow({ document }: { document: ProjectDocument }) {
+function ProjectFlow({ document, progress }: { document: ProjectDocument; progress: number }) {
   const { t } = useI18n();
   const stateText = useDnaStepStateText();
+  // A step is done only when its data is present AND the project's overall progress
+  // (the same value as the header ring) has reached that step's quarter, so the stepper never outruns the ring.
   const steps = [
     { label: t("writer.flowAssignment"), icon: FileSearch, done: true },
     { label: t("writer.flowProject"), icon: BookOpenCheck, done: document.sections.length > 0 },
     { label: t("writer.flowSources"), icon: ShieldCheck, done: document.quality.sourceConfidence >= 60 },
     { label: t("writer.flowViva"), icon: Mic2, done: document.quality.discussability >= 75 },
-  ];
+  ].map((step, index) => ({ ...step, done: step.done && progress >= (index + 1) * 25 }));
   const firstOpen = steps.findIndex((step) => !step.done);
   return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><DnaStepper size="sm" stateText={stateText} ariaLabel={steps.map((step) => step.label).join(" · ")} steps={steps.map(({ label, icon: Icon, done }, index) => ({ key: String(index), label, icon: done ? undefined : <Icon size={16} />, state: done ? "done" : index === firstOpen ? "current" : "pending" }))} /></section>;
 }

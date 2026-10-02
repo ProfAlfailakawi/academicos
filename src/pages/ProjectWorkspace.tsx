@@ -493,7 +493,7 @@ export function ProjectWorkspace() {
                         </div>
                         <div className="text-[11px] muted">
                           {f.fileType || "file"}
-                          {f.size ? ` · ${formatBytes(f.size)}` : ""}
+                          {f.size ? ` · ${formatBytes(f.size, locale)}` : ""}
                           {f.sha256
                             ? ` · SHA-256 ${String(f.sha256).slice(0, 12)}…`
                             : ""}
@@ -565,7 +565,7 @@ function Overview({
   project: ProjectDNA;
   onTab: (t: any) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const next =
     project.tasks.find(
       (t) => t.status === "ready" || t.status === "in_progress",
@@ -639,7 +639,7 @@ function Overview({
                   }
                   className="focus-ring brand-soft-bg rounded-full px-3 py-1.5 text-xs font-semibold hover:opacity-80"
                 >
-                  {moduleName(m)}
+                  {moduleName(m, locale)}
                 </button>
               ))}
             </div>
@@ -738,7 +738,7 @@ function Tasks({
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{t.title}</div>
                 <div className="text-[11px] muted mt-1 flex gap-2 flex-wrap">
-                  {t.module && <span>{moduleName(t.module)}</span>}
+                  {t.module && <span>{moduleName(t.module, locale)}</span>}
                   {t.estimatedMinutes && (
                     <span>· {t.estimatedMinutes} {tr("pw.minutes")}</span>
                   )}
@@ -1070,7 +1070,14 @@ function Modal({
     </DialogShell>
   );
 }
-function moduleName(value: string) {
+const MODULE_NAMES_AR: Record<string, string> = {
+  research: "استوديو البحث", writing: "استوديو الكتابة", data: "مختبر البيانات", spreadsheet: "استوديو الجداول",
+  code: "مختبر البرمجة", engineering: "استوديو الهندسة", lab: "دفتر المختبر", design: "لوحة التصميم",
+  media: "استوديو الوسائط", presentation: "استوديو العروض", portfolio: "استوديو ملف الإنجاز",
+  survey: "استوديو الاستبيانات", team: "استوديو الفريق", simulation: "استوديو المحاكاة", viva: "استوديو المناقشة",
+};
+function moduleName(value: string, locale?: string) {
+  if (locale === "ar" && MODULE_NAMES_AR[value]) return MODULE_NAMES_AR[value];
   return (
     (
       {
@@ -1094,8 +1101,9 @@ function moduleName(value: string) {
   );
 }
 
-function formatBytes(value: number) {
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+function formatBytes(value: number, locale?: string) {
+  const ar = locale === "ar";
+  if (value < 1024) return `${value} ${ar ? "بايت" : "B"}`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} ${ar ? "ك.ب" : "KB"}`;
+  return `${(value / 1024 / 1024).toFixed(1)} ${ar ? "م.ب" : "MB"}`;
 }

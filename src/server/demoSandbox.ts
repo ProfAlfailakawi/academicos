@@ -267,7 +267,7 @@ function demoProjectStructure(
     ],
   }));
   const requirements: Requirement[] = [
-    { id: `req_${projectId}_1`, label: "الموعد النهائي", value: new Date(final).toLocaleDateString("ar-KW", { timeZone: "Asia/Kuwait" }), category: "deadline", confidence: "high", source: "كراسة التكليف — الصفحة 1" },
+    { id: `req_${projectId}_1`, label: "الموعد النهائي", value: new Date(final).toLocaleDateString("ar-KW-u-nu-latn", { timeZone: "Asia/Kuwait" }), category: "deadline", confidence: "high", source: "كراسة التكليف — الصفحة 1" },
     { id: `req_${projectId}_2`, label: "صيغة التسليم", value: assignment.deliverables.map((d) => `${d.title} (${d.format})`).join("، "), category: "format", confidence: "high", source: "كراسة التكليف — قسم المخرجات" },
     { id: `req_${projectId}_3`, label: "المصادر", value: "ثمانية مصادر محكّمة على الأقل بأسلوب توثيق موحّد", category: "source", confidence: "medium", source: "كراسة التكليف — قسم التقييم" },
     { id: `req_${projectId}_4`, label: "سياسة الذكاء الاصطناعي", value: assignment.aiPolicy.summary, category: "policy", confidence: "high", source: "سياسة المقرر المنشورة" },

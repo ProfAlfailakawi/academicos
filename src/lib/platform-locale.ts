@@ -77,7 +77,7 @@ const RESOURCE_LABELS: Record<string, Localized> = {
   fraudRules:L("قواعد مكافحة الاحتيال","Fraud rules","Dolandırıcılık kuralları","反欺诈规则","धोखाधड़ी नियम","Reglas antifraude","Règles antifraude","فراڈ قواعد"),
   profitGuardrails:L("ضوابط التكلفة والربحية","Profit guardrails","Kârlılık sınırları","利润护栏","लाभ सुरक्षा सीमाएँ","Límites de rentabilidad","Garde-fous de rentabilité","منافع کی حدود"),
   salesLeads:L("فرص المبيعات","Sales leads","Satış fırsatları","销售线索","बिक्री लीड","Oportunidades de venta","Prospects commerciaux","سیلز لیڈز"),
-  slaPolicies:L("سياسات SLA","SLA policies","SLA politikaları","SLA 策略","SLA नीतियाँ","Políticas SLA","Politiques SLA","SLA پالیسیاں"),
+  slaPolicies:L("سياسات مستوى الخدمة","SLA policies","SLA politikaları","SLA 策略","SLA नीतियाँ","Políticas SLA","Politiques SLA","SLA پالیسیاں"),
   supportEntitlements:L("استحقاقات الدعم","Support entitlements","Destek hakları","支持权益","सपोर्ट अधिकार","Derechos de soporte","Droits de support","سپورٹ استحقاقات"),
   securityReports:L("تقارير الأمن","Security reports","Güvenlik raporları","安全报告","सुरक्षा रिपोर्ट","Informes de seguridad","Rapports de sécurité","سیکیورٹی رپورٹس"),
   securityAlerts:L("تنبيهات الأمن","Security alerts","Güvenlik uyarıları","安全警报","सुरक्षा अलर्ट","Alertas de seguridad","Alertes de sécurité","سیکیورٹی الرٹس"),
@@ -122,10 +122,24 @@ export function platformResourceDescription(category:string, locale:LocaleCode):
   return CATEGORY_DESCRIPTIONS[category]?.[locale] || CATEGORY_DESCRIPTIONS.governance[locale];
 }
 
+// Arabic-only display fallbacks so raw enum words (job types, states) never show as English in the Arabic UI.
+const STATUS_FULL_AR: Record<string,string> = {
+  project_compile:"تحليل كراسة التكليف", assignment_compile:"تحليل التكليف", project_export:"تصدير المشروع",
+  course_archive_export:"تصدير أرشيف المقرر", roster_sync:"مزامنة القوائم", viva_report:"تقرير المناقشة",
+};
+const STATUS_PART_AR: Record<string,string> = {
+  compile:"تحليل", export:"تصدير", course:"المقرر", archive:"أرشيف", roster:"القوائم", sync:"مزامنة",
+  assignment:"التكليف", viva:"المناقشة", report:"تقرير", backup:"نسخ احتياطي", restore:"استعادة", full:"كامل",
+  global:"عام", production:"إنتاج", staging:"اختبار", true:"نعم", false:"لا", ok:"سليم", admin:"مدير", user:"مستخدم",
+  professor:"أستاذ", student:"طالب", teaching:"مساعد", assistant:"تدريس", university:"جامعة", free:"مجاني",
+  preview:"معاينة", allow:"سماح", deny:"رفض", step:"تحقق", up:"إضافي", shared:"مشترك", device:"جهاز", rapid:"سريع",
+  signup:"تسجيل", disposable:"مؤقت", email:"بريد", vpn:"VPN", detected:"مكتشف",
+};
 export function platformStatusLabel(status:string, locale:LocaleCode):string {
   if (!status) return "—";
+  if (locale === "ar" && STATUS_FULL_AR[status]) return STATUS_FULL_AR[status];
   const tokens = status.toLowerCase().split(/[_\s-]+/).filter(Boolean);
-  const translated = tokens.map((part) => STATUS_PARTS[part]?.[locale] || title(part));
+  const translated = tokens.map((part) => STATUS_PARTS[part]?.[locale] || (locale === "ar" ? STATUS_PART_AR[part] : "") || title(part));
   return locale === "zh" ? translated.join("") : translated.join(" ");
 }
 

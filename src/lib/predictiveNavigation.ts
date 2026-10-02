@@ -108,7 +108,7 @@ function roleDefaults(role: string, current: string): Array<{to:string; label:st
     '/app/passport': [{ to: '/app/projects', label: 'المشاريع', reason: 'للعودة إلى العمل الذي يبني ملفك الأكاديمي', score: 6 }],
     '/app/search': [{ to: '/app/projects', label: 'المشاريع', reason: 'للوصول إلى مساحة العمل بعد العثور عليها', score: 7 }],
     '/app/professor': [{ to: '/app/semester', label: 'الفصل الحالي', reason: 'لمراجعة الصورة التنفيذية للفصل', score: 8 }],
-    '/app/course/:id': [{ to: '/app/professor', label: 'ProfessorOS', reason: 'للعودة إلى نظرة الأستاذ بعد المقرر', score: 8 }],
+    '/app/course/:id': [{ to: '/app/professor', label: 'مساحة الأستاذ', reason: 'للعودة إلى نظرة الأستاذ بعد المقرر', score: 8 }],
     '/app/control': [{ to: '/app/platform', label: 'مركز التشغيل والحوكمة', reason: 'للانتقال من مؤشرات المؤسسة إلى التشغيل', score: 9 }],
     '/app/platform': [{ to: '/app/users', label: 'إدارة المستخدمين', reason: 'إذا احتاجت مؤشرات التشغيل إلى إجراء إداري', score: 6 }],
     '/app/support-console': [{ to: '/app/support', label: 'الدعم', reason: 'للانتقال من الصندوق إلى تجربة الدعم', score: 6 }],
@@ -119,7 +119,7 @@ function roleDefaults(role: string, current: string): Array<{to:string; label:st
     if (student) base.push({ to: '/app/projects', label: 'المشاريع', reason: 'الخطوة الأقرب لبدء العمل من ملخص اليوم', score: 10 });
     else if (support) base.push({ to: '/app/support-console', label: 'صندوق الدعم', reason: 'الخطوة الأقرب بعد الدخول', score: 10 });
     else if (control) base.push({ to: '/app/control', label: 'لوحة المؤسسة', reason: 'الخطوة الأقرب بعد نظرة الفصل', score: 10 });
-    else if (faculty) base.push({ to: '/app/professor', label: 'ProfessorOS', reason: 'الخطوة الأقرب بعد نظرة الفصل', score: 10 });
+    else if (faculty) base.push({ to: '/app/professor', label: 'مساحة الأستاذ', reason: 'الخطوة الأقرب بعد نظرة الفصل', score: 10 });
   }
 
   // Even on less common screens, keep one useful prediction available instead of
@@ -128,7 +128,7 @@ function roleDefaults(role: string, current: string): Array<{to:string; label:st
     if (student) base.push({ to: '/app/projects', label: 'المشاريع', reason: 'مساحة العمل الأكثر احتمالًا بعد هذه الشاشة', score: 6 });
     else if (support) base.push({ to: '/app/support-console', label: 'صندوق الدعم', reason: 'مساحة العمل الأكثر احتمالًا لدور الدعم', score: 6 });
     else if (control) base.push({ to: '/app/control', label: 'لوحة المؤسسة', reason: 'مساحة العمل الأكثر احتمالًا لدورك الإداري', score: 6 });
-    else if (faculty) base.push({ to: '/app/professor', label: 'ProfessorOS', reason: 'مساحة العمل الأكثر احتمالًا لدور الأستاذ', score: 6 });
+    else if (faculty) base.push({ to: '/app/professor', label: 'مساحة الأستاذ', reason: 'مساحة العمل الأكثر احتمالًا لدور الأستاذ', score: 6 });
     else base.push({ to: '/app/projects', label: 'المشاريع', reason: 'مساحة العمل الأكثر احتمالًا بعد هذه الشاشة', score: 5 });
   }
   return base;

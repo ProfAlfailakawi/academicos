@@ -27,8 +27,8 @@ export function assessLegacyEligibility(params: {
   const reasons: string[] = [];
   if (!params.consent?.granted) reasons.push('لا توجد موافقة صريحة من الخريج.');
   if ((params.gradeRatio ?? 0) < minGrade) reasons.push(`الدرجة دون عتبة التميز (${Math.round(minGrade * 100)}%).`);
-  if (!params.hasEvidenceCapsule) reasons.push('لا يوجد Evidence Capsule يثبت الأصالة.');
-  if (!params.hasProofOfLearning) reasons.push('لا يوجد Proof of Learning.');
+  if (!params.hasEvidenceCapsule) reasons.push('لا توجد كبسولة أدلة تثبت الأصالة.');
+  if (!params.hasProofOfLearning) reasons.push('لا يوجد دليل تعلّم.');
   return {
     eligible: reasons.length === 0,
     reasons,
@@ -64,7 +64,7 @@ export function buildLegacyListing(params: {
     skills: params.dna.requiredSkills || [], outcomes: params.dna.learningOutcomes || [],
     anonymizedAuthorRef: `alum_${digest(params.authorId).slice(0, 12)}`,
     createdAt: isoNow(now),
-    provenanceNote: 'قائمة مرجعية منقّحة: تُعرض بنية العمل وأغراضه ومهاراته ومخرجاته فقط — لا يُنشر نص الطالب الأصلي. الهوية مُخفاة بـ hash، والإدراج بموافقة صريحة قابلة للسحب.',
+    provenanceNote: 'قائمة مرجعية منقّحة: تُعرض بنية العمل وأغراضه ومهاراته ومخرجاته فقط — لا يُنشر نص الطالب الأصلي. الهوية مُخفاة ببصمة مشفّرة، والإدراج بموافقة صريحة قابلة للسحب.',
   };
 }
 

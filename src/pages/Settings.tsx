@@ -25,7 +25,7 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 export function Settings() {
   const location = useLocation();
-  const { t, meta, numerals, setNumerals, formatNumber } = useI18n();
+  const { t, locale, meta, numerals, setNumerals, formatNumber } = useI18n();
   const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
   const { theme, setTheme, accessibility, setAccessibility } =
@@ -243,7 +243,7 @@ export function Settings() {
             </div>
             <div className="mt-4 rounded-xl border hairline brand-soft-bg px-3 py-2 flex items-center justify-between gap-3 text-xs font-semibold">
               <LanguageSwitcher />
-              <span dir="ltr">{meta.dir.toUpperCase()} · {meta.speech}</span>
+              <span dir={locale === "ar" ? "rtl" : "ltr"}>{locale === "ar" ? (meta.dir === "rtl" ? "من اليمين إلى اليسار" : "من اليسار إلى اليمين") : meta.dir.toUpperCase()} · <bdi dir="ltr">{meta.speech}</bdi></span>
             </div>
             <p className="body-copy mt-3">{t("settings.languageNote")}</p>
             <fieldset className="mt-4">
@@ -456,7 +456,7 @@ export function Settings() {
                 <Service
                   label={t("ui.dataRegion")}
                   ok
-                  value={h.dataRegion || "global"}
+                  value={locale === "ar" && (!h.dataRegion || h.dataRegion === "global") ? "عالمي" : h.dataRegion || "global"}
                 />
               </div>
             ) : (

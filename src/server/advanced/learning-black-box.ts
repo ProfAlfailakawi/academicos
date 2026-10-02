@@ -61,8 +61,8 @@ export function verifyBlackBoxChain(chain: BlackBoxChain): BlackBoxVerdict {
   for (let i = 0; i < events.length; i++) {
     const e = events[i];
     if (e.seq !== i) { intact = false; brokenAt = e.seq; reason = 'ترقيم متسلسل مكسور'; break; }
-    if (e.prevHash !== prev) { intact = false; brokenAt = e.seq; reason = 'ربط prevHash لا يطابق الحدث السابق'; break; }
-    if (computeEventHash(e) !== e.hash) { intact = false; brokenAt = e.seq; reason = 'hash الحدث لا يُعاد إنتاجه (عبث محتمل)'; break; }
+    if (e.prevHash !== prev) { intact = false; brokenAt = e.seq; reason = 'ربط البصمة السابقة (prevHash) لا يطابق الحدث السابق'; break; }
+    if (computeEventHash(e) !== e.hash) { intact = false; brokenAt = e.seq; reason = 'بصمة الحدث لا يُعاد إنتاجه (عبث محتمل)'; break; }
     if (i > 0 && e.at < events[i - 1].at) { intact = false; brokenAt = e.seq; reason = 'زمن تراجع للخلف'; break; }
     prev = e.hash;
   }
@@ -83,6 +83,6 @@ export function verifyBlackBoxChain(chain: BlackBoxChain): BlackBoxVerdict {
   return {
     projectId: chain.projectId, generatedAt: isoNow(), intact, eventCount: events.length, brokenAt, reason,
     signals: { activeMinutes, writeBursts, sourceOpens, revisions, largePastes, humanRhythmScore },
-    disclosure: 'الصندوق الأسود اختياري بالكامل ومحلي المنشأ؛ يثبت وجود عملية عمل بشرية (فترات، مصادر، مراجعات) عبر سلسلة hash قابلة لإعادة التحقق. اللصقات الكبيرة تُعرض للشفافية لا كاتهام. الطالب وحده يقرر إرفاق السلسلة بجواز التأليف.',
+    disclosure: 'الصندوق الأسود اختياري بالكامل ومحلي المنشأ؛ يثبت وجود عملية عمل بشرية (فترات، مصادر، مراجعات) عبر سلسلة بصمات قابلة لإعادة التحقق. اللصقات الكبيرة تُعرض للشفافية لا كاتهام. الطالب وحده يقرر إرفاق السلسلة بجواز التأليف.',
   };
 }

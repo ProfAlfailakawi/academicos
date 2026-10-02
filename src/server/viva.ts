@@ -42,7 +42,7 @@ const VIVA = {
     "تقاضا “{label}” کہتا ہے: {value}۔ آپ نے اسے کیسے سمجھا اور درست اطلاق کی تصدیق کیسے کریں گے؟",
   ),
   rubric: L(
-    "كيف يثبت عملك تحقيق معيار الـRubric: “{criterion}”؟ اذكر دليلًا محددًا من مشروعك.",
+    "كيف يثبت عملك تحقيق معيار معايير التقييم: “{criterion}”؟ اذكر دليلًا محددًا من مشروعك.",
     "How does your work prove the rubric criterion “{criterion}” is met? Point to specific evidence in your project.",
     "Çalışmanız “{criterion}” rubrik ölçütünü karşıladığını nasıl kanıtlıyor? Projenizden somut bir kanıt gösterin.",
     "你的工作如何证明满足评分标准“{criterion}”？请指出项目中的具体证据。",
@@ -92,7 +92,7 @@ const VIVA = {
     "اگر کوئی آزاد شخص صرف آپ کی دستاویزات سے یہ کام دہرائے تو وہ کیا دوبارہ پیدا نہیں کر سکے گا اور کیوں؟",
   ),
   evidenceSummary: L(
-    "أكمل الطالب جلسة Viva بنمط {mode}. تم توثيق {answered} إجابات من {total}. هذا سجل دليل تعلم وليس درجة أو كشفًا لنسبة AI.",
+    "أكمل الطالب جلسة المناقشة بنمط {mode}. تم توثيق {answered} إجابات من {total}. هذا سجل دليل تعلم وليس درجة أو كشفًا لنسبة الذكاء الاصطناعي.",
     "The learner completed a {mode} viva session. {answered} of {total} answers were recorded. This is a proof-of-learning record, not a grade or an AI-detection score.",
     "Öğrenci {mode} modunda bir viva oturumunu tamamladı. {total} sorudan {answered} yanıt kaydedildi. Bu bir öğrenme kanıtı kaydıdır; not veya yapay zeka tespiti değildir.",
     "学习者完成了一次「{mode}」模式的答辩。共记录 {total} 题中的 {answered} 个回答。这是学习证据记录，不是成绩，也不是 AI 检测结果。",

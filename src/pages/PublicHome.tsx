@@ -87,7 +87,7 @@ export function PublicHome() {
 
         <section id="teacher" className="teacher-lite-strip surface-deep strip-deep">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-start gap-4"><span className="h-12 w-12 rounded-2xl bg-white/12 grid place-items-center shrink-0"><GraduationCap size={23} /></span><div><div className="eyebrow text-white/65">ProfessorOS · {t("landing.optional")}</div><h2 className="text-2xl font-bold mt-1">{t("landing.teacherTitle")}</h2></div></div>
+            <div className="flex items-start gap-4"><span className="h-12 w-12 rounded-2xl bg-white/12 grid place-items-center shrink-0"><GraduationCap size={23} /></span><div><div className="eyebrow text-white/65">{t("pub.faculty.eyebrow")} · {t("landing.optional")}</div><h2 className="text-2xl font-bold mt-1">{t("landing.teacherTitle")}</h2></div></div>
             <Button variant="outline" asChild className="btn-on-deep"><Link to="/login">{t("landing.teacherSignIn")}</Link></Button>
           </div>
         </section>

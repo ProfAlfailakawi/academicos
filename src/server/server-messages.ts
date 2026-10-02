@@ -8,7 +8,7 @@ import { L } from "./server-locale";
 
 export const SRV = {
   aiPolicyLevel: L(
-    "سياسة AI — المستوى {level}",
+    "سياسة الذكاء الاصطناعي — المستوى {level}",
     "AI policy — level {level}",
     "Yapay zeka politikası — düzey {level}",
     "AI 政策 — 等级 {level}",
@@ -28,7 +28,7 @@ export const SRV = {
     "حذف کی درخواست درج",
   ),
   deletionRequestedBody: L(
-    "فترة السماح حتى {date}. قد تمنع سياسة المؤسسة حذف بعض السجلات وتحوّلها إلى anonymized/retained evidence.",
+    "فترة السماح حتى {date}. قد تمنع سياسة المؤسسة حذف بعض السجلات وتحوّلها إلى أدلة مجهولة الهوية أو محتفَظ بها.",
     "The grace period runs until {date}. Institution policy may prevent some records from being deleted and convert them into anonymized/retained evidence instead.",
     "Ek süre {date} tarihine kadar sürer. Kurum politikası bazı kayıtların silinmesini engelleyip bunları anonimleştirilmiş/saklanan kanıta dönüştürebilir.",
     "宽限期至 {date}。机构政策可能阻止删除部分记录，并将其转为匿名化/保留的证据。",
@@ -48,7 +48,7 @@ export const SRV = {
     "{file}: اس تصویر/اسکین سے متن نکالنے کے لیے ترتیب شدہ OCR سروس درکار ہے۔",
   ),
   copilotNoSignal: L(
-    "لا توجد إشارة كافية بعد. افتح أحد المقررات وأضف تكليفاً أو rubric حتى تصبح التوصية أدق.",
+    "لا توجد إشارة كافية بعد. افتح أحد المقررات وأضف تكليفاً أو معايير تقييم حتى تصبح التوصية أدق.",
     "There is not enough signal yet. Open a course and add an assignment or rubric so the recommendation can sharpen.",
     "Henüz yeterli sinyal yok. Bir ders açıp ödev veya rubrik ekleyin ki öneri netleşsin.",
     "目前信号还不够。请打开一门课程并添加作业或评分标准，建议才会更准确。",
@@ -63,13 +63,13 @@ export const SRV = {
   qualityClarityShort: L("التعليمات قصيرة؛ وضّح المطلوب والحدود وطريقة التسليم.", "The instructions are short; clarify what is required, the limits and how to submit.", "Yönergeler kısa; ne isteniyor, sınırlar ve teslim yöntemi netleştirilmeli.", "说明过短；请明确要求、限制与提交方式。", "निर्देश छोटे हैं; अपेक्षा, सीमाएँ और सबमिशन का तरीका स्पष्ट करें।", "Las instrucciones son breves; aclara qué se pide, los límites y cómo entregar.", "Les consignes sont courtes ; précisez l'attendu, les limites et le mode de rendu.", "ہدایات مختصر ہیں؛ مطلوبہ کام، حدود اور جمع کا طریقہ واضح کریں۔"),
   qualityDeliverablesLabel: L("المخرجات", "Deliverables", "Çıktılar", "交付物", "डिलिवरेबल्स", "Entregables", "Livrables", "مخرجات"),
   qualityDeliverablesSome: L("{count} مخرجات محددة.", "{count} deliverables are defined.", "{count} çıktı tanımlı.", "已定义 {count} 项交付物。", "{count} डिलिवरेबल परिभाषित हैं।", "Hay {count} entregables definidos.", "{count} livrables sont définis.", "{count} مخرجات متعین ہیں۔"),
-  qualityDeliverablesNone: L("لا توجد Deliverables محددة.", "No deliverables are defined.", "Tanımlı çıktı yok.", "尚未定义交付物。", "कोई डिलिवरेबल परिभाषित नहीं।", "No hay entregables definidos.", "Aucun livrable n'est défini.", "کوئی مخرج متعین نہیں۔"),
-  qualityRubricNone: L("لا يوجد Rubric.", "No rubric is present.", "Rubrik yok.", "没有评分标准。", "कोई रूब्रिक नहीं है।", "No hay rúbrica.", "Aucune grille n'est présente.", "کوئی روبرک نہیں۔"),
+  qualityDeliverablesNone: L("لا توجد مخرجات تسليم محددة.", "No deliverables are defined.", "Tanımlı çıktı yok.", "尚未定义交付物。", "कोई डिलिवरेबल परिभाषित नहीं।", "No hay entregables definidos.", "Aucun livrable n'est défini.", "کوئی مخرج متعین نہیں۔"),
+  qualityRubricNone: L("لا يوجد معايير التقييم.", "No rubric is present.", "Rubrik yok.", "没有评分标准。", "कोई रूब्रिक नहीं है।", "No hay rúbrica.", "Aucune grille n'est présente.", "کوئی روبرک نہیں۔"),
   qualityRubricWeight: L("مجموع الأوزان {weight}%.", "Total weighting is {weight}%.", "Toplam ağırlık %{weight}.", "权重合计 {weight}%。", "कुल भार {weight}% है।", "La ponderación total es {weight}%.", "La pondération totale est de {weight} %.", "کل وزن {weight}% ہے۔"),
-  qualityOutcomesSome: L("{count} outcomes مرتبطة.", "{count} outcomes are linked.", "{count} kazanım bağlı.", "已关联 {count} 项学习成果。", "{count} आउटकम जुड़े हैं।", "Hay {count} resultados vinculados.", "{count} acquis sont reliés.", "{count} نتائج منسلک ہیں۔"),
+  qualityOutcomesSome: L("{count} مخرجات مرتبطة.", "{count} outcomes are linked.", "{count} kazanım bağlı.", "已关联 {count} 项学习成果。", "{count} आउटकम जुड़े हैं।", "Hay {count} resultados vinculados.", "{count} acquis sont reliés.", "{count} نتائج منسلک ہیں۔"),
   qualityOutcomesNone: L("لم تُربط مخرجات تعلم بهذا التكليف.", "No learning outcomes are linked to this assignment.", "Bu ödeve bağlı öğrenme kazanımı yok.", "该作业未关联任何学习成果。", "इस असाइनमेंट से कोई लर्निंग आउटकम नहीं जुड़ा।", "No hay resultados de aprendizaje vinculados a esta tarea.", "Aucun acquis d'apprentissage n'est relié à ce devoir.", "اس اسائنمنٹ سے کوئی لرننگ آؤٹ کم منسلک نہیں۔"),
-  qualityPolicyNeedsConfirm: L("سياسة AI تحتاج تأكيدًا قبل النشر.", "The AI policy needs confirming before publishing.", "Yayımlamadan önce yapay zeka politikası doğrulanmalı.", "发布前需确认 AI 政策。", "प्रकाशन से पहले AI नीति की पुष्टि आवश्यक है।", "La política de IA necesita confirmación antes de publicar.", "La politique IA doit être confirmée avant publication.", "اشاعت سے پہلے AI پالیسی کی تصدیق ضروری ہے۔"),
-  qualityPolicySet: L("سياسة AI محددة عند Level {level}.", "The AI policy is set at level {level}.", "Yapay zeka politikası {level} düzeyinde ayarlı.", "AI 政策已设置为等级 {level}。", "AI नीति स्तर {level} पर सेट है।", "La política de IA está fijada en el nivel {level}.", "La politique IA est fixée au niveau {level}.", "AI پالیسی سطح {level} پر مقرر ہے۔"),
+  qualityPolicyNeedsConfirm: L("سياسة الذكاء الاصطناعي تحتاج تأكيدًا قبل النشر.", "The AI policy needs confirming before publishing.", "Yayımlamadan önce yapay zeka politikası doğrulanmalı.", "发布前需确认 AI 政策。", "प्रकाशन से पहले AI नीति की पुष्टि आवश्यक है।", "La política de IA necesita confirmación antes de publicar.", "La politique IA doit être confirmée avant publication.", "اشاعت سے پہلے AI پالیسی کی تصدیق ضروری ہے۔"),
+  qualityPolicySet: L("سياسة الذكاء الاصطناعي محددة عند المستوى {level}.", "The AI policy is set at level {level}.", "Yapay zeka politikası {level} düzeyinde ayarlı.", "AI 政策已设置为等级 {level}。", "AI नीति स्तर {level} पर सेट है।", "La política de IA está fijada en el nivel {level}.", "La politique IA est fixée au niveau {level}.", "AI پالیسی سطح {level} پر مقرر ہے۔"),
   qualityDeadlineLabel: L("الموعد", "Deadline", "Teslim tarihi", "截止日期", "समय-सीमा", "Fecha límite", "Échéance", "آخری تاریخ"),
   qualityDeadlineSet: L("الموعد محدد.", "A deadline is set.", "Teslim tarihi belirlendi.", "已设置截止日期。", "समय-सीमा निर्धारित है।", "Hay una fecha límite fijada.", "Une échéance est définie.", "آخری تاریخ مقرر ہے۔"),
   qualityDeadlineMissing: L("لم يحدد موعد نهائي بعد.", "No deadline has been set yet.", "Henüz teslim tarihi belirlenmedi.", "尚未设置截止日期。", "अभी कोई समय-सीमा तय नहीं है।", "Todavía no se ha fijado una fecha límite.", "Aucune échéance n'a encore été définie.", "ابھی کوئی آخری تاریخ مقرر نہیں۔"),
@@ -140,7 +140,7 @@ export const SRV = {
     "یہ {previewPages} صفحات کا مفت پیش منظر ہے۔ {targetPages} صفحات، ترمیم اور ایکسپورٹ کے لیے مکمل پروجیکٹ کھولیں۔",
   ),
   writerScaffoldNote: L(
-    "لا يوجد مزود AI مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
+    "لا يوجد مزود الذكاء الاصطناعي مهيأ؛ تم إنشاء هيكل آمن ومخصص بدل اختلاق محتوى أو مصادر.",
     "No AI provider is configured, so a safe tailored scaffold was produced instead of inventing content or sources.",
     "Yapılandırılmış bir yapay zeka sağlayıcısı yok; içerik ya da kaynak uydurmak yerine güvenli, size özel bir iskelet üretildi.",
     "未配置 AI 服务，因此生成了安全的定制框架，而不是编造内容或来源。",

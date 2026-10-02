@@ -17,8 +17,12 @@ const modes: Array<{ id: CopilotMode; label: string; icon: React.ElementType }> 
   { id: "viva_live", label: "Live Viva", icon: GraduationCap },
 ];
 
+const MODE_LABEL_AR: Record<string, string> = {
+  file_search: "البحث في الملفات", research: "البحث", assignment_compile: "محلّل التكليف", tutor: "المعلّم", workspace_function: "الإجراءات", viva_live: "مناقشة مباشرة",
+};
+
 export function ProjectCopilot({ project }: { project: ProjectDNA }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [mode, setMode] = useState<CopilotMode>("file_search");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<CopilotResponse | null>(null);
@@ -56,7 +60,7 @@ export function ProjectCopilot({ project }: { project: ProjectDNA }) {
             {modes.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setMode(id)} className={`focus-ring rounded-xl border hairline p-3 text-xs font-semibold flex items-center gap-2 ${mode === id ? "brand-soft-bg" : "hover:bg-[var(--panel-2)]"}`}>
                 <Icon size={15} />
-                {label}
+                {locale === "ar" ? MODE_LABEL_AR[id] || label : label}
               </button>
             ))}
           </div>

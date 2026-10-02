@@ -46,7 +46,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
           <div className="relative">
             {live && (
               <div className="absolute -top-2 z-10 -translate-x-1/2 flex flex-col items-center" style={{ insetInlineStart: `${live.progress}%` }}>
-                <span className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white shadow" style={{ background: 'var(--brand-2)' }}>{t('adv.ghost.you').replace('{p}', String(live.progress))}</span>
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-bold shadow" style={{ background: 'var(--brand-2)', color: 'var(--on-brand)' }}>{t('adv.ghost.you').replace('{p}', String(live.progress))}</span>
                 <span className="h-3 w-0.5" style={{ background: 'var(--brand-2)' }} />
               </div>
             )}
@@ -77,7 +77,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
           <div className="mt-4 space-y-2">
             {live.nudges.map((n: string, i: number) => (
               <div key={i} className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--accent-soft)' }}>
-                <Sparkles size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--accent)' }} /> <span>{n}</span>
+                <Sparkles size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--accent-ink)' }} /> <span>{n}</span>
               </div>
             ))}
           </div>
@@ -91,7 +91,7 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
 function PaceBadge({ pace, t }: { pace: string; t: (k: string) => string }) {
   const map: Record<string, { key: string; bg: string; c: string }> = {
     ahead: { key: 'adv.pace.ahead', bg: 'var(--brand-soft)', c: 'var(--brand-2)' },
-    on_track: { key: 'adv.pace.onTrack', bg: 'var(--accent-soft)', c: 'var(--accent)' },
+    on_track: { key: 'adv.pace.onTrack', bg: 'var(--accent-soft)', c: 'var(--accent-ink)' },
     behind: { key: 'adv.pace.behind', bg: 'color-mix(in srgb, var(--danger) 12%, transparent)', c: 'var(--danger)' },
   };
   const s = map[pace] || map.on_track;

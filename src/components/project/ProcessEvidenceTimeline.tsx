@@ -21,6 +21,8 @@ import { localizedUiError } from "../../lib/ui-error";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
+import { DnaSpark } from "../dna/DnaKit";
+import { FoldText } from "../VisualBits";
 
 const KIND_ICON: Partial<Record<ProcessEvidenceKind, React.ElementType>> = {
   draft: FilePenLine,
@@ -104,6 +106,30 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
     ? `${window.location.origin}/verify-evidence?h=${report.integrity.contentHash}&s=${report.integrity.signature}`
     : "";
 
+  // سلاسل النشاط اليومي مشتقة من سجل الأحداث الظاهر نفسه (بلا أرقام جديدة).
+  const series = useMemo(() => {
+    const out: Record<string, number[]> = {};
+    const all = report?.entries ?? [];
+    const dayOf = (iso: string) => Math.floor(new Date(iso).getTime() / 86400000);
+    const days = all.map((e) => dayOf(e.at)).filter((d) => Number.isFinite(d));
+    if (days.length < 2) return out;
+    const last = Math.max(...days);
+    const first = Math.max(Math.min(...days), last - 29);
+    const span = last - first + 1;
+    if (span < 2) return out;
+    const bucket = (pick: (e: (typeof all)[number]) => boolean) => {
+      const arr = new Array<number>(span).fill(0);
+      for (const e of all) {
+        const d = dayOf(e.at);
+        if (pick(e) && d >= first && d <= last) arr[d - first] += 1;
+      }
+      return arr;
+    };
+    out.all = bucket(() => true);
+    for (const k of ["draft", "revision", "viva", "source_check", "ai_assist"]) out[k] = bucket((e) => e.kind === k);
+    return out;
+  }, [report]);
+
   if (loading)
     return (
       <div className="min-h-64 grid place-items-center">
@@ -121,7 +147,7 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
               <div>
                 <div className="eyebrow">{t("pe.eyebrow")}</div>
                 <h2 className="section-title mt-1">{t("pe.title")}</h2>
-                <p className="body-copy mt-2 max-w-3xl">{t("pe.description")}</p>
+                <div className="mt-2 max-w-3xl"><FoldText text={t("pe.description")} limit={90} /></div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -138,16 +164,17 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
         <>
           <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3" aria-label={t("pe.summary")}>
             {([
-              ["pe.drafts", report.summary.drafts],
-              ["pe.revisions", report.summary.revisions],
-              ["pe.vivaAnswers", report.summary.vivaAnswers],
-              ["pe.sourceChecks", report.summary.sourceChecks],
-              ["pe.aiAssists", report.summary.aiAssists],
-              ["pe.activeDays", report.summary.activeDays],
-            ] as const).map(([key, value]) => (
+              ["pe.drafts", report.summary.drafts, "draft"],
+              ["pe.revisions", report.summary.revisions, "revision"],
+              ["pe.vivaAnswers", report.summary.vivaAnswers, "viva"],
+              ["pe.sourceChecks", report.summary.sourceChecks, "source_check"],
+              ["pe.aiAssists", report.summary.aiAssists, "ai_assist"],
+              ["pe.activeDays", report.summary.activeDays, "all"],
+            ] as const).map(([key, value, serie]) => (
               <div key={key} className="rounded-2xl border hairline bg-[var(--panel)] p-4">
                 <div className="text-xs muted">{t(key)}</div>
                 <div className="text-2xl font-semibold mt-2 mono-number">{formatNumber(value)}</div>
+                {series[serie] && series[serie].some((n) => n > 0) && <div dir="ltr" className="mt-2"><DnaSpark values={series[serie]} width={88} height={24} tone="mint" /></div>}
               </div>
             ))}
           </section>

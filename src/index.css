@@ -1052,3 +1052,8 @@ button.brand-bg:disabled,
   .mission-body p { grid-column: 2; margin-top: 2px; }
   .mission-body > div:last-child { grid-column: 2; margin-top: 8px; }
 }
+
+/* The "predicted now" chip is 36px tall on phones; a transparent ::after lifts its
+   touch target to 44px without changing the drawn size. */
+.predictive-mobile.predictive-mobile--chip { position: relative; }
+.predictive-mobile--chip::after { content: ""; position: absolute; inset-block: -4px; inset-inline: 0; }

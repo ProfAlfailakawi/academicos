@@ -102,6 +102,20 @@ export function hasSkillRadar(skills: Array<{ skill: string }>, max = 8) {
   return Math.min(new Set(skills.map((s) => s.skill)).size, max) >= 3;
 }
 
+/** يقسم اسم المحور إلى سطرين كحدّ أقصى (≤12 حرفًا للسطر) بدل اقتطاعه إلى بضعة أحرف. */
+function labelLines(name: string, per = 12): string[] {
+  const words = name.trim().split(/\s+/);
+  const lines: string[] = [];
+  for (const w of words) {
+    const last = lines[lines.length - 1];
+    if (last !== undefined && (last + " " + w).length <= per) lines[lines.length - 1] = last + " " + w;
+    else lines.push(w);
+  }
+  const out = lines.slice(0, 2);
+  if (lines.length > 2) out[1] = `${out[1]}…`;
+  return out.map((l) => (l.length > per ? `${l.slice(0, per - 1)}…` : l));
+}
+
 /** رادار مهارات: محاور = أسماء المهارات، القيمة = عدد أدلتها (بيانات الشاشة نفسها). */
 export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ skill: string }>; max?: number; ariaLabel: string }) {
   const counts = new Map<string, number>();
@@ -109,34 +123,43 @@ export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ ski
   const axes = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, max);
   if (axes.length < 3) return null;
   const top = Math.max(...axes.map(([, n]) => n));
-  const size = 340;
-  const c = size / 2;
-  const R = 80;
+  /* viewBox ≈ a phone card's width, so the 11px labels stay ~11px on screen
+     (a 340 box shrank them below 10px) and the empty bands above/below go. */
+  const W = 300;
+  const H = 250;
+  const cx = W / 2;
+  const c = H / 2;
+  const R = 60;
   const ang = (i: number) => -Math.PI / 2 + (2 * Math.PI * i) / axes.length;
-  const pt = (i: number, f: number) => [c + Math.cos(ang(i)) * R * f, c + Math.sin(ang(i)) * R * f] as const;
+  const pt = (i: number, f: number) => [cx + Math.cos(ang(i)) * R * f, c + Math.sin(ang(i)) * R * f] as const;
   const ring = (f: number) => axes.map((_, i) => pt(i, f).map((v) => v.toFixed(1)).join(",")).join(" ");
   const shape = axes.map(([, n], i) => pt(i, Math.max(0.12, n / top)).map((v) => v.toFixed(1)).join(",")).join(" ");
   return (
     <div dir="ltr">
-    <svg role="img" aria-label={ariaLabel} viewBox={`0 0 ${size} ${size}`} className="mx-auto block w-full max-w-[360px]">
+    <svg role="img" aria-label={ariaLabel} viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[360px]">
       <title>{ariaLabel}</title>
       {[0.33, 0.66, 1].map((f) => (
         <polygon key={f} points={ring(f)} fill="none" stroke="var(--line)" strokeWidth="1" />
       ))}
       {axes.map(([name], i) => {
         const [x, y] = pt(i, 1);
-        return <line key={name} x1={c} y1={c} x2={x} y2={y} stroke="var(--line)" strokeWidth="1" />;
+        return <line key={name} x1={cx} y1={c} x2={x} y2={y} stroke="var(--line)" strokeWidth="1" />;
       })}
       <polygon points={shape} fill="color-mix(in srgb, var(--brand) 22%, transparent)" stroke="var(--brand)" strokeWidth="2" strokeLinejoin="round" />
       {axes.map(([name, n], i) => {
         const [x, y] = pt(i, Math.max(0.12, n / top));
-        const [lx, ly] = pt(i, 1.2);
+        const [lx, ly] = pt(i, 1.25);
         const cos = Math.cos(ang(i));
         return (
           <g key={name}>
             <circle cx={x} cy={y} r="3" fill="var(--brand)" />
             <text x={lx} y={ly} fontSize="11" fill="var(--ink)" textAnchor={cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle"} dominantBaseline="middle">
-              {name.length > 12 ? `${name.slice(0, 11)}…` : name}
+              <title>{name}</title>
+              {labelLines(name).map((line, k, all) => (
+                <tspan key={k} x={lx} dy={k === 0 ? `${-(all.length - 1) * 0.55}em` : "1.1em"}>
+                  {line}
+                </tspan>
+              ))}
             </text>
           </g>
         );

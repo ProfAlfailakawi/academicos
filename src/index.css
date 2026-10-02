@@ -542,6 +542,16 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
    the tile instead of shrinking to a narrow box-in-a-box. */
 .journey-card:has(> .academic-card) { padding: 0; align-items: stretch; }
 .journey-card > .academic-card { width: 100%; border: 0; box-shadow: none; border-radius: inherit; }
+/* Phones: the three shortcut tiles read as one compact row each (icon beside
+   title and hint) instead of ~300px-tall cards that were mostly empty. */
+@media (max-width: 767px) {
+  .journey-card:has(> .academic-card) { min-height: 0; }
+  .journey-body { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+  .journey-body .journey-icon { grid-row: 1 / span 3; width: 44px; height: 44px; border-radius: 14px; }
+  .journey-body h3 { margin-top: 0; font-size: 16px; }
+  .journey-body p { margin-top: 2px; }
+  .journey-body > div { margin-top: 6px; }
+}
 /* Demo pill: amber-500 on a 15% amber wash read at ~2:1 in light mode. */
 :root:not(.dark) .demo-pill { color: #92400e; }
 :root:not(.dark) .demo-pill .demo-pill__role { color: #92400e; }
@@ -645,10 +655,12 @@ html[data-locale="zh"] .writer-canvas { font-family: "Noto Serif SC", "Noto Sans
   .journey-card { padding: 18px; gap: 13px; }
   .journey-card__icon, .journey-icon { width: 52px; height: 52px; border-radius: 17px; }
   .understanding-flow { grid-template-columns: repeat(2, 1fr); }
+  .understanding-step { min-height: 84px; }
   .pricing-preview { border-radius: 24px; }
   .writer-canvas { min-height: 520px; padding: 22px 18px; }
   .plan-grid { grid-template-columns: 1fr; }
-  .plan-card { min-height: 350px; }
+  .plan-card { min-height: 0; }
+  .plan-card > .ui-button { margin-top: 18px; }
   .plan-card.is-popular { transform: none; }
 }
 
@@ -996,6 +1008,11 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
 
 /* Primary buttons: enabled = fully solid; truly disabled = clearly dimmed and
    desaturated, so the two states can no longer be mistaken for each other. */
+/* The unlayered `a { color: inherit }` outranks the layered .brand-bg colour,
+   which left link-buttons (asChild) with dark text on solid green. */
+a.ui-button[data-variant="default"],
+a.brand-bg { color: var(--on-brand); }
+a.ui-button[data-variant="danger"] { color: #fff; }
 .ui-button[data-variant="default"]:not(:disabled),
 .brand-bg:is(button, a):not(:disabled):not([aria-disabled="true"]) { opacity: 1; }
 .ui-button[data-variant="default"]:not(:disabled):hover { opacity: 1; filter: brightness(1.06); }
@@ -1015,3 +1032,28 @@ button.brand-bg:disabled,
 @media (max-width: 1023px) {
   .app-main { padding-bottom: calc(9.75rem + env(safe-area-inset-bottom)) !important; }
 }
+
+/* Calendar month groups: custom chevron, rotated when open. */
+.calendar-month > summary { list-style: none; }
+.calendar-month > summary::-webkit-details-marker { display: none; }
+.calendar-month[open] .calendar-month__chev { transform: rotate(180deg); }
+
+/* A lone last tile in a two-column stat grid spans the row instead of orphaning. */
+@media (max-width: 1279px) {
+  .odd-fill > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+/* Phones: mission cards become one compact row (icon beside title and hint). */
+@media (max-width: 767px) {
+  .mission-body { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+  .mission-body > div:first-child { display: contents; }
+  .mission-body > div:first-child > .tone-tile { grid-column: 1; grid-row: 1 / span 4; width: 44px; height: 44px; border-radius: 14px; }
+  .mission-body > div:first-child > .eyebrow { grid-column: 2; grid-row: 1; }
+  .mission-body h3 { grid-column: 2; margin-top: 2px; }
+  .mission-body p { grid-column: 2; margin-top: 2px; }
+  .mission-body > div:last-child { grid-column: 2; margin-top: 8px; }
+}
+
+/* The "predicted now" chip is 36px tall on phones; a transparent ::after lifts its
+   touch target to 44px without changing the drawn size. */
+.predictive-mobile.predictive-mobile--chip { position: relative; }
+.predictive-mobile--chip::after { content: ""; position: absolute; inset-block: -4px; inset-inline: 0; }

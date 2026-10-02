@@ -151,7 +151,7 @@ export function ControlPlane() {
         title={t('ctrl.title')}
         description={t('ctrl.desc')}
       />
-      <div className="grid grid-cols-2 xl:grid-cols-7 gap-3">
+      <div className="odd-fill grid grid-cols-2 xl:grid-cols-7 gap-3">
         <Metric icon={Users} label={t('ctrl.metric.users')} value={m.users} />
         <Metric icon={Building2} label={t('ctrl.metric.projects')} value={m.projects} />
         <Metric icon={Activity} label={t('ctrl.metric.active')} value={m.activeProjects} />
@@ -183,7 +183,7 @@ export function ControlPlane() {
                   ].map((st) => ({ label: st.label, pct: Math.max(0, Math.min(100, (Number(st.value) || 0) * 100)) }))}
                 />
               </div>
-              <div className="grid sm:grid-cols-3 gap-2 mt-3"><Twin label={t("control.projectCompletion")} value={`${Math.round(product.projectCompletion * 100)}%`} /><Twin label={t("control.auditUsage")} value={`${Math.round(product.submissionAuditUsage * 100)}%`} /><Twin label={t("control.vivaUsage")} value={`${Math.round(product.vivaUsage * 100)}%`} /></div>
+              <div className="grid grid-cols-3 gap-2 mt-3"><Twin label={t("control.projectCompletion")} value={`${Math.round(product.projectCompletion * 100)}%`} /><Twin label={t("control.auditUsage")} value={`${Math.round(product.submissionAuditUsage * 100)}%`} /><Twin label={t("control.vivaUsage")} value={`${Math.round(product.vivaUsage * 100)}%`} /></div>
               <p className="text-[11px] muted leading-5 mt-3">{t("control.funnelNote")}</p>
             </CardContent>
           </Card>

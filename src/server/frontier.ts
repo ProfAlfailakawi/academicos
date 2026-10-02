@@ -106,7 +106,7 @@ export function buildAccreditationDossier(
     attainment:{ measuredOutcomes:measured.length, metOutcomes:met, averageAttainmentPercent:avg },
     gaps:{ uncoveredOutcomes:outcomes.filter(x=>x.status==='uncovered').map(x=>x.outcome), unassessedOutcomes:unassessed, belowThresholdOutcomes:belowThreshold },
     readiness:{ level, summary },
-    provenanceNote:'كل نسبة إتقان محسوبة من درجات تسليمات مصححة فعليًا (graded/released) مرتبطة بالمخرج عبر التكليفات. لا تُختلق أي أرقام؛ المخرج بلا تسليمات مصححة يظهر كـ"غير مُقاس" لا كـ"محقق".',
+    provenanceNote:'كل نسبة إتقان محسوبة من درجات تسليمات مصححة فعليًا (مصححة/معلنة) مرتبطة بالمخرج عبر التكليفات. لا تُختلق أي أرقام؛ المخرج بلا تسليمات مصححة يظهر كـ"غير مُقاس" لا كـ"محقق".',
   };
 }
 
@@ -137,7 +137,7 @@ export function buildAuthorshipPassport(
     integrity:{ algorithm:capsule.integrity.algorithm, hash:capsule.integrity.hash, signatureStatus:capsule.integrity.signatureStatus, keyId:capsule.integrity.keyId },
     trustTier,
     verification:{ status:verification.status, hashValid:verification.hashValid, signatureValid:verification.signatureValid, signerTrusted:verification.signerTrusted },
-    disclosure:'جواز التأليف يثبت أصالة العملية (أدلة، Proof of Learning، مساهمون بشر) عبر تجزئة SHA-256 وتوقيع Ed25519 اختياري. هو بديل إيجابي لكاشفات الذكاء الاصطناعي: لا يتهم، ولا يمثل درجة أو Transcript، ولا يرفع مستوى تحقق أي دليل عن المسجّل.',
+    disclosure:'جواز التأليف يثبت أصالة العملية (أدلة، دليل تعلّم، مساهمون بشر) عبر تجزئة SHA-256 وتوقيع Ed25519 اختياري. هو بديل إيجابي لكاشفات الذكاء الاصطناعي: لا يتهم، ولا يمثل درجة أو كشف درجات، ولا يرفع مستوى تحقق أي دليل عن المسجّل.',
   };
 }
 
@@ -245,8 +245,8 @@ export function lintAssignmentIntegrity(assignment:CourseAssignmentRecord):Integ
   const signals=[
     { code:'authentic_task', label:'مهمة أصيلة (تحليل/تصميم/تطبيق)', impact:22, present:hasAuthentic, detail:hasAuthentic?'التكليف يطلب مهارة عليا لا مجرد استرجاع.':'لا يظهر فعل معرفي عالٍ؛ المهام الاسترجاعية سهلة التوليد آليًا.' },
     { code:'local_context', label:'سياق محلي/شخصي', impact:18, present:hasLocal, detail:hasLocal?'يرتبط ببيانات/سياق يصعب على نموذج عام إنتاجه.':'لا يوجد سياق محلي أو بيانات خاصة بالطالب.' },
-    { code:'process_evidence', label:'يتطلب دليل عملية أو مناقشة', impact:22, present:requiresProcess, detail:requiresProcess?'يطلب مسودات/تأمل/Viva تثبت التأليف.':'لا يطلب أي دليل على العملية؛ يصعب إثبات التأليف لاحقًا.' },
-    { code:'rubric_process', label:'الـRubric يقيس العملية/الأصالة', impact:12, present:rubricProcess, detail:rubricProcess?'معيار تقييم يكافئ التفكير لا المخرج فقط.':'الـRubric يقيس المخرج النهائي فقط.' },
+    { code:'process_evidence', label:'يتطلب دليل عملية أو مناقشة', impact:22, present:requiresProcess, detail:requiresProcess?'يطلب مسودات/تأمل/مناقشة شفوية تثبت التأليف.':'لا يطلب أي دليل على العملية؛ يصعب إثبات التأليف لاحقًا.' },
+    { code:'rubric_process', label:'معايير التقييم تقيس العملية/الأصالة', impact:12, present:rubricProcess, detail:rubricProcess?'معيار تقييم يكافئ التفكير لا المخرج فقط.':'معايير التقييم تقيس المخرج النهائي فقط.' },
     { code:'recall_heavy', label:'ليس استرجاعيًا بحتًا', impact:14, present:!hasRecall||hasAuthentic, detail:hasRecall&&!hasAuthentic?'الصياغة استرجاعية (اذكر/عرّف/لخّص) وقابلة للتوليد الفوري.':'لا يغلب عليه الاسترجاع.' },
     { code:'clear_prompt', label:'تعليمات كافية التفصيل', impact:6, present:!thinPrompt, detail:thinPrompt?'التعليمات قصيرة جدًا؛ الغموض يشجع مخرجات عامة.':'تعليمات مفصّلة بما يكفي.' },
     { code:'scoped_ai_policy', label:'سياسة ذكاء اصطناعي محددة', impact:6, present:!policyOpen, detail:policyOpen?'السياسة مفتوحة بلا حدود؛ حدد المسموح والممنوع صراحة.':'سياسة الذكاء الاصطناعي محددة.' },
@@ -257,8 +257,8 @@ export function lintAssignmentIntegrity(assignment:CourseAssignmentRecord):Integ
   const recommendations=signals.filter(s=>!s.present).map(s=>({
     authentic_task:'أضف مطلبًا لتحليل/تصميم/تطبيق بدل الاسترجاع.',
     local_context:'اربط التكليف ببيانات الطالب أو المؤسسة أو بسياق محلي/إقليمي ذي صلة، من دون افتراض دولة بعينها.',
-    process_evidence:'اطلب مسودة أو تأملًا أو فعّل Viva قصيرة كدليل تأليف.',
-    rubric_process:'أضف معيار Rubric يكافئ منهج التفكير والأصالة.',
+    process_evidence:'اطلب مسودة أو تأملًا أو فعّل مناقشة شفوية قصيرة كدليل تأليف.',
+    rubric_process:'أضف معيار تقييم يكافئ منهج التفكير والأصالة.',
     recall_heavy:'أعد صياغة الأفعال الاسترجاعية إلى أفعال عليا (حلل/قيّم/صمم).',
     clear_prompt:'وسّع التعليمات لتقليل الغموض والمخرجات العامة.',
     scoped_ai_policy:'حدد سياسة الذكاء الاصطناعي: ما المسموح وما الممنوع وكيف يُوثّق الاستخدام.',

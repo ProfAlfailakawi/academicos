@@ -34,6 +34,30 @@ const templates: Record<LocaleCode, (name:string, category:string)=>string> = {
   ur:(name,category)=>`ادارے کے ${category} کے لیے ${name} کو محدود رسائی کے ساتھ محفوظ طریقے سے ترتیب دیں اور راز ایپ ڈیٹا سے باہر رکھیں۔`,
 };
 
+// Display-only Arabic names for generic connector names; vendor/product names (Stripe, GitHub, Moodle…) stay as-is.
+const NAMES_AR: Record<string, string> = {
+  "Transactional Email": "البريد التشغيلي",
+  "Push Notifications": "الإشعارات الفورية",
+  "SMS": "الرسائل النصية (SMS)",
+  "University SSO (SAML/OIDC)": "الدخول الموحد للجامعة (SAML/OIDC)",
+  "Regional Digital Identity Adapter": "محوّل الهوية الرقمية الإقليمية",
+  "OpenAI Provider Gateway": "بوابة مزوّد OpenAI",
+  "Anthropic Provider Gateway": "بوابة مزوّد Anthropic",
+  "Local / Private AI Gateway": "بوابة الذكاء الاصطناعي المحلية والخاصة",
+  "Institution AI Gateway": "بوابة الذكاء الاصطناعي للمؤسسة",
+  "Isolated PDF Renderer": "مُصيِّر PDF معزول",
+  "Backup / Restore Worker": "عامل النسخ الاحتياطي والاستعادة",
+  "Code Execution Sandbox": "بيئة تنفيذ الشيفرة المعزولة",
+  "Semantic Index / RAG": "الفهرس الدلالي / RAG",
+  "Translation Service": "خدمة الترجمة",
+  "Speech / Voice Viva": "الكلام والمناقشة الصوتية",
+  "Document OCR Ensemble": "مجموعة التعرّف الضوئي على المستندات (OCR)",
+  "Institutional Sales CRM": "نظام مبيعات المؤسسات (CRM)",
+  "Isolated Malware Scanner": "فاحص البرمجيات الخبيثة المعزول",
+};
+export function integrationNameLabel(name:string, locale:LocaleCode):string {
+  return locale === "ar" ? NAMES_AR[name] || name : name;
+}
 export function integrationCategoryLabel(category:string, locale:LocaleCode):string {
   return categoryNames[category]?.[locale] || categoryNames[category]?.en || category;
 }

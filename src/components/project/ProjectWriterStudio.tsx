@@ -524,9 +524,9 @@ function ProjectFlow({ document, progress }: { document: ProjectDocument; progre
 }
 
 function QualityCard({ document }: { document: ProjectDocument }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const metrics = [
-    ["Rubric", document.quality.rubricCoverage],
+    [locale === "ar" ? t("landing.elRubric") : "Rubric", document.quality.rubricCoverage],
     [t("writer.metricSources"), document.quality.sourceConfidence],
     [t("writer.metricCoherence"), document.quality.coherence],
     [t("writer.metricViva"), document.quality.discussability],

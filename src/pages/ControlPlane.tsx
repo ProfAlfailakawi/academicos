@@ -25,6 +25,37 @@ import { AcademicLoader } from "../components/ui/AcademicLoader";
 import { ArcGauge, TaperFunnel } from "../components/Infographics";
 
 /* تسميات عربية موجودة سلفًا لمفاتيح حالة البنية بدل عرض أسماء المتغيرات. */
+// Display-only Arabic labels for raw codes; unknown values fall back to the raw code.
+const CODE_AR: Record<string, string> = {
+  free_project_preview: "المعاينة المجانية للمشروع", project_preview: "معاينة المشروع", free_viva_session: "جلسة المناقشة المجانية",
+  shared_device: "جهاز مشترك", rapid_signup: "تسجيل سريع", new_device: "جهاز جديد", disposable_email: "بريد مؤقت", vpn_detected: "اكتشاف VPN",
+  EMAIL_NOT_VERIFIED: "البريد غير موثّق", INSTALL_SIGNAL_MISSING: "إشارة التثبيت مفقودة", DEVICE_SIGNAL_MISSING: "إشارة الجهاز مفقودة",
+  EMAIL_ALIAS_REUSE: "إعادة استخدام بريد بديل", MULTI_ACCOUNT_INSTALL: "حسابات متعددة على تثبيت واحد", MULTI_ACCOUNT_DEVICE: "حسابات متعددة على جهاز واحد",
+  HIGH_NETWORK_ACCOUNT_VELOCITY: "كثافة حسابات مرتفعة على الشبكة", NETWORK_FREE_BENEFIT_LIMIT: "حد المزايا المجانية على الشبكة",
+  production: "الإنتاج", development: "التطوير", staging: "الاختبار", global: "عالمي",
+};
+const FLAG_DESC_AR: Record<string, string> = {
+  VivaStudio: "جلسات محاكي المناقشة ودليل التعلّم",
+  ProjectExport: "تصدير المشروع بصيغ JSON وMarkdown وOffice وZIP",
+  EvidenceStudio: "صندوق أدلة المشروع والتتبّع",
+  ProfessorOS: "سير العمل المؤسسي لبيئة المقرر ومنشئ التكليفات",
+  AcademicPassportV2: "مشاركة الجواز الأكاديمي والمهني الموثّق",
+  NationalAnalytics: "تحليلات وطنية مجمّعة؛ تُفعَّل فقط للجهات الوطنية المتعاقدة",
+  Marketplace: "سوق القوالب والمهارات؛ يتطلب سياسة إشراف وسياسة تجارية",
+  VoiceViva: "محوّل المناقشة الصوتية؛ يتطلب بيانات اعتماد مزوّد الكلام",
+  EmployerNetwork: "مشاركة شبكة أصحاب العمل والتحديات بموافقة صريحة من المتعلم",
+  ProjectCopilot: "هيكل مساعد المشروع بمخرجات مبنية على معايير التقييم والأدلة",
+  ProjectCopilotFileSearch: "بحث دلالي خاص في ملفات المشروع والمقرر على مخزن متجهات مستضاف ذاتيًا مع استشهادات",
+  ResearchStudioGrounding: "تأريض حقيقي ببحث Google داخل استوديو البحث (أداة أصلية أو بوابة المؤسسة)",
+  MultimodalAssignmentCompiler: "محلّل تكليفات متعدد الوسائط مرتبط بسجل المشروع",
+  AdaptiveCopilotTutor: "تعليم تكيّفي يوجّه الطالب دون أن ينجز التسليم عنه",
+  WorkspaceFunctionCalling: "استدعاء وظائف محكوم بين مساحات عمل المشاريع",
+  GeminiLiveViva: "محوّل Gemini Live للمناقشة ودليل التعلّم",
+  ExternalCodeExecution: "تنفيذ الشيفرة في بيئة معزولة؛ لا يعمل أبدًا على خادم التطبيق",
+  SemanticRAG: "فهرسة دلالية ومزوّد استرجاع معزّز (RAG) ضمن النطاق المؤسسي والمشروع",
+};
+const codeLabel = (code: string, locale: string) => (locale === "ar" ? CODE_AR[code] || code : code);
+
 const SYSTEM_KEY_LABELS: Record<string, string> = {
   aiConfigured: "ui.aiGateway",
   storageConfigured: "ui.storage",
@@ -181,7 +212,7 @@ export function ControlPlane() {
               <Twin label={t("control.fairUseStepUp")} value={fairUse.stepUpSignals} />
               <Twin label={t("control.fairUseDevices")} value={fairUse.suspiciousDevices} />
             </div>
-            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{item.benefit}</span><span className="text-xs font-bold mono-number">{t("ui.risk")} {item.score}</span></div><div className="text-[11px] muted mt-1">{item.reasonCodes.join(" · ")}</div></div>)}</div>}
+            {fairUse.recent.length > 0 && <div className="mt-5 grid lg:grid-cols-2 gap-2">{fairUse.recent.slice(0,6).map((item,idx)=><div key={`${item.createdAt}_${idx}`} className="rounded-xl border hairline bg-[var(--bg)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{codeLabel(item.benefit, locale)}</span><span className="text-xs font-bold mono-number">{t("ui.risk")} {item.score}</span></div><div className="text-[11px] muted mt-1">{item.reasonCodes.map((c) => codeLabel(c, locale)).join(" · ")}</div></div>)}</div>}
           </CardContent>
         </Card>
       )}
@@ -269,13 +300,13 @@ export function ControlPlane() {
                     className="flex items-center justify-between rounded-xl bg-[var(--bg)] border hairline p-3"
                   >
                     <span className="text-xs font-semibold">{SYSTEM_KEY_LABELS[k] ? t(SYSTEM_KEY_LABELS[k]) : k === "firebase" ? "Firestore" : k}</span>
-                    <span className="text-[11px] muted max-w-40 truncate inline-flex items-center gap-1.5" title={String(v)}>
+                    <span className="text-[11px] muted max-w-40 truncate inline-flex items-center gap-1.5" title={typeof v === "boolean" ? (k === "maintenance" ? t(v ? "settings.on" : "settings.off") : t(v ? "ui.configured" : "ui.notConfigured")) : codeLabel(String(v), locale)}>
                       {typeof v === "boolean" && <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${(k === "maintenance" ? !v : v) ? "bg-success" : "bg-warning"}`} />}
                       {typeof v === "boolean"
                         ? k === "maintenance"
                           ? t(v ? "settings.on" : "settings.off")
                           : t(v ? "ui.configured" : "ui.notConfigured")
-                        : String(v)}
+                        : codeLabel(String(v), locale)}
                     </span>
                   </div>
                 ))}
@@ -304,7 +335,7 @@ export function ControlPlane() {
                       <div>
                         <div className="text-xs font-semibold">{f.key}</div>
                         <div className="text-[11px] muted mt-1 leading-4">
-                          {f.description}
+                          {locale === "ar" ? FLAG_DESC_AR[f.key] || f.description : f.description}
                         </div>
                       </div>
                       <button

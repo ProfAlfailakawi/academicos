@@ -141,7 +141,7 @@ export const ADV = {
     'طالبعلم نے اوسط بلوم سطح {bloom}/6 اور پروجیکٹ نتائج کی {coverage}% کوریج کے ساتھ {n} سوالات بنائے۔ اعلیٰ سطح کے سوالات بنانا جواب دینے سے آزاد مہارت کی علامت ہے۔',
   ),
   raNote: L(
-    'درجة صانع الامتحان مؤشر إتقان تكويني حتمي مشتق من بنية أسئلة الطالب فقط؛ لا تستبدل تقويم الأستاذ ولا تُعدّل درجة رسمية، لكنها تدخل Proof of Learning كدليل عملية أصيل.',
+    'درجة صانع الامتحان مؤشر إتقان تكويني حتمي مشتق من بنية أسئلة الطالب فقط؛ لا تستبدل تقويم الأستاذ ولا تُعدّل درجة رسمية، لكنها تدخل دليل التعلّم كدليل عملية أصيل.',
     'The exam-maker score is a deterministic formative mastery signal derived only from the structure of the student’s questions; it does not replace the instructor’s assessment or change any official grade, but it enters Proof of Learning as a genuine process record.',
     'Sınav-yapıcı puanı yalnızca öğrencinin soru yapısından türeyen deterministik biçimlendirici bir ustalık işaretidir; öğretim elemanının değerlendirmesinin yerine geçmez ve resmi notu değiştirmez, ancak gerçek bir süreç kanıtı olarak Proof of Learning’e girer.',
     '出题者得分是仅由学生问题结构推导出的确定性形成性掌握信号；它不替代教师评估，也不改变任何正式成绩，但作为真实的过程记录进入学习证明。',

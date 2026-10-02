@@ -297,7 +297,7 @@ export function CourseOS() {
               className="focus-ring inline-flex items-center gap-2 text-xs muted hover:text-[var(--ink)]"
             >
               <ArrowRight size={15} />
-              ProfessorOS
+              {t("layout.navProfessor")}
             </Link>
             <div className="eyebrow brand-text mt-4">
               {course.code}
@@ -580,7 +580,7 @@ export function CourseOS() {
                               : a.groupMode === "either"
                                 ? t("course.eitherMode")
                                 : t("course.individual")}{" "}
-                            · AI L{a.aiPolicy.level}
+                            · {locale === "ar" ? "مستوى الذكاء الاصطناعي" : "AI L"} {a.aiPolicy.level}
                           </span>
                         </div>
                         <h3 className="text-base font-semibold mt-2">

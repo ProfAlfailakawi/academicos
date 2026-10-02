@@ -33,7 +33,9 @@ let activeNumerals: NumeralStyle = "auto";
 
 export function localeIntlTag(code: LocaleCode): string {
   const system = numberingSystemFor(code, activeNumerals);
-  return system ? `${localeMeta(code).speech}-u-nu-${system}` : localeMeta(code).speech;
+  // Arabic keeps its Hijri (Umm al-Qura) calendar and month names; only the digits are Western.
+  const calendar = code === "ar" ? "-ca-islamic-umalqura" : "";
+  return system || calendar ? `${localeMeta(code).speech}-u${calendar}${system ? `-nu-${system}` : ""}` : localeMeta(code).speech;
 }
 
 export function formatDateTime(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {
@@ -126,7 +128,8 @@ const NUMERALS_KEY = "academicos.numerals.v1";
  * locale default). Eastern digits only apply to Arabic-script UIs.
  */
 export function numberingSystemFor(locale: LocaleCode, numerals: NumeralStyle): string {
-  if (numerals === "auto") return "";
+  // Owner decision: Arabic UI shows Western digits (0-9) unless the user explicitly opts into Eastern ones.
+  if (numerals === "auto") return locale === "ar" ? "latn" : "";
   if (numerals === "latn") return "latn";
   if (locale === "ar") return "arab";
   if (locale === "ur") return "arabext";

@@ -33,9 +33,8 @@ let activeNumerals: NumeralStyle = "auto";
 
 export function localeIntlTag(code: LocaleCode): string {
   const system = numberingSystemFor(code, activeNumerals);
-  // Arabic keeps its Hijri (Umm al-Qura) calendar and month names; only the digits are Western.
-  const calendar = code === "ar" ? "-ca-islamic-umalqura" : "";
-  return system || calendar ? `${localeMeta(code).speech}-u${calendar}${system ? `-nu-${system}` : ""}` : localeMeta(code).speech;
+  // Only the digits change; the calendar stays whatever the environment resolves for the locale.
+  return system ? `${localeMeta(code).speech}-u-nu-${system}` : localeMeta(code).speech;
 }
 
 export function formatDateTime(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {

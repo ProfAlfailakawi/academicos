@@ -20,7 +20,7 @@ function MonthHeat({ dates, locale }: { dates: string[]; locale: Parameters<type
           const [y, mo] = m.split('-').map(Number);
           const days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
           const total = [...byDay.entries()].filter(([k]) => k.startsWith(m)).reduce((a, [, n]) => a + n, 0);
-          const label = formatDate(`${m}-01T12:00:00Z`, locale, { month: 'long', year: 'numeric' });
+          const label = formatDate(`${m}-01T12:00:00Z`, locale, { month: 'long', year: 'numeric', calendar: 'gregory' } as Intl.DateTimeFormatOptions);
           return (
             <div key={m} className="flex items-center gap-3">
               <div className="w-24 sm:w-32 shrink-0 text-[11px] font-semibold">{label} <span className="muted mono-number">{total}</span></div>

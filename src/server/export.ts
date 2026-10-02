@@ -100,7 +100,7 @@ const ENUM_LABELS:Record<string,Record<ExportLocale,string>>={
 function enumLabel(value:unknown,locale:ExportLocale){const raw=String(value??'').trim();const key=raw.toLowerCase().replace(/[\s-]+/g,'_');return ENUM_LABELS[key]?.[locale]||raw;}
 function normalizeExportLocale(raw:unknown):ExportLocale{const short=String(raw||'en').trim().toLowerCase().slice(0,2) as ExportLocale;return short in EXPORT_LOCALES?short:'en';}
 // Arabic exports keep the Hijri calendar and month names but use Western digits.
-function exportDateTag(locale:ExportLocale){return locale==='ar'?'ar-SA-u-ca-islamic-umalqura-nu-latn':EXPORT_LOCALES[locale].bcp;}
+function exportDateTag(locale:ExportLocale){return locale==='ar'?'ar-SA-u-nu-latn':EXPORT_LOCALES[locale].bcp;}
 function formatExportDate(value:unknown,locale:ExportLocale){const raw=String(value??'').trim();if(!raw)return w('needsConfirmation',locale);const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(raw);const d=new Date(dateOnly?`${raw}T00:00:00Z`:raw);if(Number.isNaN(d.getTime()))return raw;return new Intl.DateTimeFormat(exportDateTag(locale),{dateStyle:'medium',...(dateOnly?{timeZone:'UTC'}:{})}).format(d);}
 function formatExportDateTime(value:Date|number|string,locale:ExportLocale){const d=value instanceof Date?value:new Date(value);if(Number.isNaN(d.getTime()))return String(value);return new Intl.DateTimeFormat(exportDateTag(locale),{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'}).format(d);}
 

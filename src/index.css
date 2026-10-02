@@ -1015,3 +1015,23 @@ button.brand-bg:disabled,
 @media (max-width: 1023px) {
   .app-main { padding-bottom: calc(9.75rem + env(safe-area-inset-bottom)) !important; }
 }
+
+/* Calendar month groups: custom chevron, rotated when open. */
+.calendar-month > summary { list-style: none; }
+.calendar-month > summary::-webkit-details-marker { display: none; }
+.calendar-month[open] .calendar-month__chev { transform: rotate(180deg); }
+
+/* A lone last tile in a two-column stat grid spans the row instead of orphaning. */
+@media (max-width: 1279px) {
+  .odd-fill > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+/* Phones: mission cards become one compact row (icon beside title and hint). */
+@media (max-width: 767px) {
+  .mission-body { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+  .mission-body > div:first-child { display: contents; }
+  .mission-body > div:first-child > .tone-tile { grid-column: 1; grid-row: 1 / span 4; width: 44px; height: 44px; border-radius: 14px; }
+  .mission-body > div:first-child > .eyebrow { grid-column: 2; grid-row: 1; }
+  .mission-body h3 { grid-column: 2; margin-top: 2px; }
+  .mission-body p { grid-column: 2; margin-top: 2px; }
+  .mission-body > div:last-child { grid-column: 2; margin-top: 8px; }
+}

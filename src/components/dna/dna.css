@@ -678,7 +678,7 @@
   gap: 3px;
 }
 .dna-heatc {
-  aspect-ratio: 1;
+  block-size: 14px; /* a slim strip: a few wide columns must never become giant squares */
   min-inline-size: 6px;
   border-radius: 4px;
   background: var(--t-fg);

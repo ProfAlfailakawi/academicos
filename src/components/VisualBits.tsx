@@ -45,7 +45,9 @@ export function StackedBar({ segments, ariaLabel, height = 22 }: { segments: Sta
           className="flex min-w-0 items-center justify-center overflow-hidden text-[11px] font-semibold mono-number"
           style={{
             flex: `${Math.max(0, s.value)} 1 0`,
-            background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(--panel))`,
+            // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،
+            // وجزء "muted" يبقى على --panel مع نص --ink.
+            background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(${s.tone === "muted" ? "--panel" : "--ink"}))`,
             color: s.tone === "muted" ? "var(--ink)" : "var(--panel)",
           }}
         >
@@ -93,6 +95,11 @@ export function FoldText({ text, limit = 110, className = "body-copy" }: { text:
       </summary>
     </details>
   );
+}
+
+/** هل يرسم SkillRadar شيئًا؟ (≥3 محاور متمايزة) — لتغليفه ببطاقة فقط عند الحاجة. */
+export function hasSkillRadar(skills: Array<{ skill: string }>, max = 8) {
+  return Math.min(new Set(skills.map((s) => s.skill)).size, max) >= 3;
 }
 
 /** رادار مهارات: محاور = أسماء المهارات، القيمة = عدد أدلتها (بيانات الشاشة نفسها). */

@@ -346,10 +346,10 @@ export function CourseOS() {
             </Button>
           </div>
         </div>
-        <div className="grid sm:grid-cols-3 gap-3 mt-6 pt-5 border-t hairline">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6 pt-5 border-t hairline">
           <Mini label={t("ui.courseOutcomes")} value={course.outcomes.length} />
           <Mini label={t("ui.assignments")} value={assignments.length} />
-          <Mini label={t("ui.defaultAiPolicy")} value={`L${course.aiPolicy.level}`} />
+          <Mini label={t("ui.defaultAiPolicy")} value={locale === "ar" ? `${t("ui.level")} ${course.aiPolicy.level}` : `L${course.aiPolicy.level}`} />
         </div>
       </header>
       {error && (
@@ -578,7 +578,7 @@ export function CourseOS() {
                     key={a.id}
                     className="rounded-2xl border hairline p-4 md:p-5"
                   >
-                    <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    <div className="flex flex-col gap-4">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
@@ -606,41 +606,43 @@ export function CourseOS() {
                           {a.instructions}
                         </p>
                       </div>
-                      <div className="flex gap-1.5 flex-wrap sm:justify-end">
-                        <Button asChild size="sm" variant="ghost">
-                          <Link to={`/app/course/${course.id}/assignment/${a.id}/submissions`}>
-                            <BookOpenCheck size={14} />
-                            {t("course.submissions")}
+                      <div className="course-actions flex items-center gap-1 flex-wrap">
+                        <Button asChild size="icon" variant="ghost">
+                          <Link to={`/app/course/${course.id}/assignment/${a.id}/submissions`} aria-label={t("course.submissions")} title={t("course.submissions")}>
+                            <BookOpenCheck size={16} />
                           </Link>
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
+                          aria-label={t("ui.quality")}
+                          title={t("ui.quality")}
                           onClick={() => checkQuality(a)}
                         >
-                          <ClipboardCheck size={14} />
-                          {t("ui.quality")}
+                          <ClipboardCheck size={16} />
                         </Button>
                         <Button
-                          size="sm"
-                          variant="outline"
+                          size="icon"
+                          variant="ghost"
+                          aria-label={t("cohort.open")}
+                          title={t("cohort.open")}
                           onClick={() => setInsightFor(a)}
                         >
-                          <Users size={14} />
-                          {t("cohort.open")}
+                          <Users size={16} />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
+                          aria-label={t("course.copy")}
+                          title={t("course.copy")}
                           onClick={() => cloneAssignment(a)}
                           disabled={Boolean(cloning)}
                         >
                           {cloning === a.id ? (
-                            <InlineLoader size={14}/>
+                            <InlineLoader size={16}/>
                           ) : (
-                            <Copy size={14} />
+                            <Copy size={16} />
                           )}
-                          {t("course.copy")}
                         </Button>
                         <Button
                           size="sm"
@@ -663,7 +665,12 @@ export function CourseOS() {
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="grid grid-cols-3 gap-1.5 mt-4" aria-hidden="true">
+                      {[a.deliverables.length, a.rubric.length, a.outcomes.length].map((n, i) => (
+                        <span key={i} className={`h-1.5 rounded-full ${n > 0 ? "bg-[var(--brand)]" : "bg-[var(--line)]"}`} />
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
                       <Sub label={t("course.deliverables")} value={a.deliverables.length} />
                       <Sub label={t("ui.rubric")} value={a.rubric.length} />
                       <Sub label={t("ui.outcomes")} value={a.outcomes.length} />

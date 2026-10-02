@@ -463,6 +463,9 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
 }
 .predictive-mobile-wrap { position: relative; z-index: 2; }
 .predictive-mobile { min-height: 40px; }
+/* Compact chip: a small pill, not a full-width bar. */
+.predictive-mobile.predictive-mobile--chip { min-height: 32px; box-shadow: none; }
+.predictive-mobile--chip .prediction-learned { display: none; }
 
 .skip-link {
   position: fixed;
@@ -482,6 +485,7 @@ pre, code { max-width: 100%; overflow-wrap: anywhere; }
 @media (max-width: 639px) {
   .predictive-mobile-wrap { padding-top: 10px; padding-inline: 12px; }
   .predictive-mobile { border-radius: 12px; }
+  .predictive-mobile.predictive-mobile--chip { border-radius: 999px; min-height: 36px; max-width: 100%; }
 }
 
 /* Explicit accessibility preferences complement OS-level settings. */
@@ -987,3 +991,25 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   box-shadow: 0 8px 18px rgba(0, 0, 0, .28), var(--shadow-xs);
 }
 :root.dark .ui-button[data-variant="default"]:disabled { opacity: .55; }
+
+/* Primary buttons: enabled = fully solid; truly disabled = clearly dimmed and
+   desaturated, so the two states can no longer be mistaken for each other. */
+.ui-button[data-variant="default"]:not(:disabled),
+.brand-bg:is(button, a):not(:disabled):not([aria-disabled="true"]) { opacity: 1; }
+.ui-button[data-variant="default"]:not(:disabled):hover { opacity: 1; filter: brightness(1.06); }
+.ui-button[data-variant="default"]:disabled,
+button.brand-bg:disabled,
+.brand-bg[aria-disabled="true"] {
+  opacity: .5;
+  filter: saturate(.55);
+  box-shadow: none;
+}
+:root.dark .ui-button[data-variant="default"]:disabled { opacity: .5; }
+
+/* Phones: decorative hero shield tile hidden; more room above the bottom dock. */
+@media (max-width: 639px) {
+  .hero-shield { display: none; }
+}
+@media (max-width: 1023px) {
+  .app-main { padding-bottom: calc(9.75rem + env(safe-area-inset-bottom)) !important; }
+}

@@ -991,3 +991,17 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   box-shadow: 0 8px 18px rgba(0, 0, 0, .28), var(--shadow-xs);
 }
 :root.dark .ui-button[data-variant="default"]:disabled { opacity: .55; }
+
+/* Primary buttons: enabled = fully solid; truly disabled = clearly dimmed and
+   desaturated, so the two states can no longer be mistaken for each other. */
+.ui-button[data-variant="default"]:not(:disabled),
+.brand-bg:is(button, a):not(:disabled):not([aria-disabled="true"]) { opacity: 1; }
+.ui-button[data-variant="default"]:not(:disabled):hover { opacity: 1; filter: brightness(1.06); }
+.ui-button[data-variant="default"]:disabled,
+button.brand-bg:disabled,
+.brand-bg[aria-disabled="true"] {
+  opacity: .5;
+  filter: saturate(.55);
+  box-shadow: none;
+}
+:root.dark .ui-button[data-variant="default"]:disabled { opacity: .5; }

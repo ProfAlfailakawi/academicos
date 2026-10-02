@@ -313,6 +313,7 @@ export function ProjectWriterStudio({
       setFeedback("");
       setShowFeedback(false);
       setNotice(t("writer.feedbackApplied"));
+      onProjectChange?.(response.project);
     } catch (caught: any) {
       setError(localizedUiError(caught, t, "writer.feedbackError"));
     } finally {

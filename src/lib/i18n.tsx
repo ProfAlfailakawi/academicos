@@ -33,8 +33,10 @@ let activeNumerals: NumeralStyle = "auto";
 
 export function localeIntlTag(code: LocaleCode): string {
   const system = numberingSystemFor(code, activeNumerals);
-  // Only the digits change; the calendar stays whatever the environment resolves for the locale.
-  return system ? `${localeMeta(code).speech}-u-nu-${system}` : localeMeta(code).speech;
+  // Arabic always uses the Gregorian calendar (never Hijri); digits follow the numeral preference.
+  const speech = localeMeta(code).speech;
+  const ext = [code === "ar" ? "ca-gregory" : "", system ? `nu-${system}` : ""].filter(Boolean).join("-");
+  return ext ? `${speech}-u-${ext}` : speech;
 }
 
 export function formatDateTime(value: string | number | Date, locale: LocaleCode, options?: Intl.DateTimeFormatOptions) {

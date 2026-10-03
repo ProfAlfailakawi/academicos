@@ -1035,9 +1035,9 @@ function Field({
 }
 function Mini({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl bg-[var(--bg)] border hairline p-3">
-      <div className="text-[11px] muted">{label}</div>
-      <div className="text-xl font-semibold mt-1">{value}</div>
+    <div className="rounded-xl bg-[var(--bg)] border hairline p-2.5 sm:p-3 flex flex-col justify-between gap-1 min-w-0">
+      <div className="text-[11px] leading-4 muted">{label}</div>
+      <div className="text-[15px] sm:text-xl font-semibold leading-tight">{value}</div>
     </div>
   );
 }

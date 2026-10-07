@@ -53,7 +53,7 @@ export function LtiPanel() {
                     ["lti.authLoginUrl", lti.authLoginUrl],
                     ["lti.tokenUrl", lti.tokenUrl],
                   ] as const).map(([key, value]) => (
-                    <div key={key} className="grid grid-cols-[8rem_1fr] gap-2">
+                    <div key={key} className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-0.5 sm:gap-2">
                       <dt className="muted">{t(key)}</dt>
                       <dd className="font-mono break-all" dir="ltr">{value || "—"}</dd>
                     </div>
@@ -69,7 +69,7 @@ export function LtiPanel() {
                     ["lti.launchUrl", lti.tool.launchUrl],
                     ["lti.toolJwks", lti.tool.jwksUrl],
                   ] as const).map(([key, value]) => (
-                    <div key={key} className="grid grid-cols-[8rem_1fr] gap-2">
+                    <div key={key} className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-0.5 sm:gap-2">
                       <dt className="muted">{t(key)}</dt>
                       <dd className="font-mono break-all" dir="ltr">{value}</dd>
                     </div>

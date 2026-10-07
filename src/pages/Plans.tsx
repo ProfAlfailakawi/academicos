@@ -126,11 +126,11 @@ export function Plans() {
 
     <section className="panel-flat rounded-[24px] p-4 md:p-5">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[520px]">
+        <table className="w-full text-sm sm:min-w-[520px] table-fixed sm:table-auto">
           <thead>
             <tr className="text-[11px] muted border-b hairline">
-              <th scope="col" className="text-start py-3 font-semibold"><span className="sr-only">{t("plans.title")}</span></th>
-              {plans.map((plan) => <th key={plan.id} scope="col" className="py-3 font-semibold text-center">{t(`plans.plan.${plan.id}.name`)}</th>)}
+              <th scope="col" className="text-start py-3 font-semibold w-[31%] sm:w-auto"><span className="sr-only">{t("plans.title")}</span></th>
+              {plans.map((plan) => <th key={plan.id} scope="col" className="py-3 px-1 font-semibold text-center align-bottom leading-snug">{t(`plans.plan.${plan.id}.name`)}</th>)}
             </tr>
           </thead>
           <tbody>

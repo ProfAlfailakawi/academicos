@@ -946,7 +946,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
 /* Narrow phones: the longest single word ("assignments") fits its dock cell. */
 @media (max-width: 400px) {
   .mobile-nav-link__label {
-    font-size: clamp(10.5px, 2.85vw, 12px); letter-spacing: -0.02em;
+    font-size: clamp(11px, 2.85vw, 12px); letter-spacing: -0.02em;
     padding-inline: 0; hyphens: auto;
   }
 }

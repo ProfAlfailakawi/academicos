@@ -3,6 +3,7 @@ import {
   Activity,
   AlertTriangle,
   BrainCircuit,
+  ChevronDown,
   Building2,
   DollarSign,
   Flag,
@@ -229,19 +230,24 @@ export function ControlPlane() {
       <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
         <Card>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
+            <details className="calendar-month">
+            <summary className="focus-ring flex min-h-11 cursor-pointer items-center gap-3">
+              <div className="min-w-0 flex-1">
                 <div className="eyebrow">{t("ui.operationalView")}</div>
                 <h2 className="section-title mt-1">
                   {t('ctrl.projectsInTenant')}
                 </h2>
               </div>
+              <span className="rounded-full soft-bg px-2.5 py-0.5 text-[11px] font-semibold mono-number">{data.projects.length}</span>
+              <ChevronDown size={16} className="calendar-month__chev muted shrink-0" aria-hidden="true" />
+            </summary>
+            <div className="mt-2">
               <span className="text-[11px] muted">
                 {t('ctrl.noFileContent')}
               </span>
             </div>
             <div className="mt-5 overflow-x-auto">
-              <table className="mobile-cards w-full min-w-[720px] xl:min-w-0 text-sm">
+              <table className="mobile-cards mobile-cards--duo w-full min-w-[720px] xl:min-w-0 text-sm">
                 <thead>
                   <tr className="text-[11px] muted border-b hairline">
                     <th className="text-start py-3 font-medium">{t('ctrl.col.project')}</th>
@@ -261,7 +267,7 @@ export function ControlPlane() {
                           {formatDateTime(p.updatedAt, locale)}
                         </div>
                       </td>
-                      <td data-label={t('ctrl.col.course')}>{p.course}</td>
+                      <td data-label={t('ctrl.col.course')} className="col-span-2">{p.course}</td>
                       <td data-label={t('ctrl.col.status')}>
                         <StatusPill status={p.status} />
                       </td>
@@ -286,6 +292,7 @@ export function ControlPlane() {
                 </p>
               )}
             </div>
+            </details>
           </CardContent>
         </Card>
         <div className="space-y-5">

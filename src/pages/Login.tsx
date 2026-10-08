@@ -232,7 +232,7 @@ export function Login() {
         </div>
         <div className="text-xs muted">{t("login.privateNote")}</div>
       </section>
-      <main className="relative flex flex-col md:flex-row items-center justify-center gap-3 p-4 md:p-8">
+      <main className="relative flex flex-col md:flex-row items-center justify-center gap-3 p-4 md:p-8 md:pt-16">
         <div className="self-end md:absolute md:top-4 md:end-4"><LanguageSwitcher compact /></div>
         <Card className="auth-card w-full max-w-md">
           <CardContent className="p-6 md:p-8">

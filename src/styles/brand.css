@@ -460,6 +460,11 @@ html[dir="rtl"] .onboarding-invite__fill {
 }
 .onboard-step-dot.is-done { background: color-mix(in srgb, var(--brand) 46%, transparent); cursor: pointer; }
 .onboard-step-dot.is-current { width: 46px; background: var(--brand); }
+@media (max-width: 359px) {
+  .onboard-steps { flex-wrap: nowrap; gap: 4px; }
+  .onboard-step-dot { width: 14px; }
+  .onboard-step-dot.is-current { width: 30px; }
+}
 
 .onboard-question { position: relative; }
 .onboard-question[data-motion="in"] { animation: acos-step-in 420ms var(--ease-out-quint) both; }

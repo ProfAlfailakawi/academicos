@@ -274,7 +274,7 @@ export function Settings() {
                     type="button"
                     aria-pressed={numerals === style}
                     onClick={() => setNumerals(style)}
-                    className={`focus-ring rounded-xl border hairline px-3 py-2 text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
+                    className={`focus-ring rounded-xl border hairline px-1.5 py-2 min-h-11 whitespace-nowrap text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
                   >
                     {t(`settings.numerals.${style}`)}
                   </button>

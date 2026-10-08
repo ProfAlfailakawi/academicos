@@ -668,6 +668,12 @@ html[data-locale="zh"] .writer-canvas { font-family: "Noto Serif SC", "Noto Sans
 .language-switcher select{color:inherit;max-width:8.5rem;min-width:0;text-overflow:ellipsis}
 .language-switcher--compact{padding-inline:.45rem}
 
+/* Landing header on very narrow phones: drop the globe so the language name is not cut. */
+@media (max-width: 360px) {
+  .landing-head-actions .language-switcher svg { display: none; }
+  .landing-head-actions .language-switcher select { max-width: 6.5rem; }
+}
+
 /* Global-language resilience: long translations must wrap rather than force horizontal overflow. */
 .app-main, .app-main > div, .page-header, .panel, .panel-flat, .academic-card { min-width: 0; }
 .app-main :where(h1,h2,h3,p,dd,dt,label,button,a,span) { overflow-wrap: anywhere; }
@@ -946,7 +952,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
 /* Narrow phones: the longest single word ("assignments") fits its dock cell. */
 @media (max-width: 400px) {
   .mobile-nav-link__label {
-    font-size: clamp(10.5px, 2.85vw, 12px); letter-spacing: -0.02em;
+    font-size: clamp(11px, 2.85vw, 12px); letter-spacing: -0.02em;
     padding-inline: 0; hyphens: auto;
   }
 }
@@ -978,6 +984,18 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   }
   .mobile-cards td[data-label] > * { max-width: 65%; }
   .mobile-cards td .field { width: auto; }
+}
+/* Compact variant of the stacked cards: two columns of label-over-value. */
+@media (max-width: 767px) {
+  .mobile-cards--duo tr { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: row dense; column-gap: 12px; padding: 12px 14px; }
+  .mobile-cards--duo td:not([data-label]) { grid-column: 1 / -1; padding: 0 0 8px !important; }
+  .mobile-cards--duo td[data-label] {
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px;
+    width: auto; padding: 8px 0 !important;
+  }
+  .mobile-cards--duo td[data-label]::before { font-size: 11px; }
+  .mobile-cards--duo td[data-label].col-span-2 { grid-column: 1 / -1; }
+  .mobile-cards--duo td[data-label] > * { max-width: 100%; }
 }
 @media (max-width: 1023px) {
   .app-sidebar--mobile .sidebar-nav-link { min-height: 44px; }

@@ -35,7 +35,7 @@ export function PublicHome() {
           <a href="#pricing" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navPricing")}</a>
           <a href="#teacher" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navTeacher")}</a>
         </nav>
-        <div className="flex items-center gap-2"><LanguageSwitcher compact /><Button variant="ghost" asChild className="hidden sm:inline-flex"><Link to="/login">{t("landing.signIn")}</Link></Button><Button asChild><Link to="/login">{t("landing.tryNow")} <ArrowRight size={16} className="directional-icon" /></Link></Button></div>
+        <div className="landing-head-actions flex items-center gap-2"><LanguageSwitcher compact /><Button variant="ghost" asChild className="hidden sm:inline-flex"><Link to="/login">{t("landing.signIn")}</Link></Button><Button asChild><Link to="/login">{t("landing.tryNow")} <ArrowRight size={16} className="directional-icon" /></Link></Button></div>
       </header>
 
       <main>

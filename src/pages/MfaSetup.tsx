@@ -116,7 +116,7 @@ export function MfaSetup() {
     : "";
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] grid place-items-center p-4 md:p-8">
+    <div className="min-h-screen bg-[var(--bg)] grid place-items-center p-4 pt-20 md:p-8">
       <div className="absolute top-4 end-4"><LanguageSwitcher compact /></div>
       <Card className="w-full max-w-xl">
         <CardContent className="p-6 md:p-8">

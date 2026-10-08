@@ -668,6 +668,12 @@ html[data-locale="zh"] .writer-canvas { font-family: "Noto Serif SC", "Noto Sans
 .language-switcher select{color:inherit;max-width:8.5rem;min-width:0;text-overflow:ellipsis}
 .language-switcher--compact{padding-inline:.45rem}
 
+/* Landing header on very narrow phones: drop the globe so the language name is not cut. */
+@media (max-width: 360px) {
+  .landing-head-actions .language-switcher svg { display: none; }
+  .landing-head-actions .language-switcher select { max-width: 6.5rem; }
+}
+
 /* Global-language resilience: long translations must wrap rather than force horizontal overflow. */
 .app-main, .app-main > div, .page-header, .panel, .panel-flat, .academic-card { min-width: 0; }
 .app-main :where(h1,h2,h3,p,dd,dt,label,button,a,span) { overflow-wrap: anywhere; }

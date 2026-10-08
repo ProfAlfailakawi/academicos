@@ -228,7 +228,7 @@ export function ControlPlane() {
         </section>
       )}
       <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
-        <Card>
+        <Card className="xl:self-start">
           <CardContent>
             <details className="calendar-month">
             <summary className="focus-ring flex min-h-11 cursor-pointer items-center gap-3">

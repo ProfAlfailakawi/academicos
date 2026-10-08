@@ -410,4 +410,4 @@ function Metric({ icon: Icon, label, value }: any) {
     </div>
   );
 }
-function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="text-lg font-semibold mono-number">{value}</div><div className="text-[11px] muted mt-1">{label}</div></div>}
+function Twin({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-[var(--bg)] border hairline p-2.5 min-[360px]:p-3 text-center min-w-0"><div className="text-base min-[360px]:text-lg font-semibold mono-number whitespace-nowrap">{value}</div><div className="text-[11px] muted mt-1">{label}</div></div>}

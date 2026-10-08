@@ -212,19 +212,19 @@ export function PublicPage() {
   const c = pages[slug] || pages.about;
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <header className="h-18 px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="focus-ring flex items-center gap-3">
+      <header className="min-h-18 py-2 px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <Link to="/" className="focus-ring flex items-center gap-3 min-w-0">
           <div className="h-9 w-9 rounded-xl brand-bg grid place-items-center text-xs font-semibold">
             AO
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="font-semibold">AcademicOS</div>
             <div className="text-[11px] muted">
               {t("pub.header.tagline")}
             </div>
           </div>
         </Link>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 shrink-0">
           <Button variant="ghost" asChild>
             <Link to="/">{t("pub.nav.home")}</Link>
           </Button>

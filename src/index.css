@@ -1093,7 +1093,7 @@ button.brand-bg:disabled,
   0%, 20% { border-color: var(--brand); box-shadow: 0 6px 20px color-mix(in srgb, var(--brand) 22%, transparent); transform: translateY(-3px); }
   30%, 100% { border-color: var(--line); box-shadow: none; transform: none; }
 }
-@keyframes flow-num-lit { 0%, 20% { background: var(--brand); color: #fff; } 30%, 100% { background: var(--brand-soft); color: var(--brand-2); } }
+@keyframes flow-num-lit { 0%, 20% { background: var(--brand); color: var(--on-brand); } 30%, 100% { background: var(--brand-soft); color: var(--brand-2); } }
 @keyframes flow-dot { 0% { inset-inline-start: 0; opacity: 1; } 75% { inset-inline-start: 100%; opacity: 1; } 80%, 100% { inset-inline-start: 100%; opacity: 0; } }
 @media (prefers-reduced-motion: no-preference) {
   .understanding-flow--play.is-playing .understanding-step { animation: flow-step-lit 8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 2s); }

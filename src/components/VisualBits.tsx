@@ -153,7 +153,7 @@ export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ ski
         return (
           <g key={name}>
             <circle cx={x} cy={y} r="3" fill="var(--brand)" />
-            <text x={lx} y={ly} fontSize="11" fill="var(--ink)" textAnchor={cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle"} dominantBaseline="middle">
+            <text x={lx} y={ly} fontSize="12" fill="var(--ink)" textAnchor={cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle"} dominantBaseline="middle">
               <title>{name}</title>
               {labelLines(name).map((line, k, all) => (
                 <tspan key={k} x={lx} dy={k === 0 ? `${-(all.length - 1) * 0.55}em` : "1.1em"}>

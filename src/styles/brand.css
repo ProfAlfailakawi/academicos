@@ -83,7 +83,7 @@ html[data-locale="ur"] :is(h3, h4, .section-title) { line-height: 1.85; }
 }
 .acos-lockup__caption {
   margin-top: 3px;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.01em;
   color: var(--muted);
   white-space: nowrap;
@@ -236,7 +236,7 @@ a:hover > .acos-lockup .acos-mark__seal,
   inset-inline: 0;
   margin: 0;
   padding-top: 14px;
-  font-size: 11px;
+  font-size: 12px;
   color: color-mix(in srgb, var(--muted) 82%, transparent);
   animation: acos-rise 600ms var(--ease-out-quint) 1260ms both;
 }
@@ -393,7 +393,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   border-top: 1px dashed color-mix(in srgb, var(--line-strong) 70%, transparent);
 }
 .identity-card__foot > span:first-child {
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--muted);
   min-width: 0;
@@ -402,12 +402,12 @@ html[dir="rtl"] .onboarding-invite__fill {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
+  width: 68px;
+  height: 68px;
   border-radius: 999px;
   border: 1.5px dashed color-mix(in srgb, var(--accent) 52%, transparent);
   color: var(--accent-ink);
-  font-size: 8.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-align: center;
@@ -497,7 +497,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   box-shadow: 0 0 0 3px var(--ring);
 }
 .choice-card__name { font-weight: 600; font-size: 0.95rem; }
-.choice-card__sample { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.choice-card__sample { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .choice-card__check {
   display: grid;
   place-items: center;
@@ -649,7 +649,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .onboard-hint kbd {
@@ -657,7 +657,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   border-bottom-width: 2px;
   border-radius: 6px;
   padding: 1px 6px;
-  font-size: 10px;
+  font-size: 12px;
   font-family: inherit;
   background: var(--panel-2);
 }
@@ -761,7 +761,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   min-height: 26px;
   padding: 0.24rem 0.6rem;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.005em;
   white-space: nowrap;
@@ -872,7 +872,7 @@ html[dir="rtl"] .onboarding-invite__fill {
   border: 1px solid color-mix(in srgb, white 58%, var(--line));
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   will-change: transform, opacity;
@@ -888,7 +888,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 .hero-el--evidence { bottom: 6%; inset-inline-end: -2%; }
 
 @media (max-width: 640px) {
-  .hero-el { font-size: 10px; padding: 6px 10px; }
+  .hero-el { font-size: 12px; padding: 6px 10px; }
   .hero-el--assignment { inset-inline-start: 0; }
   .hero-el--source { inset-inline-end: 0; }
   .hero-el--citation { inset-inline-start: 0; }

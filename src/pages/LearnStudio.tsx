@@ -282,7 +282,7 @@ export function LearnStudio() {
       )}
 
       {!lesson && !solve && !busy && !error && (
-        <div className="text-sm muted text-center py-10">{t("learn.empty")}</div>
+        <div className="rounded-2xl border border-dashed hairline text-sm muted text-center py-10 px-4 flex flex-col items-center gap-3"><Sparkles size={22} className="brand-text" aria-hidden="true" />{t("learn.empty")}</div>
       )}
     </div>
   );

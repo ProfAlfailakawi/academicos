@@ -258,10 +258,9 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                           : m.role === "leader"
                             ? t("team.roleLeader")
                             : t("team.roleMember")}
-                        <span className="hidden sm:inline">{" "}· {m.email}</span>
                       </div>
                       {/* البريد في سطرٍ مستقل باتجاه LTR: كان يتداخل مع اسم العضو وزر الإزالة على الهاتف. */}
-                      <div dir="ltr" className="sm:hidden text-meta muted mt-0.5 break-all text-start" title={m.email}>
+                      <div dir="ltr" className="text-meta muted mt-0.5 truncate keep-truncate text-start" title={m.email}>
                         {m.email}
                       </div>
                     </div>

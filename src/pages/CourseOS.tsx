@@ -292,7 +292,7 @@ export function CourseOS() {
   return (
     <div className="space-y-5">
       <header className="panel-flat rounded-2xl p-5 md:p-6">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-5 justify-between">
+        <div className="flex flex-col gap-5">
           <div>
             <Link
               to="/app/professor"
@@ -312,7 +312,7 @@ export function CourseOS() {
               {course.description || t("course.noDescription")}
             </p>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center border-t hairline pt-4">
             <select
               value={course.status}
               onChange={(e) =>

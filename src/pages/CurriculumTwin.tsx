@@ -1,3 +1,4 @@
+import { Skeleton } from "../components/ui/Skeleton";
 import React,{useEffect,useMemo,useState}from'react';
 import{AlertTriangle,ArrowRight,BookOpenCheck,CheckCircle2,Network,RefreshCw}from'lucide-react';
 import{Link}from'react-router';
@@ -18,7 +19,7 @@ export function CurriculumTwin(){
  const maxAssignments=useMemo(()=>Math.max(1,...(twin?.workloadByTerm||[]).map(x=>x.assignments)),[twin]);
  return <div className="space-y-6"><PageHeader eyebrow={t("ui.curriculumTwin")} title={t('curric.pageTitle')} description={t('curric.pageDesc')} action={<Button asChild variant="outline"><Link to="/app/platform">{t('curric.opsCenter')} <ArrowRight size={14} className="directional-icon"/></Link></Button>}/>
   {error&&<div className="rounded-xl border border-danger/20 bg-danger/8 p-3 text-sm text-danger">{error}</div>}
-  {!twin?<div className="h-80 panel rounded-3xl animate-pulse"/>:<>
+  {!twin?<Skeleton shape="panel"/>:<>
    <Card><CardContent><div className="flex flex-col md:flex-row md:items-end justify-between gap-4"><div><div className="eyebrow">{t("ui.programModel")}</div><h2 className="section-title mt-1">{twin.programTitle||t('curric.currentLandscape')}</h2><p className="body-copy mt-2 max-w-3xl">{twin.sourceNote}</p></div>{programs.length>1&&<label className="text-[11px] muted">{t('curric.program')}<select className="field mt-1 min-w-56" value={programId} onChange={e=>load(e.target.value)}>{programs.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>}</div>
     <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3"><Metric label={t('curric.courses')} value={twin.courses.length}/><Metric label={t("ui.outcomes")} value={twin.outcomes.length}/><Metric label={t('curric.fullGaps')} value={twin.uncoveredOutcomes.length} alert={twin.uncoveredOutcomes.length>0}/><Metric label={t('curric.thinCoverage')} value={twin.thinOutcomes.length} alert={twin.thinOutcomes.length>0}/></div>{twin.duplicateSignals.length>0&&<details className="mt-4 rounded-2xl bg-[var(--bg)] border hairline p-4"><summary className="cursor-pointer text-xs font-semibold">{t('curric.possibleDup')} · {twin.duplicateSignals.length}</summary><div className="mt-3 space-y-2">{twin.duplicateSignals.slice(0,8).map(x=><div key={x.outcome} className="flex items-center justify-between gap-4 text-[11px]"><span>{x.outcome}</span><span className="muted">{x.courseCount} {t('curric.coursesWord')}</span></div>)}</div><p className="text-[11px] leading-5 muted mt-3">{t('curric.dupNote')}</p></details>}
    </CardContent></Card>

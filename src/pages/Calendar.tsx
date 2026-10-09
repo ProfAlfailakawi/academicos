@@ -36,7 +36,7 @@ function MonthHeat({ dates, locale }: { dates: string[]; locale: Parameters<type
             </div>
           );
         })}
-        <div className="flex items-center justify-end gap-2 pt-1 text-meta muted" aria-hidden="true">
+        <div dir="ltr" className="flex items-center justify-end gap-2 pt-1 text-meta muted" aria-hidden="true">
           <span>{t('calendar.heatLess')}</span>
           {[0, 30, 55, 80, 100].map((v) => (
             <span key={v} className="h-3.5 w-5 rounded-[3px]" style={{ background: v ? `color-mix(in srgb, var(--brand) ${25 + Math.round(v * 0.65)}%, var(--panel))` : 'var(--line)', opacity: v ? 1 : 0.45 }} />

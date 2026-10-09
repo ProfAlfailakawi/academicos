@@ -209,7 +209,7 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
                           {typeof entry.version === "number" && <span className="mono-number">v{formatNumber(entry.version)}</span>}
                         </div>
                         <div className="text-sm font-semibold mt-1"><bdi>{entry.title}</bdi></div>
-                        <p className="text-sm muted leading-7" dir="auto">{entry.detail}</p>
+                        <p className="text-sm muted leading-7"><bdi>{entry.detail}</bdi></p>
                       </li>
                     );
                   })}

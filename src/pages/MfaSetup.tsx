@@ -150,7 +150,7 @@ export function MfaSetup() {
             </div>
           ) : secret ? (
             <form onSubmit={enroll} className="space-y-5 mt-6">
-              <div className="rounded-2xl brand-soft-bg border border-[var(--border-subtle)] p-4">
+              <div className="rounded-2xl brand-soft-bg border border-[var(--line)] p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   <KeyRound size={16} /> {t("mfaSetup.secretLabel")}
                 </div>

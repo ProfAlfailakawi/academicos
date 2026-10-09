@@ -128,7 +128,7 @@ export function UploadAssignment() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 rounded-full brand-soft-bg px-3 py-1.5 text-[11px] font-semibold">
+        <div className="inline-flex items-center gap-2 rounded-full brand-soft-bg px-3 py-1.5 text-meta font-semibold">
           <Sparkles size={14} />
           {t("upload2.fast")}
         </div>
@@ -264,7 +264,7 @@ export function UploadAssignment() {
                 <h2 className="section-title">{t("upload2.projectShape")}</h2>
               </div>
               <label className="block mt-5">
-                <span className="text-[11px] font-semibold">
+                <span className="text-meta font-semibold">
                   {t("upload2.writingLanguage")}
                 </span>
                 <input
@@ -284,12 +284,12 @@ export function UploadAssignment() {
                   <option value="한국어" />
                   <option value="فارسی" />
                 </datalist>
-                <span className="text-[11px] muted mt-1 block">
+                <span className="text-meta muted mt-1 block">
                   {t("upload2.anyLanguageNote")}
                 </span>
               </label>
               <label className="block mt-4">
-                <span className="text-[11px] font-semibold flex justify-between">
+                <span className="text-meta font-semibold flex justify-between">
                   <span>{t("upload2.pages")}</span>
                   <strong className="brand-text">{pages}</strong>
                 </span>
@@ -303,7 +303,7 @@ export function UploadAssignment() {
                 />
               </label>
               <div className="mt-5 pt-4 border-t hairline">
-                <div className="text-[11px] font-semibold mb-2">
+                <div className="text-meta font-semibold mb-2">
                   {t("upload2.assistance")}
                 </div>
                 <AssistChoice
@@ -365,7 +365,7 @@ export function UploadAssignment() {
               </>
             )}
           </Button>
-          <p className="text-[11px] leading-5 muted text-center">
+          <p className="text-meta leading-5 muted text-center">
             {t("upload2.truth")}
           </p>
         </aside>
@@ -399,7 +399,7 @@ function ModeButton({
       </span>
       <span className="flex-1">
         <strong className="block text-sm">{title}</strong>
-        <span className="text-[11px] muted mt-1 block">{detail}</span>
+        <span className="text-meta muted mt-1 block">{detail}</span>
       </span>
       {selected && <Check size={17} className="brand-text" />}
     </button>
@@ -441,8 +441,8 @@ function UploadBlock({
             <UploadCloud size={23} />
           </span>
           <strong className="block mt-4 text-sm">{title}</strong>
-          <span className="block text-[11px] muted mt-1">{detail}</span>
-          <span className="inline-flex items-center gap-1.5 mt-3 text-[11px] font-semibold brand-text">
+          <span className="block text-meta muted mt-1">{detail}</span>
+          <span className="inline-flex items-center gap-1.5 mt-3 text-meta font-semibold brand-text">
             <Paperclip size={13} />
             {action}
           </span>
@@ -453,7 +453,7 @@ function UploadBlock({
           {files.map((file, index) => (
             <span
               key={`${file.name}-${index}`}
-              className="inline-flex items-center gap-2 rounded-full border hairline bg-[var(--panel)] px-3 py-1.5 text-[11px]"
+              className="inline-flex items-center gap-2 rounded-full border hairline bg-[var(--panel)] px-3 py-1.5 text-meta"
             >
               <FileText size={13} />
               <span className="max-w-44 truncate">{file.name}</span>
@@ -495,8 +495,8 @@ function AssistChoice({
           {selected && <span className="h-2 w-2 rounded-full brand-bg" />}
         </span>
         <span>
-          <strong className="block text-[11px]">{title}</strong>
-          <span className="block text-[11px] muted leading-4 mt-1">
+          <strong className="block text-meta">{title}</strong>
+          <span className="block text-meta muted leading-4 mt-1">
             {detail}
           </span>
         </span>
@@ -516,7 +516,7 @@ function SmallPromise({
       <span className="h-9 w-9 rounded-xl bg-[var(--panel)]/70 grid place-items-center mx-auto">
         <Icon size={15} />
       </span>
-      <span className="text-[11px] font-semibold mt-1.5 block">{label}</span>
+      <span className="text-meta font-semibold mt-1.5 block">{label}</span>
     </div>
   );
 }

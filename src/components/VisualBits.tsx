@@ -42,7 +42,7 @@ export function StackedBar({ segments, ariaLabel, height = 22 }: { segments: Sta
         <span
           key={s.key}
           title={s.label}
-          className="flex min-w-0 items-center justify-center overflow-hidden text-[11px] font-semibold mono-number"
+          className="flex min-w-0 items-center justify-center overflow-hidden text-meta font-semibold mono-number"
           style={{
             flex: `${Math.max(0, s.value)} 1 0`,
             // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،

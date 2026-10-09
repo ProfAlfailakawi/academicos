@@ -248,7 +248,7 @@ export function Onboarding() {
           <p className="body-copy mt-4 max-w-sm">{t("onboard.railBody")}</p>
           <div className="mt-8">{card}</div>
         </div>
-        <p className="text-[11px] muted flex items-start gap-2 max-w-sm">
+        <p className="text-meta muted flex items-start gap-2 max-w-sm">
           <ShieldCheck size={14} className="mt-[2px] shrink-0" />
           {t("onboard.footer")}
         </p>
@@ -342,7 +342,7 @@ export function Onboarding() {
                   <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
                     <span className="onboard-hint">{t("onboard.courses.hint")}</span>
                     {courses.length ? (
-                      <span className="text-[11px] muted mono-number">
+                      <span className="text-meta muted mono-number">
                         {t("onboard.courses.count").replace("{n}", String(courses.length))}
                       </span>
                     ) : null}
@@ -471,12 +471,12 @@ function IdentityCard({
           <LogoMark variant="tile" size={30} />
           <span className="min-w-0">
             <span className="block text-[13px] font-semibold truncate">{t("onboard.cardTitle")}</span>
-            <span className="block text-[11px] muted">
+            <span className="block text-meta muted">
               {sealed ? t("onboard.cardSealed") : t("onboard.cardBuilding")}
             </span>
           </span>
         </span>
-        <span className="text-[11px] muted mono-number">{filled}/{total}</span>
+        <span className="text-meta muted mono-number">{filled}/{total}</span>
       </div>
       <dl className="mt-1">
         {rows.map((row) => (

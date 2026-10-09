@@ -48,15 +48,15 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
                   <h3 className="text-sm font-semibold truncate">{c.title}</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
-                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
+                  {c.personalRisk === 'critical' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-meta font-bold" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)', color: 'var(--danger)' }}><AlertTriangle size={11} />{t('adv.gl.riskYou')}</span>}
+                  {c.personalRisk === 'ok' && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-meta font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-2)' }}><ShieldCheck size={11} />{t('adv.gl.ready')}</span>}
                   <span className="text-lg font-bold" style={{ color: sevColor(c.severity) }}>{c.lossProbability}%</span>
                 </div>
               </div>
               <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: 'var(--panel-2)' }}>
                 <div className="h-2 rounded-full" style={{ width: `${c.lossProbability}%`, background: sevColor(c.severity) }} />
               </div>
-              <div className="mt-2 flex items-center justify-between text-[11px] muted">
+              <div className="mt-2 flex items-center justify-between text-meta muted">
                 <span>{t('adv.gl.lostHere').replace('{p}', String(c.averageLostPercent))}</span>
                 {c.commonReason && <span className="inline-flex items-center gap-1"><Eye size={11} />{c.commonReason}</span>}
               </div>
@@ -71,7 +71,7 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
             </div>
           ))}
         </div>
-        <p className="text-[11px] muted mt-4 leading-5">{data.privacyNote}</p>
+        <p className="text-meta muted mt-4 leading-5">{data.privacyNote}</p>
       </CardContent>
     </Card>
   );

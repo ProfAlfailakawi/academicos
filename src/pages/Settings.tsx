@@ -1,3 +1,4 @@
+import { Skeleton } from "../components/ui/Skeleton";
 import { AppDialog } from "../components/AppDialog";
 import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useState } from "react";
@@ -323,7 +324,7 @@ export function Settings() {
                       onChange={(e) => setStudyMinutes(Number(e.target.value))}
                       className="field w-28"
                     />
-                    <span className="text-[11px] muted">{t("settings.minutes")}</span>
+                    <span className="text-meta muted">{t("settings.minutes")}</span>
                     <Button
                       size="sm"
                       variant="outline"
@@ -334,9 +335,9 @@ export function Settings() {
                     </Button>
                   </div>
                   {studyMessage && (
-                    <div className="text-[11px] muted mt-2">{studyMessage}</div>
+                    <div className="text-meta muted mt-2">{studyMessage}</div>
                   )}
-                  <div className="text-[11px] muted mt-2">
+                  <div className="text-meta muted mt-2">
                     {t("settings.focusBudgetNote")}
                   </div>
                 </div>
@@ -349,7 +350,7 @@ export function Settings() {
                 <p className="text-xs text-danger">{profileLoadError}</p>
               </div>
             ) : (
-              <div className="h-24 soft-bg rounded-xl mt-4 animate-pulse" />
+              <Skeleton shape="lines" className="mt-4" />
             )}
           </CardContent>
         </Card>
@@ -393,7 +394,7 @@ export function Settings() {
                     myfatoorah: "MyFatoorah",
                   }[h?.billing?.provider as string] || t("settings.paymentGateway")}
                 </div>
-                <div className="text-[11px] muted mt-1">
+                <div className="text-meta muted mt-1">
                   {h?.billing?.configured
                     ? t("settings.configuredServer")
                     : t("settings.billingAwaiting")}
@@ -479,7 +480,7 @@ export function Settings() {
                 />
               </div>
             ) : (
-              <div className="h-24 soft-bg rounded-xl mt-4 animate-pulse" />
+              <Skeleton shape="lines" className="mt-4" />
             )}
           </CardContent>
         </Card>
@@ -582,7 +583,7 @@ function Service({ label, ok, value }: any) {
           className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-warning"}`}
         />
       </div>
-      <div className="text-[11px] muted mt-2 truncate">{value}</div>
+      <div className="text-meta muted mt-2 truncate">{value}</div>
     </div>
   );
 }
@@ -606,7 +607,7 @@ function Preference({
       className={`focus-ring min-h-11 rounded-xl border hairline p-3 text-xs font-semibold ${active ? "brand-soft-bg" : ""}`}
     >
       {label}
-      <span className="block text-[11px] muted mt-1">
+      <span className="block text-meta muted mt-1">
         {active ? t("settings.on") : t("settings.off")}
       </span>
     

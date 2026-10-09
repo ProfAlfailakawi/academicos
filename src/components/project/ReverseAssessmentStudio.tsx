@@ -39,12 +39,12 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
             <div><div className="eyebrow">{t('adv.ra.eyebrow')}</div><h2 className="section-title mt-0.5">{t('adv.ra.title')}</h2></div>
           </div>
           {brief && <p className="body-copy mt-3">{brief.instruction}</p>}
-          {brief?.targets?.length ? <div className="mt-3 flex flex-wrap gap-1.5">{brief.targets.map(t => <span key={t} className="rounded-full soft-bg px-2 py-1 text-[11px] muted">{t}</span>)}</div> : null}
+          {brief?.targets?.length ? <div className="mt-3 flex flex-wrap gap-1.5">{brief.targets.map(t => <span key={t} className="rounded-full soft-bg px-2 py-1 text-meta muted">{t}</span>)}</div> : null}
 
           <div className="mt-5 space-y-4">
             {questions.map((q, i) => (
               <div key={q.id} className="rounded-2xl border hairline bg-[var(--bg)] p-4">
-                <div className="flex items-center justify-between"><span className="text-[11px] font-bold brand-text">{t('adv.ra.question').replace('{n}', String(i + 1))}</span>{questions.length > 1 && <Button size="icon" variant="ghost" onClick={() => del(q.id)}><Trash2 size={14} /></Button>}</div>
+                <div className="flex items-center justify-between"><span className="text-meta font-bold brand-text">{t('adv.ra.question').replace('{n}', String(i + 1))}</span>{questions.length > 1 && <Button size="icon" variant="ghost" onClick={() => del(q.id)}><Trash2 size={14} /></Button>}</div>
                 <textarea value={q.prompt} onChange={e => upd(q.id, { prompt: e.target.value })} placeholder={t('adv.ra.promptPh')} className="focus-ring w-full min-h-16 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
                 <textarea value={q.modelAnswer} onChange={e => upd(q.id, { modelAnswer: e.target.value })} placeholder={t('adv.ra.modelPh')} className="focus-ring w-full min-h-14 rounded-xl border hairline bg-[var(--panel)] p-3 text-sm leading-6 mt-2" />
                 <select value={q.targetOutcome || ''} onChange={e => upd(q.id, { targetOutcome: e.target.value || undefined })} className="focus-ring w-full rounded-xl border hairline bg-[var(--panel)] px-3 py-2.5 text-sm mt-2">
@@ -85,7 +85,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
                 </div>
               ) : null}
               {result.band !== 'surface' && <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--brand-soft)' }}>{t('adv.ra.addedProof')}</div>}
-              <p className="text-[11px] muted mt-4 leading-5">{result.note}</p>
+              <p className="text-meta muted mt-4 leading-5">{result.note}</p>
             </>
           )}
         </CardContent>
@@ -114,7 +114,7 @@ function BandLabel({ band, t }: { band: string; t: (k: string) => string }) {
 function Dim({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
     <div className="rounded-xl border hairline bg-[var(--bg)] p-3">
-      <div className="flex items-center gap-1.5 text-[11px] muted brand-text">{icon}<span className="muted">{label}</span></div>
+      <div className="flex items-center gap-1.5 text-meta muted brand-text">{icon}<span className="muted">{label}</span></div>
       <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--panel-2)' }}><div className="h-1.5 rounded-full brand-soft-bg" style={{ width: `${value}%`, background: 'var(--brand)' }} /></div>
       <div className="text-sm font-bold mt-1">{value}%</div>
     </div>

@@ -568,7 +568,7 @@ export function Layout() {
               <div dir="auto" className="text-xs font-semibold truncate" title={branding.institutionName || "AcademicOS"}>
                 {branding.institutionName || "AcademicOS"}
               </div>
-              <div className="text-[11px] muted truncate" title={t("layout.tagline")}>
+              <div className="text-meta muted truncate" title={t("layout.tagline")}>
                 {t("layout.tagline")}
               </div>
             </div>
@@ -579,7 +579,7 @@ export function Layout() {
           >
             <Search size={15} />
             <span>{t("layout.searchAndNavigate")}</span>
-            <span className="ms-4 rounded-md border hairline px-1.5 py-0.5 text-[11px]">
+            <span className="ms-4 rounded-md border hairline px-1.5 py-0.5 text-meta">
               <Command size={10} className="inline" /> K
             </span>
           </button>
@@ -593,7 +593,7 @@ export function Layout() {
                 <Sparkles size={14} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[11px] font-bold uppercase tracking-[.12em] muted">
+                <span className="block text-meta font-bold uppercase tracking-[.12em] muted">
                   {t("layout.predictedNow")}
                 </span>
                 <span className="block truncate text-xs font-semibold">
@@ -634,7 +634,7 @@ export function Layout() {
                 <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={user?.displayName || undefined}>
                   {user?.displayName}
                 </div>
-                <div className="text-[11px] muted lg:hidden">
+                <div className="text-meta muted lg:hidden">
                   {t(roleTranslationKey(user?.role))}
                 </div>
               </div>
@@ -658,7 +658,7 @@ export function Layout() {
                   onChange={(event) => setDemoRole(event.target.value)}
                   title={t("demo.role")}
                   aria-label={t("demo.role")}
-                  className="demo-pill__role focus-ring h-6 rounded-full bg-transparent px-1 text-[11px] font-bold text-amber-500 outline-none"
+                  className="demo-pill__role focus-ring h-6 rounded-full bg-transparent px-1 text-meta font-bold text-amber-500 outline-none"
                 >
                   <option value="professor">{t("demo.role.professor")}</option>
                   <option value="student">{t("demo.role.student")}</option>
@@ -755,11 +755,11 @@ export function Layout() {
                 <Sparkles size={12} />
               </span>
               <span className="min-w-0 flex-1 flex items-center gap-2">
-                <span className="shrink-0 text-[11px] font-bold uppercase tracking-[.12em] muted">
+                <span className="shrink-0 text-meta font-bold uppercase tracking-[.12em] muted">
                   {t("layout.predictedNow")}
                 </span>
                 {prediction.strength === "strong" && (
-                  <span className="prediction-learned shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold">
+                  <span className="prediction-learned shrink-0 rounded-full px-1.5 py-0.5 text-meta font-semibold">
                     {t("layout.learnedFromUsage")}
                   </span>
                 )}
@@ -800,7 +800,7 @@ export function Layout() {
             <span className="mobile-add-button h-12 w-12 rounded-2xl brand-bg flex items-center justify-center">
               {academicWorkMode ? <Plus size={22} /> : <LogoMark variant="seal" size={24} inverted />}
             </span>
-            <span className="text-[11px] font-semibold mt-1">
+            <span className="text-meta font-semibold mt-1">
               {academicWorkMode ? t("layout.add") : t("layout.work")}
             </span>
           </NavLink>
@@ -836,7 +836,7 @@ export function Layout() {
                 placeholder={t("layout.searchPlaceholder")}
                 className="h-14 flex-1 bg-transparent outline-none text-sm"
               />
-              <kbd className="text-[11px] muted">ESC</kbd>
+              <kbd className="text-meta muted">ESC</kbd>
             </div>
             <div className="p-2 max-h-80 overflow-auto">
               {prediction && (
@@ -851,12 +851,12 @@ export function Layout() {
                     <Sparkles size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-bold muted">
+                    <div className="text-meta font-bold muted">
                       {t("layout.predictedNow")} · {prediction.label}
                     </div>
                     {/* أسباب التنبؤ مكتوبة بالعربية فقط؛ لا تُعرض بلغةٍ أخرى. */}
                     {locale === "ar" && (
-                      <div className="text-[11px] muted truncate">
+                      <div className="text-meta muted truncate">
                         {prediction.reason}
                       </div>
                     )}
@@ -879,7 +879,7 @@ export function Layout() {
                     <div className="text-sm font-semibold">
                       {t("layout.actionAnalyzeAssignment")}
                     </div>
-                    <div className="text-[11px] muted">
+                    <div className="text-meta muted">
                       {t("ui.universalAssignmentCompiler")}
                     </div>
                   </div>
@@ -902,7 +902,7 @@ export function Layout() {
                     <div className="text-sm font-semibold">
                       {t("layout.searchFor")} “{query.trim()}”
                     </div>
-                    <div className="text-[11px] muted">
+                    <div className="text-meta muted">
                       {t("layout.searchScope")}
                     </div>
                   </div>
@@ -948,7 +948,7 @@ export function Layout() {
                         </span>
                         <span className="min-w-0">
                           <span className="block text-sm font-semibold">{t(item.label)}</span>
-                          <span className="block text-[11px] muted">{t(item.short)}</span>
+                          <span className="block text-meta muted">{t(item.short)}</span>
                         </span>
                       </button>
                     );
@@ -1005,7 +1005,7 @@ function SidebarContent({
             >
               {branding.institutionName || <Wordmark size={17} />}
             </div>
-            <div className="text-[11px] muted truncate" title={branding.institutionName ? `AcademicOS · ${t("layout.tagline")}` : t("brand.tagline")}>
+            <div className="text-meta muted truncate" title={branding.institutionName ? `AcademicOS · ${t("layout.tagline")}` : t("brand.tagline")}>
               {branding.institutionName
                 ? `AcademicOS · ${t("layout.tagline")}`
                 : t("brand.tagline")}
@@ -1056,7 +1056,7 @@ function SidebarContent({
             </div>
             <div className="min-w-0 flex-1">
               <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={userName}>{userName}</div>
-              <div className="text-[11px] muted">
+              <div className="text-meta muted">
                 {t("layout.verifiedAccount")}
               </div>
             </div>
@@ -1105,7 +1105,7 @@ function MobileNav({ item }: { item: NavItem }) {
       end={item.end}
       className={({ isActive }) =>
         cn(
-          "mobile-nav-link focus-ring min-w-0 min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[11px]",
+          "mobile-nav-link focus-ring min-w-0 min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-meta",
           isActive ? "brand-text font-semibold" : "muted",
         )
       }

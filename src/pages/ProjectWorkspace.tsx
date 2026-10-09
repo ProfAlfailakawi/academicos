@@ -1,3 +1,4 @@
+import { Skeleton } from "../components/ui/Skeleton";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Link,
@@ -35,7 +36,7 @@ import {
 import { api } from "../lib/api";
 import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
-import { ProgressRing, SeverityDot, type Tone } from "../components/Infographics";
+import { MiniBar, ProgressRing, SeverityDot, type Tone } from "../components/Infographics";
 import { FoldText, LevelMeter, StackedBar, StepTrack } from "../components/VisualBits";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
@@ -188,9 +189,9 @@ export function ProjectWorkspace() {
     );
   if (!project)
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-20 soft-bg rounded-2xl" />
-        <div className="h-96 soft-bg rounded-2xl" />
+      <div className="space-y-4" role="status" aria-busy="true">
+        <Skeleton shape="card" />
+        <Skeleton shape="panel" className="min-h-[24rem]" />
       </div>
     );
 
@@ -354,7 +355,26 @@ export function ProjectWorkspace() {
           }
         >
         <div>
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="workspace-strip" aria-label={t("pw.tasksMetric")}>
+            <ProgressRing
+              pct={project.rubric.length ? (project.rubric.filter((r) => r.readiness === "covered").length / project.rubric.length) * 100 : 0}
+              size={64}
+              stroke={7}
+              label={t("ui.rubricReadiness")}
+            >
+              <span className="mono-number text-sm font-semibold">{project.rubric.filter((r) => r.readiness === "covered").length}/{project.rubric.length || 0}</span>
+            </ProgressRing>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold">{t("ui.rubricReadiness")}</div>
+              <div className="text-meta muted">{t("pw.notFinalGrade")}</div>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="text-meta muted shrink-0">{t("pw.tasksMetric")}</span>
+                <MiniBar value={project.tasks.filter((x) => x.status === "completed").length} max={project.tasks.length} />
+                <span className="text-meta muted mono-number shrink-0">{project.tasks.filter((x) => x.status === "completed").length}/{project.tasks.length}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center" role="group">
             {tabs
               .filter(([key]) => ["writer", "evidence", "viva"].includes(key))
               .filter(([key]) =>
@@ -390,7 +410,7 @@ export function ProjectWorkspace() {
                     ))}
                 </div>
                 <div className="mt-2 pt-2 border-t border-dashed hairline space-y-0.5">
-                  <div className="px-3 pb-1 text-[11px] font-semibold muted">{t("pw.submissionTools")}</div>
+                  <div className="px-3 pb-1 text-meta font-semibold muted">{t("pw.submissionTools")}</div>
                   <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                     <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                   </a>
@@ -492,7 +512,7 @@ export function ProjectWorkspace() {
                         <div className="text-xs font-semibold truncate">
                           {f.fileName}
                         </div>
-                        <div className="text-[11px] muted">
+                        <div className="text-meta muted">
                           {f.fileType || "file"}
                           {f.size ? ` · ${formatBytes(f.size, locale)}` : ""}
                           {f.sha256
@@ -696,7 +716,7 @@ function Overview({
             </div>
             <div className="mt-3 flex items-center gap-2">
               <LevelMeter level={project.aiPolicy.level} max={AI_LEVEL_MAX} />
-              <span className="text-[11px] muted mono-number" dir="ltr">
+              <span className="text-meta muted mono-number" dir="ltr">
                 {project.aiPolicy.level}/{AI_LEVEL_MAX}
               </span>
             </div>
@@ -754,12 +774,12 @@ function Tasks({
               key={t.id}
               className="grid grid-cols-[28px_1fr_auto] items-center gap-3 p-3 rounded-xl hover:bg-[var(--panel-2)]"
             >
-              <div className="text-[11px] muted mono-number">
+              <div className="text-meta muted mono-number">
                 {String(i + 1).padStart(2, "0")}
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{t.title}</div>
-                <div className="text-[11px] muted mt-1 flex gap-2 flex-wrap">
+                <div className="text-meta muted mt-1 flex gap-2 flex-wrap">
                   {t.module && <span>{moduleName(t.module, locale)}</span>}
                   {t.estimatedMinutes && (
                     <span>· {t.estimatedMinutes} {tr("pw.minutes")}</span>
@@ -835,7 +855,7 @@ function Deliverables({
               </ul>
             ) : null}
             <div className="mt-auto pt-6">
-              <label className="text-[11px] muted">{t("pw.updateStatus")}</label>
+              <label className="text-meta muted">{t("pw.updateStatus")}</label>
               <select
                 value={d.status}
                 onChange={(e) => onChange(d.id, e.target.value)}
@@ -873,7 +893,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
         <div className="mt-5 overflow-x-auto">
           <table className="mobile-cards w-full text-sm min-w-[700px]">
             <thead>
-              <tr className="text-start text-[11px] muted border-b hairline">
+              <tr className="text-start text-meta muted border-b hairline">
                 <th className="text-start py-3 font-semibold">{t("pw.requirement")}</th>
                 <th className="text-start py-3 font-semibold">{t("pw.value")}</th>
                 <th className="text-start py-3 font-semibold">{t("pw.category")}</th>
@@ -889,7 +909,7 @@ function Requirements({ project }: { project: ProjectDNA }) {
                   <td data-label={t("pw.category")} className="py-3 muted">{t(`req.category.${r.category}`)}</td>
                   <td data-label={t("pw.confidence")} className="py-3">
                     <span
-                      className={`rounded-full px-2 py-1 text-[11px] font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
+                      className={`rounded-full px-2 py-1 text-meta font-semibold ${r.confidence === "needs_confirmation" ? "bg-warning/12 text-warning " : "brand-soft-bg"}`}
                     >
                       {r.confidence === "needs_confirmation"
                         ? t("pw.needsConfirm")
@@ -938,7 +958,7 @@ function Rubric({
             text: `${r.weighting}%`,
           }))}
         />
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] muted">
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-meta muted">
           {legend.map(([label, tone]) => (
             <span key={label} className="inline-flex items-center gap-1.5">
               <SeverityDot tone={tone} />
@@ -964,7 +984,7 @@ function Rubric({
             </div>
             <div className="mt-5 grid sm:grid-cols-[1fr_auto] items-end gap-3">
               <div>
-                <label className="text-[11px] muted">
+                <label className="text-meta muted">
                   {t("ui.rubricReadiness")} · {t("pw.notFinalGrade")}
                 </label>
                 <select
@@ -1007,7 +1027,7 @@ function Mini({ label, value, hint, icon }: any) {
           {label}
         </div>
         <div className="text-2xl font-semibold mt-3 mono-number">{value}</div>
-        <div className="text-[11px] muted mt-1">{hint}</div>
+        <div className="text-meta muted mt-1">{hint}</div>
       </CardContent>
     </Card>
   );
@@ -1037,9 +1057,9 @@ function AuditModal({
             <span className="text-xl font-semibold mono-number">{audit.score ?? 0}%</span>
           </ProgressRing>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] muted">{t("pw.result")}</div>
+            <div className="text-meta muted">{t("pw.result")}</div>
             <div className="text-2xl font-semibold mt-1">{label}</div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] muted">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta muted">
               <span className="inline-flex items-center gap-1.5"><SeverityDot tone="danger" />{audit.blockingIssues ?? 0} {t("pw.blocking")}</span>
               <span className="inline-flex items-center gap-1.5"><SeverityDot tone="warning" />{audit.warnings ?? 0} {t("pw.warning")}</span>
             </div>
@@ -1065,8 +1085,8 @@ function AuditModal({
                 </summary>
                 <div className="px-3 pb-3 ps-14">
                   <div className="text-xs leading-6 muted">{c.detail}</div>
-                  {c.action&&<div className="text-[11px] brand-text mt-1">{t("pw.action")}: {c.action}</div>}
-                  {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-[11px] font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
+                  {c.action&&<div className="text-meta brand-text mt-1">{t("pw.action")}: {c.action}</div>}
+                  {c.status !== "pass" && c.status !== "not_applicable" && <button onClick={() => onFix(c.category)} className="mt-2 text-meta font-semibold brand-text hover:underline">{t("pw.takeMeToFix")} <ArrowRight size={12} className="inline directional-icon" /></button>}
                 </div>
               </details>
             </li>
@@ -1100,19 +1120,19 @@ function RescueModal({
       <div className="eyebrow">{t("ui.deadlineRescue")}</div>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-2">
         <div><h3 className="text-xl font-semibold">{loading ? t("pw.rescueCalculating") : severity}</h3><p className="body-copy mt-2">{plan?.summary || t("pw.rescuePrompt")}</p></div>
-        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-[11px] muted">{t("pw.estimatedWork")}</div></div>}
+        {plan && <div className="text-end shrink-0"><div className="text-2xl font-semibold mono-number">{plan.remainingMinutes} {t("pw.minuteShort")}</div><div className="text-meta muted">{t("pw.estimatedWork")}</div></div>}
       </div>
     </div>
     <div className="mt-5">
       <label className="text-xs font-semibold">{t("pw.timeAvailable")} <span className="muted">{minutes} {t("pw.minutes")}</span></label>
       <input type="range" min={30} max={720} step={30} value={minutes} onChange={(e) => onMinutes(Number(e.target.value))} className="w-full mt-3" />
-      <div className="flex justify-between text-[11px] muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
+      <div className="flex justify-between text-meta muted"><span>30 {t("pw.minuteShort")}</span><span>12 {t("pw.hours")}</span></div>
       <Button variant="outline" className="mt-3" onClick={() => onRefresh(minutes)} disabled={loading}>{loading ? <InlineLoader size={15}/> : <Clock3 size={15} />} {t("pw.reorderPlan")}</Button>
     </div>
     {plan && <div className="mt-5 space-y-3">
       {plan.phases.map((phase, index) => <div key={phase.id} className="rounded-xl border hairline p-4 flex gap-3">
         <span className="h-8 w-8 rounded-lg tone-tile text-xs font-semibold shrink-0">{index + 1}</span>
-        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-[11px] brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
+        <div className="flex-1"><div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold">{phase.title}</div><span className="text-xs mono-number muted">{phase.minutes} {t("pw.minuteShort")}</span></div><p className="text-xs leading-6 muted mt-1">{phase.reason}</p>{phase.mustDo && <div className="text-meta brand-text font-semibold mt-2">{t("pw.doNotDefer")}</div>}</div>
       </div>)}
       {plan.deferredTaskIds.length > 0 && <div className="rounded-xl soft-bg p-3 text-xs muted">{t("pw.deferredTasks").replace("{count}", String(plan.deferredTaskIds.length))}</div>}
       <Button className="w-full" onClick={onOpenPlan}>{t("pw.openPlan")}</Button>

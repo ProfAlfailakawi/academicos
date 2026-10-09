@@ -101,7 +101,7 @@ export function Plans() {
         <label className="min-w-0"><span className="eyebrow">{t("plans.projectLabel")}</span>{loading ? <span className="field mt-2 flex items-center gap-2"><InlineLoader size={15}/> {t("plans.loadingProjects")}</span> : projects.length ? <select className="field mt-2" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{projects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.course}</option>)}</select> : <p className="text-xs muted mt-2">{t("plans.noProject")}</p>}</label>
         {!projects.length && !loading ? <Button asChild><Link to="/app/upload">{t("plans.uploadAssignment")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : access?.unlocked && selected ? <Button asChild><Link to={`/app/project/${selected.id}`}>{t("plans.openProject")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : null}
       </div>
-      {selected && <div className="mt-3 flex flex-wrap gap-2 text-[11px]"><span className="rounded-full soft-bg px-3 py-1.5">{selected.collaborationMode === "group" ? t("plans.groupProject") : t("plans.individualProject")}</span><span className={`rounded-full px-3 py-1.5 ${access?.unlocked ? "brand-soft-bg" : "bg-warning/10 text-warning"}`}>{access?.unlocked ? t("plans.unlocked") : t("plans.freePreview")}</span></div>}
+      {selected && <div className="mt-3 flex flex-wrap gap-2 text-meta"><span className="rounded-full soft-bg px-3 py-1.5">{selected.collaborationMode === "group" ? t("plans.groupProject") : t("plans.individualProject")}</span><span className={`rounded-full px-3 py-1.5 ${access?.unlocked ? "brand-soft-bg" : "bg-warning/10 text-warning"}`}>{access?.unlocked ? t("plans.unlocked") : t("plans.freePreview")}</span></div>}
     </section>
 
     {message && <div role="status" className="rounded-2xl brand-soft-bg p-4 text-sm text-center">{message}</div>}
@@ -128,7 +128,7 @@ export function Plans() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm sm:min-w-[520px] table-fixed sm:table-auto">
           <thead>
-            <tr className="text-[11px] muted border-b hairline">
+            <tr className="text-meta muted border-b hairline">
               <th scope="col" className="text-start py-3 font-semibold w-[31%] sm:w-auto"><span className="sr-only">{t("plans.title")}</span></th>
               {plans.map((plan) => <th key={plan.id} scope="col" className="py-3 px-1 font-semibold text-center align-bottom leading-snug">{t(`plans.plan.${plan.id}.name`)}</th>)}
             </tr>
@@ -150,7 +150,7 @@ export function Plans() {
           </tbody>
         </table>
       </div>
-      <ul className="mt-4 grid sm:grid-cols-3 gap-2 text-[11px] muted">
+      <ul className="mt-4 grid sm:grid-cols-3 gap-2 text-meta muted">
         <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureNoRenewal")}</li>
         <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureEvidence")}</li>
         <li className="flex gap-2"><Check size={14} className="shrink-0 brand-text" /> {t("plans.featureLanguages")}</li>

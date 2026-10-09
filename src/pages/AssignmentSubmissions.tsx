@@ -172,13 +172,13 @@ export function AssignmentSubmissions() {
                     </span>
                     <Status status={item.status} />
                   </div>
-                  <div className="text-[11px] muted mt-2">
+                  <div className="text-meta muted mt-2">
                     {t("subm.attempt")} {item.attempt} ·{" "}
                     {formatDateTime(item.submittedAt, locale)}
                   </div>
                   <div
                     dir="ltr"
-                    className="text-[11px] font-mono muted mt-1 truncate"
+                    className="text-meta font-mono muted mt-1 truncate"
                   >
                     {item.receiptHash}
                   </div>
@@ -203,7 +203,7 @@ export function AssignmentSubmissions() {
                     <h2 className="section-title mt-1">
                       {current.studentName}
                     </h2>
-                    <p className="text-[11px] muted mt-2">
+                    <p className="text-meta muted mt-2">
                       {t("ui.revision")} {current.projectRevision} · {t("ui.audit")}{" "}
                       {current.audit.score ?? 0}% · {t("ui.evidence")}{" "}
                       {current.audit.evidenceCoverage ?? 0}%
@@ -247,7 +247,7 @@ export function AssignmentSubmissions() {
                           </p>
                         </div>
                         <label className="block">
-                          <span className="text-[11px] muted">
+                          <span className="text-meta muted">
                             {t("subm.scoreOf")} {row.weighting}
                           </span>
                           <input
@@ -278,7 +278,7 @@ export function AssignmentSubmissions() {
                         </label>
                       </div>
                       <label className="block mt-3">
-                        <span className="text-[11px] muted">
+                        <span className="text-meta muted">
                           {t("subm.criterionFeedback")}
                         </span>
                         <textarea
@@ -301,7 +301,7 @@ export function AssignmentSubmissions() {
                   ))}
                 </div>
                 <label className="block mt-4">
-                  <span className="text-[11px] font-semibold muted">
+                  <span className="text-meta font-semibold muted">
                     {t("subm.generalFeedback")}
                   </span>
                   <textarea
@@ -314,7 +314,7 @@ export function AssignmentSubmissions() {
                   />
                 </label>
                 <label className="block mt-3">
-                  <span className="text-[11px] font-semibold muted">
+                  <span className="text-meta font-semibold muted">
                     {t("subm.returnReason")}
                   </span>
                   <textarea
@@ -405,7 +405,7 @@ function Status({ status }: { status: CourseSubmissionRecord["status"] }) {
     released: t("subm.statusReleased"),
   };
   return (
-    <span className="subm-status inline-flex items-center gap-1.5 rounded-full bg-[var(--panel-2)] px-2 py-1 text-[11px] font-semibold" data-status={status}>
+    <span className="subm-status inline-flex items-center gap-1.5 rounded-full bg-[var(--panel-2)] px-2 py-1 text-meta font-semibold" data-status={status}>
       <span className="subm-status__dot" aria-hidden="true" />
       {labels[status]}
     </span>
@@ -437,7 +437,7 @@ function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) 
 function Mini({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl bg-[var(--bg)] border hairline p-3">
-      <div className="text-[11px] muted">{label}</div>
+      <div className="text-meta muted">{label}</div>
       <div className="text-xl font-semibold mt-1 mono-number">{value}</div>
     </div>
   );

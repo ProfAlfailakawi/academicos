@@ -10,6 +10,7 @@ import { StatusPill } from "../components/StatusPill";
 import { EmptyState } from "../components/EmptyState";
 import { DnaRing } from "../components/dna/DnaKit";
 import { useI18n } from "../lib/i18n";
+import { Skeleton } from "../components/ui/Skeleton";
 
 export function Projects() {
   const { t } = useI18n();
@@ -70,7 +71,7 @@ export function Projects() {
         </div>
       </div>
       {projects === null ? (
-        <div className="h-56 rounded-2xl soft-bg animate-pulse" />
+        <Skeleton shape="panel" />
       ) : visible.length ? (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {visible.map((p) => (
@@ -78,7 +79,7 @@ export function Projects() {
           ))}
         </div>
       ) : (
-        <EmptyState
+        <EmptyState scene="projects"
           icon={FolderKanban}
           title={t("projects.emptyTitle")}
           description={t("projects.emptyDescription")}

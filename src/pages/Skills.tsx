@@ -8,6 +8,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { SkillRadar, hasSkillRadar } from "../components/VisualBits";
 import { EmptyState } from "../components/EmptyState";
 import { formatDate, useI18n } from "../lib/i18n";
+import { Skeleton } from "../components/ui/Skeleton";
 
 export function Skills() {
   const { t, locale } = useI18n();
@@ -33,7 +34,7 @@ export function Skills() {
         description={t("skills.description")}
       />
       {skills === null ? (
-        <div className="h-72 soft-bg rounded-2xl animate-pulse" />
+        <Skeleton shape="panel" />
       ) : grouped.length ? (
         <>
           {hasSkillRadar(skills || []) && (
@@ -55,7 +56,7 @@ export function Skills() {
                       <BookOpenCheck size={17} />
                     </div>
                     <h2 className="section-title min-w-0 flex-1">{name}</h2>
-                    <span className="shrink-0 text-[11px] muted">
+                    <span className="shrink-0 text-meta muted">
                       {evidence.length} {t("skills.evidenceUnit")}
                     </span>
                   </div>
@@ -69,10 +70,10 @@ export function Skills() {
                         <div className="text-xs font-semibold line-clamp-1">
                           {e.projectTitle}
                         </div>
-                        <div className="text-[11px] muted mt-1">
+                        <div className="text-meta muted mt-1">
                           {e.course} · {formatDate(e.date, locale)}
                         </div>
-                        <div className="mt-2 flex items-center gap-1 text-[11px] brand-text">
+                        <div className="mt-2 flex items-center gap-1 text-meta brand-text">
                           <ShieldCheck size={12} />
                           {e.verificationLevel === "institution"
                             ? t("skills.verifyInstitution")
@@ -84,7 +85,7 @@ export function Skills() {
                     ))}
                   </div>
                   {evidence.length > 3 && (
-                    <div className="text-[11px] muted mt-3">
+                    <div className="text-meta muted mt-3">
                       + {evidence.length - 3} {t("skills.moreEvidence")}
                     </div>
                   )}
@@ -94,7 +95,7 @@ export function Skills() {
           </div>
         </>
       ) : (
-        <EmptyState
+        <EmptyState scene="skills"
           title={t("skills.emptyTitle")}
           description={t("skills.emptyDescription")}
         />

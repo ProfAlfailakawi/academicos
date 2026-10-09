@@ -25,6 +25,7 @@ import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/EmptyState";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
+import { Skeleton } from "../components/ui/Skeleton";
 
 type Notice = {
   id: string;
@@ -311,7 +312,7 @@ export function Notifications() {
           {loading ? (
             <div className="grid gap-3">
               {[1, 2, 3].map((x) => (
-                <div key={x} className="h-28 panel rounded-2xl animate-pulse" />
+                <Skeleton key={x} shape="card" />
               ))}
             </div>
           ) : error ? (
@@ -351,7 +352,7 @@ export function Notifications() {
                               : t("notif.normal")}
                         </span>
                         {n.read && (
-                          <span className="text-[11px] muted">
+                          <span className="text-meta muted">
                             {t("notif.read")}
                           </span>
                         )}
@@ -359,7 +360,7 @@ export function Notifications() {
                       <p className="body-copy mt-1">{n.detail}</p>
                       {n.date && (
                         <time
-                          className="text-[11px] muted mt-2 block"
+                          className="text-meta muted mt-2 block"
                           dateTime={n.date}
                         >
                           {formatDateTime(n.date, locale, {
@@ -418,7 +419,7 @@ export function Notifications() {
               ))}
             </div>
           ) : (
-            <EmptyState
+            <EmptyState scene="notifications"
               icon={CheckCircle2}
               title={t("notif.emptyTitle")}
               description={t("notif.emptyDesc")}

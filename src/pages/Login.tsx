@@ -362,7 +362,7 @@ export function Login() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold">{t("login.passwordLabel")}</span>
                         {mode === "login" && (
-                          <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccessMsg(""); }} className="text-[11px] brand-text hover:underline">
+                          <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccessMsg(""); }} className="text-meta brand-text hover:underline">
                             {t("login.forgotPassword")}
                           </button>
                         )}
@@ -433,7 +433,7 @@ export function Login() {
                   </div>
                 )}
 
-                <div className="mt-6 pt-5 border-t hairline text-[11px] muted leading-5">
+                <div className="mt-6 pt-5 border-t hairline text-meta muted leading-5">
                   <strong>{t("login.firstTimeTitle")}</strong> {t("login.firstTimeDesc")}
                 </div>
               </>

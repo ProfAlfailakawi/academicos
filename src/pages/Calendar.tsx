@@ -6,9 +6,11 @@ import type { ProjectDNA } from '../types';
 import { PageHeader } from '../components/PageHeader';
 import { Card, CardContent } from '../components/ui/card';
 import { EmptyState } from '../components/EmptyState';
+import { Skeleton } from '../components/ui/Skeleton';
 import { formatDate, formatDateTime, useI18n } from '../lib/i18n';
 
 function MonthHeat({ dates, locale }: { dates: string[]; locale: Parameters<typeof formatDate>[1] }) {
+  const { t } = useI18n();
   const byDay = new Map<string, number>();
   for (const d of dates) { const k = d.slice(0, 10); byDay.set(k, (byDay.get(k) || 0) + 1); }
   const months = [...new Set([...byDay.keys()].map((k) => k.slice(0, 7)))].sort();
@@ -28,12 +30,19 @@ function MonthHeat({ dates, locale }: { dates: string[]; locale: Parameters<type
                 {Array.from({ length: days }, (_, i) => {
                   const k = `${m}-${String(i + 1).padStart(2, '0')}`;
                   const n = byDay.get(k) || 0;
-                  return <span key={k} title={`${i + 1}: ${n}`} className="h-5 rounded-[3px]" style={{ background: n ? `color-mix(in srgb, var(--brand) ${25 + Math.round((n / max) * 65)}%, var(--panel))` : 'var(--line)', opacity: n ? 1 : 0.45 }} />;
+                  return <span key={k} title={`${i + 1}: ${n}`} className="h-8 rounded-[4px]" style={{ background: n ? `color-mix(in srgb, var(--brand) ${25 + Math.round((n / max) * 65)}%, var(--panel))` : 'var(--line)', opacity: n ? 1 : 0.45 }} />;
                 })}
               </div>
             </div>
           );
         })}
+        <div className="flex items-center justify-end gap-2 pt-1 text-meta muted" aria-hidden="true">
+          <span>{t('calendar.heatLess')}</span>
+          {[0, 30, 55, 80, 100].map((v) => (
+            <span key={v} className="h-3.5 w-5 rounded-[3px]" style={{ background: v ? `color-mix(in srgb, var(--brand) ${25 + Math.round(v * 0.65)}%, var(--panel))` : 'var(--line)', opacity: v ? 1 : 0.45 }} />
+          ))}
+          <span>{t('calendar.heatMore')}</span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -60,5 +69,5 @@ export function Calendar() {
     const now = new Date().toISOString().slice(0, 7);
     return (monthGroups.find((g) => g.key >= now) || monthGroups[monthGroups.length - 1])?.key;
   }, [monthGroups]);
-  return <div className="space-y-7"><PageHeader eyebrow={t("ui.semesterOs")} title={t('calendar.title')} description={t('calendar.description')}/>{projects===null?<div className="h-80 soft-bg rounded-2xl animate-pulse"/>:events.length?<><MonthHeat dates={events.map(e=>e.date)} locale={locale}/><div className="space-y-3">{monthGroups.map(g=><Card key={g.key}><CardContent className="p-2 md:p-3"><details className="calendar-month" open={g.key===openKey}><summary className="focus-ring flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3"><CalendarDays size={17} className="brand-text shrink-0"/><span className="section-title flex-1">{formatDate(`${g.key}-01T12:00:00Z`,locale,{month:'long',year:'numeric',calendar:'gregory'} as Intl.DateTimeFormatOptions)}</span><span className="rounded-full soft-bg px-2.5 py-0.5 text-meta font-semibold mono-number">{g.items.length}</span><ChevronDown size={16} className="calendar-month__chev muted shrink-0"/></summary><div className="mt-1">{g.items.map(e=><Link to={`/app/project/${e.projectId}`} key={e.id} className="focus-ring flex items-center gap-3 sm:gap-4 rounded-xl p-2.5 sm:p-3 md:p-4 hover:bg-[var(--panel-2)]"><div className="h-12 min-w-12 px-1.5 rounded-xl brand-soft-bg flex flex-col items-center justify-center shrink-0"><span className="text-meta leading-4 whitespace-nowrap">{formatDate(e.date,locale,{month:'short'})}</span><span className="font-semibold mono-number">{formatDate(e.date,locale,{day:'numeric'})}</span></div><div className="min-w-0 flex-1"><div className="text-sm font-semibold truncate">{e.title}</div><div className="text-meta muted mt-1 truncate">{e.subtitle}</div></div><div className="hidden sm:flex items-center gap-1 text-meta muted"><Clock3 size={13}/>{formatDateTime(e.date,locale,{hour:'2-digit',minute:'2-digit'})}</div></Link>)}</div></details></CardContent></Card>)}</div></>:<EmptyState title={t('calendar.emptyTitle')} description={t('calendar.emptyDescription')}/>}</div>;
+  return <div className="space-y-7"><PageHeader eyebrow={t("ui.semesterOs")} title={t('calendar.title')} description={t('calendar.description')}/>{projects===null?<Skeleton shape="panel"/>:events.length?<><MonthHeat dates={events.map(e=>e.date)} locale={locale}/><div className="space-y-3">{monthGroups.map(g=><Card key={g.key}><CardContent className="p-2 md:p-3"><details className="calendar-month" open={g.key===openKey}><summary className="focus-ring flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3"><CalendarDays size={17} className="brand-text shrink-0"/><span className="section-title flex-1">{formatDate(`${g.key}-01T12:00:00Z`,locale,{month:'long',year:'numeric',calendar:'gregory'} as Intl.DateTimeFormatOptions)}</span><span className="rounded-full soft-bg px-2.5 py-0.5 text-meta font-semibold mono-number">{g.items.length}</span><ChevronDown size={16} className="calendar-month__chev muted shrink-0"/></summary><div className="mt-1">{g.items.map(e=><Link to={`/app/project/${e.projectId}`} key={e.id} className="focus-ring flex items-center gap-3 sm:gap-4 rounded-xl p-2.5 sm:p-3 md:p-4 hover:bg-[var(--panel-2)]"><div className="h-12 min-w-12 px-1.5 rounded-xl brand-soft-bg flex flex-col items-center justify-center shrink-0"><span className="text-meta leading-4 whitespace-nowrap">{formatDate(e.date,locale,{month:'short'})}</span><span className="font-semibold mono-number">{formatDate(e.date,locale,{day:'numeric'})}</span></div><div className="min-w-0 flex-1"><div className="text-sm font-semibold truncate">{e.title}</div><div className="text-meta muted mt-1 truncate">{e.subtitle}</div></div><div className="hidden sm:flex items-center gap-1 text-meta muted"><Clock3 size={13}/>{formatDateTime(e.date,locale,{hour:'2-digit',minute:'2-digit'})}</div></Link>)}</div></details></CardContent></Card>)}</div></>:<EmptyState title={t('calendar.emptyTitle')} description={t('calendar.emptyDescription')}/>}</div>;
 }

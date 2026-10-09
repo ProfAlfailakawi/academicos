@@ -2946,4 +2946,6 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
   "status.allUpTitle": UI("كل شيء يعمل","Everything is running","Her şey çalışıyor","一切运行正常","सब कुछ चल रहा है","Todo funciona","Tout fonctionne","سب کچھ چل رہا ہے"),
   "status.allUpBody": UI("جميع الخدمات تعمل بشكل طبيعي الآن.","All services are working normally right now.","Tüm hizmetler şu anda normal çalışıyor.","所有服务目前运行正常。","सभी सेवाएँ अभी सामान्य रूप से चल रही हैं।","Todos los servicios funcionan con normalidad ahora mismo.","Tous les services fonctionnent normalement en ce moment.","تمام سروسز اس وقت معمول کے مطابق چل رہی ہیں۔"),
   "pub.header.back": UI("العودة للرئيسية","Back to home","Ana sayfaya dön","返回首页","होम पर लौटें","Volver al inicio","Retour à l'accueil","ہوم پر واپس"),
+  "calendar.heatLess": UI("أقل","Less","Daha az","更少","कम","Menos","Moins","کم"),
+  "calendar.heatMore": UI("أكثر","More","Daha fazla","更多","अधिक","Más","Plus","زیادہ"),
 };

@@ -57,7 +57,7 @@ export function Status() {
             {t("ui.loadError")}
           </div>
         )}
-        {services.length > 0 && services.every(([, ok]: any) => ok) && (
+        {services.length > 0 && services.every(([, ok]: any) => ok) && !h?.maintenance && !h?.incidentBanner && (
           <div className="status-hero mt-8" role="status">
             <span className="status-hero__dot" aria-hidden="true" />
             <div className="status-hero__title">{t("status.allUpTitle")}</div>

@@ -1080,3 +1080,26 @@ button.brand-bg:disabled,
    touch target to 44px without changing the drawn size. */
 .predictive-mobile.predictive-mobile--chip { position: relative; }
 .predictive-mobile--chip::after { content: ""; position: absolute; inset-block: -4px; inset-inline: 0; }
+
+/* Public home: animated 4-step walkthrough (visual only; static and complete without motion) */
+.understanding-flow--play { position: relative; }
+.understanding-flow__track { display: none; }
+.understanding-flow--play .understanding-step { z-index: 1; }
+@media (min-width: 641px) {
+  .understanding-flow__track { display: block; position: absolute; top: 50%; inset-inline: 12.5%; height: 2px; border-radius: 2px; background: var(--line); }
+  .understanding-flow__track i { position: absolute; top: 50%; inset-inline-start: 0; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); opacity: 0; }
+}
+@keyframes flow-step-lit {
+  0%, 20% { border-color: var(--brand); box-shadow: 0 6px 20px color-mix(in srgb, var(--brand) 22%, transparent); transform: translateY(-3px); }
+  30%, 100% { border-color: var(--line); box-shadow: none; transform: none; }
+}
+@keyframes flow-num-lit { 0%, 20% { background: var(--brand); color: var(--on-brand); } 30%, 100% { background: var(--brand-soft); color: var(--brand-2); } }
+@keyframes flow-dot { 0% { inset-inline-start: 0; opacity: 1; } 75% { inset-inline-start: 100%; opacity: 1; } 80%, 100% { inset-inline-start: 100%; opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .understanding-flow--play.is-playing .understanding-step { animation: flow-step-lit 8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 2s); }
+  .understanding-flow--play.is-playing .understanding-step__number { animation: flow-num-lit 8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 2s); }
+  .understanding-flow--play.is-playing .understanding-flow__track i { animation: flow-dot 8s linear infinite; }
+}
+.understanding-flow--play .understanding-step:nth-of-type(2), .understanding-flow--play .understanding-step:nth-of-type(2) .understanding-step__number { --i: 1; }
+.understanding-flow--play .understanding-step:nth-of-type(3), .understanding-flow--play .understanding-step:nth-of-type(3) .understanding-step__number { --i: 2; }
+.understanding-flow--play .understanding-step:nth-of-type(4), .understanding-flow--play .understanding-step:nth-of-type(4) .understanding-step__number { --i: 3; }

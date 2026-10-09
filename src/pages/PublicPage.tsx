@@ -1,3 +1,4 @@
+import { PublicHeader } from "../components/PublicHeader";
 import React, { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
@@ -212,29 +213,23 @@ export function PublicPage() {
   const c = pages[slug] || pages.about;
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <header className="min-h-18 py-2 px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-between gap-2">
-        <Link to="/" className="focus-ring flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-xl brand-bg grid place-items-center text-xs font-semibold">
-            AO
-          </div>
-          <div className="min-w-0">
-            <div className="font-semibold">AcademicOS</div>
-            <div className="text-[11px] muted">
-              {t("pub.header.tagline")}
-            </div>
-          </div>
-        </Link>
-        <div className="flex gap-1 sm:gap-2 shrink-0">
-          <Button variant="ghost" asChild>
-            <Link to="/">{t("pub.nav.home")}</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/app">
-              {t("pub.nav.open")} <ArrowRight size={15} className="directional-icon" />
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <div className="px-4 md:px-8 pt-3">
+        <PublicHeader
+          className="max-w-7xl"
+          aside={
+            <>
+              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                <Link to="/">{t("pub.nav.home")}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/app">
+                  {t("pub.nav.open")} <ArrowRight size={15} className="directional-icon" />
+                </Link>
+              </Button>
+            </>
+          }
+        />
+      </div>
       <main className="border-y hairline paper-grid">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-20 md:py-28">
           <div className="eyebrow brand-text">{t(c.eyebrow)}</div>

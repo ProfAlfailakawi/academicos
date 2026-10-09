@@ -19,6 +19,8 @@ import { SkillRadar, hasSkillRadar } from "../components/VisualBits";
 import { StatusPill } from "../components/StatusPill";
 import { EmptyState } from "../components/EmptyState";
 import { Button } from "../components/ui/button";
+import { Seal } from "../components/Seal";
+import { Skeleton } from "../components/ui/Skeleton";
 
 export function Passport() {
   const { t } = useI18n();
@@ -152,14 +154,16 @@ export function Passport() {
           <p className="body-copy mt-2">{loadError}</p>
         </div>
       ) : !data ? (
-        <div className="h-72 rounded-2xl soft-bg animate-pulse" />
+        <Skeleton shape="panel" />
       ) : (
         <>
           <div className="grid lg:grid-cols-[330px_1fr] gap-5">
             <Card>
               <CardContent className="text-center">
-                <div className="h-20 w-20 rounded-3xl brand-soft-bg mx-auto flex items-center justify-center">
-                  <GraduationCap size={30} />
+                <div className="flex justify-center">
+                  <Seal tone="brand">
+                    <GraduationCap size={30} />
+                  </Seal>
                 </div>
                 <h2 className="text-xl font-semibold mt-4">
                   {data.user.displayName}
@@ -183,7 +187,7 @@ export function Passport() {
                     : t("passport.shareSelected")}
                 </Button>
                 {shareMessage && (
-                  <p className="text-[11px] muted mt-2 leading-5">
+                  <p className="text-meta muted mt-2 leading-5">
                     {shareMessage}
                   </p>
                 )}
@@ -193,7 +197,7 @@ export function Passport() {
                     <div className="text-xs font-semibold">
                       {t("passport.privateByDefault")}
                     </div>
-                    <div className="text-[11px] muted mt-1">
+                    <div className="text-meta muted mt-1">
                       {t("passport.publicNeedsConsent")}
                     </div>
                   </div>
@@ -245,7 +249,7 @@ export function Passport() {
                             <div className="text-sm font-semibold truncate">
                               {p.title}
                             </div>
-                            <div className="text-[11px] muted mt-1">
+                            <div className="text-meta muted mt-1">
                               {p.course}
                             </div>
                           </div>
@@ -287,11 +291,11 @@ export function Passport() {
                             <div className="text-xs font-semibold">
                               {p.title}
                             </div>
-                            <div className="text-[11px] muted mt-1">
+                            <div className="text-meta muted mt-1">
                               {p.course}
                             </div>
                           </div>
-                          <span className="text-[11px] font-semibold">
+                          <span className="text-meta font-semibold">
                             {selected
                               ? t("passport.selected")
                               : t("passport.private")}
@@ -321,7 +325,7 @@ export function Passport() {
                     >
                       <div>
                         <div className="text-xs font-semibold">{x.label}</div>
-                        <div className="text-[11px] muted mt-1">
+                        <div className="text-meta muted mt-1">
                           {x.revokedAt
                             ? t("passport.revoked")
                             : x.expiresAt &&
@@ -381,7 +385,7 @@ function Stat({ icon: Icon, value, label }: any) {
       <CardContent className="p-3.5 sm:p-4">
         <Icon size={17} className="muted" />
         <div className="text-3xl font-semibold mt-3 mono-number">{value}</div>
-        <div className="text-[11px] muted mt-1">{label}</div>
+        <div className="text-meta muted mt-1">{label}</div>
       </CardContent>
     </Card>
   );

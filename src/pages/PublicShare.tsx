@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
-import { BadgeCheck, ExternalLink, KeyRound, ShieldCheck } from "lucide-react";
+import { useParams } from "react-router";
+import { BadgeCheck, ExternalLink, KeyRound, ShieldAlert, ShieldCheck } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import type { EvidenceCapsule, PublicPlatformShare } from "../types";
 import { Button } from "../components/ui/button";
@@ -8,6 +8,10 @@ import { Card, CardContent } from "../components/ui/card";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { runtimeEnumLabel } from "../lib/platform-locale";
 import { InlineLoader } from "../components/ui/AcademicLoader";
+import { PublicHeader } from "../components/PublicHeader";
+import { Skeleton } from "../components/ui/Skeleton";
+import { Seal } from "../components/Seal";
+import { SkillRadar, hasSkillRadar } from "../components/VisualBits";
 
 export function PublicShare() {
   const { t } = useI18n();
@@ -50,19 +54,15 @@ export function PublicShare() {
     }
   }
   return (
-    <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10">
+    <main className="public-page">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="min-h-11 inline-flex items-center font-semibold focus-ring rounded-xl"
-          >
-            AcademicOS
-          </Link>
-          <div className="text-[11px] muted flex items-center gap-1">
-            <ShieldCheck size={13} /> {t("share.consentShare")}
-          </div>
-        </div>
+        <PublicHeader
+          aside={
+            <div className="text-meta muted hidden sm:flex items-center gap-1">
+              <ShieldCheck size={13} /> {t("share.consentShare")}
+            </div>
+          }
+        />
         {needsPassword ? (
           <PasswordCard
             password={password}
@@ -79,7 +79,7 @@ export function PublicShare() {
             </CardContent>
           </Card>
         ) : !share ? (
-          <div className="mt-16 h-64 panel rounded-3xl animate-pulse" />
+          <div className="mt-10" role="status" aria-busy="true" aria-label={t("app.loading")}><Skeleton shape="panel" /></div>
         ) : (
           <ShareContent share={share} />
         )}
@@ -155,44 +155,42 @@ function ShareContent({ share }: { share: PublicPlatformShare }) {
       .catch(() => setVerification(null));
   }, [capsule?.integrity.hash]);
   return (
-    <Card className="mt-10 relative overflow-hidden">
-      <CardContent className="p-6 md:p-10">
-        <div className="flex items-start gap-3">
-          <div className="h-12 w-12 rounded-2xl tone-tile shrink-0">
-            <BadgeCheck size={21} className="brand-text" />
-          </div>
-          <div className="min-w-0">
-            <div className="eyebrow">
-              {t("ui.consentShare")} ·{" "}
-              {capsule ? t("ui.evidenceCapsule") : share.kind}
-            </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-[-0.03em] mt-1">
-              {capsule?.project.title || share.label}
-            </h1>
-            {capsule && (
-              <div className="text-xs muted mt-2">
-                {capsule.project.course} ·{" "}
-                {runtimeEnumLabel(capsule.project.status, locale)}
-              </div>
-            )}
-          </div>
+    <div className="certificate mt-8">
+      <div className="certificate__inner">
+        <div className="certificate__band">
+          <BadgeCheck size={20} className="brand-text" aria-hidden="true" />
+          <span className="eyebrow">
+            {t("ui.consentShare")} ·{" "}
+            {capsule ? t("ui.evidenceCapsule") : share.kind}
+          </span>
         </div>
-        {share.watermark && (
-          <div className="mt-5 rounded-xl border hairline bg-[var(--bg)] px-4 py-3 text-[11px] muted">
-            {t("ui.watermark")}:{" "}
-            <span className="font-semibold text-[var(--ink)]">
-              {share.watermark}
-            </span>
-          </div>
-        )}
-        {capsule ? (
-          <CapsuleView capsule={capsule} verification={verification} />
-        ) : (
-          <GenericView snapshot={share.snapshot} />
-        )}
-        <ShareFooter share={share} />
-      </CardContent>
-    </Card>
+        <div className="p-6 md:p-10">
+          <h1 className="text-2xl md:text-4xl font-semibold tracking-[-0.03em]">
+            {capsule?.project.title || share.label}
+          </h1>
+          {capsule && (
+            <div className="text-sm muted mt-2">
+              {capsule.project.course} ·{" "}
+              {runtimeEnumLabel(capsule.project.status, locale)}
+            </div>
+          )}
+          {share.watermark && (
+            <div className="mt-5 rounded-xl border hairline bg-[var(--bg)] px-4 py-3 text-meta muted">
+              {t("ui.watermark")}:{" "}
+              <span className="font-semibold text-[var(--ink)]">
+                {share.watermark}
+              </span>
+            </div>
+          )}
+          {capsule ? (
+            <CapsuleView capsule={capsule} verification={verification} />
+          ) : (
+            <GenericView snapshot={share.snapshot} />
+          )}
+          <ShareFooter share={share} />
+        </div>
+      </div>
+    </div>
   );
 }
 function isCapsule(share: PublicPlatformShare) {
@@ -217,6 +215,15 @@ function CapsuleView({
   } | null;
 }) {
   const { t, locale } = useI18n();
+  const sealTone =
+    verification?.status === "invalid"
+      ? "bad"
+      : verification?.status === "signed_untrusted"
+        ? "warn"
+        : verification?.status === "signed_trusted" ||
+            verification?.status === "hash_valid"
+          ? "ok"
+          : "brand";
   return (
     <div className="mt-8 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -235,13 +242,20 @@ function CapsuleView({
         />
       </div>
       <section className="rounded-2xl bg-[var(--bg)] border hairline p-5">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <Seal tone={sealTone}>
+            {verification?.status === "invalid" ? (
+              <ShieldAlert size={30} />
+            ) : (
+              <ShieldCheck size={30} />
+            )}
+          </Seal>
+          <div className="min-w-0 flex-1">
             <div className="eyebrow">{t("ui.integrity")}</div>
             <h2 className="section-title mt-1">{t("share.integrityTitle")}</h2>
           </div>
           <span
-            className={`self-start rounded-full px-3 py-1.5 text-[11px] font-semibold ${verification?.status === "invalid" ? "bg-danger/12 text-danger  " : capsule.integrity.signatureStatus === "signed" ? "brand-soft-bg" : "soft-bg muted"}`}
+            className={`verified-badge self-start sm:self-center ${verification?.status === "invalid" ? "!bg-danger/12 !text-danger" : capsule.integrity.signatureStatus === "signed" ? "" : "!bg-[var(--panel-2)] !text-[var(--muted)]"}`}
           >
             {verification?.status === "signed_trusted"
               ? t("ui.signatureTrusted")
@@ -256,26 +270,31 @@ function CapsuleView({
                       : t("ui.checkingHash")}
           </span>
         </div>
-        <code dir="ltr" className="block mt-4 text-[11px] leading-5 break-all">
+        <code dir="ltr" className="block mt-4 text-meta leading-5 break-all">
           {capsule.integrity.hash}
         </code>
         {capsule.integrity.signature && (
-          <div className="mt-3 text-[11px] muted break-all" dir="ltr">
+          <div className="mt-3 text-meta muted break-all" dir="ltr">
             {t("ui.signature")}: {capsule.integrity.signature}
           </div>
         )}
         {capsule.integrity.keyId && (
-          <div className="mt-2 text-[11px] muted" dir="ltr">
+          <div className="mt-2 text-meta muted" dir="ltr">
             {t("ui.keyId")}: {capsule.integrity.keyId}
           </div>
         )}
-        <p className="text-[11px] leading-5 muted mt-4">
+        <p className="text-meta leading-5 muted mt-4">
           {t("share.integrityNote")}
         </p>
       </section>
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-4 items-start">
         <section className="rounded-2xl border hairline p-5">
           <div className="eyebrow">{t("ui.skillEvidence")}</div>
+          {hasSkillRadar(capsule.skills) && (
+            <div className="mt-3">
+              <SkillRadar skills={capsule.skills} ariaLabel={t("ui.skillEvidence")} />
+            </div>
+          )}
           <div className="mt-4 space-y-3">
             {capsule.skills.length ? (
               capsule.skills.map((s, i) => (
@@ -285,11 +304,11 @@ function CapsuleView({
                 >
                   <div className="flex justify-between gap-3">
                     <span className="text-xs font-semibold">{s.skill}</span>
-                    <span className="text-[11px] muted">
+                    <span className="text-meta muted">
                       {runtimeEnumLabel(s.verificationLevel, locale)}
                     </span>
                   </div>
-                  <p className="text-[11px] leading-5 muted mt-1">
+                  <p className="text-meta leading-5 muted mt-1">
                     {s.evidence}
                   </p>
                 </div>
@@ -308,13 +327,13 @@ function CapsuleView({
                 className="flex items-center justify-between gap-3 text-xs"
               >
                 <span className="font-semibold">{d.title}</span>
-                <span className="text-[11px] muted">
+                <span className="text-meta muted">
                   {d.format} · {runtimeEnumLabel(d.status, locale)}
                 </span>
               </div>
             ))}
           </div>
-          <div className="mt-5 pt-4 border-t hairline text-[11px] muted">
+          <div className="mt-5 pt-4 border-t hairline text-meta muted">
             {capsule.rubric.length} {t("share.rubricSaved")}
           </div>
         </section>
@@ -328,14 +347,14 @@ function CapsuleView({
                 key={x.id}
                 className="rounded-xl bg-[var(--bg)] border hairline p-3"
               >
-                <div className="text-[11px] font-semibold">{x.source}</div>
-                <p className="text-[11px] leading-5 muted mt-1">{x.summary}</p>
+                <div className="text-meta font-semibold">{x.source}</div>
+                <p className="text-meta leading-5 muted mt-1">{x.summary}</p>
               </div>
             ))}
           </div>
         </section>
       )}
-      <div className="text-[11px] leading-5 muted">{capsule.disclosure}</div>
+      <div className="text-meta leading-5 muted">{capsule.disclosure}</div>
     </div>
   );
 }
@@ -356,7 +375,7 @@ function GenericView({ snapshot }: { snapshot: Record<string, unknown> }) {
 function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl bg-[var(--bg)] border hairline p-4">
-      <div className="text-[11px] muted">{label}</div>
+      <div className="text-meta muted">{label}</div>
       <div className="text-xl font-semibold mt-2 mono-number">{value}</div>
     </div>
   );
@@ -364,7 +383,7 @@ function Metric({ label, value }: { label: string; value: number }) {
 function ShareFooter({ share }: { share: PublicPlatformShare }) {
   const { t, locale } = useI18n();
   return (
-    <div className="mt-8 border-t hairline pt-4 flex flex-wrap justify-between gap-3 text-[11px] muted">
+    <div className="mt-8 border-t hairline pt-4 flex flex-wrap justify-between gap-3 text-meta muted">
       <span>
         {t("share.createdAt")} {formatDateTime(share.createdAt, locale)}
       </span>

@@ -51,7 +51,7 @@ export function PublicHome() {
             <div className="student-hero-visual" role="img" aria-label={t("landing.heroImageAlt")}>
               <HeroJourney />
               <HeroConstellation />
-              <div className="hero-result-card"><FileCheck2 size={18} /><span><strong>92%</strong> {t("landing.vivaReady")}</span></div>
+              <div className="hero-result-card"><FileCheck2 size={18} /><span><strong>92%</strong> {t("landing.vivaReady")}</span><span className="example-chip" title={t("ui.exampleChipHint")}>{t("ui.exampleChip")}</span></div>
             </div>
           </div>
         </section>
@@ -65,7 +65,7 @@ export function PublicHome() {
         <section className="public-xray-section border-y hairline">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid lg:grid-cols-2 gap-10 items-center">
             <div className="xray-visual panel">
-              <div className="flex items-center justify-between"><span className="eyebrow">{t("ui.projectXray")}</span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
+              <div className="flex items-center justify-between gap-2 flex-wrap"><span className="eyebrow">{t("ui.projectXray")} <span className="example-chip" title={t("ui.exampleChipHint")}>{t("ui.exampleChip")}</span></span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
               <div className="xray-score-grid mt-7"><Score value="91" label={t("landing.structure")} /><Score value="78" label={t("landing.sources")} /><Score value="88" label={t("landing.coherence")} /></div>
               <div className="xray-finding mt-6"><Check size={16} /> {t("landing.findingGood")}</div>
               <div className="xray-finding xray-finding--warn"><FileSearch size={16} /> {t("landing.findingWarn")}</div>
@@ -99,7 +99,7 @@ export function PublicHome() {
 }
 
 function Proof({ icon: Icon, label }: { icon: React.ElementType; label: string }) { return <div className="proof-mini"><Icon size={17} /><span>{label}</span></div>; }
-function Journey({ icon: Icon, title, text, to, tone }: { icon: React.ElementType; title: string; text: string; to: string; tone: string }) { return <Link to={to} className={`journey-card journey-card--${tone} focus-ring`}><span className="journey-card__icon"><Icon size={26} /></span><div><h3>{title}</h3><p>{text}</p></div><ArrowRight size={20} className="journey-card__arrow directional-icon" /></Link>; }
+function Journey({ icon: Icon, title, text, to, tone }: { icon: React.ElementType; title: string; text: string; to: string; tone: string }) { return <Link to={to} className={`journey-card journey-card--${tone} focus-ring`}><span className="journey-card__icon"><Icon size={32} /></span><div><h3>{title}</h3><p>{text}</p></div><ArrowRight size={20} className="journey-card__arrow directional-icon" /></Link>; }
 function FlowWalkthrough({ children }: { children: React.ReactNode }) {
   const ref = React.useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = React.useState(false);

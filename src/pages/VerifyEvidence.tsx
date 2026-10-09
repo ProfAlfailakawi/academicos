@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { ShieldAlert, ShieldCheck, Upload } from "lucide-react";
 import { api } from "../lib/api";
 import type { ProcessEvidenceReport, ProcessEvidenceVerification } from "../types";
@@ -8,6 +8,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { InlineLoader } from "../components/ui/AcademicLoader";
+import { PublicHeader } from "../components/PublicHeader";
+import { Seal } from "../components/Seal";
 
 /** Public verifier for printed / exported Process Evidence reports. */
 export function VerifyEvidence() {
@@ -52,9 +54,9 @@ export function VerifyEvidence() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10">
+    <main className="public-page">
       <div className="max-w-2xl mx-auto">
-        <Link to="/" className="tap-link text-xs muted">AcademicOS</Link>
+        <PublicHeader />
         <div className="mt-10 h-12 w-12 rounded-2xl tone-tile"><ShieldCheck size={20} /></div>
         <h1 className="text-3xl font-semibold mt-4">{t("pe.verifyTitle")}</h1>
         <p className="body-copy mt-3">{t("pe.verifyIntro")}</p>
@@ -79,12 +81,14 @@ export function VerifyEvidence() {
             </div>
             {error && <div role="alert" className="rounded-xl bg-danger/10 text-danger p-3 text-sm">{error}</div>}
             {result && (
-              <div role="status" className={`rounded-xl p-4 text-sm flex gap-2 ${result.status === "valid" ? "brand-soft-bg" : "bg-warning/10 text-warning"}`}>
-                {result.status === "valid" ? <ShieldCheck size={17} className="shrink-0" /> : <ShieldAlert size={17} className="shrink-0" />}
-                <div>
-                  <div className="font-semibold">{t(`pe.status.${result.status}`)}</div>
-                  {report && <div className="text-xs mt-1"><bdi>{report.projectTitle}</bdi> · <bdi>{report.course}</bdi></div>}
-                  {!report && result.status === "valid" && <div className="text-xs mt-1">{t("pe.signatureOnly")}</div>}
+              <div role="status" className={`verdict ${result.status === "valid" ? "seal--ok" : "seal--warn"}`}>
+                <Seal tone={result.status === "valid" ? "ok" : "warn"}>
+                  {result.status === "valid" ? <ShieldCheck size={34} /> : <ShieldAlert size={34} />}
+                </Seal>
+                <div className="min-w-0">
+                  <div className="text-xl md:text-2xl font-bold" style={{ color: result.status === "valid" ? "var(--success)" : "var(--warning)" }}>{t(`pe.status.${result.status}`)}</div>
+                  {report && <div className="text-xs mt-2 muted"><bdi>{report.projectTitle}</bdi> · <bdi>{report.course}</bdi></div>}
+                  {!report && result.status === "valid" && <div className="text-xs mt-2 muted">{t("pe.signatureOnly")}</div>}
                 </div>
               </div>
             )}

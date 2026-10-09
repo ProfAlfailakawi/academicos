@@ -49,6 +49,10 @@
   --on-brand: #ffffff;
   /* ظل أغمق من --accent للنصوص الصغيرة فقط (≥4.5:1 على اللوحة). */
   --accent-ink: color-mix(in srgb, var(--accent) 72%, black);
+  --info: #2c6a8c;
+  --insight: #61519c;
+  /* أصغر حجم نص مسموح به في الواجهة (12px). */
+  --text-meta: 0.75rem;
 }
 
 :root.dark {
@@ -76,6 +80,8 @@
   --ring: color-mix(in srgb, var(--brand) 38%, transparent);
   --on-brand: #07120e;
   --accent-ink: var(--accent);
+  --info: #86bcd6;
+  --insight: #b6a6e6;
 }
 
 * { box-sizing: border-box; }

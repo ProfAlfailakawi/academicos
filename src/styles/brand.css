@@ -43,14 +43,7 @@ html[data-locale="ur"] {
     "Noto Nastaliq Urdu", "IBM Plex Sans Arabic", ui-sans-serif, Tahoma, Arial,
     sans-serif;
 }
-:root {
-  --info: #2c6a8c;
-  --insight: #61519c;
-}
-:root.dark {
-  --info: #86bcd6;
-  --insight: #b6a6e6;
-}
+/* ألوان info/insight تعيش الآن مع باقي التوكنز في index.css (مصدر واحد للوضعين). */
 [data-tone] { --tone: var(--brand); }
 
 

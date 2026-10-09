@@ -197,8 +197,8 @@ export function AuthorshipIntegrityModal({
               <div className="space-y-2 max-h-[46vh] overflow-auto pe-1" role="tabpanel">
                 {report.sentenceBreakdown.map((sentence, index) => (
                   <div key={index} className={`rounded-xl border p-3 ${sentence.highlightColor === "red" ? "border-danger/25 bg-danger/8" : sentence.highlightColor === "orange" ? "border-warning/25 bg-warning/8" : "hairline"}`}>
-                    <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7" dir="auto">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-[11px] font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
-                    {sentence.reasons.length > 0 && <div className="mt-2"><div className="text-[11px] font-semibold muted">{t("integrity.whyFlagged")}</div><div className="flex flex-wrap gap-1.5 mt-1">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-[11px] muted">{reason}</span>)}</div></div>}
+                    <div className="flex items-start gap-3 justify-between"><p className="text-sm leading-7" dir="auto">{sentence.text}</p><span className="rounded-full soft-bg px-2 py-1 text-meta font-semibold shrink-0">{t("integrity.review")} {sentence.styleRiskScore}</span></div>
+                    {sentence.reasons.length > 0 && <div className="mt-2"><div className="text-meta font-semibold muted">{t("integrity.whyFlagged")}</div><div className="flex flex-wrap gap-1.5 mt-1">{sentence.reasons.map((reason) => <span key={reason} className="rounded-full soft-bg px-2.5 py-1 text-meta muted">{reason}</span>)}</div></div>}
                   </div>
                 ))}
               </div>

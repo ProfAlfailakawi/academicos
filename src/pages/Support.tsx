@@ -154,7 +154,7 @@ export function Support() {
               {loading ? (
                 <InlineLoader size={17}/>
               ) : (
-                <span className="text-[11px] muted">{tickets.length}</span>
+                <span className="text-meta muted">{tickets.length}</span>
               )}
             </div>
             <div className="mt-5 space-y-3">
@@ -165,11 +165,11 @@ export function Support() {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${ticket.status === "resolved" || ticket.status === "closed" ? "brand-soft-bg" : "soft-bg muted"}`}
+                            className={`rounded-full px-2 py-1 text-meta font-semibold ${ticket.status === "resolved" || ticket.status === "closed" ? "brand-soft-bg" : "soft-bg muted"}`}
                           >
                             {statusLabel(t, ticket.status)}
                           </span>
-                          <span className="text-[11px] muted">
+                          <span className="text-meta muted">
                             {categoryLabel(t, ticket.category)} ·{" "}
                             {priorityLabel(t, ticket.priority)}
                           </span>
@@ -178,14 +178,14 @@ export function Support() {
                           {ticket.subject}
                         </h3>
                       </div>
-                      <time className="text-[11px] muted shrink-0">
+                      <time className="text-meta muted shrink-0">
                         {formatDate(ticket.updatedAt, locale)}
                       </time>
                     </div>
                     <p className="text-xs leading-6 muted mt-3 whitespace-pre-wrap">
                       {ticket.message}
                     </p>
-                    <div className="text-[11px] muted mt-3 mono-number">
+                    <div className="text-meta muted mt-3 mono-number">
                       {t("ui.ticket")} {ticket.id.slice(0, 8)}
                     </div>
                   </div>
@@ -215,7 +215,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold muted">{label}</span>
+      <span className="text-meta font-semibold muted">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
   );

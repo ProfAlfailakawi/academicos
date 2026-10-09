@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router";
 import { Activity, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { Card, CardContent } from "../components/ui/card";
+import { PublicHeader } from "../components/PublicHeader";
+import { Skeleton } from "../components/ui/Skeleton";
 import { useI18n } from "../lib/i18n";
 
 export function Status() {
@@ -24,18 +25,10 @@ export function Status() {
       ]
     : [];
   return (
-    <main className="min-h-screen bg-[var(--bg)] p-4 md:p-10">
+    <main className="public-page">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            to="/"
-            className="min-h-11 inline-flex items-center font-semibold focus-ring rounded-xl"
-          >
-            AcademicOS
-          </Link>
-          <span className="text-[11px] muted">{t("status.publicStatus")}</span>
-        </div>
-        <div className="mt-14">
+        <PublicHeader aside={<span className="text-meta muted hidden sm:inline">{t("status.publicStatus")}</span>} />
+        <div className="mt-12">
           <div className="h-12 w-12 rounded-2xl tone-tile">
             <Activity size={20} />
           </div>
@@ -54,7 +47,7 @@ export function Status() {
         {h === null && (
           <div className="grid sm:grid-cols-2 gap-3 mt-8" role="status" aria-busy="true" aria-label={t("app.loading")}>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-2xl soft-bg animate-pulse" />
+              <Skeleton key={i} shape="card" />
             ))}
           </div>
         )}
@@ -62,6 +55,13 @@ export function Status() {
           <div role="alert" className="mt-6 rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-danger flex items-center gap-2">
             <AlertTriangle size={16} className="shrink-0" />
             {t("ui.loadError")}
+          </div>
+        )}
+        {services.length > 0 && services.every(([, ok]: any) => ok) && (
+          <div className="status-hero mt-8" role="status">
+            <span className="status-hero__dot" aria-hidden="true" />
+            <div className="status-hero__title">{t("status.allUpTitle")}</div>
+            <p className="body-copy">{t("status.allUpBody")}</p>
           </div>
         )}
         {services.length > 0 && (
@@ -88,7 +88,7 @@ export function Status() {
                     <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
                   )}
                 </div>
-                <div className="text-[11px] muted mt-2">
+                <div className="text-meta muted mt-2">
                   {ok
                     ? t("status.operational")
                     : t("status.unavailable")}
@@ -97,7 +97,7 @@ export function Status() {
             </Card>
           ))}
         </div>
-        <div className="mt-8 text-[11px] muted flex items-center gap-2">
+        <div className="mt-8 text-meta muted flex items-center gap-2">
           <ShieldCheck size={13} /> {t("status.secretsNote")}
         </div>
       </div>

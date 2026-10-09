@@ -43,14 +43,7 @@ html[data-locale="ur"] {
     "Noto Nastaliq Urdu", "IBM Plex Sans Arabic", ui-sans-serif, Tahoma, Arial,
     sans-serif;
 }
-:root {
-  --info: #2c6a8c;
-  --insight: #61519c;
-}
-:root.dark {
-  --info: #86bcd6;
-  --insight: #b6a6e6;
-}
+/* ألوان info/insight تعيش الآن مع باقي التوكنز في index.css (مصدر واحد للوضعين). */
 [data-tone] { --tone: var(--brand); }
 
 
@@ -1072,3 +1065,120 @@ html[dir="rtl"] .onboarding-invite__fill {
   .acos-overture { display: none; }
 }
 .a11y-reduced-motion .acos-overture { display: none; }
+
+/* =============================================================================
+   Final polish layer: shared skeleton, empty-state scenes, public header,
+   certificate / seal pieces, "example" chip, minimum text size.
+   ========================================================================== */
+
+/* --- Skeleton ------------------------------------------------------------- */
+.skel {
+  display: block;
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--brand) 7%, var(--panel-2)) 30%,
+    color-mix(in srgb, var(--brand) 15%, var(--panel-2)) 50%,
+    color-mix(in srgb, var(--brand) 7%, var(--panel-2)) 70%);
+  background-size: 220% 100%;
+  animation: skel-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes skel-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.skel--line { height: 10px; border-radius: 999px; }
+.skel--tile { width: 44px; height: 44px; border-radius: 14px; flex: 0 0 auto; }
+.skel--dot { width: 28px; height: 28px; border-radius: 999px; flex: 0 0 auto; }
+.skel--chip { width: 64px; height: 22px; border-radius: 999px; flex: 0 0 auto; }
+.skel--ring { width: 72px; height: 72px; border-radius: 999px; -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%); mask: radial-gradient(circle, transparent 54%, #000 56%); }
+.skel--block { min-height: 14px; border-radius: 14px; }
+.skel-lines { display: grid; gap: 10px; }
+.skel-card { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); min-height: 7.5rem; }
+.skel-card--panel { min-height: 14rem; border-radius: 24px; }
+.skel-card__body { display: grid; gap: 12px; flex: 1; min-width: 0; padding-top: 4px; }
+.skel-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; background: color-mix(in srgb, var(--brand) 9%, var(--panel-2)); } }
+.a11y-reduced-motion .skel { animation: none; }
+
+/* --- Empty-state scenes --------------------------------------------------- */
+.empty-scene { display: block; margin: 0 auto; max-width: 100%; height: auto; color: var(--brand); }
+.empty-scene .es-ground { fill: color-mix(in srgb, var(--brand) 9%, transparent); }
+.empty-scene .es-paper { fill: var(--panel); stroke: color-mix(in srgb, var(--brand) 38%, var(--line)); stroke-width: 2; stroke-linejoin: round; }
+.empty-scene .es-back { fill: var(--brand-soft); }
+.empty-scene .es-line { stroke: var(--brand); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+.empty-scene .es-faint { opacity: .35; }
+.empty-scene .es-accent { fill: var(--accent); stroke: none; }
+.empty-scene .es-plus { stroke: #fff; stroke-width: 3; stroke-linecap: round; }
+.dark .empty-scene .es-plus { stroke: #1b1208; }
+@media (prefers-reduced-motion: no-preference) {
+  .empty-state .empty-scene { animation: es-float 5.5s ease-in-out infinite; }
+  @keyframes es-float { 50% { transform: translateY(-4px); } }
+}
+
+/* --- Public header -------------------------------------------------------- */
+.public-bar { max-width: 72rem; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 4px; }
+.public-bar__aside { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.public-page { min-height: 100vh; background: var(--bg); padding: 16px; }
+@media (min-width: 768px) { .public-page { padding: 28px 40px 56px; } }
+
+/* --- "Example" chip: marks illustrative numbers so they never pass as real - */
+.example-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--accent-ink) 55%, transparent);
+  color: var(--accent-ink); background: color-mix(in srgb, var(--accent-soft) 70%, transparent);
+  font-size: var(--text-meta); font-weight: 600; line-height: 1.6; white-space: nowrap;
+}
+.hero-result-card .example-chip { margin-inline-start: 8px; }
+
+/* --- Status hero ---------------------------------------------------------- */
+.status-hero {
+  display: grid; justify-items: center; text-align: center; gap: 10px;
+  padding: 44px 20px; border-radius: 28px; border: 1px solid color-mix(in srgb, var(--success) 28%, var(--line));
+  background:
+    radial-gradient(420px 220px at 50% 0%, color-mix(in srgb, var(--success) 14%, transparent), transparent 72%),
+    var(--panel);
+}
+.status-hero__dot { position: relative; width: 22px; height: 22px; border-radius: 999px; background: var(--success); }
+.status-hero__dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--success); opacity: .45; }
+@media (prefers-reduced-motion: no-preference) {
+  .status-hero__dot::after { animation: status-pulse 2.2s ease-out infinite; }
+  @keyframes status-pulse { from { transform: scale(1); opacity: .5; } to { transform: scale(3); opacity: 0; } }
+}
+.status-hero__title { font-size: clamp(1.6rem, 4.5vw, 2.4rem); font-weight: 700; margin-top: 6px; }
+
+/* --- Seal (verification result / integrity ring) --------------------------- */
+.seal { position: relative; display: grid; place-items: center; width: 112px; height: 112px; flex: 0 0 auto; color: var(--seal, var(--brand)); }
+.seal--sm { width: 72px; height: 72px; }
+.seal svg.seal__ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.seal__core { position: relative; display: grid; place-items: center; width: 62%; height: 62%; border-radius: 999px; background: color-mix(in srgb, var(--seal, var(--brand)) 13%, var(--panel)); }
+.seal--ok { --seal: var(--success); }
+.seal--warn { --seal: var(--warning); }
+.seal--bad { --seal: var(--danger); }
+@media (prefers-reduced-motion: no-preference) {
+  .seal svg.seal__ring { animation: seal-spin 40s linear infinite; }
+  @keyframes seal-spin { to { transform: rotate(360deg); } }
+}
+.verdict {
+  display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--seal, var(--brand)) 35%, var(--line));
+  background: color-mix(in srgb, var(--seal, var(--brand)) 8%, var(--panel));
+}
+@media (max-width: 480px) { .verdict { flex-direction: column; text-align: center; } }
+
+/* --- Certificate (shared evidence / passport) ----------------------------- */
+.certificate {
+  position: relative; border-radius: 28px; padding: 6px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, var(--line)), var(--line) 40%, color-mix(in srgb, var(--brand) 45%, var(--line)));
+}
+.certificate__inner { border-radius: 23px; background: var(--panel); overflow: hidden; }
+.certificate__band { display: flex; align-items: center; gap: 14px; padding: 16px 24px; background: linear-gradient(135deg, var(--brand-soft), var(--panel)); border-bottom: 1px solid var(--line); }
+.verified-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: .95rem; background: var(--brand-soft); color: var(--brand-2); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); }
+
+@media print {
+  .no-print, .app-sidebar, .mobile-dock, .public-bar__aside, .acos-overture { display: none !important; }
+  body { background: #fff !important; }
+  .certificate { background: #999; break-inside: avoid; }
+  .certificate__inner, .panel { box-shadow: none !important; }
+  .seal svg.seal__ring { animation: none !important; }
+}
+
+/* --- Minimum readable text: 12px (replaces ad-hoc 10/11px) ---------------- */
+.text-meta { font-size: var(--text-meta); line-height: 1.6; }
+

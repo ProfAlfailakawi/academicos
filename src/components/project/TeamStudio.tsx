@@ -127,7 +127,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <p className="body-copy mt-2">{t("team.studioDesc")}</p>
               </div>
               <span
-                className={`shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
+                className={`shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-meta font-semibold ${project.collaborationMode === "group" ? "brand-soft-bg" : "soft-bg muted"}`}
               >
                 {project.collaborationMode === "group"
                   ? t("ui.groupProject")
@@ -140,7 +140,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
               </div>
             ) : isOwner ? (
               <form onSubmit={invite} className="mt-5">
-                <label className="text-[11px] font-semibold muted">
+                <label className="text-meta font-semibold muted">
                   {t("team.inviteLabel")}
                 </label>
                 <div className="mt-1.5 flex flex-col gap-2 sm:flex-row">
@@ -165,7 +165,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     {t("team.invite")}
                   </Button>
                 </div>
-                <p className="text-[11px] muted mt-2">{t("team.inviteHint")}</p>
+                <p className="text-meta muted mt-2">{t("team.inviteHint")}</p>
               </form>
             ) : (
               <div className="mt-5 rounded-xl soft-bg p-4 text-xs muted">
@@ -186,7 +186,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 <div className="eyebrow">{t("ui.presence")}</div>
                 <h2 className="section-title mt-1">{t("team.presenceTitle")}</h2>
               </div>
-              <span className="text-[11px] muted">
+              <span className="text-meta muted">
                 {presence.length} {t("ui.online")}
               </span>
             </div>
@@ -195,7 +195,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                 presence.map((p) => (
                   <div
                     key={p.userId}
-                    className="rounded-full border hairline px-3 py-1.5 text-[11px] flex items-center gap-2"
+                    className="rounded-full border hairline px-3 py-1.5 text-meta flex items-center gap-2"
                   >
                     <span className="h-2 w-2 rounded-full bg-success" />
                     <span className="font-semibold">
@@ -222,7 +222,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
               {loading ? (
                 <InlineLoader size={16}/>
               ) : (
-                <span className="text-[11px] muted">
+                <span className="text-meta muted">
                   {members.filter((m) => m.status === "active").length + 1}{" "}
                   {t("team.active")}
                 </span>
@@ -252,7 +252,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                       <div className="text-xs font-semibold break-words" title={m.displayName || m.email}>
                         {m.displayName || m.email}
                       </div>
-                      <div className="text-[11px] muted mt-1">
+                      <div className="text-meta muted mt-1">
                         {m.status === "pending"
                           ? t("team.pendingInvite")
                           : m.role === "leader"
@@ -261,7 +261,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                         <span className="hidden sm:inline">{" "}· {m.email}</span>
                       </div>
                       {/* البريد في سطرٍ مستقل باتجاه LTR: كان يتداخل مع اسم العضو وزر الإزالة على الهاتف. */}
-                      <div dir="ltr" className="sm:hidden text-[11px] muted mt-0.5 break-all text-start" title={m.email}>
+                      <div dir="ltr" className="sm:hidden text-meta muted mt-0.5 break-all text-start" title={m.email}>
                         {m.email}
                       </div>
                     </div>
@@ -314,7 +314,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold">{name}</div>
-                        <div className="text-[11px] muted mt-1">
+                        <div className="text-meta muted mt-1">
                           {short(c.actor)}
                         </div>
                       </div>
@@ -329,7 +329,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                         .map(([k, v]) => (
                           <span
                             key={k}
-                            className="rounded-full soft-bg px-2 py-1 text-[11px] muted"
+                            className="rounded-full soft-bg px-2 py-1 text-meta muted"
                           >
                             {label(k, t)} · {v}
                           </span>
@@ -366,7 +366,7 @@ function MemberRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-xs font-semibold break-words">{name}</div>
-        <div className="text-[11px] muted mt-1" title={meta}>
+        <div className="text-meta muted mt-1" title={meta}>
           {owner ? t("ui.ownerLeader") : t("ui.member")} · <bdi dir="ltr">{short(meta)}</bdi>
         </div>
       </div>

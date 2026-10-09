@@ -171,14 +171,14 @@ export function LearnStudio() {
             <div className="rounded-2xl brand-soft-bg p-5">
               <div className="flex items-center gap-2 text-xs font-semibold"><Target size={15} /> {t("learn.todaySession")}</div>
               {brain?.recommendedFocus?.[0] ? <><strong className="block mt-3">{brain.recommendedFocus[0].skill}</strong><p className="text-xs leading-6 mt-2 opacity-80">{t("learn.focusReason")}</p></> : <><strong className="block mt-3">{t("learn.startOneMaterial")}</strong><p className="text-xs leading-6 mt-2 opacity-80">{t("learn.startOneMaterialDesc")}</p></>}
-              {examDate && <div className="mt-3 text-[11px] font-semibold">{Math.max(0, Math.ceil((new Date(`${examDate}T23:59:59`).getTime() - Date.now()) / 86400000))} {t("learn.daysRemaining")}</div>}
+              {examDate && <div className="mt-3 text-meta font-semibold">{Math.max(0, Math.ceil((new Date(`${examDate}T23:59:59`).getTime() - Date.now()) / 86400000))} {t("learn.daysRemaining")}</div>}
             </div>
           </div>
           {examIntake && <div className="mt-5 border-t hairline pt-5">
             <div className="flex items-start gap-3"><span className="h-9 w-9 rounded-xl soft-bg grid place-items-center shrink-0"><FileText size={16} /></span><div className="flex-1"><div className="text-xs font-semibold">{t("learn.materialMapReady")}</div><p className="text-xs leading-6 muted mt-1">{examIntake.guide.summary}</p></div></div>
-            {examIntake.guide.keyIdeas.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{examIntake.guide.keyIdeas.slice(0, 6).map((idea, index) => <button key={index} onClick={() => { setTab("explain"); setTopic(idea.slice(0, 550)); }} className="focus-ring rounded-full border hairline px-3 py-1.5 text-[11px] font-semibold hover:bg-[var(--panel-2)]">{t("learn.explainPrefix")}: {idea.slice(0, 70)}</button>)}</div>}
-            {examIntake.guide.examPrompts[0] && <div className="mt-4 rounded-xl soft-bg p-4"><div className="text-[11px] muted">{t("learn.suggestedQuestion")}</div><p className="text-sm leading-7 mt-1">{examIntake.guide.examPrompts[0]}</p><Button size="sm" className="mt-3" onClick={() => { setTab("solve"); setProblem(examIntake.guide.examPrompts[0]); }}>{t("learn.testMe")}</Button></div>}
-            {examIntake.guide.warnings.length > 0 && <div className="mt-3 text-[11px] text-warning">{examIntake.guide.warnings[0]}</div>}
+            {examIntake.guide.keyIdeas.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{examIntake.guide.keyIdeas.slice(0, 6).map((idea, index) => <button key={index} onClick={() => { setTab("explain"); setTopic(idea.slice(0, 550)); }} className="focus-ring rounded-full border hairline px-3 py-1.5 text-meta font-semibold hover:bg-[var(--panel-2)]">{t("learn.explainPrefix")}: {idea.slice(0, 70)}</button>)}</div>}
+            {examIntake.guide.examPrompts[0] && <div className="mt-4 rounded-xl soft-bg p-4"><div className="text-meta muted">{t("learn.suggestedQuestion")}</div><p className="text-sm leading-7 mt-1">{examIntake.guide.examPrompts[0]}</p><Button size="sm" className="mt-3" onClick={() => { setTab("solve"); setProblem(examIntake.guide.examPrompts[0]); }}>{t("learn.testMe")}</Button></div>}
+            {examIntake.guide.warnings.length > 0 && <div className="mt-3 text-meta text-warning">{examIntake.guide.warnings[0]}</div>}
           </div>}
         </CardContent>
       </Card>
@@ -233,13 +233,13 @@ export function LearnStudio() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold">{lesson.topic}</h2>
               <div className="flex items-center gap-2">
-                {lessonSource === "cache" && <span className="text-[11px] brand-text flex items-center gap-1"><ShieldCheck size={12} />{t("learn.sourceCache")}</span>}
+                {lessonSource === "cache" && <span className="text-meta brand-text flex items-center gap-1"><ShieldCheck size={12} />{t("learn.sourceCache")}</span>}
                 <Button variant="ghost" onClick={() => narrate([lesson.intuition, ...lesson.buildingBlocks])}>
                   {speaking ? <><Square size={14} className="inline me-1" />{t("learn.stop")}</> : <><Play size={14} className="inline me-1" />{t("learn.listen")}</>}
                 </Button>
               </div>
             </div>
-            {lesson.notice && <div className="mt-2 text-[11px] muted">{lesson.notice}</div>}
+            {lesson.notice && <div className="mt-2 text-meta muted">{lesson.notice}</div>}
             <div className="mt-4 rounded-xl brand-soft-bg p-4">
               <div className="flex items-center gap-2 section-title"><Lightbulb size={15} />{t("learn.intuition")}</div>
               <p className="mt-2 text-sm leading-relaxed">{lesson.intuition}</p>
@@ -276,7 +276,7 @@ export function LearnStudio() {
             <Section icon={<ShieldCheck size={15} />} title={t("learn.verify")} items={solve.result.verify} />
             {solve.result.practiceQuestion && <div className="mt-5 rounded-2xl border border-dashed border-[var(--brand)]/35 brand-soft-bg p-5"><div className="flex items-center gap-2 section-title"><GraduationCap size={16} />{t("learn.practiceSimilar")}</div><p className="mt-3 text-sm leading-7">{solve.result.practiceQuestion}</p></div>}
             <Section icon={<AlertTriangle size={15} />} title={t("learn.caveats")} items={solve.result.caveats} />
-            <div className="mt-5 text-[11px] muted border-t hairline pt-3">{solve.result.disclosure}</div>
+            <div className="mt-5 text-meta muted border-t hairline pt-3">{solve.result.disclosure}</div>
           </CardContent>
         </Card>
       )}

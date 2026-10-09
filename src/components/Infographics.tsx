@@ -121,7 +121,7 @@ export function TaperFunnel({ stages }: { stages: Array<{ label: string; pct: nu
       <div className="flex flex-col shrink-0 min-w-[7.5rem] max-w-[11rem]">
         {stages.map((s, i) => (
           <div key={i} role="listitem" className="flex flex-col justify-center" style={{ height: rowH }}>
-            <span className="text-[11px] muted leading-4">{s.label}</span>
+            <span className="text-meta muted leading-4">{s.label}</span>
             <strong className="text-sm mono-number leading-5">{s.pct}%</strong>
           </div>
         ))}

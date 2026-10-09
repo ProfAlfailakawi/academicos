@@ -166,7 +166,7 @@ export function MfaSetup() {
                 </div>
                 <details className="mt-3 text-xs">
                   <summary className="cursor-pointer brand-text font-semibold">{t("mfaSetup.uriLabel")}</summary>
-                  <code dir="ltr" className="block mt-2 rounded-xl bg-[var(--panel)] border hairline px-3 py-2.5 text-[11px] break-all select-all">
+                  <code dir="ltr" className="block mt-2 rounded-xl bg-[var(--panel)] border hairline px-3 py-2.5 text-meta break-all select-all">
                     {authenticatorUri}
                   </code>
                 </details>

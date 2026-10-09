@@ -49,6 +49,10 @@
   --on-brand: #ffffff;
   /* ظل أغمق من --accent للنصوص الصغيرة فقط (≥4.5:1 على اللوحة). */
   --accent-ink: color-mix(in srgb, var(--accent) 72%, black);
+  --info: #2c6a8c;
+  --insight: #61519c;
+  /* أصغر حجم نص مسموح به في الواجهة (12px). */
+  --text-meta: 0.75rem;
 }
 
 :root.dark {
@@ -76,6 +80,8 @@
   --ring: color-mix(in srgb, var(--brand) 38%, transparent);
   --on-brand: #07120e;
   --accent-ink: var(--accent);
+  --info: #86bcd6;
+  --insight: #b6a6e6;
 }
 
 * { box-sizing: border-box; }
@@ -1103,3 +1109,28 @@ button.brand-bg:disabled,
 .understanding-flow--play .understanding-step:nth-of-type(2), .understanding-flow--play .understanding-step:nth-of-type(2) .understanding-step__number { --i: 1; }
 .understanding-flow--play .understanding-step:nth-of-type(3), .understanding-flow--play .understanding-step:nth-of-type(3) .understanding-step__number { --i: 2; }
 .understanding-flow--play .understanding-step:nth-of-type(4), .understanding-flow--play .understanding-step:nth-of-type(4) .understanding-step__number { --i: 3; }
+
+/* --- Landing polish ------------------------------------------------------- */
+.journey-card::after {
+  content: ""; position: absolute; inset-inline-end: -46px; bottom: -58px; width: 170px; height: 170px; border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand) 14%, transparent), transparent 68%); pointer-events: none;
+}
+.journey-card--sand::after { background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%); }
+.journey-card--blue::after { background: radial-gradient(circle, color-mix(in srgb, var(--info) 18%, transparent), transparent 68%); }
+.price-orbit { position: relative; overflow: hidden; isolation: isolate; }
+.price-orbit::before, .price-orbit::after { content: ""; position: absolute; z-index: -1; border-radius: 999px; border: 1px dashed color-mix(in srgb, var(--brand) 26%, transparent); inset-inline-end: -60px; top: -60px; width: 170px; height: 170px; }
+.price-orbit::after { inset-inline-end: -100px; top: -100px; width: 250px; height: 250px; opacity: .6; }
+.price-orbit__currency { font-size: var(--text-meta); }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .public-shell .journey-card, .public-shell .xray-visual, .public-shell .pricing-preview, .public-shell .teacher-lite-strip > div {
+      animation: reveal-up linear both; animation-timeline: view(); animation-range: entry 0% entry 30%;
+    }
+    @keyframes reveal-up { from { opacity: .4; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  }
+}
+.a11y-reduced-motion .public-shell .journey-card, .a11y-reduced-motion .public-shell .xray-visual { animation: none !important; opacity: 1 !important; }
+@media (min-width: 640px) { .journey-card__icon, .journey-icon { width: 68px; height: 68px; border-radius: 22px; } }
+
+/* Project workspace readiness strip (layout only, uses data already on the page) */
+.workspace-strip { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--brand-soft) 40%, var(--panel)); }

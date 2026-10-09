@@ -138,12 +138,12 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="eyebrow text-brand">{t("source.title")}</span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-brand/15 text-brand font-semibold border border-brand/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-meta bg-brand/15 text-brand font-semibold border border-brand/20 flex items-center gap-1">
                 <Database size={10} /> {t("ui.crossrefLive")}
               </span>
             </div>
             <h2 className="studio-head__title">{t("source.title")}</h2>
-            <p className="text-[11px] text-muted-foreground mt-1 max-w-2xl leading-5">
+            <p className="text-meta text-muted-foreground mt-1 max-w-2xl leading-5">
               {t("source.description")}
             </p>
           </div>
@@ -210,7 +210,7 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             <AcademicLoader size={40} delay={200} label="" />
             <div className="acad-verify-chips flex flex-wrap justify-center gap-1.5">
               {["DOI", t("source.result"), t("source.copyApa"), "Crossref"].map((chip, i) => (
-                <span key={chip} className="acad-verify-chip px-2 py-0.5 rounded-full text-[11px] border border-success/25 bg-success/8 text-success font-semibold" style={{ animationDelay: `${i * 90}ms` }}>{chip}</span>
+                <span key={chip} className="acad-verify-chip px-2 py-0.5 rounded-full text-meta border border-success/25 bg-success/8 text-success font-semibold" style={{ animationDelay: `${i * 90}ms` }}>{chip}</span>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">{t("dossier.verifying")}…</p>
@@ -245,15 +245,15 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-success/10 text-success border border-success/20 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-md text-meta font-bold bg-success/10 text-success border border-success/20 flex items-center gap-1">
                     <CheckCircle2 size={11} /> {t("ui.crossrefRecordMatched")}
                   </span>
-                  <span className="text-[11px] font-mono text-muted-foreground">{t("source.result")} #{index + 1}</span>
+                  <span className="text-meta font-mono text-muted-foreground">{t("source.result")} #{index + 1}</span>
                   {typeof source.citedByCount === "number" && (
-                    <span className="text-[11px] text-muted-foreground">{t("ui.crossrefCitedBy")}: {source.citedByCount}</span>
+                    <span className="text-meta text-muted-foreground">{t("ui.crossrefCitedBy")}: {source.citedByCount}</span>
                   )}
                   {!!source.licenseUrls?.length && (
-                    <span className="px-2 py-0.5 rounded-md text-[11px] bg-info/10 text-info">{t("source.licenseAvailable")}</span>
+                    <span className="px-2 py-0.5 rounded-md text-meta bg-info/10 text-info">{t("source.licenseAvailable")}</span>
                   )}
                 </div>
                 <h3 dir="auto" className="text-sm md:text-base font-bold text-foreground leading-snug">{source.title}</h3>
@@ -268,30 +268,30 @@ export function LiveScholarVerifier({ project }: { project: ProjectDNA }) {
               </Button>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-2 text-[11px]">
+            <div className="grid sm:grid-cols-2 gap-2 text-meta">
               <div className="rounded-lg bg-[var(--bg)] border hairline p-2.5 font-mono ltr break-all">doi:{source.doi}</div>
               <div className="rounded-lg bg-[var(--bg)] border hairline p-2.5">
                 {source.issn?.length ? `ISSN metadata: ${source.issn.join(", ")}` : t("source.noIssn")}
               </div>
             </div>
 
-            <div className="rounded-xl border border-info/20 bg-info/8 p-3 text-[11px] leading-5 flex gap-2">
+            <div className="rounded-xl border border-info/20 bg-info/8 p-3 text-meta leading-5 flex gap-2">
               <Link2 size={14} className="text-info shrink-0 mt-0.5" />
               <span><strong>{t("source.title")}:</strong> {t("source.guardianNote")}</span>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t hairline text-xs">
-              <div className="text-[11px] text-muted-foreground">{t("source.metadataVerified")}: {formatDateTime(source.metadataVerifiedAt, locale)}</div>
+              <div className="text-meta text-muted-foreground">{t("source.metadataVerified")}: {formatDateTime(source.metadataVerifiedAt, locale)}</div>
               <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2.5" onClick={() => copyCitation(source, "apa")}>
+                <Button size="sm" variant="ghost" className="h-7 text-meta px-2.5" onClick={() => copyCitation(source, "apa")}>
                   {copied === `${source.doi}-apa` ? <Check size={12} className="text-success" /> : <Copy size={12} />} {t("source.copyApa")}
                 </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2.5" onClick={() => copyCitation(source, "bibtex")}>
+                <Button size="sm" variant="ghost" className="h-7 text-meta px-2.5" onClick={() => copyCitation(source, "bibtex")}>
                   {copied === `${source.doi}-bibtex` ? <Check size={12} className="text-success" /> : <Copy size={12} />} BibTeX
                 </Button>
                 <Button
                   size="sm"
-                  className="h-7 text-[11px] px-3 bg-success hover:bg-success text-[color:var(--on-brand)] gap-1"
+                  className="h-7 text-meta px-3 bg-success hover:bg-success text-[color:var(--on-brand)] gap-1"
                   disabled={addingDoi === source.doi || addedDois.has(source.doi)}
                   onClick={() => addToProject(source)}
                 >

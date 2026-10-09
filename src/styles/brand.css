@@ -1151,6 +1151,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 .seal--ok { --seal: var(--success); }
 .seal--warn { --seal: var(--warning); }
 .seal--bad { --seal: var(--danger); }
+.seal--neutral { --seal: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
   .seal svg.seal__ring { animation: seal-spin 40s linear infinite; }
   @keyframes seal-spin { to { transform: rotate(360deg); } }

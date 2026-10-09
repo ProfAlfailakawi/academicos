@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { BadgeCheck, ExternalLink, KeyRound, ShieldAlert, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ExternalLink, KeyRound, ShieldAlert, ShieldCheck, Clock3 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import type { EvidenceCapsule, PublicPlatformShare } from "../types";
 import { Button } from "../components/ui/button";
@@ -223,7 +223,7 @@ function CapsuleView({
         : verification?.status === "signed_trusted" ||
             verification?.status === "hash_valid"
           ? "ok"
-          : "brand";
+          : "neutral";
   return (
     <div className="mt-8 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -244,10 +244,14 @@ function CapsuleView({
       <section className="rounded-2xl bg-[var(--bg)] border hairline p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Seal tone={sealTone}>
-            {verification?.status === "invalid" ? (
+            {verification?.status === "signed_trusted" ||
+            verification?.status === "hash_valid" ? (
+              <ShieldCheck size={30} />
+            ) : verification?.status === "invalid" ||
+              verification?.status === "signed_untrusted" ? (
               <ShieldAlert size={30} />
             ) : (
-              <ShieldCheck size={30} />
+              <Clock3 size={30} />
             )}
           </Seal>
           <div className="min-w-0 flex-1">
@@ -255,7 +259,7 @@ function CapsuleView({
             <h2 className="section-title mt-1">{t("share.integrityTitle")}</h2>
           </div>
           <span
-            className={`verified-badge self-start sm:self-center ${verification?.status === "invalid" ? "!bg-danger/12 !text-danger" : capsule.integrity.signatureStatus === "signed" ? "" : "!bg-[var(--panel-2)] !text-[var(--muted)]"}`}
+            className={`verified-badge self-start sm:self-center ${verification?.status === "invalid" ? "!bg-danger/12 !text-danger" : verification?.status === "signed_untrusted" ? "!bg-warning/12 !text-warning" : verification?.status === "signed_trusted" || verification?.status === "hash_valid" ? "" : "!bg-[var(--panel-2)] !text-[var(--muted)]"}`}
           >
             {verification?.status === "signed_trusted"
               ? t("ui.signatureTrusted")

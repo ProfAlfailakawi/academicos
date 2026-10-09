@@ -1,7 +1,7 @@
 import React from "react";
 
 /** Seal-style ring around an icon (presentational; the caller supplies the meaning and label). */
-export function Seal({ tone = "ok", small = false, children }: { tone?: "ok" | "warn" | "bad" | "brand"; small?: boolean; children: React.ReactNode }) {
+export function Seal({ tone = "ok", small = false, children }: { tone?: "ok" | "warn" | "bad" | "brand" | "neutral"; small?: boolean; children: React.ReactNode }) {
   const teeth = Array.from({ length: 24 }, (_, i) => {
     const a = (i / 24) * Math.PI * 2;
     return <line key={i} x1={50 + Math.cos(a) * 44} y1={50 + Math.sin(a) * 44} x2={50 + Math.cos(a) * 48.5} y2={50 + Math.sin(a) * 48.5} />;

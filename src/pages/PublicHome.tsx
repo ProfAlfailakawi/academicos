@@ -60,7 +60,7 @@ export function PublicHome() {
         <section id="how" className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto"><div className="eyebrow brand-text">{t("landing.chooseGoal")}</div><h2 className="text-3xl md:text-5xl font-black tracking-[-.045em] mt-3">{t("landing.threeDoors")}</h2></div>
           <div className="journey-grid mt-10">{journey.map((item) => <Journey key={item.title} {...item} />)}</div>
-          <JourneyFlow className="mt-12" items={[
+          <JourneyFlow className="mt-12" playKey="landing:how" items={[
             { key: "upload", icon: UploadCloud, title: t("landing.flowUpload"), text: t("landing.flowUploadText") },
             { key: "build", icon: FilePenLine, title: t("landing.flowBuild"), text: t("landing.flowBuildText") },
             { key: "check", icon: FileSearch, title: t("landing.flowCheck"), text: t("landing.flowCheckText") },

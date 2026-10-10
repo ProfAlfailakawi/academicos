@@ -834,7 +834,10 @@ function Deliverables({
   const { t } = useI18n();
   const stateText = useDnaStepStateText();
   // One observer + one short timer for the whole list: every card lights up to its own real status together.
-  const { ref, lit } = useJourneyReveal<HTMLDivElement>({ target: DELIVERABLE_FLOW.length, count: DELIVERABLE_FLOW.length, stepMs: 350, threshold: 0.2, playKey: `deliverables:${project.id}` });
+  // The shared intro runs up to the furthest really-reached station of any card. With no cards yet (data still
+  // loading) the target is 0, so the hook does not arm and spend the intro on an empty grid; it arms once they exist.
+  const target = project.deliverables.reduce((max, d) => Math.max(max, d.status === "completed" ? DELIVERABLE_FLOW.length : Math.max(0, DELIVERABLE_FLOW.indexOf(d.status)) + 1), 0);
+  const { ref, lit } = useJourneyReveal<HTMLDivElement>({ target, count: DELIVERABLE_FLOW.length, stepMs: 350, threshold: 0.2, playKey: `deliverables:${project.id}` });
   const labels = [t("pw.pending"), t("pw.inProgress"), t("pw.readyForSubmit"), t("pw.submittedArchived")];
   return (
     <div ref={ref} className="grid md:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FoldText } from "../VisualBits";
 import { DnaStepper, type DnaStepState } from "../dna/DnaKit";
 import { MiniBar } from "../Infographics";
-import { useDnaStepStateText } from "../dna/useDnaStepStateText";
+import { useDnaEstimatedStepStateText, useDnaStepStateText } from "../dna/useDnaStepStateText";
 import {
   AlertTriangle,
   ArrowRight,
@@ -506,7 +506,7 @@ const GENERATION_STAGE_MS = 9000;
 
 function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
   const { t } = useI18n();
-  const stateText = useDnaStepStateText();
+  const stateText = useDnaEstimatedStepStateText();
   const labels = mode === "rescue"
     ? [t("writer.stageRead"), t("writer.stageSources"), t("writer.stageStructure"), t("writer.stageExplain")]
     : [t("writer.stageUnderstand"), t("writer.stagePlan"), t("writer.stageWrite"), t("writer.stageViva")];
@@ -518,7 +518,7 @@ function GenerationState({ mode }: { mode: ProjectWriterRequest["mode"] }) {
     return () => clearInterval(id);
   }, [labels.length]);
   const steps = labels.map((label, index) => ({ key: String(index), label, state: (index < at ? "done" : index === at ? "current" : "pending") as DnaStepState }));
-  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center" aria-busy="true"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><AcademicLoader size={48} delay={0} label={mode === "rescue" ? t("writer.rebuilding") : t("writer.building")} /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="max-w-3xl mx-auto mt-8"><DnaStepper journey size="sm" stateText={stateText} ariaLabel={`${labels.join(" · ")} (${t("writer.stagesEstimate")})`} steps={steps} /></div><p className="text-meta muted mt-4">{t("writer.stagesEstimate")}</p><p className="text-meta muted mt-2">{t("writer.buildingNote")}</p></CardContent></Card>;
+  return <Card className="generation-state overflow-hidden"><CardContent className="py-12 md:py-16 text-center" aria-busy="true"><span className="generation-orb h-20 w-20 rounded-[28px] tone-tile mx-auto"><AcademicLoader size={48} delay={0} label={mode === "rescue" ? t("writer.rebuilding") : t("writer.building")} /></span><h2 className="text-2xl md:text-3xl font-semibold mt-6">{mode === "rescue" ? t("writer.rebuilding") : t("writer.building")}</h2><p className="body-copy mt-2">{t("writer.sharedMemory")}</p><div className="max-w-3xl mx-auto mt-8"><DnaStepper journey estimated size="sm" stateText={stateText} ariaLabel={`${labels.join(" · ")} (${t("writer.stagesEstimate")})`} steps={steps} /></div><p className="text-meta muted mt-4">{t("writer.stagesEstimate")}</p><p className="text-meta muted mt-2">{t("writer.buildingNote")}</p></CardContent></Card>;
 }
 
 function ProjectFlow({ document, progress }: { document: ProjectDocument; progress: number }) {
@@ -533,7 +533,7 @@ function ProjectFlow({ document, progress }: { document: ProjectDocument; progre
     { label: t("writer.flowViva"), icon: Mic2, done: document.quality.discussability >= 75 },
   ].map((step, index) => ({ ...step, done: step.done && progress >= (index + 1) * 25 }));
   const firstOpen = steps.findIndex((step) => !step.done);
-  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><DnaStepper size="sm" reveal playKey={`writer:${document.projectId}`} stateText={stateText} ariaLabel={steps.map((step) => step.label).join(" · ")} steps={steps.map(({ label, icon: Icon, done }, index) => ({ key: String(index), label, icon: done ? undefined : <Icon size={16} />, state: done ? "done" : index === firstOpen ? "current" : "pending" }))} /></section>;
+  return <section className="project-flow panel-flat rounded-2xl p-3 md:p-4"><DnaStepper size="sm" reveal playKey={`writer:${document.projectId}`} stateText={stateText} ariaLabel={steps.map((step) => step.label).join(" · ")} steps={steps.map(({ label, icon: Icon, done }, index) => ({ key: String(index), label, icon: done ? undefined : <Icon size={16} />, introIcon: done ? <Icon size={16} /> : undefined, state: done ? "done" : index === firstOpen ? "current" : "pending" }))} /></section>;
 }
 
 function QualityCard({ document }: { document: ProjectDocument }) {

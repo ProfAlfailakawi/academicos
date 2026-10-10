@@ -105,6 +105,8 @@ export interface DnaStep {
   stamp?: string;
   badge?: React.ReactNode;
   title?: string;
+  /** Glyph shown while the journey intro has not reached this (really done) station yet; it then flips to the check. */
+  introIcon?: React.ReactNode;
 }
 
 const DEFAULT_STATE_TEXT: Record<DnaStepState, string> = {
@@ -138,6 +140,8 @@ export interface DnaStepperProps {
   journey?: boolean;
   /** Externally driven intro position (shared observer for lists); overrides `reveal`. */
   lit?: number | null;
+  /** Estimated flow (no live progress feed): passed stations show their number, not a hard check mark. */
+  estimated?: boolean;
 }
 
 export function DnaStepper({
@@ -153,6 +157,7 @@ export function DnaStepper({
   stepMs,
   journey = false,
   lit: litProp,
+  estimated = false,
 }: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
@@ -175,6 +180,7 @@ export function DnaStepper({
       className={cx('dna', 'dna-steps', className)}
       data-size={size}
       data-journey={journeyMode ? '' : undefined}
+      data-estimated={estimated ? '' : undefined}
       data-reveal={journeyMode && (reveal || controlled) ? (lit ?? 'done') : undefined}
       style={journeyMode ? ({ '--journey-ms': `${ms}ms` } as React.CSSProperties) : undefined}
       aria-label={ariaLabel}
@@ -201,7 +207,9 @@ export function DnaStepper({
                 <span className="dna-stamp">{step.stamp}</span>
               ) : step.icon && !(state === 'done' && step.state !== 'done') ? (
                 step.icon
-              ) : state === 'done' ? (
+              ) : state !== 'done' && step.state === 'done' && step.introIcon ? (
+                step.introIcon
+              ) : state === 'done' && !estimated ? (
                 <CheckGlyph />
               ) : (
                 <span className="dna-num">{i + 1}</span>

@@ -12,3 +12,18 @@ export function useDnaStepStateText(): Record<DnaStepState, string> {
     blocked: t("ui.stepBlocked"),
   };
 }
+
+/**
+ * Screen-reader words for flows whose stations are only an estimate (no server progress feed):
+ * a station that has "passed" is never announced as completed.
+ */
+export function useDnaEstimatedStepStateText(): Record<DnaStepState, string> {
+  const { t } = useI18n();
+  return {
+    done: t("ui.stepEstDone"),
+    current: t("ui.stepEstCurrent"),
+    pending: t("ui.stepEstPending"),
+    returned: t("ui.stepReturned"),
+    blocked: t("ui.stepBlocked"),
+  };
+}

@@ -1030,6 +1030,12 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
 .dna-steps[data-journey] .dna-ok { background: var(--journey-fill); }
 .dna-steps[data-journey] .dna-lbl { transition: color 0.4s var(--dna-ease); }
 .dna-steps[data-journey] .dna-stepi[data-state='pending'] .dna-lbl { opacity: 0.75; }
+/* Estimated flow: a passed station is a soft ring with its number, never a solid "completed" check. */
+.dna-steps[data-estimated] .dna-stepi[data-state='done'] .dna-node {
+  background: var(--accent-soft);
+  color: var(--journey-ink);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--journey-fill) 60%, transparent);
+}
 /* "Returned" must not read as the gold current station: use the danger tone in journey mode. */
 .dna-steps[data-journey] .dna-stepi[data-state='returned'] .dna-node { background: var(--dna-danger-soft); color: var(--dna-danger); box-shadow: inset 0 0 0 1.5px var(--dna-danger); }
 .dna-steps[data-journey] .dna-stepi[data-state='returned'] .dna-lbl { color: var(--dna-danger); }

@@ -57,6 +57,13 @@ export function journeyThreshold(threshold: number, elementHeight: number, viewp
   return Math.max(0.05, Math.min(threshold, (0.9 * viewportHeight) / elementHeight));
 }
 
+/** What the ticker does next: light the next station, keep the last halo then settle, or wait. */
+export function journeyNext(started: boolean, lit: number | null, target: number, hold: boolean): "idle" | "advance" | "settle" | "park" {
+  if (!started || lit === null) return "idle";
+  if (lit < target) return "advance";
+  return hold ? "park" : "settle";
+}
+
 export function journeyPlayed(playKey?: string): boolean {
   if (!playKey) return false;
   if (PLAYED.has(playKey)) return true;
@@ -162,14 +169,15 @@ export function useJourneyReveal<T extends Element = HTMLElement>({
   // Ticker: always converges to the real state. While behind the target (also when the target grows
   // mid-intro) light the next station; once level, keep the last halo a moment, then settle to null.
   useEffect(() => {
-    if (!started || lit === null) return;
-    if (lit < target) {
+    const next = journeyNext(started, lit, target, hold);
+    if (next === "advance") {
       const id = setTimeout(() => setLit((n) => (n === null ? n : journeyAdvance(n, targetRef.current))), ms);
       return () => clearTimeout(id);
     }
-    if (hold) return;
-    const id = setTimeout(() => setLit(null), SETTLE_MS);
-    return () => clearTimeout(id);
+    if (next === "settle") {
+      const id = setTimeout(() => setLit(null), SETTLE_MS);
+      return () => clearTimeout(id);
+    }
   }, [started, lit, target, hold, ms]);
 
   return { ref: setRef, lit };

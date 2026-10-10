@@ -184,7 +184,7 @@ export function LearnStudio() {
         </CardContent>
       </Card>
 
-      <JourneyFlow ariaLabel={t("learn.trainingJourney")} items={[
+      <JourneyFlow ariaLabel={t("learn.trainingJourney")} playKey="learn:flow" items={[
         { key: "paste", icon: CheckCircle2, title: t("learn.flowPaste") },
         { key: "hint", icon: CheckCircle2, title: t("learn.flowHint") },
         { key: "understand", icon: CheckCircle2, title: t("learn.flowUnderstand") },

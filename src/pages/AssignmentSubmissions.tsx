@@ -424,6 +424,7 @@ function GradingSteps({ id, status }: { id: string; status: CourseSubmissionReco
   ].map((step, index) => ({
     ...step,
     icon: index < at || (status === "released" && index === at) ? undefined : step.icon,
+    introIcon: step.icon,
     state: (status === "returned" && index === 1
       ? "returned"
       : index < at || (status === "released" && index === at)

@@ -6,6 +6,7 @@ import {
   journeyPlayed,
   journeyAdvance,
   journeyHasTarget,
+  journeyNext,
   journeyReached,
   journeyStepMs,
   journeyThreshold,
@@ -137,4 +138,82 @@ test('journey: survives a StrictMode setup -> cleanup -> setup cycle (played is 
   const setup = src.slice(src.indexOf('useIsoLayoutEffect(() => {'), src.indexOf('const io = new IntersectionObserver'));
   assert.doesNotMatch(setup, /markJourneyPlayed|armed/);
   assert.doesNotMatch(src, /armed\.current/);
+});
+
+test('journey: ticker plan (advance until the real target, then settle, hold parks, idle before start/after settle)', () => {
+  assert.equal(journeyNext(false, 0, 3, false), 'idle');
+  assert.equal(journeyNext(true, null, 3, false), 'idle');
+  assert.equal(journeyNext(true, 1, 3, false), 'advance');
+  assert.equal(journeyNext(true, 3, 3, false), 'settle');
+  assert.equal(journeyNext(true, 3, 3, true), 'park');
+  // the target grows mid-intro: it advances again instead of settling behind the real state
+  assert.equal(journeyNext(true, 2, 4, false), 'advance');
+});
+
+test('journey: no deliverables yet means no target, so the intro is not spent on an empty grid', () => {
+  assert.equal(journeyHasTarget(0), false);
+  assert.equal(journeyHasTarget(1), true);
+});
+
+test('estimated flow wording exists in all 8 locales, is never "completed", and differs from the live wording', async () => {
+  const src = await readFile(new URL('../src/lib/i18n-messages.ts', import.meta.url), 'utf8');
+  for (const key of ['ui.stepEstDone', 'ui.stepEstCurrent', 'ui.stepEstPending']) {
+    const line = src.split('\n').find((l) => l.includes(`"${key}"`));
+    assert.ok(line, key);
+    const args = [...line!.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]).slice(1);
+    assert.equal(args.length, 8, `${key} has 8 locale strings`);
+    assert.equal(new Set(args).size, 8, `${key} strings are all different`);
+    args.forEach((a) => assert.ok(a.length > 3, `${key}: ${a}`));
+  }
+  const done = src.split('\n').find((l) => l.includes('"ui.stepEstDone"'))!;
+  const live = src.split('\n').find((l) => l.includes('"ui.stepDone"'))!;
+  assert.notEqual(done, live);
+  const writer = await readFile(new URL('../src/components/project/ProjectWriterStudio.tsx', import.meta.url), 'utf8');
+  assert.match(writer, /useDnaEstimatedStepStateText\(\)/);
+  assert.match(writer, /<DnaStepper journey estimated /);
+});
+
+test('journey: landing and Learn Studio walkthroughs are remembered per session (SPA remounts do not replay)', async () => {
+  const home = await readFile(new URL('../src/pages/PublicHome.tsx', import.meta.url), 'utf8');
+  const learn = await readFile(new URL('../src/pages/LearnStudio.tsx', import.meta.url), 'utf8');
+  assert.match(home, /<JourneyFlow className="mt-12" playKey="landing:how"/);
+  assert.match(learn, /<JourneyFlow [^>]*playKey="learn:flow"/);
+});
+
+test('journey: deliverables intro targets the furthest really reached station and arms only once cards exist', async () => {
+  const ws = await readFile(new URL('../src/pages/ProjectWorkspace.tsx', import.meta.url), 'utf8');
+  assert.match(ws, /const target = project\.deliverables\.reduce\(/);
+  assert.match(ws, /useJourneyReveal<HTMLDivElement>\(\{ target, count: DELIVERABLE_FLOW\.length/);
+});
+
+// Runtime (server render): the no-JS / first-paint output is the complete, truthful final state.
+test('runtime: DnaStepper reveal and JourneyFlow render the complete real state on first (server) render', async () => {
+  const { register } = await import('node:module');
+  register(new URL('./helpers/css-stub-loader.mjs', import.meta.url));
+  const React = await import('react');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { DnaStepper } = await import('../src/components/dna/DnaKit');
+  const { JourneyFlow } = await import('../src/components/dna/JourneyFlow');
+  const steps = [
+    { key: 'a', label: 'A', state: 'done' as const, introIcon: React.createElement('i', { 'data-intro': 'a' }) },
+    { key: 'b', label: 'B', state: 'current' as const },
+    { key: 'c', label: 'C', state: 'pending' as const },
+  ];
+  const html = renderToStaticMarkup(React.createElement(DnaStepper, { steps, reveal: true, playKey: 'ssr-1', stateText: { done: 'DONE', current: 'CUR', pending: 'PEND' } }));
+  assert.match(html, /data-reveal="done"/);
+  assert.equal((html.match(/data-state="done"/g) ?? []).length, 1);
+  assert.equal((html.match(/data-state="pending"/g) ?? []).length, 1);
+  assert.equal((html.match(/aria-current="step"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /data-just/);
+  assert.match(html, /DONE/);
+  assert.match(html, /CUR/);
+  // estimated flow: no completed check glyph for a passed station
+  const est = renderToStaticMarkup(React.createElement(DnaStepper, { steps, journey: true, estimated: true, stateText: { done: 'EST-PASSED', current: 'EST-CUR', pending: 'EST-NEXT' } }));
+  assert.match(est, /data-estimated/);
+  assert.doesNotMatch(est, /<svg/);
+  assert.match(est, /EST-PASSED/);
+  assert.doesNotMatch(est, /DONE/);
+  const flow = renderToStaticMarkup(React.createElement(JourneyFlow, { items: [1, 2, 3].map((n) => ({ key: String(n), icon: () => null, title: 'T' + n })) }));
+  assert.match(flow, /data-reveal="done"/);
+  assert.equal((flow.match(/data-lit/g) ?? []).length, 3);
 });

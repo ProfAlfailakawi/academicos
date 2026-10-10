@@ -103,3 +103,16 @@ test('journey: a 1px sliver does not start the intro; the attainable threshold d
   assert.equal(journeyReached(0.01, eff), false);
   assert.equal(journeyReached(eff, eff), true);
 });
+
+test('journey: remembered/settled reveal steppers render a static ring (halo only on the station the hook just lit)', async () => {
+  const css = await readFile(new URL('../src/components/dna/dna.css', import.meta.url), 'utf8');
+  const kit = await readFile(new URL('../src/components/dna/DnaKit.tsx', import.meta.url), 'utf8');
+  // the one-shot halo keyframe is referenced only from the data-just rule
+  const uses = css.split('\n').filter((l) => l.includes('animation: dna-journey-halo'));
+  assert.equal(uses.length, 1);
+  assert.match(css, /\[data-just\] \.dna-node::after \{[^}]*animation: dna-journey-halo/s);
+  // reveal and externally-driven steppers always carry data-reveal (also when settled/remembered),
+  // so the base halo is off and the infinite journey pulse (":not([data-reveal])") never applies to them
+  assert.match(kit, /data-reveal=\{journeyMode && \(reveal \|\| controlled\) \? \(lit \?\? 'done'\) : undefined\}/);
+  assert.match(kit, /data-just=\{lit !== null && i === lit - 1/);
+});

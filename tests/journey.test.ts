@@ -127,3 +127,14 @@ test('journey: re-arming is keyed on playKey (old observer/timer/lit are torn do
   // the played key is recorded by the observer that belongs to the current effect run only
   assert.match(src, /markJourneyPlayed\(playKey\);\n\s+setStarted\(true\)/);
 });
+
+test('journey: survives a StrictMode setup -> cleanup -> setup cycle (played is marked only when playback starts)', async () => {
+  const src = await readFile(new URL('../src/components/dna/useJourneyReveal.ts', import.meta.url), 'utf8');
+  const main = await readFile(new URL('../src/main.tsx', import.meta.url), 'utf8');
+  assert.match(main, /<StrictMode>/);
+  // exactly one mark, inside the observer callback (after the ratio check), never in setup/cleanup
+  assert.equal(src.split('markJourneyPlayed(playKey)').length - 1, 1);
+  const setup = src.slice(src.indexOf('useIsoLayoutEffect(() => {'), src.indexOf('const io = new IntersectionObserver'));
+  assert.doesNotMatch(setup, /markJourneyPlayed|armed/);
+  assert.doesNotMatch(src, /armed\.current/);
+});

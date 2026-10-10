@@ -268,14 +268,14 @@ export function Settings() {
             <p className="body-copy mt-3">{t("settings.languageNote")}</p>
             <fieldset className="mt-4">
               <legend className="text-xs font-semibold">{t("settings.numerals")}</legend>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="numerals-grid grid grid-cols-3 gap-2 mt-2">
                 {(["auto", "latn", "arab"] as const).map((style) => (
                   <button
                     key={style}
                     type="button"
                     aria-pressed={numerals === style}
                     onClick={() => setNumerals(style)}
-                    className={`focus-ring rounded-xl border hairline px-1.5 py-2 min-h-11 whitespace-nowrap text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
+                    className={`numerals-btn focus-ring rounded-xl border hairline px-1.5 py-2 min-h-11 whitespace-nowrap text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
                   >
                     {t(`settings.numerals.${style}`)}
                   </button>

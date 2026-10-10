@@ -6,6 +6,7 @@
  */
 import * as React from 'react';
 import './dna.css';
+import { journeyDisplayState, journeyStepMs, journeyTarget, useJourneyReveal } from './useJourneyReveal';
 
 export type DnaTone =
   | 'accent'
@@ -121,33 +122,86 @@ export interface DnaStepperProps {
   ariaLabel?: string;
   stateText?: Partial<Record<DnaStepState, string>>;
   className?: string;
+  /**
+   * Journey mode: stations light one after another when the stepper scrolls into view
+   * (plays once, then settles). `steps[].state` stays the truth: the intro only reveals
+   * stations that are already really lit. Off by default (no behaviour change).
+   */
+  reveal?: boolean;
+  /** Entity id: the same entity does not replay its intro within the session. */
+  playKey?: string;
+  /** Keep the intro from settling while true. */
+  hold?: boolean;
+  /** Milliseconds per station (default derived from the step count, ~4s in total). */
+  stepMs?: number;
+  /** Journey styling (gold fill, directional connector) without any intro. */
+  journey?: boolean;
+  /** Externally driven intro position (shared observer for lists); overrides `reveal`. */
+  lit?: number | null;
 }
 
-export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className }: DnaStepperProps) {
+export function DnaStepper({
+  steps,
+  size = 'md',
+  showLabels = true,
+  ariaLabel,
+  stateText,
+  className,
+  reveal = false,
+  playKey,
+  hold,
+  stepMs,
+  journey = false,
+  lit: litProp,
+}: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
+  const controlled = litProp !== undefined;
+  const own = useJourneyReveal<HTMLOListElement>({
+    target: journeyTarget(steps.map((s) => s.state)),
+    count: steps.length,
+    stepMs,
+    hold,
+    playKey,
+    enabled: reveal && !controlled,
+  });
+  const lit = controlled ? litProp : own.lit;
+  const journeyMode = reveal || journey || controlled;
+  const ms = stepMs ?? journeyStepMs(steps.length);
+  const shown = steps.map((s, i) => journeyDisplayState(s.state, i, lit));
   return (
-    <ol className={cx('dna', 'dna-steps', className)} data-size={size} aria-label={ariaLabel}>
+    <ol
+      ref={own.ref}
+      className={cx('dna', 'dna-steps', className)}
+      data-size={size}
+      data-journey={journeyMode ? '' : undefined}
+      data-reveal={journeyMode && (reveal || controlled) ? (lit ?? 'done') : undefined}
+      style={journeyMode ? ({ '--journey-ms': `${ms}ms` } as React.CSSProperties) : undefined}
+      aria-label={ariaLabel}
+    >
       {steps.map((step, i) => {
-        const prev = i > 0 ? steps[i - 1] : null;
-        const link = !prev ? 'none' : step.state === 'returned' ? 'returned' : prev.state === 'done' ? 'done' : 'pending';
-        const stamped = Boolean(step.stamp) && step.state === 'done';
+        const state = shown[i];
+        const prev = i > 0 ? shown[i - 1] : null;
+        const link = !prev ? 'none' : state === 'returned' ? 'returned' : prev === 'done' ? 'done' : 'pending';
+        const stamped = Boolean(step.stamp) && state === 'done';
         return (
           <li
             key={step.key}
             className="dna-stepi"
-            data-state={step.state}
+            data-state={state}
             data-link={link}
             data-stamp={stamped ? 'true' : undefined}
+            data-lit={lit !== null && i < lit && state !== 'pending' ? '' : undefined}
+            data-just={lit !== null && i === lit - 1 && state !== 'pending' ? '' : undefined}
             aria-current={step.state === 'current' ? 'step' : undefined}
             title={step.title ?? (size === 'xs' && typeof step.label === 'string' ? step.label : undefined)}
           >
             <span className="dna-node" aria-hidden="true">
               {stamped ? (
                 <span className="dna-stamp">{step.stamp}</span>
-              ) : step.icon ? (
+              ) : step.icon && !(state === 'done' && step.state !== 'done') ? (
                 step.icon
-              ) : step.state === 'done' ? (
+              ) : state === 'done' ? (
                 <CheckGlyph />
               ) : (
                 <span className="dna-num">{i + 1}</span>

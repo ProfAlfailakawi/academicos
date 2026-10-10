@@ -224,7 +224,7 @@ export function AssignmentSubmissions() {
                     />
                   )}
                 </div>
-                <GradingSteps status={current.status} />
+                <GradingSteps id={current.id} status={current.status} />
                 {immutable && (
                   <div
                     role="status"
@@ -411,7 +411,7 @@ function Status({ status }: { status: CourseSubmissionRecord["status"] }) {
     </span>
   );
 }
-function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) {
+function GradingSteps({ id, status }: { id: string; status: CourseSubmissionRecord["status"] }) {
   const { t } = useI18n();
   const stateText = useDnaStepStateText();
   const order = ["submitted", "grading", "graded", "released"] as const;
@@ -432,7 +432,7 @@ function GradingSteps({ status }: { status: CourseSubmissionRecord["status"] }) 
           ? "current"
           : "pending") as DnaStepState,
   }));
-  return <DnaStepper className="mt-4" size="sm" stateText={stateText} steps={steps} ariaLabel={steps.map((step) => step.label).join(" · ")} />;
+  return <DnaStepper className="mt-4" size="sm" reveal playKey={`grading:${id}`} stateText={stateText} steps={steps} ariaLabel={steps.map((step) => step.label).join(" · ")} />;
 }
 function Mini({ label, value }: { label: string; value: number }) {
   return (

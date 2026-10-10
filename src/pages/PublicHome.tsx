@@ -10,6 +10,7 @@ import { Logo } from "../components/brand/Logo";
 import { HeroJourney } from "../components/brand/HeroJourney";
 import { HeroConstellation, useHeroEntrance } from "../components/brand/HeroEntrance";
 import { Overture, useOverture } from "../components/brand/Overture";
+import { JourneyFlow } from "../components/dna/JourneyFlow";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
@@ -59,7 +60,12 @@ export function PublicHome() {
         <section id="how" className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto"><div className="eyebrow brand-text">{t("landing.chooseGoal")}</div><h2 className="text-3xl md:text-5xl font-black tracking-[-.045em] mt-3">{t("landing.threeDoors")}</h2></div>
           <div className="journey-grid mt-10">{journey.map((item) => <Journey key={item.title} {...item} />)}</div>
-          <FlowWalkthrough><Flow icon={UploadCloud} n="1" title={t("landing.flowUpload")} text={t("landing.flowUploadText")} /><Flow icon={FilePenLine} n="2" title={t("landing.flowBuild")} text={t("landing.flowBuildText")} /><Flow icon={FileSearch} n="3" title={t("landing.flowCheck")} text={t("landing.flowCheckText")} /><Flow icon={MessageCircleQuestion} n="4" title={t("landing.flowDefend")} text={t("landing.flowDefendText")} /></FlowWalkthrough>
+          <JourneyFlow className="mt-12" items={[
+            { key: "upload", icon: UploadCloud, title: t("landing.flowUpload"), text: t("landing.flowUploadText") },
+            { key: "build", icon: FilePenLine, title: t("landing.flowBuild"), text: t("landing.flowBuildText") },
+            { key: "check", icon: FileSearch, title: t("landing.flowCheck"), text: t("landing.flowCheckText") },
+            { key: "defend", icon: MessageCircleQuestion, title: t("landing.flowDefend"), text: t("landing.flowDefendText") },
+          ]} />
         </section>
 
         <section className="public-xray-section border-y hairline">
@@ -100,17 +106,4 @@ export function PublicHome() {
 
 function Proof({ icon: Icon, label }: { icon: React.ElementType; label: string }) { return <div className="proof-mini"><Icon size={17} /><span>{label}</span></div>; }
 function Journey({ icon: Icon, title, text, to, tone }: { icon: React.ElementType; title: string; text: string; to: string; tone: string }) { return <Link to={to} className={`journey-card journey-card--${tone} focus-ring`}><span className="journey-card__icon"><Icon size={32} /></span><div><h3>{title}</h3><p>{text}</p></div><ArrowRight size={20} className="journey-card__arrow directional-icon" /></Link>; }
-function FlowWalkthrough({ children }: { children: React.ReactNode }) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [playing, setPlaying] = React.useState(false);
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([e]) => setPlaying(e.isIntersecting), { threshold: 0.4 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return <div ref={ref} className={`understanding-flow understanding-flow--play mt-12${playing ? " is-playing" : ""}`}><span className="understanding-flow__track" aria-hidden="true"><i /></span>{children}</div>;
-}
-function Flow({ icon: Icon, n, title, text }: { icon: React.ElementType; n: string; title: string; text: string }) { return <div className="understanding-step"><span className="understanding-step__number">{n}</span><Icon size={23} /><strong>{title}</strong><small>{text}</small></div>; }
 function Score({ value, label }: { value: string; label: string }) { return <div className="xray-score" style={{ ["--xray-score" as string]: value } as React.CSSProperties}><strong>{value}</strong><span>{label}</span></div>; }

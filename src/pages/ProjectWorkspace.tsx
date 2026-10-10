@@ -37,7 +37,7 @@ import { api } from "../lib/api";
 import type { ProjectDNA, ProjectTask, ProjectWriterRequest, RescuePlan, SubmissionAudit } from "../types";
 import { Button } from "../components/ui/button";
 import { MiniBar, ProgressRing, SeverityDot, type Tone } from "../components/Infographics";
-import { FoldText, LevelMeter, StackedBar, StepTrack } from "../components/VisualBits";
+import { FoldText, LevelMeter, StackedBar } from "../components/VisualBits";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { DialogShell } from "../components/AppDialog";
@@ -76,7 +76,9 @@ import {
   ArrowRightLeft,
   Layers,
 } from "lucide-react";
-import { DnaRing, DnaStatusHeader } from "../components/dna/DnaKit";
+import { DnaRing, DnaStatusHeader, DnaStepper, type DnaStep } from "../components/dna/DnaKit";
+import { useDnaStepStateText } from "../components/dna/useDnaStepStateText";
+import { useJourneyReveal } from "../components/dna/useJourneyReveal";
 
 const tabs = [
   ["copilot", "pw.tabCopilot", Bot],
@@ -816,6 +818,12 @@ function Tasks({
 
 const DELIVERABLE_FLOW = ["pending", "in_progress", "ready", "completed"];
 
+/** Truth for one card: stations before the status are done; the status station is current (completed = all done). */
+function deliverableSteps(status: string, labels: string[]): DnaStep[] {
+  const index = Math.max(0, DELIVERABLE_FLOW.indexOf(status));
+  return labels.map((label, i) => ({ key: DELIVERABLE_FLOW[i], label, state: status === "completed" || i < index ? "done" : i === index ? "current" : "pending" }));
+}
+
 function Deliverables({
   project,
   onChange,
@@ -824,8 +832,12 @@ function Deliverables({
   onChange: (id: string, s: string) => void;
 }) {
   const { t } = useI18n();
+  const stateText = useDnaStepStateText();
+  // One observer + one short timer for the whole list: every card lights up to its own real status together.
+  const { ref, lit } = useJourneyReveal<HTMLDivElement>({ target: DELIVERABLE_FLOW.length, count: DELIVERABLE_FLOW.length, stepMs: 350, threshold: 0.2, playKey: `deliverables:${project.id}` });
+  const labels = [t("pw.pending"), t("pw.inProgress"), t("pw.readyForSubmit"), t("pw.submittedArchived")];
   return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
+    <div ref={ref} className="grid md:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
       {project.deliverables.map((d) => (
         <Card key={d.id}>
           <CardContent className="h-full flex flex-col">
@@ -838,11 +850,7 @@ function Deliverables({
             <h2 className="section-title mt-5">{d.title}</h2>
             <p className="body-copy mt-2">{t("pw.format")}: {d.format}</p>
             <div className="mt-4">
-              <StepTrack
-                ariaLabel={d.title}
-                index={Math.max(0, DELIVERABLE_FLOW.indexOf(d.status))}
-                steps={[t("pw.pending"), t("pw.inProgress"), t("pw.readyForSubmit"), t("pw.submittedArchived")]}
-              />
+              <DnaStepper size="xs" lit={lit} stateText={stateText} ariaLabel={d.title} steps={deliverableSteps(d.status, labels)} />
             </div>
             {d.validationRules?.length ? (
               <ul className="mt-4 space-y-1.5 text-xs muted">

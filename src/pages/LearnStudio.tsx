@@ -1,3 +1,4 @@
+import { JourneyFlow } from "../components/dna/JourneyFlow";
 import { localizedUiError } from "../lib/ui-error";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
@@ -183,9 +184,12 @@ export function LearnStudio() {
         </CardContent>
       </Card>
 
-      <div className="understanding-flow" aria-label={t("learn.trainingJourney")}>
-        {[t("learn.flowPaste"), t("learn.flowHint"), t("learn.flowUnderstand"), t("learn.flowLock")].map((label, index) => <div key={label} className="understanding-step"><span>{index + 1}</span><CheckCircle2 size={20} /><strong>{label}</strong></div>)}
-      </div>
+      <JourneyFlow ariaLabel={t("learn.trainingJourney")} items={[
+        { key: "paste", icon: CheckCircle2, title: t("learn.flowPaste") },
+        { key: "hint", icon: CheckCircle2, title: t("learn.flowHint") },
+        { key: "understand", icon: CheckCircle2, title: t("learn.flowUnderstand") },
+        { key: "lock", icon: CheckCircle2, title: t("learn.flowLock") },
+      ]} />
 
       <div className="flex gap-2">
         {(["explain", "solve"] as Tab[]).map((x) => (

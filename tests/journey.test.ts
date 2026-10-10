@@ -4,7 +4,11 @@ import { readFile } from 'node:fs/promises';
 import {
   journeyDisplayState,
   journeyPlayed,
+  journeyAdvance,
+  journeyHasTarget,
+  journeyReached,
   journeyStepMs,
+  journeyThreshold,
   journeyTarget,
   markJourneyPlayed,
   resetJourneyPlayed,
@@ -55,4 +59,47 @@ test('journey: stylesheet fills the connector in the reading direction and never
   assert.match(css, /dna-journey-halo 1\.4s var\(--dna-ease\) 1 both/);
   assert.match(css, /\.dna-steps\[data-reveal\] \.dna-stepi\[data-state='current'\] \.dna-node \{ animation: none; \}/);
   assert.match(css, /--journey-fill: var\(--accent\)/);
+});
+
+test('journey: threshold is always attainable (tall element in a short viewport still fires)', () => {
+  assert.equal(journeyThreshold(0.4, 300, 800), 0.4);
+  // 1000px tall flow in a 500px viewport can never be 40% visible: 0.9*500/1000 = 0.45 -> still 0.4
+  assert.equal(journeyThreshold(0.5, 1000, 500), 0.45);
+  const t = journeyThreshold(0.5, 2000, 500);
+  assert.ok(t <= (0.9 * 500) / 2000 + 1e-9 && t >= 0.05);
+  assert.equal(journeyThreshold(0.5, 100000, 500), 0.05);
+  assert.equal(journeyThreshold(0.5, 0, 500), 0.5);
+});
+
+test('journey: the intro arms when stations arrive later (async data), not only on first render', () => {
+  assert.equal(journeyHasTarget(journeyTarget(['pending', 'pending'])), false);
+  assert.equal(journeyHasTarget(journeyTarget(['done', 'current', 'pending'])), true);
+});
+
+test('journey: reveal mode never leaves the base infinite halo running (no second halo after settle)', async () => {
+  const css = await readFile(new URL('../src/components/dna/dna.css', import.meta.url), 'utf8');
+  assert.match(css, /\.dna-steps\[data-reveal\] \.dna-stepi\[data-state='current'\] \.dna-node \{ animation: none; \}/);
+  // the gold pulse exists only for journey steppers WITHOUT reveal
+  assert.match(css, /\.dna-steps\[data-journey\]:not\(\[data-reveal\]\) \.dna-stepi\[data-state='current'\] \.dna-node \{ animation-name: dna-journey-pulse; \}/);
+});
+
+test('journey: the ticker converges to the (possibly growing) real target and then settles', () => {
+  // GradingSteps mounts at submitted (target 1), then the status moves to grading (target 2) mid-intro
+  let lit = 1;
+  let target = 1;
+  assert.equal(journeyAdvance(lit, target), 1);
+  target = 2;
+  let guard = 0;
+  while (lit < target && guard++ < 10) lit = journeyAdvance(lit, target);
+  assert.equal(lit, 2); // caught up, the effect then schedules the settle (never parked behind the real state)
+  assert.equal(journeyAdvance(5, 3), 3);
+  assert.equal(journeyAdvance(0, 0), 0);
+});
+
+test('journey: a 1px sliver does not start the intro; the attainable threshold does', () => {
+  assert.equal(journeyReached(0.01, 0.4), false);
+  assert.equal(journeyReached(0.4, 0.4), true);
+  const eff = journeyThreshold(0.4, 1000, 500); // tall mobile flow on a short viewport
+  assert.equal(journeyReached(0.01, eff), false);
+  assert.equal(journeyReached(eff, eff), true);
 });

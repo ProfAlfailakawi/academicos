@@ -33,6 +33,30 @@ export function journeyDisplayState(real: DnaStepState, index: number, lit: numb
   return lit === null || index < lit ? real : "pending";
 }
 
+/** One tick of the intro: light the next station, never past the real target. */
+export function journeyAdvance(lit: number, target: number): number {
+  return Math.min(lit + 1, Math.max(target, 0));
+}
+
+/** An observer entry counts only when it reaches the (attainable) threshold, not on a 1px sliver. */
+export function journeyReached(ratio: number, threshold: number): boolean {
+  return ratio >= threshold - 0.01;
+}
+
+/** The intro can only be armed once at least one station is really lit (data may load async). */
+export function journeyHasTarget(target: number): boolean {
+  return target > 0;
+}
+
+/**
+ * A threshold the element can actually reach: an element taller than the viewport can never be
+ * `threshold` visible, so its observer callback would never fire and the stations would stay hidden.
+ */
+export function journeyThreshold(threshold: number, elementHeight: number, viewportHeight: number): number {
+  if (!(elementHeight > 0) || !(viewportHeight > 0)) return threshold;
+  return Math.max(0.05, Math.min(threshold, (0.9 * viewportHeight) / elementHeight));
+}
+
 export function journeyPlayed(playKey?: string): boolean {
   if (!playKey) return false;
   if (PLAYED.has(playKey)) return true;
@@ -97,57 +121,56 @@ export function useJourneyReveal<T extends Element = HTMLElement>({
   const holdRef = useRef(hold);
   holdRef.current = hold;
   const ms = stepMs ?? journeyStepMs(count);
-  const armed = useRef(false);
-
+  
   // Callback ref so a stepper that mounts later (conditional render) still gets observed.
   const setRef = useCallback((node: T | null) => {
     ref.current = node;
   }, []);
 
+  const hasTarget = journeyHasTarget(target);
+  const [started, setStarted] = useState(false);
+
   useIsoLayoutEffect(() => {
-    if (!enabled || typeof IntersectionObserver === "undefined" || prefersReducedMotion() || journeyPlayed(playKey)) return;
+    // Nothing is lit yet (async data): stay on the real, all-pending state and arm when stations arrive.
+    if (!hasTarget || !enabled || typeof IntersectionObserver === "undefined" || prefersReducedMotion() || journeyPlayed(playKey)) return;
     const el = ref.current;
     if (!el) return;
     setLit(0); // before paint: no flash of the final state
-    let timer: ReturnType<typeof setInterval> | undefined;
+    const effective = journeyThreshold(threshold, el.getBoundingClientRect().height, window.innerHeight);
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
+        // The observer also queues an initial entry with whatever sliver is visible: require the (attainable) ratio.
+        if (!entries.some((e) => e.isIntersecting && journeyReached(e.intersectionRatio, effective))) return;
+        if (targetRef.current <= 0) return; // data went away again: keep observing, do not spend the intro
         io.disconnect();
-        armed.current = true;
         markJourneyPlayed(playKey);
-        if (targetRef.current <= 0) {
-          setLit(null);
-          return;
-        }
-        let n = 1;
+        setStarted(true);
         setLit(1);
-        if (targetRef.current <= 1) return;
-        timer = setInterval(() => {
-          n += 1;
-          setLit(Math.min(n, targetRef.current));
-          if (n >= targetRef.current) clearInterval(timer);
-        }, ms);
       },
-      { threshold },
+      { threshold: effective },
     );
     io.observe(el);
     return () => {
       io.disconnect();
-      if (timer) clearInterval(timer);
-      armed.current = false;
+      setStarted(false);
       setLit(null); // never leave stations hidden
     };
-    // Armed once per entity; later prop changes are read through refs.
+    // Armed once per entity; later prop changes are handled by the ticker below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, playKey]);
+  }, [enabled, playKey, hasTarget]);
 
-  // After the last lit station arrives, keep its halo for a moment, then settle to real states.
+  // Ticker: always converges to the real state. While behind the target (also when the target grows
+  // mid-intro) light the next station; once level, keep the last halo a moment, then settle to null.
   useEffect(() => {
-    if (lit === null || lit < 1 || lit < target || hold || !armed.current) return;
+    if (!started || lit === null) return;
+    if (lit < target) {
+      const id = setTimeout(() => setLit((n) => (n === null ? n : journeyAdvance(n, targetRef.current))), ms);
+      return () => clearTimeout(id);
+    }
+    if (hold) return;
     const id = setTimeout(() => setLit(null), SETTLE_MS);
     return () => clearTimeout(id);
-  }, [lit, target, hold]);
+  }, [started, lit, target, hold, ms]);
 
   return { ref: setRef, lit };
 }

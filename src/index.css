@@ -1005,7 +1005,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .mobile-cards--duo td[data-label] { min-width: 0; }
   .mobile-cards--duo td[data-label] > select.field { width: 100%; min-width: 0; }
 }
-@media (max-width: 379px) {
+@media (max-width: 479px) {
   .mobile-cards--duo td.users-role-cell { grid-column: 1 / -1; }
 }
 @media (max-width: 1023px) {
@@ -1170,3 +1170,23 @@ button.brand-bg:disabled,
 .hero-depth { background-image: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--brand) 4%, var(--panel)), var(--panel)); box-shadow: var(--shadow-sm); }
 .app-main .brain-stat { min-width: 0; }
 .brain-stat { padding-inline: .375rem; } .brain-stat > :last-child { font-size: .6875rem; }
+
+/* --- Round 2: small-screen fixes found in the route sweep ------------------ */
+/* Settings: digit-style choices wrapped instead of colliding at 393. */
+.numerals-btn { text-align: center; }
+@media (max-width: 479px) { .numerals-grid { grid-template-columns: 1fr; } }
+/* Jobs: progress and cancel wrap together; stage tiles read as rows on phones. */
+.job-progress-row { flex-wrap: wrap; }
+.job-progress { flex: 1 1 10rem; min-width: 0; }
+@media (max-width: 639px) {
+  .job-stage-grid { grid-template-columns: 1fr; }
+  .job-stage { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .job-stage > div { min-width: 0; }
+  .job-stage > div + div { margin-top: 0; flex: none; }
+}
+/* Search: on phones the decorative icon yields its space so the placeholder is not cut. */
+@media (max-width: 479px) { .search-form { gap: .5rem; } .search-icon { display: none; } .search-input::placeholder { font-size: .75rem; } }
+.search-input { text-overflow: ellipsis; }
+/* Public pages: icon tile with a soft gradient and lift. */
+.public-page .tone-tile { background-image: linear-gradient(145deg, rgba(255,255,255,.7), color-mix(in srgb, var(--brand) 14%, transparent)); box-shadow: 0 6px 14px color-mix(in srgb, var(--brand) 12%, transparent), inset 0 1px 0 rgba(255,255,255,.6); }
+.dark .public-page .tone-tile { background-image: linear-gradient(145deg, rgba(255,255,255,.1), rgba(255,255,255,.02)); box-shadow: none; }

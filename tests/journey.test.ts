@@ -116,3 +116,14 @@ test('journey: remembered/settled reveal steppers render a static ring (halo onl
   assert.match(kit, /data-reveal=\{journeyMode && \(reveal \|\| controlled\) \? \(lit \?\? 'done'\) : undefined\}/);
   assert.match(kit, /data-just=\{lit !== null && i === lit - 1/);
 });
+
+test('journey: re-arming is keyed on playKey (old observer/timer/lit are torn down when the entity changes)', async () => {
+  const src = await readFile(new URL('../src/components/dna/useJourneyReveal.ts', import.meta.url), 'utf8');
+  assert.match(src, /\}, \[enabled, playKey, hasTarget\]\);/);
+  const cleanup = src.slice(src.indexOf('return () => {\n      io.disconnect();'), src.indexOf('// Armed once per entity'));
+  assert.match(cleanup, /io\.disconnect\(\)/);
+  assert.match(cleanup, /setStarted\(false\)/);
+  assert.match(cleanup, /setLit\(null\)/);
+  // the played key is recorded by the observer that belongs to the current effect run only
+  assert.match(src, /markJourneyPlayed\(playKey\);\n\s+setStarted\(true\)/);
+});

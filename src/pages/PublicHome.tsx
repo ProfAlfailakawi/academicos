@@ -99,7 +99,7 @@ export function PublicHome() {
         </section>
       </main>
 
-      <footer className="px-4 md:px-8 py-8"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — {t("landing.footerTag")}</span><span className="flex flex-wrap gap-x-4"><Link className="min-h-11 inline-flex items-center" to="/p/academic-integrity">{t("landing.integrity")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/privacy">{t("landing.privacy")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/terms">{t("landing.terms")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/faq">{t("landing.faq")}</Link></span></div></footer>
+      <footer className="px-4 md:px-8 pt-8 pb-[max(2rem,env(safe-area-inset-bottom))]"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — {t("landing.footerTag")}</span><span className="flex flex-wrap gap-x-2"><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/academic-integrity">{t("landing.integrity")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/privacy">{t("landing.privacy")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/terms">{t("landing.terms")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/faq">{t("landing.faq")}</Link></span></div></footer>
     </div>
   );
 }

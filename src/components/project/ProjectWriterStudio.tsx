@@ -93,6 +93,19 @@ export function ProjectWriterStudio({
   const [feedback, setFeedback] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const requestedOnce = useRef(false);
+  /* المحرر ينمو مع النص بدل كتلة بيضاء فارغة. */
+  const canvasRef = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const fit = () => {
+      const el = canvasRef.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight + 2}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [draft]);
 
   useEffect(() => {
     let active = true;
@@ -451,11 +464,12 @@ export function ProjectWriterStudio({
                 ))}
               </div>
               <textarea
+                ref={canvasRef}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 dir="auto"
                 aria-label={t("writer.sectionContentAria").replace("{section}", section?.title || t("writer.projectFallback"))}
-                className="writer-canvas w-full min-h-[650px] resize-y bg-[var(--panel)] p-6 md:p-10 text-[15px] md:text-base leading-[2.15] outline-none"
+                className="writer-canvas w-full min-h-[320px] resize-none overflow-hidden bg-[var(--panel)] p-6 md:p-10 text-[15px] md:text-base leading-[2.15] outline-none"
                 spellCheck
               />
               <div className="px-5 py-3 border-t hairline text-meta muted flex flex-wrap justify-between gap-2">
@@ -491,7 +505,7 @@ export function ProjectWriterStudio({
             </CardContent>
           </Card>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <InlineLoader size={15}/> : access?.canExport ? <Download size={15} /> : <LockKeyhole size={15} />} Word</Button>
+            <Button variant="outline" onClick={exportWord} disabled={actionBusy === "export"}>{actionBusy === "export" ? <InlineLoader size={15}/> : access?.canExport ? <Download size={15} /> : <LockKeyhole size={15} />} {t("writer.exportWordBtn")}</Button>
             <Button onClick={() => access?.canViva ? onOpenViva?.() : window.location.assign(`/app/plans?project=${encodeURIComponent(project.id)}`)}>{access?.canViva ? <Mic2 size={15} /> : <LockKeyhole size={15} />} {t("writer.viva")}</Button>
           </div>
         </aside>

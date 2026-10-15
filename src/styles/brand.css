@@ -843,10 +843,15 @@ html[dir="rtl"] .onboarding-invite__fill {
     box-shadow: var(--shadow-lg);
     background: transparent;
   }
-  .hj-path { stroke-dasharray: 6 8; animation: hj-flow 2.4s linear infinite; }
+  /* The dashed path is drawn once (mask reveal), then rests. hj-flow kept for reference. */
+  .hj-path { stroke-dasharray: 6 8; }
   @keyframes hj-flow { to { stroke-dashoffset: -28; } }
-  @media (prefers-reduced-motion: reduce) { .hj-path { animation: none; } }
-  .a11y-reduced-motion .hj-path { animation: none; }
+  @keyframes hj-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .hj-reveal { animation: hj-draw 2.2s var(--ease-out-quint) .3s 1 backwards; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hj-path, .hj-reveal { animation: none; } }
+  .a11y-reduced-motion .hj-path, .a11y-reduced-motion .hj-reveal { animation: none; }
 
 }
 
@@ -1107,7 +1112,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 .empty-scene .es-plus { stroke: #fff; stroke-width: 3; stroke-linecap: round; }
 .dark .empty-scene .es-plus { stroke: #1b1208; }
 @media (prefers-reduced-motion: no-preference) {
-  .empty-state .empty-scene { animation: es-float 5.5s ease-in-out infinite; }
+  .empty-state .empty-scene { animation: es-float 5.5s ease-in-out 3; }
   @keyframes es-float { 50% { transform: translateY(-4px); } }
 }
 
@@ -1138,7 +1143,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 .status-hero__dot { position: relative; width: 22px; height: 22px; border-radius: 999px; background: var(--success); }
 .status-hero__dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--success); opacity: .45; }
 @media (prefers-reduced-motion: no-preference) {
-  .status-hero__dot::after { animation: status-pulse 2.2s ease-out infinite; }
+  .status-hero__dot::after { animation: status-pulse 2.2s ease-out 1; }
   @keyframes status-pulse { from { transform: scale(1); opacity: .5; } to { transform: scale(3); opacity: 0; } }
 }
 .status-hero__title { font-size: clamp(1.6rem, 4.5vw, 2.4rem); font-weight: 700; margin-top: 6px; }
@@ -1152,10 +1157,8 @@ html[dir="rtl"] .onboarding-invite__fill {
 .seal--warn { --seal: var(--warning); }
 .seal--bad { --seal: var(--danger); }
 .seal--neutral { --seal: var(--muted); }
-@media (prefers-reduced-motion: no-preference) {
-  .seal svg.seal__ring { animation: seal-spin 40s linear infinite; }
-  @keyframes seal-spin { to { transform: rotate(360deg); } }
-}
+/* At rest the seal is still; the one-time stamp (data-stamped, draw.css) is its only motion. Keyframes kept. */
+@keyframes seal-spin { to { transform: rotate(360deg); } }
 .verdict {
   display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--seal, var(--brand)) 35%, var(--line));

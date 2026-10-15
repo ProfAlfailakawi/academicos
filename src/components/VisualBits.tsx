@@ -45,17 +45,24 @@ export function StackedBar({ segments, ariaLabel, height = 22, playKey }: { segm
         <span
           key={s.key}
           title={s.label}
-          className="dna-fillx flex min-w-0 items-center justify-center overflow-hidden text-meta font-semibold mono-number"
+          className="relative flex min-w-0 items-center justify-center overflow-hidden text-meta font-semibold mono-number"
           style={{
             flex: `${Math.max(0, s.value)} 1 0`,
             "--i": i,
-            // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،
-            // وجزء "muted" يبقى على --panel مع نص --ink.
-            background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(${s.tone === "muted" ? "--panel" : "--ink"}))`,
             color: s.tone === "muted" ? "var(--ink)" : "var(--panel)",
           } as React.CSSProperties}
         >
-          <span aria-hidden="true" className="truncate px-1">{s.text ?? ""}</span>
+          {/* الخلفية وحدها تتمدّد؛ النص لا يُمسّ فلا يتشوّه أثناء الرسم. */}
+          <span
+            aria-hidden="true"
+            className="dna-fillx absolute inset-0"
+            style={{
+              // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،
+              // وجزء "muted" يبقى على --panel مع نص --ink.
+              background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(${s.tone === "muted" ? "--panel" : "--ink"}))`,
+            }}
+          />
+          <span aria-hidden="true" className="dna-fillx-label relative truncate px-1">{s.text ?? ""}</span>
         </span>
       ))}
     </div>

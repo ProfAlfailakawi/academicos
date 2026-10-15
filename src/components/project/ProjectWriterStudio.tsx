@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FoldText } from "../VisualBits";
-import { DnaStepper, type DnaStepState } from "../dna/DnaKit";
+import { DnaDraw, DnaStepper, type DnaStepState } from "../dna/DnaKit";
 import { MiniBar } from "../Infographics";
 import { useDnaEstimatedStepStateText, useDnaStepStateText } from "../dna/useDnaStepStateText";
 import {
@@ -544,7 +544,7 @@ function QualityCard({ document }: { document: ProjectDocument }) {
     [t("writer.metricCoherence"), document.quality.coherence],
     [t("writer.metricViva"), document.quality.discussability],
   ] as const;
-  return <Card><CardContent><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{t("writer.health")}</div><h3 className="text-sm font-semibold mt-1">{t("writer.quickPanel")}</h3></div><PanelRightOpen size={17} className="muted" /></div><div className="quality-rings grid grid-cols-2 gap-3 mt-5">{metrics.map(([label, value]) => <div key={label} className="quality-ring" style={{ "--score": value } as React.CSSProperties}><div className="quality-ring__dial"><strong>{value}</strong><span>%</span></div><div className="text-meta font-semibold mt-2">{label}</div></div>)}</div>{document.integrityWarnings[0] && <div className="rounded-xl bg-warning/10 text-warning p-3 text-meta leading-5 mt-4 flex gap-2"><AlertTriangle size={13} className="shrink-0 mt-0.5" />{document.integrityWarnings[0]}</div>}</CardContent></Card>;
+  return <Card><CardContent><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{t("writer.health")}</div><h3 className="text-sm font-semibold mt-1">{t("writer.quickPanel")}</h3></div><PanelRightOpen size={17} className="muted" /></div><DnaDraw playKey={`writer-quality:${document.projectId}`} className="quality-rings grid grid-cols-2 gap-3 mt-5">{metrics.map(([label, value]) => <div key={label} className="quality-ring" style={{ "--score": value } as React.CSSProperties}><div className="quality-ring__dial"><strong>{value}</strong><span>%</span></div><div className="text-meta font-semibold mt-2">{label}</div></div>)}</DnaDraw>{document.integrityWarnings[0] && <div className="rounded-xl bg-warning/10 text-warning p-3 text-meta leading-5 mt-4 flex gap-2"><AlertTriangle size={13} className="shrink-0 mt-0.5" />{document.integrityWarnings[0]}</div>}</CardContent></Card>;
 }
 
 const XRAY_SCORE_KEYS: Record<string, string> = { sources: "writer.metricSources", coherence: "writer.metricCoherence", discussability: "writer.metricViva" };

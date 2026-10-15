@@ -10,6 +10,13 @@ import { localizedUiError } from "../lib/ui-error";
 import { InlineLoader } from "../components/ui/AcademicLoader";
 import { PublicHeader } from "../components/PublicHeader";
 import { Seal } from "../components/Seal";
+import { useArrival } from "../components/dna/useDrawIn";
+
+/** The verdict seal stamps once when the result arrives (it mounts with the result). */
+function VerdictSeal({ tone, children }: { tone: "ok" | "warn"; children: React.ReactNode }) {
+  const stamp = useArrival(true, { onMount: true });
+  return <Seal tone={tone} stamp={stamp}>{children}</Seal>;
+}
 
 /** Public verifier for printed / exported Process Evidence reports. */
 export function VerifyEvidence() {
@@ -82,9 +89,9 @@ export function VerifyEvidence() {
             {error && <div role="alert" className="rounded-xl bg-danger/10 text-danger p-3 text-sm">{error}</div>}
             {result && (
               <div role="status" className={`verdict ${result.status === "valid" ? "seal--ok" : "seal--warn"}`}>
-                <Seal tone={result.status === "valid" ? "ok" : "warn"}>
+                <VerdictSeal tone={result.status === "valid" ? "ok" : "warn"}>
                   {result.status === "valid" ? <ShieldCheck size={34} /> : <ShieldAlert size={34} />}
-                </Seal>
+                </VerdictSeal>
                 <div className="min-w-0">
                   <div className="text-xl md:text-2xl font-bold" style={{ color: result.status === "valid" ? "var(--success)" : "var(--warning)" }}>{t(`pe.status.${result.status}`)}</div>
                   {report && <div className="text-xs mt-2 muted"><bdi>{report.projectTitle}</bdi> · <bdi>{report.course}</bdi></div>}

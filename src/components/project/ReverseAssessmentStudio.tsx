@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
 import { InlineLoader } from "../ui/AcademicLoader";
+import { DnaDraw } from '../dna/DnaKit';
 
 // Reverse Assessment — the student designs exam questions about their project; a deterministic evaluator scores the exam-maker.
 interface Q { id: string; prompt: string; modelAnswer: string; targetOutcome?: string }
@@ -67,17 +68,17 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
           {!result ? (
             <div className="py-10 text-center"><div className="mx-auto h-14 w-14 rounded-2xl grid place-items-center" style={{ background: 'var(--accent-soft)' }}><Award style={{ color: 'var(--accent)' }} /></div><div className="text-sm font-semibold mt-3">{t('adv.ra.makerScore')}</div><p className="body-copy mt-1">{t('adv.ra.emptyHint')}</p></div>
           ) : (
-            <>
+            <DnaDraw playKey={`reverse:${project.id}`}>
               <div className="text-center">
                 <div className="eyebrow">{t('adv.ra.makerScore')}</div>
                 <Gauge value={result.makerScore} band={result.band} />
                 <BandLabel band={result.band} t={t} />
               </div>
               <div className="mt-5 grid grid-cols-2 gap-2.5">
-                <Dim icon={<Layers size={14} />} label={t('adv.ra.dimDepth')} value={result.dimensions.depth} />
-                <Dim icon={<Target size={14} />} label={t('adv.ra.dimCoverage')} value={result.dimensions.coverage} />
-                <Dim icon={<Fingerprint size={14} />} label={t('adv.ra.dimDiscrimination')} value={result.dimensions.discrimination} />
-                <Dim icon={<Award size={14} />} label={t('adv.ra.dimRigor')} value={result.dimensions.rigor} />
+                <Dim i={0} icon={<Layers size={14} />} label={t('adv.ra.dimDepth')} value={result.dimensions.depth} />
+                <Dim i={1} icon={<Target size={14} />} label={t('adv.ra.dimCoverage')} value={result.dimensions.coverage} />
+                <Dim i={2} icon={<Fingerprint size={14} />} label={t('adv.ra.dimDiscrimination')} value={result.dimensions.discrimination} />
+                <Dim i={3} icon={<Award size={14} />} label={t('adv.ra.dimRigor')} value={result.dimensions.rigor} />
               </div>
               {result.coverageGaps?.length ? (
                 <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)' }}>
@@ -86,7 +87,7 @@ export function ReverseAssessmentStudio({ project }: { project: ProjectDNA }) {
               ) : null}
               {result.band !== 'surface' && <div className="mt-4 rounded-xl px-3 py-2.5 text-xs leading-6" style={{ background: 'var(--brand-soft)' }}>{t('adv.ra.addedProof')}</div>}
               <p className="text-meta muted mt-4 leading-5">{result.note}</p>
-            </>
+            </DnaDraw>
           )}
         </CardContent>
       </Card>
@@ -101,7 +102,7 @@ function Gauge({ value, band }: { value: number; band: string }) {
     <div className="relative mx-auto mt-2" style={{ width: 140, height: 140 }}>
       <svg viewBox="0 0 140 140" className="-rotate-90">
         <circle cx="70" cy="70" r={r} fill="none" stroke="var(--panel-2)" strokeWidth="12" />
-        <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset .8s ease' }} />
+        <circle className="dna-ringoff" cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset .8s ease', '--ring-c': c } as React.CSSProperties} />
       </svg>
       <div className="absolute inset-0 grid place-items-center"><div className="text-3xl font-bold" style={{ color }}>{value}</div></div>
     </div>
@@ -111,11 +112,11 @@ function BandLabel({ band, t }: { band: string; t: (k: string) => string }) {
   const m: Record<string, string> = { mastery: 'adv.band.mastery', developing: 'adv.band.developing', surface: 'adv.band.surface' };
   return <div className="text-sm font-semibold mt-1">{m[band] ? t(m[band]) : band}</div>;
 }
-function Dim({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function Dim({ icon, label, value, i = 0 }: { icon: React.ReactNode; label: string; value: number; i?: number }) {
   return (
     <div className="rounded-xl border hairline bg-[var(--bg)] p-3">
       <div className="flex items-center gap-1.5 text-meta muted brand-text">{icon}<span className="muted">{label}</span></div>
-      <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--panel-2)' }}><div className="h-1.5 rounded-full brand-soft-bg" style={{ width: `${value}%`, background: 'var(--brand)' }} /></div>
+      <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--panel-2)' }}><div className="dna-fillx h-1.5 rounded-full brand-soft-bg" style={{ width: `${value}%`, background: 'var(--brand)', '--i': i } as React.CSSProperties} /></div>
       <div className="text-sm font-bold mt-1">{value}%</div>
     </div>
   );

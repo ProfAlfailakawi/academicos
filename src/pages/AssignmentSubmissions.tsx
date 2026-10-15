@@ -167,7 +167,7 @@ export function AssignmentSubmissions() {
                   className={`focus-ring w-full text-start rounded-xl border p-3 ${selected === item.id ? "border-[var(--brand)] brand-soft-bg" : "hairline bg-[var(--bg)]"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold">
+                    <span className="min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">
                       {item.studentName}
                     </span>
                     <Status status={item.status} />
@@ -178,7 +178,7 @@ export function AssignmentSubmissions() {
                   </div>
                   <div
                     dir="ltr"
-                    className="text-meta font-mono muted mt-1 truncate"
+                    className="text-meta font-mono muted mt-1 truncate keep-truncate"
                   >
                     {item.receiptHash}
                   </div>
@@ -219,7 +219,13 @@ export function AssignmentSubmissions() {
                       max={current.maxScore}
                       size={64}
                       stroke={5}
-                      label={<span className="mono-number text-xs font-bold" dir="ltr">{`${current.totalScore}/${current.maxScore}`}</span>}
+                      label={
+                        `${current.totalScore}/${current.maxScore}`.length > 7 ? (
+                          <span className="mono-number text-xs font-bold leading-tight" dir="ltr">{current.totalScore}<br />{`/${current.maxScore}`}</span>
+                        ) : (
+                          <span className="mono-number text-xs font-bold" dir="ltr">{`${current.totalScore}/${current.maxScore}`}</span>
+                        )
+                      }
                       ariaLabel={`${current.totalScore}/${current.maxScore}`}
                     />
                   )}
@@ -405,7 +411,7 @@ function Status({ status }: { status: CourseSubmissionRecord["status"] }) {
     released: t("subm.statusReleased"),
   };
   return (
-    <span className="subm-status inline-flex items-center gap-1.5 rounded-full bg-[var(--panel-2)] px-2 py-1 text-meta font-semibold" data-status={status}>
+    <span className="subm-status inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--panel-2)] px-2 py-1 text-meta font-semibold" data-status={status}>
       <span className="subm-status__dot" aria-hidden="true" />
       {labels[status]}
     </span>

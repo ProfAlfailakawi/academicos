@@ -5,6 +5,7 @@ import { api } from "../../lib/api";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 import { localizedUiError } from "../../lib/ui-error";
 import { DialogShell } from "../AppDialog";
+import { DnaDraw } from "../dna/DnaKit";
 import { Button } from "../ui/button";
 import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
 
@@ -112,8 +113,8 @@ export function CohortInsightDialog({
                   <Stat label={t("cohort.completed")} value={formatNumber(insight.stageDistribution?.completed || 0)} />
                 </div>
                 {insight.stuckPoints.length ? (
-                  <ul className="mt-4 space-y-2">
-                    {insight.stuckPoints.map((point) => (
+                  <DnaDraw as="ul" playKey={`cohort:${courseId}:${assignmentId}`} threshold={0.12} className="mt-4 space-y-2">
+                    {insight.stuckPoints.map((point, index) => (
                       <li key={`${point.kind}-${point.detail}-${point.label}`} className="rounded-xl border hairline p-3">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
@@ -126,11 +127,11 @@ export function CohortInsightDialog({
                           </div>
                         </div>
                         <div className="mt-2 h-1.5 rounded-full soft-bg overflow-hidden" aria-hidden="true">
-                          <div className="h-1.5 rounded-full bg-[var(--brand)]" style={{ width: `${point.percent}%` }} />
+                          <div className="dna-fillx h-1.5 rounded-full bg-[var(--brand)]" style={{ width: `${point.percent}%`, "--i": index } as React.CSSProperties} />
                         </div>
                       </li>
                     ))}
-                  </ul>
+                  </DnaDraw>
                 ) : <p className="body-copy mt-3">{t("cohort.noStuck")}</p>}
               </>
             )}

@@ -6,7 +6,9 @@
  */
 import * as React from 'react';
 import './dna.css';
+import './draw.css';
 import { journeyDisplayState, journeyStepMs, journeyTarget, useJourneyReveal } from './useJourneyReveal';
+import { useCountUp, useDrawIn } from './useDrawIn';
 
 export type DnaTone =
   | 'accent'
@@ -336,9 +338,12 @@ export interface DnaRingProps {
   sublabel?: React.ReactNode;
   ariaLabel?: string;
   className?: string;
+  /** Opt-in: draw the arc once per key (entity id) when it scrolls into view. Final state at once without it. */
+  playKey?: string;
 }
 
-export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accent', label, sublabel, ariaLabel, className }: DnaRingProps) {
+export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accent', label, sublabel, ariaLabel, className, playKey }: DnaRingProps) {
+  const drawn = useDrawIn<HTMLDivElement>({ playKey, enabled: Boolean(playKey) });
   const has = typeof value === 'number' && Number.isFinite(value) && max > 0;
   const fraction = has ? Math.min(1, Math.max(0, (value as number) / max)) : 0;
   const r = (size - stroke) / 2;
@@ -346,8 +351,10 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
   const mid = size / 2;
   return (
     <div
+      ref={drawn.ref}
       className={cx('dna', 'dna-ring', className)}
       data-dna-tone={tone}
+      data-draw={drawn.draw}
       style={{ inlineSize: size, blockSize: size }}
       role="img"
       aria-label={ariaLabel}
@@ -429,6 +436,7 @@ export function DnaSpark({
   tone = 'accent',
   ariaLabel,
   className,
+  playKey,
 }: {
   values: number[];
   width?: number;
@@ -436,7 +444,10 @@ export function DnaSpark({
   tone?: DnaTone;
   ariaLabel?: string;
   className?: string;
+  /** Opt-in: draw the line left to right once per key, then fade the area in. */
+  playKey?: string;
 }) {
+  const drawn = useDrawIn<SVGSVGElement>({ playKey, enabled: Boolean(playKey) });
   const clean = values.filter((v) => Number.isFinite(v));
   if (clean.length < 2) return null;
   const min = Math.min(...clean);
@@ -452,8 +463,10 @@ export function DnaSpark({
   const last = pts[pts.length - 1];
   return (
     <svg
+      ref={drawn.ref}
       className={cx('dna', 'dna-spark', className)}
       data-dna-tone={tone}
+      data-draw={drawn.draw}
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
@@ -462,9 +475,80 @@ export function DnaSpark({
       aria-hidden={ariaLabel ? undefined : true}
     >
       <path className="dna-sparka" d={area} />
-      <path className="dna-sparkl" d={line} />
+      <path className="dna-sparkl" d={line} pathLength={1} />
       <circle cx={last[0]} cy={last[1]} r={2.6} />
     </svg>
+  );
+}
+
+/* ------------------------------------------------- count-up + draw host */
+
+/**
+ * Number that counts 0 -> value once per `playKey` when it first scrolls into view (~700ms).
+ * `format` is the screen's own formatter, so the final text never changes. Assistive tech always
+ * gets the final text; the final value is also what shows without IO, with reduced motion, for an
+ * already-played key, and for every later value change.
+ */
+export function DnaCountUp({
+  value,
+  format = (n: number) => String(n),
+  playKey,
+  duration,
+  enabled = true,
+  className,
+}: {
+  value: number;
+  format?: (n: number) => string;
+  playKey?: string;
+  duration?: number;
+  enabled?: boolean;
+  className?: string;
+}) {
+  const { ref, animating, shown } = useCountUp<HTMLSpanElement>(value, { playKey, duration, enabled: enabled && Boolean(playKey) });
+  const final = format(value);
+  return (
+    <span ref={ref} className={cx('dna-cu', className)}>
+      {animating ? (
+        <>
+          <span className="dna-cu-sr">{final}</span>
+          <span aria-hidden="true">{format(shown)}</span>
+        </>
+      ) : (
+        final
+      )}
+    </span>
+  );
+}
+
+/**
+ * Host for the shared draw-once rule when there is no kit component to carry it: children opt in
+ * with `.dna-fillx` (bars), `.dna-seq` (appear in order), `.dna-sring` (donut arcs) and so on.
+ */
+export function DnaDraw({
+  playKey,
+  enabled = true,
+  threshold,
+  as = 'div',
+  className,
+  style,
+  children,
+  ...rest
+}: {
+  playKey?: string;
+  enabled?: boolean;
+  /** Fraction visible before drawing (lower it for tall lists). */
+  threshold?: number;
+  as?: 'div' | 'span' | 'ul' | 'ol' | 'section';
+  className?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'style' | 'children'>) {
+  const { ref, draw } = useDrawIn<HTMLElement>({ playKey, enabled: enabled && Boolean(playKey), threshold });
+  const Tag = as as React.ElementType;
+  return (
+    <Tag ref={ref} className={className} style={style} data-draw={draw} {...rest}>
+      {children}
+    </Tag>
   );
 }
 

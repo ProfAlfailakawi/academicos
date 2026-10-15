@@ -5,6 +5,7 @@ import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
 import { AcademicLoader } from "../ui/AcademicLoader";
+import { DnaDraw } from '../dna/DnaKit';
 
 // Ghost Cohort — anonymized rhythm of high scorers (k-anonymity) vs. the current student's progress.
 export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDNA; assignmentId?: string }) {
@@ -51,18 +52,18 @@ export function GhostCohortPanel({ project, assignmentId }: { project: ProjectDN
               </div>
             )}
             <div className="h-2.5 rounded-full mt-4" style={{ background: 'linear-gradient(90deg, var(--brand-soft), color-mix(in srgb, var(--brand) 45%, var(--brand-soft)), var(--brand))' }} />
-            <div className="mt-4 space-y-2.5">
-              {data.phases.map((ph: any) => (
+            <DnaDraw playKey={`ghost:${project.id}`} threshold={0.12} className="mt-4 space-y-2.5">
+              {data.phases.map((ph: any, index: number) => (
                 <div key={ph.phase} className="grid grid-cols-[110px_1fr] items-center gap-3">
                   <div className="text-meta font-semibold truncate">{ph.label}</div>
                   <div className="relative h-6 rounded-lg" style={{ background: 'var(--panel-2)' }}>
-                    <div className="absolute top-0 h-6 rounded-lg opacity-80" style={{ insetInlineStart: `${ph.typicalAtP25}%`, width: `${Math.max(3, ph.typicalAtP75 - ph.typicalAtP25)}%`, background: 'color-mix(in srgb,var(--brand) 30%,transparent)' }} title={t('adv.ghost.tipRange').replace('{a}', String(ph.typicalAtP25)).replace('{b}', String(ph.typicalAtP75))} />
+                    <div className="dna-fillx absolute top-0 h-6 rounded-lg opacity-80" style={{ insetInlineStart: `${ph.typicalAtP25}%`, width: `${Math.max(3, ph.typicalAtP75 - ph.typicalAtP25)}%`, background: 'color-mix(in srgb,var(--brand) 30%,transparent)', '--i': index } as React.CSSProperties} title={t('adv.ghost.tipRange').replace('{a}', String(ph.typicalAtP25)).replace('{b}', String(ph.typicalAtP75))} />
                     <div className="absolute top-0 h-6 w-0.5" style={{ insetInlineStart: `${ph.typicalAtP50}%`, background: 'var(--brand)' }} title={t('adv.ghost.tipMedian').replace('{p}', String(ph.typicalAtP50))} />
                     <span className="absolute inset-y-0 grid place-items-center text-meta muted" style={{ insetInlineStart: `${Math.min(88, ph.typicalAtP50 + 2)}%` }}>{ph.typicalAtP50}%</span>
                   </div>
                 </div>
               ))}
-            </div>
+            </DnaDraw>
           </div>
         </div>
 

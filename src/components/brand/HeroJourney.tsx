@@ -24,6 +24,19 @@ export function HeroJourney({ className = "" }: { className?: string }) {
           <stop offset="0%" stopColor="var(--brand)" />
           <stop offset="100%" stopColor="var(--brand-2)" />
         </linearGradient>
+        {/* reveal mask: the dashed path is drawn once, start to end (the dashes themselves stay still) */}
+        <mask id="hj-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="720" height="560">
+          <path
+            className="hj-reveal"
+            d="M150 300 C 240 300, 250 220, 340 220 S 470 300, 560 210"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="12"
+            strokeLinecap="round"
+            pathLength={1}
+            strokeDasharray="1"
+          />
+        </mask>
         <filter id="hj-shadow" x="-20%" y="-20%" width="140%" height="150%">
           <feDropShadow dx="0" dy="14" stdDeviation="20" floodColor="var(--brand-2)" floodOpacity="0.12" />
         </filter>
@@ -44,6 +57,7 @@ export function HeroJourney({ className = "" }: { className?: string }) {
       {/* the dashed journey path */}
       <path
         className="hj-path"
+        mask="url(#hj-reveal)"
         d="M150 300 C 240 300, 250 220, 340 220 S 470 300, 560 210"
         fill="none"
         stroke="var(--accent)"

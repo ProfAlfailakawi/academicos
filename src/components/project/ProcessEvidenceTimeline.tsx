@@ -21,7 +21,7 @@ import { localizedUiError } from "../../lib/ui-error";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { AcademicLoader, InlineLoader } from "../ui/AcademicLoader";
-import { DnaSpark } from "../dna/DnaKit";
+import { DnaCountUp, DnaDraw, DnaSpark } from "../dna/DnaKit";
 import { FoldText } from "../VisualBits";
 
 const KIND_ICON: Partial<Record<ProcessEvidenceKind, React.ElementType>> = {
@@ -173,8 +173,8 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
             ] as const).map(([key, value, serie]) => (
               <div key={key} className="rounded-2xl border hairline bg-[var(--panel)] p-4">
                 <div className="text-xs muted">{t(key)}</div>
-                <div className="text-2xl font-semibold mt-2 mono-number">{formatNumber(value)}</div>
-                {series[serie] && series[serie].some((n) => n > 0) && <div dir="ltr" className="mt-2"><DnaSpark values={series[serie]} width={88} height={24} tone="mint" /></div>}
+                <div className="text-2xl font-semibold mt-2 mono-number"><DnaCountUp value={value} format={formatNumber} playKey={`pe-kpi:${report.projectId}:${key}`} /></div>
+                {series[serie] && series[serie].some((n) => n > 0) && <div dir="ltr" className="mt-2"><DnaSpark values={series[serie]} width={88} height={24} tone="mint" playKey={`pe-spark:${report.projectId}:${serie}`} /></div>}
               </div>
             ))}
           </section>
@@ -194,11 +194,11 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
                 ))}
               </div>
               {entries.length ? (
-                <ol className="mt-5 relative border-s hairline ms-2 space-y-4">
-                  {entries.map((entry) => {
+                <DnaDraw as="ol" playKey={`pe-timeline:${report.projectId}`} threshold={0.12} className="mt-5 relative border-s hairline ms-2 space-y-4">
+                  {entries.map((entry, index) => {
                     const Icon = KIND_ICON[entry.kind] || CheckCircle2;
                     return (
-                      <li key={entry.id} className="ms-5">
+                      <li key={entry.id} className={index < 8 ? "dna-seq ms-5" : "ms-5"} style={index < 8 ? ({ "--i": index } as React.CSSProperties) : undefined}>
                         <span className="absolute -start-[11px] mt-1 h-5 w-5 rounded-full brand-soft-bg grid place-items-center" aria-hidden="true">
                           <Icon size={11} className="brand-text" />
                         </span>
@@ -213,7 +213,7 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
                       </li>
                     );
                   })}
-                </ol>
+                </DnaDraw>
               ) : (
                 <p className="body-copy mt-5">{t("pe.empty")}</p>
               )}

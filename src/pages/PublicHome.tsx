@@ -11,6 +11,7 @@ import { HeroJourney } from "../components/brand/HeroJourney";
 import { HeroConstellation, useHeroEntrance } from "../components/brand/HeroEntrance";
 import { Overture, useOverture } from "../components/brand/Overture";
 import { JourneyFlow } from "../components/dna/JourneyFlow";
+import { DnaDraw } from "../components/dna/DnaKit";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
 
@@ -72,7 +73,7 @@ export function PublicHome() {
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-16 grid lg:grid-cols-2 gap-6 md:gap-10 items-center">
             <div className="xray-visual panel">
               <div className="flex items-center justify-between gap-2 flex-wrap"><span className="eyebrow">{t("ui.projectXray")} <span className="example-chip" title={t("ui.exampleChipHint")}>{t("ui.exampleChip")}</span></span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
-              <div className="xray-score-grid mt-7"><Score value="91" label={t("landing.structure")} /><Score value="78" label={t("landing.sources")} /><Score value="88" label={t("landing.coherence")} /></div>
+              <DnaDraw playKey="landing:xray" className="xray-score-grid mt-7"><Score value="91" label={t("landing.structure")} /><Score value="78" label={t("landing.sources")} /><Score value="88" label={t("landing.coherence")} /></DnaDraw>
               <div className="xray-finding mt-6"><Check size={16} /> {t("landing.findingGood")}</div>
               <div className="xray-finding xray-finding--warn"><FileSearch size={16} /> {t("landing.findingWarn")}</div>
             </div>

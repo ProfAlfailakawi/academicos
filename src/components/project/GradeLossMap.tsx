@@ -5,6 +5,7 @@ import type { ProjectDNA } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { useI18n } from '../../lib/i18n';
 import { AcademicLoader } from "../ui/AcademicLoader";
+import { DnaDraw } from '../dna/DnaKit';
 import { RubricCriterionDrilldown, useRubricDrilldown } from './RubricDrilldown';
 
 // Predictive Grade-Loss Map — where the cohort actually lost points, matched to your readiness.
@@ -39,8 +40,8 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
         </div>
         <div className="mt-4 rounded-2xl px-4 py-3 text-sm font-semibold leading-6" style={{ background: 'var(--accent-soft)', color: 'var(--ink)' }}>{data.headline}</div>
 
-        <div className="mt-5 space-y-3">
-          {data.criteria.filter((c: any) => c.severity !== 'insufficient').map((c: any) => (
+        <DnaDraw playKey={`gradeloss:${project.id}`} threshold={0.12} className="mt-5 space-y-3">
+          {data.criteria.filter((c: any) => c.severity !== 'insufficient').map((c: any, index: number) => (
             <div key={c.rubricId} className="rounded-2xl border hairline bg-[var(--bg)] p-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 min-w-0">
@@ -54,7 +55,7 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
                 </div>
               </div>
               <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: 'var(--panel-2)' }}>
-                <div className="h-2 rounded-full" style={{ width: `${c.lossProbability}%`, background: sevColor(c.severity) }} />
+                <div className="dna-fillx h-2 rounded-full" style={{ width: `${c.lossProbability}%`, background: sevColor(c.severity), '--i': index } as React.CSSProperties} />
               </div>
               <div className="mt-2 flex items-center justify-between text-meta muted">
                 <span>{t('adv.gl.lostHere').replace('{p}', String(c.averageLostPercent))}</span>
@@ -70,7 +71,7 @@ export function GradeLossMap({ project, assignmentId, onProjectChange, onNavigat
               )}
             </div>
           ))}
-        </div>
+        </DnaDraw>
         <p className="text-meta muted mt-4 leading-5">{data.privacyNote}</p>
       </CardContent>
     </Card>

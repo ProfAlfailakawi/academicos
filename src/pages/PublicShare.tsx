@@ -12,6 +12,8 @@ import { PublicHeader } from "../components/PublicHeader";
 import { Skeleton } from "../components/ui/Skeleton";
 import { Seal } from "../components/Seal";
 import { SkillRadar, hasSkillRadar } from "../components/VisualBits";
+import { DnaCountUp } from "../components/dna/DnaKit";
+import { useArrival } from "../components/dna/useDrawIn";
 
 export function PublicShare() {
   const { t } = useI18n();
@@ -215,6 +217,8 @@ function CapsuleView({
   } | null;
 }) {
   const { t, locale } = useI18n();
+  // One stamp on the seal and one fading highlight on the badge when the verification result arrives.
+  const arrived = useArrival(Boolean(verification));
   const sealTone =
     verification?.status === "invalid"
       ? "bad"
@@ -227,23 +231,26 @@ function CapsuleView({
   return (
     <div className="mt-8 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Metric label={t("ui.skills")} value={capsule.skills.length} />
+        <Metric label={t("ui.skills")} value={capsule.skills.length} playKey={capsule.integrity.hash} />
         <Metric
           label={t("ui.deliverables")}
           value={capsule.deliverables.length}
+          playKey={capsule.integrity.hash}
         />
         <Metric
           label={t("ui.evidence")}
           value={capsule.provenance.evidenceItems}
+          playKey={capsule.integrity.hash}
         />
         <Metric
           label={t("ui.humanContributors")}
           value={capsule.provenance.humanContributors}
+          playKey={capsule.integrity.hash}
         />
       </div>
       <section className="rounded-2xl bg-[var(--bg)] border hairline p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <Seal tone={sealTone}>
+          <Seal tone={sealTone} stamp={arrived}>
             {verification?.status === "signed_trusted" ||
             verification?.status === "hash_valid" ? (
               <ShieldCheck size={30} />
@@ -259,6 +266,7 @@ function CapsuleView({
             <h2 className="section-title mt-1">{t("share.integrityTitle")}</h2>
           </div>
           <span
+            data-flash={arrived}
             className={`verified-badge self-start sm:self-center ${verification?.status === "invalid" ? "!bg-danger/12 !text-danger" : verification?.status === "signed_untrusted" ? "!bg-warning/12 !text-warning" : verification?.status === "signed_trusted" || verification?.status === "hash_valid" ? "" : "!bg-[var(--panel-2)] !text-[var(--muted)]"}`}
           >
             {verification?.status === "signed_trusted"
@@ -376,11 +384,11 @@ function GenericView({ snapshot }: { snapshot: Record<string, unknown> }) {
     </div>
   );
 }
-function Metric({ label, value }: { label: string; value: number }) {
+function Metric({ label, value, playKey }: { label: string; value: number; playKey?: string }) {
   return (
     <div className="rounded-2xl bg-[var(--bg)] border hairline p-4">
       <div className="text-meta muted">{label}</div>
-      <div className="text-xl font-semibold mt-2 mono-number">{value}</div>
+      <div className="text-xl font-semibold mt-2 mono-number"><DnaCountUp value={value} playKey={playKey ? `share-metric:${playKey}:${label}` : undefined} /></div>
     </div>
   );
 }

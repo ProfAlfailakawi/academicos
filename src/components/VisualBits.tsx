@@ -1,5 +1,7 @@
 import React from "react";
 import { toneColor, type Tone } from "./Infographics";
+import { useDrawIn } from "./dna/useDrawIn";
+import "./dna/draw.css";
 
 /* عناصر عرض صغيرة تعتمد على بيانات تعرضها الشاشة أصلًا؛ ألوانها من التوكنز. */
 
@@ -33,25 +35,34 @@ export interface StackedSegment {
 }
 
 /** شريط مكدّس: عرض كل جزء نسبة إلى مجموع القيم. */
-export function StackedBar({ segments, ariaLabel, height = 22 }: { segments: StackedSegment[]; ariaLabel: string; height?: number }) {
+export function StackedBar({ segments, ariaLabel, height = 22, playKey }: { segments: StackedSegment[]; ariaLabel: string; height?: number; playKey?: string }) {
+  const drawn = useDrawIn<HTMLDivElement>({ playKey, enabled: Boolean(playKey) });
   const total = segments.reduce((a, s) => a + Math.max(0, s.value), 0);
   if (total <= 0) return null;
   return (
-    <div role="img" aria-label={ariaLabel} className="flex w-full gap-0.5 overflow-hidden rounded-full" style={{ height }}>
-      {segments.map((s) => (
+    <div ref={drawn.ref} data-draw={drawn.draw} role="img" aria-label={ariaLabel} className="flex w-full gap-0.5 overflow-hidden rounded-full" style={{ height }}>
+      {segments.map((s, i) => (
         <span
           key={s.key}
           title={s.label}
-          className="flex min-w-0 items-center justify-center overflow-hidden text-meta font-semibold mono-number"
+          className="relative flex min-w-0 items-center justify-center overflow-hidden text-meta font-semibold mono-number"
           style={{
             flex: `${Math.max(0, s.value)} 1 0`,
-            // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،
-            // وجزء "muted" يبقى على --panel مع نص --ink.
-            background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(${s.tone === "muted" ? "--panel" : "--ink"}))`,
+            "--i": i,
             color: s.tone === "muted" ? "var(--ink)" : "var(--panel)",
-          }}
+          } as React.CSSProperties}
         >
-          <span aria-hidden="true" className="truncate px-1">{s.text ?? ""}</span>
+          {/* الخلفية وحدها تتمدّد؛ النص لا يُمسّ فلا يتشوّه أثناء الرسم. */}
+          <span
+            aria-hidden="true"
+            className="dna-fillx absolute inset-0"
+            style={{
+              // نص 11px يحتاج ≥4.5:1: الألوان الدلالية تُمزج نحو --ink (تباين ≥6.9:1 مع --panel في الفاتح والداكن)،
+              // وجزء "muted" يبقى على --panel مع نص --ink.
+              background: `color-mix(in srgb, ${toneColor(s.tone)} 78%, var(${s.tone === "muted" ? "--panel" : "--ink"}))`,
+            }}
+          />
+          <span aria-hidden="true" className="dna-fillx-label relative truncate px-1">{s.text ?? ""}</span>
         </span>
       ))}
     </div>
@@ -117,7 +128,8 @@ function labelLines(name: string, per = 12): string[] {
 }
 
 /** رادار مهارات: محاور = أسماء المهارات، القيمة = عدد أدلتها (بيانات الشاشة نفسها). */
-export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ skill: string }>; max?: number; ariaLabel: string }) {
+export function SkillRadar({ skills, max = 8, ariaLabel, playKey }: { skills: Array<{ skill: string }>; max?: number; ariaLabel: string; playKey?: string }) {
+  const drawn = useDrawIn<HTMLDivElement>({ playKey, enabled: Boolean(playKey) });
   const counts = new Map<string, number>();
   skills.forEach((s) => counts.set(s.skill, (counts.get(s.skill) || 0) + 1));
   const axes = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, max);
@@ -132,10 +144,11 @@ export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ ski
   const R = 60;
   const ang = (i: number) => -Math.PI / 2 + (2 * Math.PI * i) / axes.length;
   const pt = (i: number, f: number) => [cx + Math.cos(ang(i)) * R * f, c + Math.sin(ang(i)) * R * f] as const;
+  const origin = { "--ox": `${cx}px`, "--oy": `${c}px` } as React.CSSProperties;
   const ring = (f: number) => axes.map((_, i) => pt(i, f).map((v) => v.toFixed(1)).join(",")).join(" ");
   const shape = axes.map(([, n], i) => pt(i, Math.max(0.12, n / top)).map((v) => v.toFixed(1)).join(",")).join(" ");
   return (
-    <div dir="ltr">
+    <div ref={drawn.ref} data-draw={drawn.draw} dir="ltr">
     <svg role="img" aria-label={ariaLabel} viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[360px]">
       <title>{ariaLabel}</title>
       {[0.33, 0.66, 1].map((f) => (
@@ -145,14 +158,14 @@ export function SkillRadar({ skills, max = 8, ariaLabel }: { skills: Array<{ ski
         const [x, y] = pt(i, 1);
         return <line key={name} x1={cx} y1={c} x2={x} y2={y} stroke="var(--line)" strokeWidth="1" />;
       })}
-      <polygon points={shape} fill="color-mix(in srgb, var(--brand) 22%, transparent)" stroke="var(--brand)" strokeWidth="2" strokeLinejoin="round" />
+      <polygon className="dna-radshape" style={origin} points={shape} fill="color-mix(in srgb, var(--brand) 22%, transparent)" stroke="var(--brand)" strokeWidth="2" strokeLinejoin="round" />
       {axes.map(([name, n], i) => {
         const [x, y] = pt(i, Math.max(0.12, n / top));
         const [lx, ly] = pt(i, 1.25);
         const cos = Math.cos(ang(i));
         return (
           <g key={name}>
-            <circle cx={x} cy={y} r="3" fill="var(--brand)" />
+            <circle className="dna-radshape" style={origin} cx={x} cy={y} r="3" fill="var(--brand)" />
             <text x={lx} y={ly} fontSize="12" fill="var(--ink)" textAnchor={cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle"} dominantBaseline="middle">
               <title>{name}</title>
               {labelLines(name).map((line, k, all) => (

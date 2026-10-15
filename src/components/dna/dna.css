@@ -302,7 +302,8 @@
   background: var(--dna-accent-soft);
   color: var(--dna-accent);
   box-shadow: inset 0 0 0 2px var(--dna-accent), 0 0 0 4px color-mix(in srgb, var(--dna-accent) 12%, transparent);
-  animation: dna-halo 2.8s var(--dna-ease) infinite;
+  /* Rests static; the halo plays twice when a station becomes current (the busy pulse below is the generation stepper's). */
+  animation: dna-halo 2.8s var(--dna-ease) 2;
 }
 .dna-stepi[data-state='returned'] .dna-node {
   background: var(--dna-warn-soft);
@@ -1054,6 +1055,7 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   50% { box-shadow: inset 0 0 0 2px var(--journey-fill), 0 0 0 7px color-mix(in srgb, var(--journey-fill) 0%, transparent); }
 }
 .dna-steps[data-journey]:not([data-reveal]) .dna-stepi[data-state='current'] .dna-node { animation-name: dna-journey-pulse; }
+.dna-steps[data-journey]:not([data-reveal]) .dna-stepi[data-state='current'] .dna-node { animation-iteration-count: infinite; }
 /* Intro: one soft halo per station as it lights; never an infinite loop. */
 .dna-steps[data-reveal] .dna-stepi[data-state='current'] .dna-node { animation: none; }
 @keyframes dna-journey-halo {

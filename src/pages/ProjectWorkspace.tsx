@@ -76,7 +76,7 @@ import {
   ArrowRightLeft,
   Layers,
 } from "lucide-react";
-import { DnaRing, DnaStatusHeader, DnaStepper, type DnaStep } from "../components/dna/DnaKit";
+import { DnaCountUp, DnaDraw, DnaRing, DnaStatusHeader, DnaStepper, type DnaStep } from "../components/dna/DnaKit";
 import { useDnaStepStateText } from "../components/dna/useDnaStepStateText";
 import { useJourneyReveal } from "../components/dna/useJourneyReveal";
 
@@ -344,7 +344,7 @@ export function ProjectWorkspace() {
           }
           actions={
             <div className="flex gap-2 flex-wrap items-center">
-              <DnaRing value={project.progress} size={48} ariaLabel={`${project.progress}%`} />
+              <DnaRing value={project.progress} size={48} ariaLabel={`${project.progress}%`} playKey={`pw-progress:${project.id}`} />
               <Button onClick={runAudit} disabled={auditing} className="dna-btnp shadow-sm">
                 {auditing ? <InlineLoader size={16}/> : <ClipboardCheck size={16} />}
                 {t("pw.submissionReady")}
@@ -363,15 +363,16 @@ export function ProjectWorkspace() {
               size={64}
               stroke={7}
               label={t("ui.rubricReadiness")}
+              playKey={`pw-rubric:${project.id}`}
             >
-              <span className="mono-number text-sm font-semibold">{project.rubric.filter((r) => r.readiness === "covered").length}/{project.rubric.length || 0}</span>
+              <span className="mono-number text-sm font-semibold"><DnaCountUp value={project.rubric.filter((r) => r.readiness === "covered").length} playKey={`pw-rubric-n:${project.id}`} />/{project.rubric.length || 0}</span>
             </ProgressRing>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{t("ui.rubricReadiness")}</div>
               <div className="text-meta muted">{t("pw.notFinalGrade")}</div>
               <div className="mt-2 flex items-center gap-3">
                 <span className="text-meta muted shrink-0">{t("pw.tasksMetric")}</span>
-                <MiniBar value={project.tasks.filter((x) => x.status === "completed").length} max={project.tasks.length} />
+                <MiniBar value={project.tasks.filter((x) => x.status === "completed").length} max={project.tasks.length} playKey={`pw-tasks:${project.id}`} />
                 <span className="text-meta muted mono-number shrink-0">{project.tasks.filter((x) => x.status === "completed").length}/{project.tasks.length}</span>
               </div>
             </div>
@@ -960,6 +961,7 @@ function Rubric({
     <Card>
       <CardContent className="p-4">
         <StackedBar
+          playKey={`pw-rubricbar:${project.id}`}
           ariaLabel={`${t("ui.rubric")}: ${project.rubric.map((r) => `${r.title} ${r.weighting}%`).join("، ")}`}
           segments={project.rubric.map((r) => ({
             key: r.id,
@@ -1064,8 +1066,8 @@ function AuditModal({
     <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
         <div className="flex items-center gap-4">
-          <ProgressRing pct={audit.score ?? 0} size={88} stroke={9} tone={audit.status === "ready" || audit.status === "mostly_ready" ? "success" : audit.status === "needs_attention" ? "warning" : "danger"} label={`${audit.score ?? 0}%`}>
-            <span className="text-xl font-semibold mono-number">{audit.score ?? 0}%</span>
+          <ProgressRing playKey={`audit-ring:${audit.id}`} pct={audit.score ?? 0} size={88} stroke={9} tone={audit.status === "ready" || audit.status === "mostly_ready" ? "success" : audit.status === "needs_attention" ? "warning" : "danger"} label={`${audit.score ?? 0}%`}>
+            <span className="text-xl font-semibold mono-number"><DnaCountUp value={audit.score ?? 0} format={(n) => `${n}%`} playKey={`audit-n:${audit.id}`} duration={800} /></span>
           </ProgressRing>
           <div className="min-w-0 flex-1">
             <div className="text-meta muted">{t("pw.result")}</div>
@@ -1080,12 +1082,12 @@ function AuditModal({
           {t("pw.auditNote")}
         </p>
       </div>
-      <ul className="mt-4 space-y-2">
-        {audit.checks.map((c) => {
+      <DnaDraw as="ul" playKey={`audit-list:${audit.id}`} threshold={0.12} className="mt-4 space-y-2">
+        {audit.checks.map((c, i) => {
           const pass = c.status === "pass";
           const tone = pass ? "brand-soft-bg" : c.status === "critical" ? "bg-danger/12 text-danger" : "bg-warning/12 text-warning";
           return (
-            <li key={c.id} className="rounded-xl border hairline">
+            <li key={c.id} className="dna-seq rounded-xl border hairline" style={{ "--i": i } as React.CSSProperties}>
               <details open={c.status === "critical"} className="group">
                 <summary className="focus-ring flex cursor-pointer list-none items-center gap-3 p-3 [&::-webkit-details-marker]:hidden">
                   <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
@@ -1103,7 +1105,7 @@ function AuditModal({
             </li>
           );
         })}
-      </ul>
+      </DnaDraw>
     </Modal>
   );
 }

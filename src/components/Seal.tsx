@@ -1,13 +1,14 @@
 import React from "react";
+import "./dna/draw.css";
 
 /** Seal-style ring around an icon (presentational; the caller supplies the meaning and label). */
-export function Seal({ tone = "ok", small = false, children }: { tone?: "ok" | "warn" | "bad" | "brand" | "neutral"; small?: boolean; children: React.ReactNode }) {
+export function Seal({ tone = "ok", small = false, stamp, children }: { tone?: "ok" | "warn" | "bad" | "brand" | "neutral"; small?: boolean; /** "go" plays the one-time stamp (see useArrival). */ stamp?: "go"; children: React.ReactNode }) {
   const teeth = Array.from({ length: 24 }, (_, i) => {
     const a = (i / 24) * Math.PI * 2;
     return <line key={i} x1={50 + Math.cos(a) * 44} y1={50 + Math.sin(a) * 44} x2={50 + Math.cos(a) * 48.5} y2={50 + Math.sin(a) * 48.5} />;
   });
   return (
-    <span className={`seal ${small ? "seal--sm" : ""} ${tone === "brand" ? "" : `seal--${tone}`}`.trim()} aria-hidden="true">
+    <span className={`seal ${small ? "seal--sm" : ""} ${tone === "brand" ? "" : `seal--${tone}`}`.trim()} data-stamped={stamp} aria-hidden="true">
       <svg className="seal__ring" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeLinecap="round">
         <circle cx="50" cy="50" r="41" strokeWidth="2" opacity=".55" />
         <circle cx="50" cy="50" r="36" strokeWidth="1" strokeDasharray="2 4" opacity=".45" />

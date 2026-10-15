@@ -217,3 +217,47 @@ test('runtime: DnaStepper reveal and JourneyFlow render the complete real state 
   assert.match(flow, /data-reveal="done"/);
   assert.equal((flow.match(/data-lit/g) ?? []).length, 3);
 });
+
+/* ---- shared draw-once rule + count-up (useDrawIn) ---- */
+import { countUpEase, countUpValue, drawEligible, drawPlayed, markDrawPlayed } from '../src/components/dna/useDrawIn';
+
+test('draw: plays only with IO, motion allowed, visible tab and an unplayed key', () => {
+  const base = { enabled: true, hasObserver: true, reduced: false, hidden: false, played: false };
+  assert.equal(drawEligible(base), true);
+  assert.equal(drawEligible({ ...base, hasObserver: false }), false); // jsdom / SSR: final state
+  assert.equal(drawEligible({ ...base, reduced: true }), false); // reduced motion: final state
+  assert.equal(drawEligible({ ...base, hidden: true }), false);
+  assert.equal(drawEligible({ ...base, played: true }), false);
+  assert.equal(drawEligible({ ...base, enabled: false }), false);
+});
+
+test('draw: a playKey plays once per session, keys are independent of the journey store', () => {
+  resetJourneyPlayed();
+  assert.equal(drawPlayed('p1'), false);
+  markDrawPlayed('p1');
+  assert.equal(drawPlayed('p1'), true);
+  assert.equal(drawPlayed('p2'), false);
+  assert.equal(journeyPlayed('p1'), false);
+  assert.equal(drawPlayed(undefined), false);
+});
+
+test('count-up: 0 -> final, eased, integers stay integers and the end is exactly the value', () => {
+  assert.equal(countUpEase(0), 0);
+  assert.equal(countUpEase(1), 1);
+  assert.ok(countUpEase(0.5) > 0.5);
+  assert.equal(countUpValue(88, 0), 0);
+  assert.equal(countUpValue(88, 1), 88);
+  assert.equal(Number.isInteger(countUpValue(88, 0.37)), true);
+  assert.equal(countUpValue(2.5, 1), 2.5);
+  assert.equal(countUpValue(2.5, 2), 2.5); // never overshoots
+});
+
+test('draw css: pre-state is gated behind data-draw and reduced motion never sets it', async () => {
+  const css = await readFile(new URL('../src/components/dna/draw.css', import.meta.url), 'utf8');
+  assert.match(css, /\[data-draw='pre'\] \.dna-fillx/);
+  assert.match(css, /@property --draw-k/);
+  assert.doesNotMatch(css, /animation-fill-mode:\s*(forwards|both)/);
+  const hook = await readFile(new URL('../src/components/dna/useDrawIn.ts', import.meta.url), 'utf8');
+  assert.match(hook, /prefersReducedMotion\(\)/);
+  assert.match(hook, /typeof IntersectionObserver !== "undefined"/);
+});

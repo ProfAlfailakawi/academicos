@@ -89,7 +89,7 @@ export function resetJourneyPlayed(): void {
   PLAYED.clear();
 }
 
-function prefersReducedMotion(): boolean {
+export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return true;
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return true;
   return document.documentElement.classList.contains("a11y-reduced-motion");

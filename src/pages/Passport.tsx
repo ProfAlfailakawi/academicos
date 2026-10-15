@@ -1,6 +1,7 @@
 import { AppDialog } from "../components/AppDialog";
 import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useState } from "react";
+import { DnaCountUp } from "../components/dna/DnaKit";
 import { Link } from "react-router";
 import {
   BriefcaseBusiness,
@@ -226,6 +227,7 @@ export function Passport() {
                 <Card>
                   <CardContent>
                     <SkillRadar
+                      playKey="passport-radar"
                       skills={data.skills}
                       ariaLabel={t("passport.skillEvidence")}
                     />
@@ -384,7 +386,9 @@ function Stat({ icon: Icon, value, label }: any) {
     <Card>
       <CardContent className="p-3.5 sm:p-4">
         <Icon size={17} className="muted" />
-        <div className="text-3xl font-semibold mt-3 mono-number">{value}</div>
+        <div className="text-3xl font-semibold mt-3 mono-number">
+          <DnaCountUp value={value} playKey={`passport-stat:${label}`} />
+        </div>
         <div className="text-meta muted mt-1">{label}</div>
       </CardContent>
     </Card>

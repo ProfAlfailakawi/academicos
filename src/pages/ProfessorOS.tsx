@@ -8,10 +8,13 @@ import { Card, CardContent } from "../components/ui/card";
 import { useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { SegmentRing, SeverityDot, type Tone } from "../components/Infographics";
+import { DnaCountUp } from "../components/dna/DnaKit";
+import { useRiseOnce } from "../components/dna/useDrawIn";
 import { InlineLoader, AcademicLoader } from "../components/ui/AcademicLoader";
 
 type PolicyPreset={level:1|2|4;title:string;summary:string;allowed:string[];prohibited:string[];disclosureRequired:boolean};
 export function ProfessorOS(){
+  useRiseOnce(); // hero/pulse entrance rise plays once per session
   const{t}=useI18n();
   const presets=useMemo<PolicyPreset[]>(()=>[
     {level:1,title:t('prof2.policy1'),summary:t('prof2.policy1Desc'),allowed:[t('prof2.allowExplain'),t('prof2.allowBrainstorm'),t('prof2.allowPlan')],prohibited:[t('prof2.blockSubmit'),t('prof2.blockFakeSources')],disclosureRequired:false},
@@ -95,7 +98,7 @@ function PulseAction({action,t}:{action:FacultyAutomationBrief["actions"][number
 function AttentionRing({actions,t}:{actions:Array<{priority:string}>;t:(k:string)=>string}){
   if(!actions.length)return null;
   const groups=(['critical','important','improve'] as const).map(k=>({k,n:actions.filter(a=>(a.priority==='critical'||a.priority==='important'?a.priority:'improve')===k).length,label:t(k==='critical'?'prof2.critical':k==='important'?'prof2.important':'prof2.improve')})).filter(g=>g.n>0);
-  return <div className="mt-4 flex items-center gap-4 rounded-xl border hairline p-3"><SegmentRing size={56} stroke={7} segments={groups.map(g=>({value:g.n,tone:priorityTone(g.k)}))}><span className="text-base font-bold mono-number">{actions.length}</span></SegmentRing><ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-meta font-semibold">{groups.map(g=><li key={g.k} className="inline-flex items-center gap-1.5"><SeverityDot tone={priorityTone(g.k)}/><span>{g.label}</span><span className="mono-number muted">{g.n}</span></li>)}</ul></div>;
+  return <div className="mt-4 flex items-center gap-4 rounded-xl border hairline p-3"><SegmentRing playKey="prof-attention" size={56} stroke={7} segments={groups.map(g=>({value:g.n,tone:priorityTone(g.k)}))}><span className="text-base font-bold mono-number">{actions.length}</span></SegmentRing><ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-meta font-semibold">{groups.map(g=><li key={g.k} className="inline-flex items-center gap-1.5"><SeverityDot tone={priorityTone(g.k)}/><span>{g.label}</span><span className="mono-number muted">{g.n}</span></li>)}</ul></div>;
 }
-function Pulse({label,value}:{label:string;value:string|number}){return <div className="brain-stat rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="brain-stat__num text-lg font-bold mono-number">{value}</div><div className="text-xs muted mt-1">{label}</div></div>}
+function Pulse({label,value}:{label:string;value:string|number}){return <div className="brain-stat rounded-xl bg-[var(--bg)] border hairline p-3 text-center"><div className="brain-stat__num text-lg font-bold mono-number">{typeof value==='number'?<DnaCountUp value={value} playKey={`prof-pulse:${label}`}/>:value}</div><div className="text-xs muted mt-1">{label}</div></div>}
 function LiteCard({icon:Icon,title,text}:{icon:React.ElementType;title:string;text:string}){return <Card><CardContent><span className="h-14 w-14 rounded-2xl tone-tile"><Icon size={26}/></span><h2 className="text-base font-bold mt-5">{title}</h2><p className="text-xs leading-6 muted mt-2">{text}</p></CardContent></Card>}

@@ -8,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusPill } from "../components/StatusPill";
 import { EmptyState } from "../components/EmptyState";
-import { DnaRing } from "../components/dna/DnaKit";
+import { DnaDraw, DnaRing } from "../components/dna/DnaKit";
 import { useI18n } from "../lib/i18n";
 import { Skeleton } from "../components/ui/Skeleton";
 
@@ -73,11 +73,12 @@ export function Projects() {
       {projects === null ? (
         <Skeleton shape="panel" />
       ) : visible.length ? (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        /* one shared observer: every card's ring draws together, once per session */
+        <DnaDraw playKey="projects-list" threshold={0.1} className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {visible.map((p) => (
             <ProjectCard key={p.id} p={p} />
           ))}
-        </div>
+        </DnaDraw>
       ) : (
         <EmptyState scene="projects"
           icon={FolderKanban}

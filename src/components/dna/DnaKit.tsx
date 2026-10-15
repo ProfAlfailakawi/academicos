@@ -347,12 +347,12 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
   const has = typeof value === 'number' && Number.isFinite(value) && max > 0;
   const fraction = has ? Math.min(1, Math.max(0, (value as number) / max)) : 0;
   // Small rings: slimmer stroke so the centred "100%" keeps breathing room inside the arc.
-  const ringStroke = !label && size <= 44 ? Math.min(stroke, 3) : stroke;
+  const ringStroke = label == null && size <= 44 ? Math.min(stroke, 3) : stroke;
   const r = (size - ringStroke) / 2;
   const c = 2 * Math.PI * r;
   const mid = size / 2;
   // Auto percentage label scales with the ring's inner diameter, identical for 0%..100%.
-  const autoLabelStyle: React.CSSProperties | undefined = !label && size < 56
+  const autoLabelStyle: React.CSSProperties | undefined = label == null && size < 56
     ? { fontSize: Math.min(13, Math.round((size - 2 * ringStroke) * 0.3 * 2) / 2), letterSpacing: '-0.03em' }
     : undefined;
   return (

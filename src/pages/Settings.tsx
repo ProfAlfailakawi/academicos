@@ -263,7 +263,7 @@ export function Settings() {
             </div>
             <div className="mt-4 rounded-xl border hairline brand-soft-bg px-3 py-2 flex items-center justify-between gap-3 text-xs font-semibold">
               <LanguageSwitcher />
-              <span dir={locale === "ar" ? "rtl" : "ltr"}>{locale === "ar" ? (meta.dir === "rtl" ? "من اليمين إلى اليسار" : "من اليسار إلى اليمين") : meta.dir.toUpperCase()} · <bdi dir="ltr">{meta.speech}</bdi></span>
+              <span dir={locale === "ar" ? "rtl" : "ltr"}>{locale === "ar" ? (meta.dir === "rtl" ? "من اليمين إلى اليسار" : "من اليسار إلى اليمين") : meta.dir.toUpperCase()}{locale === "ar" ? null : <> · <bdi dir="ltr">{meta.speech}</bdi></>}</span>
             </div>
             <p className="body-copy mt-3">{t("settings.languageNote")}</p>
             <fieldset className="mt-4">
@@ -421,7 +421,7 @@ export function Settings() {
                   value={h.status === "ok" ? t("ctrl.posture.healthy") : h.status}
                 />
                 <Service
-                  label="Firestore"
+                  label={locale === "ar" ? "قاعدة البيانات" : "Firestore"}
                   ok={h.firebase}
                   value={h.firebase ? t("ui.configured") : t("ui.notConfigured")}
                 />
@@ -436,7 +436,7 @@ export function Settings() {
                   value={h.aiConfigured ? t("ui.configured") : t("ui.notConfigured")}
                 />
                 <Service
-                  label="OCR"
+                  label={locale === "ar" ? "قراءة النص من الصور" : "OCR"}
                   ok={h.ocr?.configured}
                   value={
                     h.ocr?.ensemble

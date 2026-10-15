@@ -292,7 +292,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
         <CardContent>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="eyebrow">{t("ui.liveVoiceViva")} · {t(`viva.mode.${session.mode}`)}</div>
+              <div className="eyebrow">{t("ui.liveVoiceViva")} · {t(({ easy: "viva.modeEasy", normal: "viva.modeNormal", strict: "viva.modeStrict", external: "viva.modeExternal" } as Record<string, string>)[session.mode] || "viva.modeNormal")}</div>
               <h2 className="section-title mt-1">{t("viva.liveTitle")}</h2>
             </div>
             <div className="text-end"><div className="text-xs font-semibold">{currentIndex + 1} / {session.questions.length}</div><div className="text-meta muted">{answeredCount} {t("viva.answered")}</div></div>

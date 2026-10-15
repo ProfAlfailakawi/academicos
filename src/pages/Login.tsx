@@ -408,13 +408,11 @@ export function Login() {
                      isolated tenant of synthetic academic work — no real
                      institution data is reachable from it. */
                   <div className="mt-5 pt-4 border-t hairline flex justify-center">
-                    {/* أيقونة صامتة: المدخل ثانويّ ولا ينبغي أن يتصدّر شاشة
-                        الدخول بعبارة. الوصف في title/aria-label. */}
+                    {/* زر نصّي واضح: الأيقونة وحدها لا يفهمها الزائر الجديد. */}
                     <button
                       type="button"
                       disabled={demoBusy}
                       title={`${t("demo.enter")} — ${t("demo.enterHint")}`}
-                      aria-label={t("demo.enter")}
                       onClick={async () => {
                         setDemoBusy(true);
                         setError("");
@@ -426,16 +424,13 @@ export function Login() {
                           setDemoBusy(false);
                         }
                       }}
-                      className="focus-ring w-11 h-11 grid place-items-center rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-500 hover:bg-amber-500/15 disabled:opacity-60"
+                      className="focus-ring min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] text-sm font-semibold brand-text hover:bg-[var(--brand-soft)] disabled:opacity-60"
                     >
                       {demoBusy ? <InlineLoader size={16}/> : <FlaskConical className="w-4 h-4" aria-hidden="true"/>}
+                      <span>{t("demo.tryNoAccount")}</span>
                     </button>
                   </div>
                 )}
-
-                <div className="mt-6 pt-5 border-t hairline text-meta muted leading-5">
-                  <strong>{t("login.firstTimeTitle")}</strong> {t("login.firstTimeDesc")}
-                </div>
               </>
             )}
           </CardContent>

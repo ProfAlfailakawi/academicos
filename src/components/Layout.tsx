@@ -749,7 +749,7 @@ export function Layout() {
           <div className="predictive-mobile-wrap 2xl:hidden px-4 md:px-7 pt-2.5">
             <button
               onClick={goToPrediction}
-              className="predictive-mobile predictive-mobile--chip focus-ring flex w-fit max-w-full items-center gap-2 rounded-full px-2 py-1 text-start"
+              className="predictive-mobile predictive-mobile--chip focus-ring flex w-fit max-w-full items-center gap-2 rounded-full px-3 py-2 min-h-10 text-start"
             >
               <span className="predictive-chip__spark h-6 w-6 shrink-0 rounded-full flex items-center justify-center">
                 <Sparkles size={12} />

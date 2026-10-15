@@ -51,7 +51,15 @@ export function formatDate(value: string | number | Date, locale: LocaleCode, op
   return new Intl.DateTimeFormat(localeIntlTag(locale), options || { dateStyle: "medium" }).format(date);
 }
 
+const AR_CURRENCY_NAMES: Record<string, string> = { USD: "دولار", KWD: "دينار كويتي", EUR: "يورو", SAR: "ريال سعودي", AED: "درهم إماراتي", GBP: "جنيه إسترليني" };
+
 export function formatMoney(amount: number, currency: string, locale: LocaleCode) {
+  /* العربية: صيغة واحدة آمنة للاتجاه — «6.99 دولار» — بدل «$US 6.99» / «6.99 US$». */
+  if (locale === "ar") {
+    if (amount === 0) return "مجانًا";
+    const digits = new Intl.NumberFormat("en-US", { minimumFractionDigits: currency === "KWD" ? 3 : 2, maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
+    return `${digits} ${AR_CURRENCY_NAMES[currency] || currency}`;
+  }
   return new Intl.NumberFormat(localeIntlTag(locale), { style: "currency", currency, currencyDisplay: "narrowSymbol", numberingSystem: "latn", maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
 }
 

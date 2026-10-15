@@ -42,7 +42,7 @@ export function PublicHome() {
 
       <main>
         <section className={`public-student-hero border-y hairline overflow-hidden${heroEntering ? " is-entering" : ""}`}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-20 grid lg:grid-cols-[.95fr_1.05fr] gap-10 items-center">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-20 grid lg:grid-cols-[.95fr_1.05fr] gap-10 items-center">
             <div>
               <div className="student-proof-chip"><Sparkles size={15} /> {t("landing.globalChip")}</div>
               <h1 className="text-[43px] sm:text-[58px] xl:text-[72px] font-black tracking-[-.055em] leading-[1.03] mt-6">{t("landing.heroLine1")}<br /><span className="brand-text">{t("landing.heroLine2")}</span></h1>
@@ -58,9 +58,9 @@ export function PublicHome() {
           </div>
         </section>
 
-        <section id="how" className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
+        <section id="how" className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-24">
           <div className="text-center max-w-2xl mx-auto"><div className="eyebrow brand-text">{t("landing.chooseGoal")}</div><h2 className="text-3xl md:text-5xl font-black tracking-[-.045em] mt-3">{t("landing.threeDoors")}</h2></div>
-          <div className="journey-grid mt-10">{journey.map((item) => <Journey key={item.title} {...item} />)}</div>
+          <div className="journey-grid mt-6 md:mt-10">{journey.map((item) => <Journey key={item.title} {...item} />)}</div>
           <JourneyFlow className="mt-12" playKey="landing:how" items={[
             { key: "upload", icon: UploadCloud, title: t("landing.flowUpload"), text: t("landing.flowUploadText") },
             { key: "build", icon: FilePenLine, title: t("landing.flowBuild"), text: t("landing.flowBuildText") },
@@ -70,7 +70,7 @@ export function PublicHome() {
         </section>
 
         <section className="public-xray-section border-y hairline">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid lg:grid-cols-2 gap-10 items-center">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-16 grid lg:grid-cols-2 gap-6 md:gap-10 items-center">
             <div className="xray-visual panel">
               <div className="flex items-center justify-between gap-2 flex-wrap"><span className="eyebrow">{t("ui.projectXray")} <span className="example-chip" title={t("ui.exampleChipHint")}>{t("ui.exampleChip")}</span></span><span className="quality-badge">{t("landing.readyLabel")} 86%</span></div>
               <DnaDraw playKey="landing:xray" className="xray-score-grid mt-7"><Score value="91" label={t("landing.structure")} /><Score value="78" label={t("landing.sources")} /><Score value="88" label={t("landing.coherence")} /></DnaDraw>
@@ -85,7 +85,7 @@ export function PublicHome() {
           </div>
         </section>
 
-        <section id="pricing" className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
+        <section id="pricing" className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-24">
           <div className="pricing-preview">
             <div><div className="eyebrow">{t("landing.studentPrice")}</div><h2 className="text-3xl md:text-5xl font-black tracking-[-.045em] mt-3">{t("landing.priceHeadline").replace("{price}", projectPrice)}</h2><p className="body-copy mt-4">{t("landing.priceBody")}</p></div>
             <div className="price-orbit"><span className="price-orbit__amount">{projectPrice}</span><span className="price-orbit__currency">{t("landing.perProject")}</span><Button asChild className="mt-5"><Link to="/login">{t("landing.seePlans")}</Link></Button></div>
@@ -93,14 +93,14 @@ export function PublicHome() {
         </section>
 
         <section id="teacher" className="teacher-lite-strip surface-deep strip-deep">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-start gap-4"><span className="h-12 w-12 rounded-2xl bg-white/12 grid place-items-center shrink-0"><GraduationCap size={23} /></span><div><div className="eyebrow text-white/65">{t("pub.faculty.eyebrow")} · {t("landing.optional")}</div><h2 className="text-2xl font-bold mt-1">{t("landing.teacherTitle")}</h2></div></div>
             <Button variant="outline" asChild className="btn-on-deep"><Link to="/login">{t("landing.teacherSignIn")}</Link></Button>
           </div>
         </section>
       </main>
 
-      <footer className="px-4 md:px-8 py-8"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — {t("landing.footerTag")}</span><span className="flex flex-wrap gap-x-4"><Link className="min-h-11 inline-flex items-center" to="/p/academic-integrity">{t("landing.integrity")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/privacy">{t("landing.privacy")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/terms">{t("landing.terms")}</Link><Link className="min-h-11 inline-flex items-center" to="/p/faq">{t("landing.faq")}</Link></span></div></footer>
+      <footer className="px-4 md:px-8 pt-8 pb-[max(2rem,env(safe-area-inset-bottom))]"><div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-between text-xs muted"><span>AcademicOS — {t("landing.footerTag")}</span><span className="flex flex-wrap gap-x-2"><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/academic-integrity">{t("landing.integrity")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/privacy">{t("landing.privacy")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/terms">{t("landing.terms")}</Link><Link className="min-h-11 min-w-11 px-2 inline-flex items-center justify-center" to="/p/faq">{t("landing.faq")}</Link></span></div></footer>
     </div>
   );
 }

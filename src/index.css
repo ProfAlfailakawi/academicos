@@ -386,10 +386,11 @@ tbody tr:hover { background: color-mix(in srgb, var(--panel-2) 70%, transparent)
     linear-gradient(to bottom, color-mix(in srgb, var(--line) 24%, transparent) 1px, transparent 1px);
   background-size: 36px 36px;
 }
+input[type="checkbox"]:not(.sr-only), input[type="radio"]:not(.sr-only) { width: 20px; height: 20px; flex: none; }
 .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
 
 @media (max-width: 1023px) {
-  .app-main { padding-bottom: 7.7rem !important; }
+  .app-main { padding-bottom: calc(7.7rem + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 @media (max-width: 639px) {
@@ -632,8 +633,8 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .writer-action { background: var(--panel); color: var(--ink); transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
 .writer-action:hover { color: var(--brand-2); border-color: color-mix(in srgb, var(--brand) 30%, var(--line)); background: var(--brand-soft); }
 .writer-canvas { border: 0; font-family: "Noto Serif", Georgia, "Times New Roman", serif; }
-html[data-locale="ar"] .writer-canvas { font-family: "Noto Naskh Arabic", "Noto Serif Arabic", serif; }
-html[data-locale="ur"] .writer-canvas { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif; }
+html[data-locale="ar"] .writer-canvas { font-family: "IBM Plex Sans Arabic", "Noto Naskh Arabic", "Noto Serif Arabic", "Amiri", "Traditional Arabic", "Geeza Pro", "Segoe UI", "Times New Roman", serif; }
+html[data-locale="ur"] .writer-canvas { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", "Geeza Pro", "Segoe UI", serif; }
 html[data-locale="hi"] .writer-canvas { font-family: "Noto Serif Devanagari", "Noto Sans Devanagari", serif; }
 html[data-locale="zh"] .writer-canvas { font-family: "Noto Serif SC", "Noto Sans SC", serif; }
 .writer-canvas:focus { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--brand) 24%, transparent); }
@@ -1192,3 +1193,9 @@ button.brand-bg:disabled,
 /* Public pages: icon tile with a soft gradient and lift. */
 .public-page .tone-tile { background-image: linear-gradient(145deg, rgba(255,255,255,.7), color-mix(in srgb, var(--brand) 14%, transparent)); box-shadow: 0 6px 14px color-mix(in srgb, var(--brand) 12%, transparent), inset 0 1px 0 rgba(255,255,255,.6); }
 .dark .public-page .tone-tile { background-image: linear-gradient(145deg, rgba(255,255,255,.1), rgba(255,255,255,.02)); box-shadow: none; }
+
+/* ≥12px floor for secondary text and ≥40px hit areas (round 2). */
+.text-\[9px\], .text-\[10px\], .text-\[11px\], .text-\[11\.5px\], [class~="text-[11px]"], [class~="text-[10px]"], [class~="text-[11.5px]"] { font-size: 12px !important; }
+.mobile-nav-link__label { font-size: 12px; }
+label:has(> input[type="checkbox"]:not(.sr-only)), label:has(> input[type="radio"]:not(.sr-only)) { min-height: 40px; }
+.app-sidebar :where(a, button), .predictive-chip { min-height: 40px; }

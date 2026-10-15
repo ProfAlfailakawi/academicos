@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Draw once — ONE shared opt-in rule for rings, bars, donuts, radars, funnels,
+   gauges, lists and counters (hooks: useDrawIn / useCountUp).
+   `data-draw="pre"` is applied only once JS decided to play (never in SSR, tests,
+   reduced motion, print); `data-draw="go"` runs the transition to the real value;
+   the attribute is then removed. Transform / opacity / stroke-dashoffset only
+   (conic rings sweep a registered number).
+   ========================================================================== */
+/* uses the DNA easing curve even where dna.css is not loaded */
+:root { --draw-ease: var(--dna-ease, cubic-bezier(0.22, 0.78, 0.24, 1)); }
+@property --draw-k {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+[data-draw] { transition: --draw-k 0.9s var(--draw-ease); }
+[data-draw='pre'] { --draw-k: 0; }
+[data-draw='go'] { --draw-k: 1; }
+
+/* svg ring arcs (DnaRing, ProgressRing, SegmentRing) */
+[data-draw] .dna-ringv { transition: stroke-dasharray 0.9s var(--draw-ease), opacity 0.15s linear; }
+.dna-sring { transition: stroke-dasharray 0.7s var(--draw-ease); }
+[data-draw] .dna-sring { transition: stroke-dasharray 0.7s var(--draw-ease) calc(min(var(--i, 0), 6) * 140ms); }
+[data-draw='pre'] .dna-ringv { stroke-dasharray: 0 1000 !important; opacity: 0; }
+[data-draw='pre'] .dna-sring { stroke-dasharray: 0 1000 !important; }
+
+/* ring drawn with a dash offset instead of a dash length (Reverse Assessment gauge) */
+[data-draw='pre'] .dna-ringoff { stroke-dashoffset: var(--ring-c, 0) !important; }
+
+/* bars: grow from the inline-start edge, <= 60ms apart (--i), whole thing <= 1.2s */
+.dna-fillx { transform-origin: left center; }
+.dna-fillx:dir(rtl) { transform-origin: right center; }
+[data-draw] .dna-fillx { transition: transform 0.6s var(--draw-ease) calc(min(var(--i, 0), 10) * 60ms); }
+[data-draw='pre'] .dna-fillx { transform: scaleX(0); }
+.dna-fillx[data-axis='y'] { transform-origin: center bottom; }
+[data-draw='pre'] .dna-fillx[data-axis='y'] { transform: scaleY(0); }
+
+/* appear in reading order: rows stay in place, opacity + a few px only */
+[data-draw] .dna-seq { transition: opacity 0.4s var(--draw-ease) calc(min(var(--i, 0), 8) * 40ms), transform 0.4s var(--draw-ease) calc(min(var(--i, 0), 8) * 40ms); }
+[data-draw='pre'] .dna-seq { opacity: 0; transform: translateY(6px); }
+
+/* sparkline: line draws start -> end, then the area fades in */
+[data-draw] .dna-sparkl { stroke-dasharray: 1; transition: stroke-dashoffset 0.9s var(--draw-ease); }
+[data-draw] .dna-sparka { transition: opacity 0.5s var(--draw-ease) 0.7s; }
+svg.dna-spark[data-draw] circle { transition: opacity 0.3s var(--draw-ease) 0.8s; }
+[data-draw='pre'] .dna-sparkl { stroke-dashoffset: 1; }
+[data-draw='pre'] .dna-sparka, svg.dna-spark[data-draw='pre'] circle { opacity: 0; }
+
+/* radar: the shape grows from the centre (--ox/--oy set on the shape) */
+.dna-radshape { transform-origin: var(--ox, 50%) var(--oy, 50%); }
+[data-draw] .dna-radshape { transition: transform 0.9s var(--draw-ease), opacity 0.4s var(--draw-ease); }
+[data-draw='pre'] .dna-radshape { transform: scale(0.02); opacity: 0; }
+
+/* gauge needle: sweeps from the empty end to the value (--needle-deg = value * 180) */
+.dna-needle { transform-origin: var(--ox, 50%) var(--oy, 50%); }
+[data-draw] .dna-needle { transition: transform 1s var(--draw-ease); }
+[data-draw='pre'] .dna-needle { transform: rotate(calc(var(--needle-deg, 0) * -1deg)); }
+
+/* conic rings (.quality-ring__dial, .xray-score) multiply their percentage by --draw-k (see index.css) */
+/* counters */
+.dna-cu { font-variant-numeric: tabular-nums; }
+.dna-cu-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* one stamp on a seal / one fading highlight (verification result arriving) */
+@keyframes dna-stamp {
+  0% { transform: scale(1.35) rotate(-8deg); opacity: 0; }
+  55% { transform: scale(0.96) rotate(1deg); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes dna-flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-stamped='go'] { animation: dna-stamp 0.7s var(--draw-ease) 1; }
+  [data-flash='go'] { position: relative; }
+  [data-flash='go']::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    border: 2px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation: dna-flash 1.4s var(--draw-ease) 1;
+  }
+}
+

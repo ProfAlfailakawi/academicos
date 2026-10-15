@@ -42,28 +42,34 @@ export interface DrawInOptions {
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+/** Browser-only, evaluated during render so an eligible element's very first style is already the drawn-out one. */
+function eligibleNow(playKey: string | undefined, enabled: boolean): boolean {
+  return drawEligible({
+    enabled,
+    playKey,
+    hasObserver: typeof IntersectionObserver !== "undefined",
+    reduced: prefersReducedMotion(),
+    hidden: hidden(),
+    played: drawPlayed(playKey),
+  });
+}
+
 export function useDrawIn<T extends Element = HTMLElement>({ playKey, enabled = true, threshold = 0.35, settleMs = 2000 }: DrawInOptions = {}) {
   const ref = useRef<T | null>(null);
-  const [draw, setDraw] = useState<DrawPhase>(undefined);
+  // Initial state is decided synchronously: "pre" only when the intro can really play (never SSR/tests/reduced motion/played).
+  // Entering "pre" has no transition (see draw.css), so it is instant even when set after mount.
+  const [draw, setDraw] = useState<DrawPhase>(() => (eligibleNow(playKey, enabled) ? "pre" : undefined));
   const setRef = useCallback((node: T | null) => {
     ref.current = node;
   }, []);
 
   useIsoLayoutEffect(() => {
     const el = ref.current;
-    if (
-      !el ||
-      !drawEligible({
-        enabled,
-        playKey,
-        hasObserver: typeof IntersectionObserver !== "undefined",
-        reduced: prefersReducedMotion(),
-        hidden: hidden(),
-        played: drawPlayed(playKey),
-      })
-    )
+    if (!el || !eligibleNow(playKey, enabled)) {
+      setDraw(undefined); // never leave something drawn-out
       return;
-    setDraw("pre"); // before paint: no flash of the final state
+    }
+    setDraw("pre");
     const effective = journeyThreshold(threshold, el.getBoundingClientRect().height, window.innerHeight);
     let timer: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(

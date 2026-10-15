@@ -50,3 +50,7 @@ The hero source and rendered implementation were compared in `.codex-qa/hero-com
 - No visual change is required before credentialed staging. Repeat authenticated screenshots after the owner adds Firebase/payment credentials.
 
 final result: passed
+
+## Font note
+
+- Noto Naskh Arabic is not bundled (no font package in the repo). The editor canvas uses the self-hosted IBM Plex Sans Arabic first, then Naskh/system Arabic faces as graceful fallbacks.

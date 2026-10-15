@@ -375,7 +375,7 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
           />
         )}
       </svg>
-      <div className="dna-ringc" aria-hidden="true" style={size <= 44 ? { fontSize: 11, letterSpacing: '-0.03em' } : undefined}>
+      <div className="dna-ringc" aria-hidden="true" style={size <= 44 ? { fontSize: 12, letterSpacing: '-0.04em' } : undefined}>
         {label ?? (has ? `${Math.round(fraction * 100)}%` : '—')}
         {sublabel != null && sublabel !== false && <small>{sublabel}</small>}
       </div>

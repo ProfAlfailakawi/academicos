@@ -378,7 +378,7 @@ tbody tr:hover { background: color-mix(in srgb, var(--panel-2) 70%, transparent)
 *::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 44%, transparent); }
 
 /* Make very small metadata readable without changing information density. */
-[class~="text-[11px]"] { font-size: 11px; }
+[class~="text-[11px]"] { font-size: 12px; }
 
 .paper-grid {
   background-image:
@@ -1172,7 +1172,7 @@ button.brand-bg:disabled,
 }
 .hero-depth { background-image: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--brand) 4%, var(--panel)), var(--panel)); box-shadow: var(--shadow-sm); }
 .app-main .brain-stat { min-width: 0; }
-.brain-stat { padding-inline: .375rem; } .brain-stat > :last-child { font-size: .6875rem; }
+.brain-stat { padding-inline: .375rem; } .brain-stat > :last-child { font-size: .75rem; }
 
 /* --- Round 2: small-screen fixes found in the route sweep ------------------ */
 /* Settings: digit-style choices wrapped instead of colliding at 393. */
@@ -1199,3 +1199,4 @@ button.brand-bg:disabled,
 .mobile-nav-link__label { font-size: 12px; }
 label:has(> input[type="checkbox"]:not(.sr-only)), label:has(> input[type="radio"]:not(.sr-only)) { min-height: 40px; }
 .app-sidebar :where(a, button), .predictive-chip { min-height: 40px; }
+summary { min-height: 40px; }

@@ -21,7 +21,7 @@ import { InlineLoader } from "../ui/AcademicLoader";
 
 export function TeamStudio({ project }: { project: ProjectDNA }) {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [members, setMembers] = useState<ProjectMemberRecord[]>([]);
   const [presence, setPresence] = useState<ProjectPresenceRecord[]>([]);
   const [activity, setActivity] = useState<ProjectActivityRecord[]>([]);
@@ -236,7 +236,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                     ? user?.displayName || t("team.you")
                     : t("team.ownerName")
                 }
-                meta={project.userId}
+                meta={isOwner ? user?.email || "" : ""}
               />
               {members
                 .filter((m) => m.status !== "revoked")
@@ -330,7 +330,7 @@ export function TeamStudio({ project }: { project: ProjectDNA }) {
                             key={k}
                             className="rounded-full soft-bg px-2 py-1 text-meta muted"
                           >
-                            {label(k, t)} · {v}
+                            {label(k, t, locale)} · {v}
                           </span>
                         ))}
                     </div>
@@ -375,9 +375,19 @@ function MemberRow({
 function short(v: string) {
   return v.length > 22 ? `${v.slice(0, 8)}…${v.slice(-5)}` : v;
 }
-function label(v: string, t: (key: string) => string) {
+const AR_ACTION_WORDS: Record<string, string> = {
+  team: "الفريق", create: "إنشاء", update: "تحديث", delete: "حذف", add: "إضافة", invite: "دعوة", accept: "قبول",
+  revoke: "إلغاء", comment: "تعليق", export: "تصدير", upsert: "تحديث", audit: "فحص", start: "بدء", member: "عضو",
+  project: "المشروع", evidence: "دليل", restore: "استعادة", save: "حفظ", submission: "التسليم", viva: "المناقشة",
+  workspace: "مساحة العمل", item: "عنصر", task: "مهمة", complete: "إكمال", view: "عرض",
+};
+function label(v: string, t: (key: string) => string, locale?: string) {
   const key = `team.label.${v}`;
   const translated = t(key);
   if (translated !== key) return translated;
+  if (locale === "ar") {
+    const parts = v.split(".").map((w) => AR_ACTION_WORDS[w]).filter(Boolean);
+    if (parts.length) return parts.join(" ");
+  }
   return v.split(".").pop() || v;
 }

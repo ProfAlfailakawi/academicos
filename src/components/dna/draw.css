@@ -32,6 +32,9 @@
 .dna-fillx:dir(rtl) { transform-origin: right center; }
 [data-draw='go'] .dna-fillx { transition: transform 0.6s var(--draw-ease) calc(min(var(--i, 0), 10) * 60ms); }
 [data-draw='pre'] .dna-fillx { transform: scaleX(0); }
+/* a bar's label never scales with it: the label fades in once the fill is under way */
+[data-draw='go'] .dna-fillx-label { transition: opacity 0.4s var(--draw-ease) calc(min(var(--i, 0), 10) * 60ms + 0.2s); }
+[data-draw='pre'] .dna-fillx-label { opacity: 0; }
 .dna-fillx[data-axis='y'] { transform-origin: center bottom; }
 [data-draw='pre'] .dna-fillx[data-axis='y'] { transform: scaleY(0); }
 

@@ -24,7 +24,7 @@ import {
   Users,
 } from "lucide-react";
 import { api } from "../lib/api";
-import { formatDate, useI18n } from "../lib/i18n";
+import { formatDate, formatDateTime, useI18n } from "../lib/i18n";
 import { runtimeEnumLabel } from "../lib/platform-locale";
 import type {
   CourseAssignmentRecord,
@@ -786,12 +786,15 @@ export function CourseOS() {
                 <Field label={t("course.deadline")}>
                   <input
                     type="datetime-local"
+                    lang={locale}
+                    dir="ltr"
                     className="field"
                     value={form.deadline}
                     onChange={(e) =>
                       setForm({ ...form, deadline: e.target.value })
                     }
                   />
+                  <span className="block text-meta muted mt-1">{form.deadline ? formatDateTime(form.deadline, locale, { dateStyle: "full", timeStyle: "short" }) : t("ui.dateHintDMY")}</span>
                 </Field>
               </div>
               <Field label={t("course.instructions")}>

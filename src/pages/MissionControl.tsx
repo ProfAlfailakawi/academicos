@@ -1,7 +1,7 @@
 import { localizedUiError } from "../lib/ui-error";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { ArrowRight, Award, Bell, BookOpenCheck, BrainCircuit, CalendarDays, Camera, CheckCircle2, Clock3, FileHeart, FilePenLine, FileText, FolderOpen, GraduationCap, LoaderCircle, Mic2, Paperclip, ScanSearch, ShieldCheck, Sparkles, Target, WandSparkles, X, Zap } from "lucide-react";
+import { ArrowRight, Award, Bell, BookOpenCheck, BrainCircuit, CalendarDays, Camera, CheckCircle2, Clock3, FileText, FolderOpen, LoaderCircle, Mic2, Paperclip, ScanSearch, ShieldCheck, Sparkles, Target, WandSparkles, X, Zap } from "lucide-react";
 import { DnaHubMap, DnaRing, type DnaHubNode } from "../components/dna/DnaKit";
 import { api } from "../lib/api";
 import type { LearningBrain, MissionControlPlan, ProjectDNA, UserProfile } from "../types";
@@ -14,11 +14,6 @@ import { InlineLoader } from "../components/ui/AcademicLoader";
 
 const MAX = 20 * 1024 * 1024;
 type Intent = "auto" | "write" | "rescue" | "exam";
-const JOURNEYS = [
-  { to: "/app/upload?mode=write", icon: FilePenLine, title: "mission.journeyWrite", detail: "mission.journeyWriteDesc", tone: "brand" },
-  { to: "/app/upload?mode=rescue", icon: FileHeart, title: "mission.journeyRescue", detail: "mission.journeyRescueDesc", tone: "sand" },
-  { to: "/app/learn", icon: GraduationCap, title: "mission.journeyExam", detail: "mission.journeyExamDesc", tone: "blue" },
-] as const;
 const ACADEMIC_TOOLS = [
   { to: "/app/calendar", icon: CalendarDays, label: "layout.navCalendar", detail: "mission.toolCalendarDesc" },
   { to: "/app/notifications", icon: Bell, label: "layout.navNotifications", detail: "mission.toolNotificationsDesc" },

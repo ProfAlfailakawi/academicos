@@ -56,6 +56,7 @@ const AR_CURRENCY_NAMES: Record<string, string> = { USD: "دولار", KWD: "د�
 export function formatMoney(amount: number, currency: string, locale: LocaleCode) {
   /* العربية: صيغة واحدة آمنة للاتجاه — «6.99 دولار» — بدل «$US 6.99» / «6.99 US$». */
   if (locale === "ar") {
+    if (amount === 0) return "مجانًا";
     const digits = new Intl.NumberFormat("en-US", { minimumFractionDigits: currency === "KWD" ? 3 : 2, maximumFractionDigits: currency === "KWD" ? 3 : 2 }).format(amount);
     return `${digits} ${AR_CURRENCY_NAMES[currency] || currency}`;
   }

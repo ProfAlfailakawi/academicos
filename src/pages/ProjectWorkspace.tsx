@@ -413,7 +413,7 @@ export function ProjectWorkspace() {
                 </div>
                 <div className="mt-2 pt-2 border-t border-dashed hairline space-y-0.5">
                   <div className="px-3 pb-1 text-meta font-semibold muted">{t("pw.submissionTools")}</div>
-                  <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
+                  <a href={api.exportBundleUrl(project.id)} download className="flex items-center gap-2 min-h-10 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)]">
                     <FileCheck2 size={15} /> {t("pw.submissionBundle")}
                   </a>
                   <button onClick={() => setShowIntegrityCheck(true)} className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-[var(--panel-2)] text-start">

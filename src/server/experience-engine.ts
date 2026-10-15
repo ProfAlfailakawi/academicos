@@ -225,8 +225,8 @@ export function buildFacultyAutomation(
     const problems = [
       !item.deadline && tx(EXP.fieldDeadline, locale),
       !item.deliverables.length && tx(EXP.fieldDeliverables, locale),
-      (!item.rubric.length || Math.abs(weight - 100) > 0.01) && "Rubric",
-      !item.outcomes.length && "Outcomes",
+      (!item.rubric.length || Math.abs(weight - 100) > 0.01) && (locale === "ar" ? "معايير التقييم" : "Rubric"),
+      !item.outcomes.length && (locale === "ar" ? "مخرجات التعلّم" : "Outcomes"),
       item.aiPolicy.needsConfirmation && tx(EXP.fieldAiPolicy, locale),
     ].filter((value): value is string => Boolean(value));
     if (problems.length)

@@ -346,9 +346,15 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
   const drawn = useDrawIn<HTMLDivElement>({ playKey, enabled: Boolean(playKey) });
   const has = typeof value === 'number' && Number.isFinite(value) && max > 0;
   const fraction = has ? Math.min(1, Math.max(0, (value as number) / max)) : 0;
-  const r = (size - stroke) / 2;
+  // Small rings: slimmer stroke so the centred "100%" keeps breathing room inside the arc.
+  const ringStroke = !label && size <= 44 ? Math.min(stroke, 3) : stroke;
+  const r = (size - ringStroke) / 2;
   const c = 2 * Math.PI * r;
   const mid = size / 2;
+  // Auto percentage label scales with the ring's inner diameter, identical for 0%..100%.
+  const autoLabelStyle: React.CSSProperties | undefined = !label && size < 56
+    ? { fontSize: Math.min(13, Math.round((size - 2 * ringStroke) * 0.3 * 2) / 2), letterSpacing: '-0.03em' }
+    : undefined;
   return (
     <div
       ref={drawn.ref}
@@ -360,7 +366,7 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
       aria-label={ariaLabel}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-        <circle className="dna-ringt" cx={mid} cy={mid} r={r} fill="none" strokeWidth={stroke} strokeDasharray={has ? undefined : '3 4'} />
+        <circle className="dna-ringt" cx={mid} cy={mid} r={r} fill="none" strokeWidth={ringStroke} strokeDasharray={has ? undefined : '3 4'} />
         {has && fraction > 0 && (
           <circle
             className="dna-ringv"
@@ -368,14 +374,14 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
             cy={mid}
             r={r}
             fill="none"
-            strokeWidth={stroke}
+            strokeWidth={ringStroke}
             strokeLinecap="round"
             strokeDasharray={`${c * fraction} ${c}`}
             transform={`rotate(-90 ${mid} ${mid})`}
           />
         )}
       </svg>
-      <div className="dna-ringc" aria-hidden="true" style={size <= 44 ? { fontSize: 11, letterSpacing: '-0.03em' } : undefined}>
+      <div className="dna-ringc" aria-hidden="true" style={autoLabelStyle}>
         {label ?? (has ? `${Math.round(fraction * 100)}%` : '—')}
         {sublabel != null && sublabel !== false && <small>{sublabel}</small>}
       </div>

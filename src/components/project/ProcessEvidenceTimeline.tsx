@@ -35,6 +35,32 @@ const KIND_ICON: Partial<Record<ProcessEvidenceKind, React.ElementType>> = {
 const FILTERS: Array<ProcessEvidenceKind | "all"> = ["all", "draft", "revision", "viva", "source_check", "ai_assist"];
 
 /** Authorship-evidence timeline with a signed, printable "Process Evidence" report. */
+/* نصوص السجل يولّدها الخادم بالإنجليزية؛ نعرّب الرموز المعروفة في الواجهة العربية فقط (عرض بحت). */
+const AR_EV_TOKENS: Record<string, string> = {
+  writing: "الكتابة", research: "البحث", chart: "رسم بياني", claim: "ادعاء", calculation: "حساب", decision: "قرار",
+  source: "مصدر", workspace: "مساحة العمل", data: "البيانات", code: "البرمجة", design: "التصميم", presentation: "العرض",
+  in_progress: "قيد العمل", ready: "جاهز", unverified: "غير موثّق", verified: "موثّق", user_verified: "وثّقه المستخدم",
+  draft: "مسودة", needs_review: "بحاجة إلى مراجعة", gemini: "الذكاء الاصطناعي",
+  viva_generation: "توليد أسئلة المناقشة", language_review: "مراجعة لغوية", project_outline: "مخطط المشروع",
+  Draft: "مسودة", "AI assistance": "مساعدة الذكاء الاصطناعي",
+};
+function localizeEvidenceText(value: string, locale: string): string {
+  if (locale !== "ar" || !value) return value;
+  if (AR_EV_TOKENS[value]) return AR_EV_TOKENS[value];
+  if (!value.includes(" · ")) return value;
+  return value
+    .split(" · ")
+    .filter((part) => !/^gemini-[\w.\-]+$/i.test(part))
+    .map((part) => {
+      const v = part.match(/^v(\d+)$/);
+      if (v) return `الإصدار ${v[1]}`;
+      const c = part.match(/^(\d+) chars$/);
+      if (c) return `${c[1]} حرفًا`;
+      return AR_EV_TOKENS[part] || part;
+    })
+    .join(" · ");
+}
+
 export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
   const { t, locale, formatNumber } = useI18n();
   const [report, setReport] = useState<ProcessEvidenceReport | null>(null);
@@ -208,8 +234,8 @@ export function ProcessEvidenceTimeline({ project }: { project: ProjectDNA }) {
                           <span>{t(`pe.actor.${entry.actorType}`)}</span>
                           {typeof entry.version === "number" && <span className="mono-number">v{formatNumber(entry.version)}</span>}
                         </div>
-                        <div className="text-sm font-semibold mt-1"><bdi>{entry.title}</bdi></div>
-                        <p className="text-sm muted leading-7"><bdi>{entry.detail}</bdi></p>
+                        <div className="text-sm font-semibold mt-1"><bdi>{localizeEvidenceText(entry.title, locale)}</bdi></div>
+                        <p className="text-sm muted leading-7"><bdi>{localizeEvidenceText(entry.detail, locale)}</bdi></p>
                       </li>
                     );
                   })}
@@ -283,7 +309,7 @@ function ProcessEvidencePrint({ report, verifyUrl }: { report: ProcessEvidenceRe
             <tr key={entry.id}>
               <td>{formatDateTime(entry.at, locale)}</td>
               <td>{t(`pe.kind.${entry.kind}`)}</td>
-              <td><strong><bdi>{entry.title}</bdi></strong><div dir="auto">{entry.detail}</div></td>
+              <td><strong><bdi>{localizeEvidenceText(entry.title, locale)}</bdi></strong><div dir="auto">{localizeEvidenceText(entry.detail, locale)}</div></td>
             </tr>
           ))}
         </tbody>

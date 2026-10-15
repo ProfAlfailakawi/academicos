@@ -353,7 +353,7 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
   const mid = size / 2;
   // Auto percentage label scales with the ring's inner diameter, identical for 0%..100%.
   const autoLabelStyle: React.CSSProperties | undefined = label == null && size < 56
-    ? { fontSize: Math.min(13, Math.round((size - 2 * ringStroke) * 0.3 * 2) / 2), letterSpacing: '-0.03em' }
+    ? { fontSize: Math.max(12, Math.min(13, Math.round((size - 2 * ringStroke) * 0.3 * 2) / 2)), letterSpacing: '-0.03em' }
     : undefined;
   return (
     <div

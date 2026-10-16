@@ -255,7 +255,7 @@ export function Notifications() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="3"
-                      strokeLinecap="round"
+                      strokeLinecap={frac > 0 ? "round" : "butt"}
                       strokeDasharray={`${C * frac} ${C}`}
                     />
                   </svg>

@@ -346,6 +346,27 @@
   inline-size: 10px !important;
   block-size: 10px !important;
 }
+/* sm: the 24px node is too small for the full-size check badge and triple ring, which covered the initials */
+.dna-steps[data-size='sm'] .dna-stepi[data-stamp='true'][data-state='done'] .dna-node {
+  box-shadow: inset 0 0 0 1.5px var(--dna-accent), inset 0 0 0 2.5px var(--dna-surface),
+    inset 0 0 0 3.5px color-mix(in srgb, var(--dna-accent) 35%, transparent);
+}
+.dna-steps[data-journey][data-size='sm'] .dna-stepi[data-stamp='true'][data-state='done'] .dna-node {
+  box-shadow: inset 0 0 0 1.5px var(--journey-fill), inset 0 0 0 2.5px var(--dna-surface),
+    inset 0 0 0 3.5px color-mix(in srgb, var(--journey-fill) 35%, transparent);
+}
+.dna-steps[data-size='sm'] .dna-stamp { font-size: 9.5px; letter-spacing: -0.02em; white-space: nowrap; }
+.dna-steps[data-size='sm'] .dna-ok {
+  inset-block-end: -5px;
+  inset-inline-end: -5px;
+  inline-size: 12px;
+  block-size: 12px;
+  box-shadow: 0 0 0 1.5px var(--dna-surface);
+}
+.dna-steps[data-size='sm'] .dna-ok svg {
+  inline-size: 7px !important;
+  block-size: 7px !important;
+}
 .dna-bdg {
   position: absolute;
   inset-block-start: -8px;

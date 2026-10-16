@@ -102,7 +102,7 @@ function Gauge({ value, band }: { value: number; band: string }) {
     <div className="relative mx-auto mt-2" style={{ width: 140, height: 140 }}>
       <svg viewBox="0 0 140 140" className="-rotate-90">
         <circle cx="70" cy="70" r={r} fill="none" stroke="var(--panel-2)" strokeWidth="12" />
-        <circle className="dna-ringoff" cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset .8s ease', '--ring-c': c } as React.CSSProperties} />
+        <circle className="dna-ringoff" cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap={value > 0 ? "round" : "butt"} strokeDasharray={c} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset .8s ease', '--ring-c': c } as React.CSSProperties} />
       </svg>
       <div className="absolute inset-0 grid place-items-center"><div className="text-3xl font-bold" style={{ color }}>{value}</div></div>
     </div>

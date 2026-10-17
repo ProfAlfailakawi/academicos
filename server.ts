@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { directHostGuard } from "./src/server/direct-host-guard";
 import express, {
   type NextFunction,
   type Request,
@@ -1961,6 +1962,7 @@ async function loadLatestProjectDocument(
 async function startServer() {
   initFirebase();
   const app = express();
+  app.use(directHostGuard());
   // Server-scoped helpers injected into route modules under src/server/routes.
   const routeDeps = (): RouteDeps => ({
     authenticate,

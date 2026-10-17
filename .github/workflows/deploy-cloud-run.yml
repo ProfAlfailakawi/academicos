@@ -134,9 +134,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" \
-                  --project "$GCP_PROJECT_ID" --region "$CLOUD_RUN_REGION" \
-                  --format='value(status.url)')"
+          # رابط run.app يحوّل إلى النطاق الرسمي؛ التحقق يتمّ من النطاق نفسه.
+          URL="https://academicos-kw.web.app"
           echo "URL: $URL"
           CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")"
           echo "HTTP $CODE"

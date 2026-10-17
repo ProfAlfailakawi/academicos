@@ -11,3 +11,4 @@ server.cjs
 server.cjs.map
 .env*
 !.env.example
+.firebase/

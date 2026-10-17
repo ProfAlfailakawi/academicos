@@ -108,3 +108,12 @@ base64 < evidence-capsule.pem | tr -d '\n'
 Set the resulting value as `EVIDENCE_CAPSULE_ED25519_PRIVATE_KEY_B64`. Never commit the PEM or encoded private key.
 
 The public verification endpoint distinguishes a valid self-contained signature from a signer trusted by the current AcademicOS deployment. During key rotation, retain old public SPKI values in the comma-separated `EVIDENCE_CAPSULE_TRUSTED_PUBLIC_KEYS` setting so previously issued capsules remain recognizable without retaining old private keys. Remove a retired public key only when the institution intentionally wants that signer to stop being trusted.
+
+## النطاق المجاني `academicos-kw.web.app`
+
+موقع Firebase Hosting في مشروع Cloud Run (`tebyan-clean-2026-5f13b`) يمرّر كل الطلبات إلى
+الخدمة `academicos-app` (europe-west2). تطبيقه لا يعتمد كعكات جلسة (الدخول عبر Firebase Auth)،
+فالتمرير آمن. متغيّرا الخدمة `APP_URL` و`ALLOWED_ORIGINS` يتضمّنان الأصل الجديد، ونطاق الموقع
+مضاف إلى النطاقات المصرّح بها في Firebase Authentication لمشروع `academicos-3991f`.
+
+نشر إعداد Hosting (ثابت، مرة واحدة): `firebase deploy --only hosting:academicos-kw --project tebyan-clean-2026-5f13b`

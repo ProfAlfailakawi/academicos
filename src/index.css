@@ -363,6 +363,18 @@ html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 32, 27, .035); 
     var(--bg);
 }
 .auth-card { box-shadow: var(--shadow-lg); }
+/* Below lg the desktop brand panel is hidden; keep its soft gradient + paper grid as a
+   quiet, text-free backdrop behind the login card so phones are not flatter. */
+@media (max-width: 1023px) {
+  .auth-shell > main {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 28%, transparent), transparent 55%),
+      linear-gradient(to right, color-mix(in srgb, var(--line) 20%, transparent) 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(to bottom, color-mix(in srgb, var(--line) 18%, transparent) 1px, transparent 1px) 0 0 / 28px 28px,
+      var(--bg);
+  }
+  .a11y-simplified .auth-shell > main { background: var(--bg); }
+}
 
 /* Data-heavy pages */
 table { border-collapse: separate; border-spacing: 0; }

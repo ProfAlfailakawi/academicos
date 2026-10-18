@@ -262,6 +262,20 @@ for (let i = 0; i < 30; i++) {
   put("supportTickets", `seed-ticket-${pad(i + 1)}`, { id: `seed-ticket-${pad(i + 1)}`, tenantId, userId: s.uid, subject: pick(["لا أستطيع رفع الملف", "مشكلة في الدفع", "سؤال عن الدرجة", "نسيت كلمة المرور"]), message: "السلام عليكم، أحتاج مساعدة من فضلكم.", status: pick(["open", "open", "in_progress", "resolved"]), priority: "normal", createdAt: iso(-i), updatedAt: iso(-i) });
 }
 
+// ---- teacher-account requests (pending / approved / rejected) ----------------
+// Pending + rejected belong to students (role stays "student"); approved ones
+// belong to seeded teachers (their claims already carry the professor role).
+const INSTITUTIONS = ["جامعة الكويت", "جامعة الخليج للعلوم والتكنولوجيا", "الجامعة الأمريكية في الشارقة", "جامعة الملك سعود", "جامعة قطر", "كلية الكويت للعلوم والتكنولوجيا"];
+const trRecord = (user, i, status, extra = {}) => ({
+  id: user.uid, userId: user.uid, tenantId, email: user.email, displayName: user.name, emailVerified: i % 4 !== 0,
+  institution: INSTITUTIONS[i % INSTITUTIONS.length], note: i % 2 ? "أحاضر في قسم " + user.spec + " وأرغب بإنشاء مقررات وتكليفات لطلابي." : undefined,
+  status, attempts: 1, createdAt: iso(-12 + i), updatedAt: iso(-10 + i), ...extra,
+});
+let nTeacherRequests = 0;
+if (students.length >= 912) for (let i = 0; i < 6; i++) { put("teacherRequests", students[900 + i].uid, trRecord(students[900 + i], i, "pending")); nTeacherRequests++; }
+if (teachers.length >= 3) for (let i = 0; i < 3; i++) { put("teacherRequests", teachers[i].uid, trRecord(teachers[i], i, "approved", { decidedBy: "seed-root", decidedAt: iso(-8 + i), reason: "تم التحقق من الانتماء المؤسسي" })); nTeacherRequests++; }
+if (students.length >= 912) for (let i = 0; i < 2; i++) { put("teacherRequests", students[910 + i].uid, trRecord(students[910 + i], i, "rejected", { decidedBy: "seed-superadmin", decidedAt: iso(-6 + i), reason: i ? "لم نتمكن من التحقق من الجهة المذكورة" : "البريد غير مؤسسي، يرجى استخدام بريد الجامعة" })); nTeacherRequests++; }
+
 // ---- flush ------------------------------------------------------------------
 for (let i = 0; i < writes.length; i += 400) {
   const batch = db.batch();
@@ -271,6 +285,6 @@ for (let i = 0; i < writes.length; i += 400) {
 console.log(JSON.stringify({
   seeded: true, tenantId, password: SEED_PASSWORD, seconds: Math.round((Date.now() - started) / 1000),
   users: staff.length + teachers.length + students.length, teachers: teachers.length, students: students.length,
-  courses: courses.length, assignments: assignments.length, projects: nProj, evidence: nEv, submissions: nSub, payments: nPay, notifications: nNote, documents: writes.length,
+  courses: courses.length, assignments: assignments.length, projects: nProj, evidence: nEv, submissions: nSub, payments: nPay, notifications: nNote, teacherRequests: nTeacherRequests, documents: writes.length,
   sampleLogins: { teacher: teachers[0].email, student: students[1].email, universityAdmin: "univadmin@seed.academicos.local", root: "root@seed.academicos.local", support: "support@seed.academicos.local" },
 }, null, 1));

@@ -135,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           # رابط run.app يحوّل إلى النطاق الرسمي؛ التحقق يتمّ من النطاق نفسه.
-          URL="https://academicos-kw.web.app"
+          URL="https://academicos-edu.web.app"
           echo "URL: $URL"
           CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")"
           echo "HTTP $CODE"

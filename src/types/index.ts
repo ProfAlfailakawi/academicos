@@ -1648,3 +1648,24 @@ export interface ClarificationThreadRecord {
   updatedAt: string;
   version: number;
 }
+
+export type TeacherRequestStatus = "pending" | "approved" | "rejected";
+
+export interface TeacherRequestRecord {
+  id: string; // == userId (one request per user)
+  userId: string;
+  tenantId: string;
+  email: string;
+  displayName: string;
+  emailVerified: boolean;
+  institution: string;
+  note?: string;
+  status: TeacherRequestStatus;
+  attempts: number;
+  reason?: string; // reviewer's reason (required when rejecting)
+  decidedBy?: string;
+  decidedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

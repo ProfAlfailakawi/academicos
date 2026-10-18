@@ -25,17 +25,35 @@
     },
     "singleProjectMode": true
   },
-  "hosting": {
-    "site": "academicos-kw",
-    "public": "hosting",
-    "rewrites": [
-      {
-        "source": "**",
-        "run": {
-          "serviceId": "academicos-app",
-          "region": "europe-west2"
+  "hosting": [
+    {
+      "site": "academicos-edu",
+      "public": "hosting",
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "academicos-app",
+            "region": "europe-west2"
+          }
         }
-      }
-    ]
-  }
+      ]
+    },
+    {
+      "site": "academicos-kw",
+      "public": "hosting",
+      "redirects": [
+        {
+          "source": "/:path*",
+          "destination": "https://academicos-edu.web.app/:path*",
+          "type": 302
+        },
+        {
+          "source": "/",
+          "destination": "https://academicos-edu.web.app/",
+          "type": 302
+        }
+      ]
+    }
+  ]
 }

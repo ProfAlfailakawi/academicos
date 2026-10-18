@@ -10045,7 +10045,7 @@ async function startServer() {
     );
   }
   app.listen(PORT, "0.0.0.0", () =>
-    console.log(`AcademicOS server running on :${PORT} (${"production"})`),
+    console.log(`AcademicOS server running on :${PORT} (${process.env.NODE_ENV || "development"})`),
   );
 }
 /*

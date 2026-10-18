@@ -9,7 +9,7 @@ export function isUnsafeDocId(value: string) {
     value === "." ||
     value === ".." ||
     /^__.*__$/.test(value) ||
-    /[\u0000-\u001f]/.test(value) ||
+    [...value].some((ch) => ch.charCodeAt(0) < 32) ||
     value.length > 700
   );
 }

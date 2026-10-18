@@ -66,6 +66,15 @@ function normalizePolicy(policy?: Partial<AIUsagePolicy>): AIUsagePolicy {
     prohibited: cleanList(policy?.prohibited, 40, 180),
     disclosureRequired: Boolean(policy?.disclosureRequired),
     needsConfirmation: Boolean(policy?.needsConfirmation),
+    // Provenance links the project to the authoritative published assignment.
+    // Dropping these made every course submission fail with
+    // PROJECT_ASSIGNMENT_MISMATCH.
+    ...(policy?.provenance &&
+    ['published_assignment', 'course_policy', 'extracted_unverified'].includes(policy.provenance)
+      ? { provenance: policy.provenance }
+      : {}),
+    ...(clean(policy?.courseId, 180) ? { courseId: clean(policy?.courseId, 180) } : {}),
+    ...(clean(policy?.assignmentId, 180) ? { assignmentId: clean(policy?.assignmentId, 180) } : {}),
   };
 }
 

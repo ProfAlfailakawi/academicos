@@ -983,6 +983,7 @@ function SidebarContent({
   academicWorkMode: boolean;
 }) {
   const { t } = useI18n();
+  const { user } = useAuth();
   return (
     <div className="h-full flex flex-col p-4 overflow-y-auto overscroll-contain">
       <div className="px-3 pt-3 pb-6">
@@ -1057,7 +1058,9 @@ function SidebarContent({
             <div className="min-w-0 flex-1">
               <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={userName}>{userName}</div>
               <div className="text-meta muted">
-                {t("layout.verifiedAccount")}
+                {user?.emailVerified === false
+                  ? t("layout.verifyEmailTitle")
+                  : t("layout.verifiedAccount")}
               </div>
             </div>
           </div>

@@ -101,6 +101,9 @@ export function ControlPlane() {
         setError((current) => current || localizedUiError(e, t, "ui.loadError"));
       });
 
+    // The endpoint is limited to these roles; asking as e.g. a department admin
+    // only produced a 403 and a spurious "could not load" banner.
+    if (!user || !["trust_safety_admin", "university_admin", "admin", "superadmin", "root_owner"].includes(user.role)) return;
     api.fairUseMetrics()
       .then((r) => setFairUse(r.fairUse))
       .catch((e) => {

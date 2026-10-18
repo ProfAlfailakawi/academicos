@@ -164,7 +164,7 @@ export function verifyMyFatoorahWebhook(raw:Buffer,signature:string):VerifiedPay
 }
 
 export function verifyLemonSqueezyWebhook(raw:Buffer,signature:string):VerifiedPaymentEvent{
-  const secret=String(process.env.LEMONSQUEEZY_WEBHOOK_SECRET||'');if(!secret||!signature)throw Object.assign(new Error('Lemon Squeezy webhook is not configured'),{status:503,code:'LEMONSQUEEZY_WEBHOOK_NOT_CONFIGURED'});
+  const secret=String(process.env.LEMONSQUEEZY_WEBHOOK_SECRET||'');if(!secret)throw Object.assign(new Error('Lemon Squeezy webhook is not configured'),{status:503,code:'LEMONSQUEEZY_WEBHOOK_NOT_CONFIGURED'});if(!signature)throw Object.assign(new Error('Missing Lemon Squeezy webhook signature'),{status:401,code:'LEMONSQUEEZY_SIGNATURE_INVALID'});
   const expected=createHmac('sha256',secret).update(raw).digest('hex');if(!equalSignature(expected,signature))throw Object.assign(new Error('Invalid Lemon Squeezy webhook signature'),{status:401,code:'LEMONSQUEEZY_SIGNATURE_INVALID'});
   const body=JSON.parse(raw.toString('utf8')),custom=body?.meta?.custom_data||{},attributes=body?.data?.attributes||{};
   const eventName=String(body?.meta?.event_name||''),state=String(attributes.status||'').toLowerCase(),externalId=String(body?.data?.id||attributes.identifier||'');

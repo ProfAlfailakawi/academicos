@@ -843,7 +843,9 @@ export const firestoreStore = {
       .where("tenantId", "==", tenantId)
       .where("courseId", "==", courseId)
       .where("assignmentId", "==", assignmentId)
-      .limit(500)
+      // Large lecture courses exceed 500 students; a silent cut hid submissions
+      // from the grading queue.
+      .limit(3000)
       .get();
     return snap.docs
       .map((d) => d.data() as CourseSubmissionRecord)
@@ -939,6 +941,42 @@ export const firestoreStore = {
       .map((d) => d.data() as CourseAssignmentRecord)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
+  /**
+   * A teacher's own courses. Queried by owner (equality filters only, so no
+   * composite index) instead of "newest 200 in the tenant, then filter": in a
+   * real institution that silently hid every course past the first 200.
+   */
+  async listCoursesByOwner(
+    tenantId: string,
+    ownerId: string,
+  ): Promise<CourseRecord[]> {
+    const snap = await db()
+      .collection(COLLECTIONS.courses)
+      .where("tenantId", "==", tenantId)
+      .where("ownerId", "==", ownerId)
+      .limit(500)
+      .get();
+    return snap.docs
+      .map((d) => d.data() as CourseRecord)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  },
+  async listAssignmentsForCourses(
+    tenantId: string,
+    courseIds: string[],
+  ): Promise<CourseAssignmentRecord[]> {
+    const ids = [...new Set(courseIds)];
+    const out: CourseAssignmentRecord[] = [];
+    for (let i = 0; i < ids.length; i += 30) {
+      const snap = await db()
+        .collection(COLLECTIONS.assignments)
+        .where("tenantId", "==", tenantId)
+        .where("courseId", "in", ids.slice(i, i + 30))
+        .limit(1000)
+        .get();
+      for (const d of snap.docs) out.push(d.data() as CourseAssignmentRecord);
+    }
+    return out.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  },
   async listCourses(tenantId: string): Promise<CourseRecord[]> {
     const snap = await db()
       .collection(COLLECTIONS.courses)
@@ -958,7 +996,7 @@ export const firestoreStore = {
       .collection(COLLECTIONS.enrollments)
       .where("tenantId", "==", tenantId)
       .where("courseId", "==", courseId)
-      .limit(500)
+      .limit(3000)
       .get();
     return snap.docs
       .map((d) => d.data() as CourseEnrollmentRecord)
@@ -1228,6 +1266,15 @@ export const firestoreStore = {
     return snap.docs
       .map((d) => d.data() as CourseAssignmentRecord)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  },
+  async getAssignmentById(
+    id: string,
+    tenantId: string,
+  ): Promise<CourseAssignmentRecord | null> {
+    const doc = await db().collection(COLLECTIONS.assignments).doc(id).get();
+    if (!doc.exists) return null;
+    const item = doc.data() as CourseAssignmentRecord;
+    return item.tenantId === tenantId ? item : null;
   },
   async getCourseAssignment(
     id: string,
@@ -2047,7 +2094,7 @@ export async function buildDashboard(
       active: list.filter((p) => p.status !== "completed").length,
       dueSoon: list.filter(
         (p) =>
-          p.deadlines.final &&
+          p.deadlines?.final &&
           new Date(p.deadlines.final).getTime() >= now &&
           new Date(p.deadlines.final).getTime() <= sevenDays &&
           p.status !== "completed",
@@ -2060,7 +2107,7 @@ export async function buildDashboard(
     },
     upcoming: list
       .flatMap((p) => [
-        ...(p.deadlines.final
+        ...(p.deadlines?.final
           ? [
               {
                 id: `deadline_${p.id}`,
@@ -2071,7 +2118,7 @@ export async function buildDashboard(
               },
             ]
           : []),
-        ...p.deadlines.milestones.map((m) => ({
+        ...(p.deadlines?.milestones ?? []).map((m) => ({
           id: m.id,
           title: m.title,
           date: m.date,
@@ -2083,7 +2130,7 @@ export async function buildDashboard(
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(0, 8),
     risks: list.flatMap((p) =>
-      p.riskFlags.slice(0, 2).map((message) => ({
+      (p.riskFlags ?? []).slice(0, 2).map((message) => ({
         projectId: p.id,
         projectTitle: p.title,
         message,

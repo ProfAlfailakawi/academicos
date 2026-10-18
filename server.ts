@@ -126,6 +126,7 @@ import {
 } from "./src/server/security-controls";
 import { ocrStatus, runOcr } from "./src/server/ocr";
 import { fairUseMetrics, finalizeFreeBenefit, reserveFreeBenefit, type FairUseReservation } from "./src/server/abuse-guard";
+import { isUnsafeDocId } from "./src/server/doc-id";
 import {
   buildCopilotPlatformInstruction,
   copilotEnabled,
@@ -784,6 +785,26 @@ function cleanField(value: unknown, max = 240) {
     ? value.replace(/\x00/g, "").trim().slice(0, max)
     : "";
 }
+const DOC_ID_PARAMS = [
+  "id",
+  "projectId",
+  "courseId",
+  "assignmentId",
+  "submissionId",
+  "artifactId",
+  "evidenceId",
+  "uid",
+  "commentId",
+  "memberId",
+  "versionId",
+  "taskId",
+  "deliverableId",
+  "criterionId",
+  "codeId",
+  "threadId",
+  "sessionId",
+  "resource",
+];
 function cleanStringList(value: unknown, maxItems = 50, maxChars = 300) {
   return Array.isArray(value)
     ? [
@@ -2087,6 +2108,12 @@ async function startServer() {
     apiRateLimit: (_req, _res, next) => next(),
     adminRoles: ["university_admin", "college_admin", "department_admin", "admin", "superadmin", "root_owner", "course_coordinator", "professor"],
   });
+  for (const name of DOC_ID_PARAMS)
+    app.param(name, (_req, res, next, value) =>
+      isUnsafeDocId(String(value))
+        ? res.status(404).json({ error: "Not found", code: "NOT_FOUND" })
+        : next(),
+    );
   app.use("/api", verifyAppCheck);
   app.use("/api", maintenanceGate);
   const defaultJson = express.json({ limit: "2mb" });
@@ -2752,10 +2779,17 @@ async function startServer() {
           return res
             .status(404)
             .json({ error: "Unknown feature flag", code: "FLAG_NOT_FOUND" });
+        // A missing/non-boolean "enabled" used to coerce to false and silently
+        // switch the feature off for the whole tenant.
+        if (typeof req.body?.enabled !== "boolean")
+          return res.status(400).json({
+            error: "enabled must be true or false",
+            code: "FLAG_VALUE_INVALID",
+          });
         const flag: FeatureFlagRecord = {
           key: base.key,
           tenantId: a.tenantId,
-          enabled: Boolean(req.body?.enabled),
+          enabled: req.body.enabled,
           description: base.description,
           updatedAt: new Date().toISOString(),
           updatedBy: a.userId,
@@ -3679,6 +3713,20 @@ async function startServer() {
           return res
             .status(400)
             .json({ error: "Reason is required", code: "REASON_REQUIRED" });
+        // Idempotent: a second click (or a retry) must not open a second request.
+        const openRequests = (
+          await platformStore.list("deletionRequests", a.tenantId, { limit: 200 })
+        ).filter(
+          (r) =>
+            r.ownerId === a.userId &&
+            ["grace_period", "requested"].includes(String(r.status)),
+        );
+        if (openRequests.length)
+          return res.status(200).json({
+            success: true,
+            request: openRequests[0],
+            alreadyRequested: true,
+          });
         const graceDays = Math.min(
           30,
           Math.max(0, Number(process.env.ACCOUNT_DELETION_GRACE_DAYS || 7)),
@@ -4277,13 +4325,14 @@ async function startServer() {
     async (req: AuthenticatedRequest, res, next) => {
       try {
         const a = req.actor!;
-        const assignments = await firestoreStore.listTenantAssignments(
+        const assignment = await firestoreStore.getAssignmentById(
+          String(req.params.assignmentId || ""),
           a.tenantId,
         );
-        const assignment = assignments.find(
-          (x) => x.id === req.params.assignmentId,
-        );
-        if (!assignment)
+        const course = assignment
+          ? await firestoreStore.getCourse(assignment.courseId, a.tenantId)
+          : null;
+        if (!assignment || !course || !canReadCourse(a, course))
           return res.status(404).json({
             error: "Assignment not found",
             code: "ASSIGNMENT_NOT_FOUND",
@@ -4303,7 +4352,17 @@ async function startServer() {
         const a = req.actor!;
         const assignmentId =
           cleanField(req.query.assignmentId, 180) || undefined;
-        const all = await firestoreStore.listTenantSubmissions(a.tenantId);
+        let all = await firestoreStore.listTenantSubmissions(a.tenantId);
+        // Grader-vs-cohort statistics name individual graders. Teachers only see
+        // submissions of their own courses; institution admins see the tenant.
+        if (!COURSE_ADMIN_ROLES.has(a.role)) {
+          const own = new Set(
+            (await firestoreStore.listCoursesByOwner(a.tenantId, a.userId)).map(
+              (c) => c.id,
+            ),
+          );
+          all = all.filter((x) => own.has(x.courseId));
+        }
         const submissions = assignmentId
           ? all.filter((x) => x.assignmentId === assignmentId)
           : all;
@@ -4543,10 +4602,9 @@ async function startServer() {
       try {
         const a = req.actor!;
         await assertFeature(a.tenantId, "ProfessorOS");
-        const all = await firestoreStore.listCourses(a.tenantId);
         const courses = COURSE_ADMIN_ROLES.has(a.role)
-          ? all
-          : all.filter((course) => course.ownerId === a.userId);
+          ? await firestoreStore.listCourses(a.tenantId)
+          : await firestoreStore.listCoursesByOwner(a.tenantId, a.userId);
         res.json({ success: true, courses });
       } catch (e) {
         next(e);
@@ -4561,17 +4619,17 @@ async function startServer() {
       try {
         const a = req.actor!;
         await assertFeature(a.tenantId, "ProfessorOS");
-        const allCourses = await firestoreStore.listCourses(a.tenantId);
         const courses = COURSE_ADMIN_ROLES.has(a.role)
-          ? allCourses
-          : allCourses.filter((course) => course.ownerId === a.userId);
-        const allAssignments = await firestoreStore.listTenantAssignments(
-          a.tenantId,
-        );
-        const courseIds = new Set(courses.map((c) => c.id)),
-          assignments = allAssignments.filter((item) =>
-            courseIds.has(item.courseId),
-          );
+          ? await firestoreStore.listCourses(a.tenantId)
+          : await firestoreStore.listCoursesByOwner(a.tenantId, a.userId);
+        const assignments = COURSE_ADMIN_ROLES.has(a.role)
+          ? (await firestoreStore.listTenantAssignments(a.tenantId)).filter(
+              (item) => courses.some((c) => c.id === item.courseId),
+            )
+          : await firestoreStore.listAssignmentsForCourses(
+              a.tenantId,
+              courses.map((c) => c.id),
+            );
         res.json({
           success: true,
           brief: buildFacultyAutomation(courses, assignments, reqLocale(req)),
@@ -4591,10 +4649,11 @@ async function startServer() {
         await assertFeature(a.tenantId, "ProfessorOS");
         const query = cleanField(req.body?.query, 1200);
         if (!query) return res.status(400).json({ error: "Ask the faculty copilot a question", code: "FACULTY_QUERY_REQUIRED" });
-        const allCourses = await firestoreStore.listCourses(a.tenantId);
-        const courses = COURSE_ADMIN_ROLES.has(a.role) ? allCourses : allCourses.filter((course) => course.ownerId === a.userId);
+        const courses = COURSE_ADMIN_ROLES.has(a.role) ? await firestoreStore.listCourses(a.tenantId) : await firestoreStore.listCoursesByOwner(a.tenantId, a.userId);
         const courseIds = new Set(courses.map((course) => course.id));
-        const assignments = (await firestoreStore.listTenantAssignments(a.tenantId)).filter((assignment) => courseIds.has(assignment.courseId));
+        const assignments = COURSE_ADMIN_ROLES.has(a.role)
+          ? (await firestoreStore.listTenantAssignments(a.tenantId)).filter((assignment) => courseIds.has(assignment.courseId))
+          : await firestoreStore.listAssignmentsForCourses(a.tenantId, [...courseIds]);
         const brief = buildFacultyAutomation(courses, assignments, reqLocale(req));
         if (!aiConfigured({ taskType: "faculty_copilot", complexity: "medium", risk: "medium" })) {
           return res.json({
@@ -5143,6 +5202,24 @@ async function startServer() {
             error: "Assignment title and instructions are required",
             code: "ASSIGNMENT_REQUIRED",
           });
+        const rawDeadline = cleanField(body.deadline, 80);
+        if (rawDeadline && !Number.isFinite(Date.parse(rawDeadline)))
+          return res.status(400).json({
+            error: "The deadline is not a valid date",
+            code: "ASSIGNMENT_DEADLINE_INVALID",
+          });
+        const rubricWeight = (Array.isArray(body.rubric) ? body.rubric : [])
+          .slice(0, 100)
+          .reduce(
+            (sum: number, r: any) =>
+              sum + Math.min(100, Math.max(0, Number(r?.weighting) || 0)),
+            0,
+          );
+        if (rubricWeight > 100.01)
+          return res.status(400).json({
+            error: `Rubric weights add up to ${rubricWeight}; they cannot exceed 100`,
+            code: "RUBRIC_WEIGHT_EXCEEDS_100",
+          });
         const now = new Date().toISOString();
         const deliverables = (
           Array.isArray(body.deliverables) ? body.deliverables : []
@@ -5378,6 +5455,12 @@ async function startServer() {
             code: "ASSIGNMENT_NOT_FOUND",
           });
         const body = req.body || {};
+        const patchDeadline = cleanField(body.deadline, 80);
+        if (patchDeadline && !Number.isFinite(Date.parse(patchDeadline)))
+          return res.status(400).json({
+            error: "The deadline is not a valid date",
+            code: "ASSIGNMENT_DEADLINE_INVALID",
+          });
         const item: CourseAssignmentRecord = {
           ...current,
           title: cleanField(body.title, 260) || current.title,
@@ -5426,6 +5509,11 @@ async function startServer() {
           return res
             .status(400)
             .json({ error: "projectId is required", code: "PROJECT_REQUIRED" });
+        if (isUnsafeDocId(projectId))
+          return res.status(404).json({
+            error: "Owned project not found",
+            code: "PROJECT_NOT_FOUND",
+          });
         const [course, assignment, enrollment, project] = await Promise.all([
           firestoreStore.getCourse(courseId, a.tenantId),
           firestoreStore.getCourseAssignment(
@@ -5773,6 +5861,16 @@ async function startServer() {
             "other",
           ]),
           priorities = new Set(["normal", "important", "critical"]);
+        // Abuse guard: a burst of tickets from one account floods the support desk.
+        const recentTickets = (
+          await firestoreStore.listMySupportTickets(a.userId, a.tenantId)
+        ).filter((x) => Date.now() - Date.parse(x.createdAt) < 3600_000);
+        if (recentTickets.length >= 10)
+          return res.status(429).json({
+            error:
+              "You have opened many support tickets in the last hour. Please wait, or add details to an existing ticket.",
+            code: "SUPPORT_RATE_LIMITED",
+          });
         const now = new Date().toISOString();
         const ticket: SupportTicket = {
           id: randomUUID(),
@@ -5924,7 +6022,16 @@ async function startServer() {
           studyYear: cleanString(body.studyYear, 80) ?? current.studyYear,
           academicTerm:
             cleanString(body.academicTerm, 100) ?? current.academicTerm,
-          timezone: cleanString(body.timezone, 80) ?? current.timezone,
+          timezone: (() => {
+            const tz = cleanString(body.timezone, 80);
+            if (!tz) return current.timezone;
+            try {
+              new Intl.DateTimeFormat("en", { timeZone: tz });
+              return tz;
+            } catch {
+              return current.timezone; // invalid IANA zone: keep the previous one
+            }
+          })(),
           dailyStudyMinutes:
             body.dailyStudyMinutes === undefined
               ? current.dailyStudyMinutes
@@ -5998,8 +6105,23 @@ async function startServer() {
             fileType: file.fileType,
             size: "size" in file ? file.size : undefined,
             sha256: "sha256" in file ? file.sha256 : undefined,
+            // A storage/signing hiccup must not hide the assignment text and file
+            // list: degrade to "no download link" for that file instead of a 500.
             url: file.storagePath
-              ? await getOriginalFileUrl(file.storagePath, a.tenantId, a.userId)
+              ? await getOriginalFileUrl(
+                  file.storagePath,
+                  a.tenantId,
+                  a.userId,
+                ).catch((error: any) => {
+                  console.error(
+                    JSON.stringify({
+                      severity: "ERROR",
+                      event: "original_file_url_failed",
+                      message: String(error?.message || error).slice(0, 300),
+                    }),
+                  );
+                  return undefined;
+                })
               : undefined,
           })),
         );
@@ -6149,6 +6271,17 @@ async function startServer() {
       let actorForJob: AuthenticatedRequest["actor"];
       try {
         const intake = req.body as AssignmentIntake;
+        if (
+          intake &&
+          typeof intake === "object" &&
+          intake.textContext !== undefined &&
+          intake.textContext !== null &&
+          typeof intake.textContext !== "string"
+        )
+          return res.status(400).json({
+            error: "Assignment text must be a string",
+            code: "ASSIGNMENT_TEXT_INVALID",
+          });
         const incomingFiles = (
           Array.isArray(intake?.files) && intake.files.length
             ? intake.files
@@ -6207,6 +6340,11 @@ async function startServer() {
           .update(
             JSON.stringify({
               text: intake.textContext || "",
+              // The same brief compiled for a different course assignment is a
+              // different project; without this the first (possibly unlinked)
+              // project was returned and the submission was rejected.
+              courseId: cleanField(intake.courseId, 180) || "",
+              assignmentId: cleanField(intake.assignmentId, 180) || "",
               files: incomingFiles.map((f) => ({
                 name: f.name,
                 size: f.size,
@@ -6374,6 +6512,11 @@ async function startServer() {
         {
           const courseId = cleanField(intake.courseId, 180),
             assignmentId = cleanField(intake.assignmentId, 180);
+          if (isUnsafeDocId(courseId) || isUnsafeDocId(assignmentId))
+            throw Object.assign(
+              new Error("Published course assignment not found"),
+              { status: 404, code: "PUBLISHED_ASSIGNMENT_NOT_FOUND" },
+            );
           if (Boolean(courseId) !== Boolean(assignmentId))
             throw Object.assign(
               new Error(
@@ -9337,9 +9480,10 @@ async function startServer() {
   app.get(
     "/api/control-plane",
     authenticate,
+    // Tenant-wide student project list + audit log: institution administrators
+    // only (matches the client's CONTROL_ROLES route guard). Teachers previously
+    // passed this guard and could read every student's project in the tenant.
     requireRoles(
-      "professor",
-      "course_coordinator",
       "department_admin",
       "college_admin",
       "university_admin",
@@ -9797,6 +9941,17 @@ async function startServer() {
   );
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const id = randomUUID();
+    // Body-parser failures are client mistakes: answer with a friendly, localized
+    // 4xx instead of leaking the parser's internal message under INTERNAL_ERROR.
+    if (err?.type === "entity.parse.failed" || err?.type === "entity.too.large") {
+      const tooLarge = err.type === "entity.too.large";
+      const locale = resolveServerLocale((_req as any)?.appLocale);
+      return res.status(tooLarge ? 413 : 400).json({
+        error: tx(tooLarge ? SRV.payloadTooLarge : SRV.invalidJson, locale),
+        code: tooLarge ? "PAYLOAD_TOO_LARGE" : "INVALID_JSON",
+        errorId: id,
+      });
+    }
     console.error(`[${id}]`, err);
     const rawCode = String(err?.code || "");
     const firebaseInfrastructureCode =

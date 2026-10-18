@@ -189,6 +189,26 @@ export const SRV = {
     "L'opération n'a pas pu aboutir. Réessayez et, si le problème persiste, indiquez l'identifiant d'erreur lors du signalement.",
     "عمل مکمل نہ ہو سکا۔ دوبارہ کوشش کریں؛ مسئلہ برقرار رہے تو رپورٹ میں ایرر آئی ڈی بتائیں۔",
   ),
+  invalidJson: L(
+    "الطلب المرسل غير مفهوم (صيغة JSON غير صالحة). أعد المحاولة، وإن تكرر الأمر حدّث الصفحة.",
+    "The request could not be read (invalid JSON). Try again, and refresh the page if it keeps happening.",
+    "İstek okunamadı (geçersiz JSON). Yeniden deneyin; sürerse sayfayı yenileyin.",
+    "无法读取该请求（JSON 无效）。请重试；若持续出现，请刷新页面。",
+    "अनुरोध पढ़ा नहीं जा सका (अमान्य JSON)। पुनः प्रयास करें; बना रहे तो पेज रीफ़्रेश करें।",
+    "No se pudo leer la solicitud (JSON no válido). Inténtalo de nuevo y recarga la página si persiste.",
+    "La requête est illisible (JSON invalide). Réessayez et actualisez la page si cela persiste.",
+    "درخواست پڑھی نہ جا سکی (غلط JSON)۔ دوبارہ کوشش کریں؛ برقرار رہے تو صفحہ ریفریش کریں۔",
+  ),
+  payloadTooLarge: L(
+    "حجم الطلب أكبر من الحد المسموح. قلّل حجم النص أو الملفات وأعد المحاولة.",
+    "The request is larger than the allowed limit. Reduce the text or file size and try again.",
+    "İstek izin verilen sınırdan büyük. Metin veya dosya boyutunu azaltıp yeniden deneyin.",
+    "请求超过允许的大小。请减小文本或文件大小后重试。",
+    "अनुरोध अनुमत सीमा से बड़ा है। टेक्स्ट या फ़ाइल का आकार घटाकर पुनः प्रयास करें।",
+    "La solicitud supera el límite permitido. Reduce el texto o los archivos e inténtalo de nuevo.",
+    "La requête dépasse la limite autorisée. Réduisez le texte ou les fichiers et réessayez.",
+    "درخواست مجاز حد سے بڑی ہے۔ متن یا فائل کا سائز کم کر کے دوبارہ کوشش کریں۔",
+  ),
 } as const;
 
 export const SRV2 = {

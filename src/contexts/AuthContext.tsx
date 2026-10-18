@@ -33,6 +33,8 @@ interface AuthState {
   configured: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  /** Re-read the ID token (e.g. after a teacher request is approved) and rebuild the user. */
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -280,6 +282,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await sendEmailVerification(result.user).catch(() => undefined);
         await result.user.getIdToken(true);
         setUser(await mapFirebaseUser(result.user));
+      },
+      refreshUser: async () => {
+        const current = firebaseAuth?.currentUser;
+        if (!current) return;
+        await current.getIdToken(true);
+        setUser(await mapFirebaseUser(current));
       },
       logout: async () => {
         const auth = requireFirebase();

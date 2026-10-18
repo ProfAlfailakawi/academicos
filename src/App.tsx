@@ -118,6 +118,9 @@ const Passport = lazy(() =>
 const Archive = lazy(() =>
   import("./pages/Archive").then((m) => ({ default: m.Archive })),
 );
+const TeacherRequests = lazy(() =>
+  import("./pages/TeacherRequests").then((m) => ({ default: m.TeacherRequests })),
+);
 const Invitations = lazy(() =>
   import("./pages/Invitations").then((m) => ({ default: m.Invitations })),
 );
@@ -162,6 +165,7 @@ const USER_ADMIN_ROLES = new Set([
   "superadmin",
   "root_owner",
 ]);
+const TEACHER_REQUEST_ROLES = new Set(["admin", "superadmin", "root_owner"]);
 const SUPPORT_ROLES = new Set([
   "support_agent",
   "trust_safety_admin",
@@ -311,6 +315,10 @@ export default function App() {
             <Route
               path="integrations"
               element={<RoleGuard roles={PLATFORM_ADMIN_ROLES}><Integrations /></RoleGuard>}
+            />
+            <Route
+              path="teacher-requests"
+              element={<RoleGuard roles={TEACHER_REQUEST_ROLES}><TeacherRequests /></RoleGuard>}
             />
             <Route
               path="users"

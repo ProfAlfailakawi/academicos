@@ -150,6 +150,7 @@ import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/route
 import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
 import { registerRubricRoutes } from "./src/server/routes/rubric";
 import { registerInstructorRoutes } from "./src/server/routes/instructor";
+import { registerTeacherRequestRoutes } from "./src/server/routes/teacher-requests";
 import { registerLtiRoutes } from "./src/server/routes/lti";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
@@ -592,7 +593,7 @@ async function verifyFirebaseIdToken(token: string) {
  * كي لا يُنفق زائرٌ آلي ميزانية المزوّد.
  */
 const DEMO_BLOCKED_WRITE_PREFIXES = [
-  "/api/admin/", "/api/shares", "/api/platform/", "/api/billing/",
+  "/api/admin/", "/api/teacher-requests", "/api/shares", "/api/platform/", "/api/billing/",
   "/api/security/", "/api/lifecycle/", "/api/feature-flags/",
   "/api/support/", "/api/tools/code/execute", "/api/jobs/",
   "/api/notification-preferences", "/api/notifications/",
@@ -9867,6 +9868,7 @@ async function startServer() {
     },
   );
   registerBillingApiRoutes(app, routeDeps());
+  registerTeacherRequestRoutes(app, { ...routeDeps(), requireRoles, requireRecentPrivilegedAuth });
   // Advanced capabilities registry (router-registry pattern — see
   // docs/ARCHITECTURE_REFACTOR.md). One call mounts the eight advanced engines;
   // dependencies are injected via ctx so no engine reaches into server internals.

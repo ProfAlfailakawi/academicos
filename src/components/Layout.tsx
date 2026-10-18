@@ -256,6 +256,9 @@ export function Layout() {
       user.role,
     ),
   );
+  const canTeacherRequests = Boolean(
+    user && ["admin", "superadmin", "root_owner"].includes(user.role),
+  );
   const canSupport = Boolean(
     user &&
     [
@@ -344,6 +347,9 @@ export function Layout() {
             ...(canUserAdmin
               ? [{ to: "/app/users", label: "layout.navUsers", short: "layout.navUsersShort", icon: UsersRound } as NavItem]
               : []),
+            ...(canTeacherRequests
+              ? [{ to: "/app/teacher-requests", label: "layout.navTeacherRequests", short: "layout.navTeacherRequestsShort", icon: GraduationCap } as NavItem]
+              : []),
             ...(canSupport
               ? [{ to: "/app/support-console", label: "layout.navSupportConsole", short: "layout.navSupportShort", icon: Headphones } as NavItem]
               : []),
@@ -364,6 +370,7 @@ export function Layout() {
       studentMode,
       canFaculty,
       canUserAdmin,
+      canTeacherRequests,
       canSupport,
       canControl,
       canCurriculum,

@@ -55,6 +55,8 @@ import type {
   SubmissionAudit,
   DeepAIDetectionReport,
   SupportTicket,
+  TeacherRequestRecord,
+  TeacherRequestStatus,
   UserProfile,
   VivaMode,
   VivaSession,
@@ -1241,6 +1243,27 @@ export const api = {
     request<{ success: true; user: AdminUserRecord }>(
       `/api/admin/users/${encodeURIComponent(id)}`,
       { method: "PATCH", body: JSON.stringify(body) },
+    ),
+  myTeacherRequest: () =>
+    request<{ success: true; request: TeacherRequestRecord | null }>(
+      "/api/teacher-requests/mine",
+    ),
+  submitTeacherRequest: (body: { institution: string; note?: string; displayName?: string }) =>
+    request<{ success: true; request: TeacherRequestRecord }>(
+      "/api/teacher-requests",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  adminTeacherRequests: (status: TeacherRequestStatus = "pending") =>
+    request<{ success: true; requests: TeacherRequestRecord[] }>(
+      `/api/admin/teacher-requests?status=${encodeURIComponent(status)}`,
+    ),
+  decideTeacherRequest: (
+    id: string,
+    body: { decision: "approve" | "reject"; reason?: string },
+  ) =>
+    request<{ success: true; request: TeacherRequestRecord }>(
+      `/api/admin/teacher-requests/${encodeURIComponent(id)}/decision`,
+      { method: "POST", body: JSON.stringify(body) },
     ),
   billingStatus: () =>
     request<{

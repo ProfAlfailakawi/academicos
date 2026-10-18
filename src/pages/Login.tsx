@@ -22,6 +22,7 @@ import {
 } from "firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
 import { firebaseAuth } from "../lib/firebase";
+import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 import { Button } from "../components/ui/button";
 import { Logo } from "../components/brand/Logo";
@@ -47,6 +48,9 @@ export function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState<"student" | "teacher">("student");
+  const [institution, setInstitution] = useState("");
+  const [teacherNote, setTeacherNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -124,6 +128,16 @@ export function Login() {
     try {
       if (mode === "signup") {
         await signup(name, email, password);
+        // The account is a normal student account from the first second. A teacher
+        // request is only a pending record; the server grants the role after approval.
+        if (accountType === "teacher") {
+          try {
+            await api.submitTeacherRequest({ institution, note: teacherNote || undefined, displayName: name });
+          } catch (requestError) {
+            console.error("Teacher request could not be sent", requestError);
+            try { window.sessionStorage.setItem("academicos.teacherRequestFailed", "1"); } catch { /* storage unavailable */ }
+          }
+        }
       } else if (mode === "forgot") {
         await resetPassword(email);
         setSuccessMsg(t("login.resetSent"));
@@ -346,6 +360,35 @@ export function Login() {
                 )}
 
                 <form onSubmit={submit} className="space-y-4 mt-5">
+                  {mode === "signup" && (
+                    <div role="radiogroup" aria-label={t("login.accountType")} className="grid grid-cols-2 gap-2">
+                      {(["student", "teacher"] as const).map((kind) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          role="radio"
+                          aria-checked={accountType === kind}
+                          onClick={() => setAccountType(kind)}
+                          className={`focus-ring min-h-11 rounded-xl border text-sm font-semibold ${accountType === kind ? "brand-soft-bg border-[var(--brand)] brand-text" : "hairline muted"}`}
+                        >
+                          {kind === "student" ? t("login.typeStudent") : t("login.typeTeacher")}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {mode === "signup" && accountType === "teacher" && (
+                    <>
+                      <p className="text-xs leading-5 muted rounded-lg soft-bg p-3">{t("login.teacherNotice")}</p>
+                      <label className="block">
+                        <span className="text-xs font-semibold">{t("login.institution")}</span>
+                        <input required minLength={2} maxLength={160} value={institution} onChange={(e) => setInstitution(e.target.value)} className="field mt-1.5" placeholder={t("login.institutionPlaceholder")} />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs font-semibold">{t("login.teacherNote")}</span>
+                        <textarea maxLength={1000} value={teacherNote} onChange={(e) => setTeacherNote(e.target.value)} className="field mt-1.5 min-h-20 resize-y" placeholder={t("login.teacherNotePlaceholder")} />
+                      </label>
+                    </>
+                  )}
                   {mode === "signup" && (
                     <label className="block">
                       <span className="text-xs font-semibold">{t("login.name")}</span>

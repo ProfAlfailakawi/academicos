@@ -1,3 +1,4 @@
+import { TeacherAccountCard } from "../components/TeacherAccountCard";
 import { Skeleton } from "../components/ui/Skeleton";
 import { AppDialog } from "../components/AppDialog";
 import { localizedUiError } from "../lib/ui-error";
@@ -354,6 +355,7 @@ export function Settings() {
             )}
           </CardContent>
         </Card>
+        <TeacherAccountCard className={tabCls("profile")} />
         <Card className={` ${tabCls("profile")}`}>
           <CardContent>
             <div className="flex items-center gap-2">

@@ -214,3 +214,17 @@ html[dir="ltr"] .app-sidebar { background-image: linear-gradient(270deg, transpa
 }
 :root.dark .mobile-add-button { color: #1c0e09; }
 .student-hero-visual > .hero-journey { border-radius: 14px; border-color: color-mix(in srgb, var(--ink) 16%, var(--line)); }
+
+/* شبكة الورق الصغيرة → ورق مسطَّر بهامش المراجع (يمين في RTL، يسار في LTR). */
+.paper-grid {
+  background-image:
+    linear-gradient(to left, transparent 40px, var(--margin-rule) 40px 41px, transparent 41px),
+    repeating-linear-gradient(180deg, transparent 0 35px, var(--paper-rule) 35px 36px);
+  background-size: auto, auto;
+}
+html[dir="ltr"] .paper-grid {
+  background-image:
+    linear-gradient(to right, transparent 40px, var(--margin-rule) 40px 41px, transparent 41px),
+    repeating-linear-gradient(180deg, transparent 0 35px, var(--paper-rule) 35px 36px);
+}
+.a11y-simplified .paper-grid { background-image: none; }

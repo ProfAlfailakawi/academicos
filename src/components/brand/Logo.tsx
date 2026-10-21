@@ -63,8 +63,20 @@ export function LogoMark({
         <rect
           width="48"
           height="48"
-          rx="13.4"
+          rx="11"
           fill={inverted ? "currentColor" : `url(#${id}-tile)`}
+        />
+        {/* إطار ختم داخلي: يجعل الشعار يُقرأ كختم مراجعة لا كأيقونة تطبيق عامة */}
+        <rect
+          x="3.2"
+          y="3.2"
+          width="41.6"
+          height="41.6"
+          rx="8.2"
+          fill="none"
+          stroke="var(--panel)"
+          strokeOpacity="0.3"
+          strokeWidth="1"
         />
         <g
           className="acos-mark__ascent"

@@ -18,7 +18,7 @@
   --dna-danger-soft: color-mix(in srgb, var(--danger) 12%, var(--panel));
   --dna-info: var(--info);
   --dna-info-soft: color-mix(in srgb, var(--info) 12%, var(--panel));
-  --dna-shadow: var(--shadow-xs), 0 12px 30px -18px rgba(20, 32, 27, 0.2);
+  --dna-shadow: var(--shadow-xs), 0 12px 30px -18px rgba(20, 24, 43, 0.2);
 }
 
 /* Site dark selector joins the kit's dark tone scope. */

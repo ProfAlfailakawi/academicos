@@ -1,0 +1,214 @@
+/* ==========================================================================
+   AcademicOS — هوية "دفتر الأدلة" (Evidence Ledger)
+   --------------------------------------------------------------------------
+   الفكرة: أوراق تصحيح أكاديمية — حبر أزرق داكن على ورق دافئ مسطَّر، وختم
+   زنجفري (قلم المراجع) لا يظهر إلا حيث يوجد دليل أو علامة تستحق الانتباه.
+   • الألوان: حبر نيلي (--brand) + زنجفر (--accent) + ورق عاجي (--bg/--panel).
+   • الخط: Amiri (OFL، مستضاف ذاتيًا) للعناوين الكبرى فقط — نسخي كتابي
+     يعطي صوت "الكتاب المحقَّق"؛ والنص كله يبقى IBM Plex Sans Arabic.
+   • الأشكال: زوايا مدروسة (بطاقة فهرسة لا فقاعة)، وحدود حبرية رفيعة.
+   • الختم: كل شارة حالة تُرسم كختم مستطيل بإطار مزدوج.
+   • الحركة: "الكتابة بالقلم" — ظهور وانزلاق قصيران، وتعطَّل مع
+     prefers-reduced-motion.
+   هذا الملف طبقة عرض فقط: لا يمسّ منطقًا ولا أسماء أصناف يعتمد عليها JS.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Amiri Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  size-adjust: 106%;
+  src: url("/fonts/amiri-arabic-700.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Amiri Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  size-adjust: 98%;
+  src: url("/fonts/amiri-latin-700.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
+}
+
+:root {
+  --font-display: "Amiri Display", "IBM Plex Sans Arabic", "Noto Naskh Arabic", serif;
+  /* لغة الأشكال: زوايا أحدّ من ذي قبل — بطاقة فهرسة لا فقاعة. */
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.8125rem;
+  --radius-3xl: 1.0625rem;
+  --paper-rule: color-mix(in srgb, var(--line) 52%, transparent);
+  --margin-rule: color-mix(in srgb, var(--accent) 58%, transparent);
+  --ink-soft: color-mix(in srgb, var(--brand) 9%, var(--panel));
+}
+:root.dark {
+  --paper-rule: color-mix(in srgb, var(--line) 38%, transparent);
+  --margin-rule: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* --- ورق مسطَّر خلف المحتوى ------------------------------------------------ */
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 55%, transparent), transparent 340px),
+    repeating-linear-gradient(180deg, transparent 0 35px, var(--paper-rule) 35px 36px);
+  background-repeat: no-repeat, repeat;
+}
+.app-surface {
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(180deg, transparent 0 35px, var(--paper-rule) 35px 36px);
+}
+.app-main::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 50%, transparent), transparent);
+  opacity: 0.5;
+}
+
+/* --- الطباعة: عناوين Amiri ------------------------------------------------- */
+html:not([data-locale="ur"]):not([data-locale="hi"]):not([data-locale="zh"]) :is(h1, h2, .page-title, .onboard-title) {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0;
+  font-feature-settings: "liga", "calt";
+}
+html:not([data-locale="ur"]):not([data-locale="hi"]):not([data-locale="zh"]) .public-hero h1 {
+  line-height: 1.32;
+  text-wrap: balance;
+  font-size: clamp(2.3rem, 5.2vw, 4.1rem);
+}
+html[data-locale="ar"] :is(h1, h2, .page-title, .onboard-title) { line-height: 1.42; }
+
+/* أرقام كبرى بوجه الكتاب نفسه: تقرأ كـ"درجة مُدوَّنة" لا كعدّاد تقني. */
+.hero-figure,
+.score-figure,
+[data-figure] {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* --- البطاقات: حدّ حبري + حافة علوية دقيقة --------------------------------- */
+.academic-card,
+.panel,
+.panel-flat {
+  border-color: color-mix(in srgb, var(--ink) 11%, var(--line));
+}
+.academic-card { border-radius: var(--radius-2xl); }
+.panel { box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 6%, transparent), var(--shadow-sm); }
+
+/* --- الأزرار: حبر مسطَّح بحافة سفلية كأنه ختم مطبوع -------------------------- */
+.ui-button { border-radius: 0.625rem; letter-spacing: 0; }
+.ui-button[data-variant="default"] {
+  background: var(--brand);
+  box-shadow:
+    inset 0 -2px 0 color-mix(in srgb, #000 28%, transparent),
+    0 6px 14px color-mix(in srgb, var(--brand) 20%, transparent);
+}
+.ui-button[data-variant="default"]:not(:disabled):hover {
+  background: color-mix(in srgb, var(--brand) 90%, var(--accent));
+}
+.ui-button[data-variant="default"]:not(:disabled):active { transform: translateY(1px); box-shadow: inset 0 -1px 0 color-mix(in srgb, #000 28%, transparent); }
+.ui-button[data-variant="outline"] {
+  background: var(--panel);
+  border-color: color-mix(in srgb, var(--ink) 18%, var(--line));
+}
+.ui-button[data-size="icon"] { border-radius: 0.625rem; }
+
+.field {
+  border-radius: 0.625rem;
+  background: var(--panel);
+  border-color: color-mix(in srgb, var(--ink) 14%, var(--line));
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.field:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* --- الشارة = ختم ------------------------------------------------------------ */
+.status-pill {
+  border-radius: 0.375rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, currentColor 38%, transparent),
+    inset 0 0 0 3px var(--panel),
+    inset 0 0 0 4px color-mix(in srgb, currentColor 16%, transparent);
+  padding-inline: 0.7rem;
+}
+
+/* --- الشريط الجانبي ---------------------------------------------------------- */
+.app-sidebar {
+  background: color-mix(in srgb, var(--panel) 96%, var(--brand-soft));
+  background-image: linear-gradient(90deg, transparent calc(100% - 1px), var(--margin-rule) calc(100% - 1px));
+}
+html[dir="ltr"] .app-sidebar { background-image: linear-gradient(270deg, transparent calc(100% - 1px), var(--margin-rule) calc(100% - 1px)); }
+.sidebar-nav-link { border-radius: 0.5rem; }
+.sidebar-nav-link[aria-current="page"] {
+  background: var(--brand);
+  color: var(--on-brand);
+  border-color: transparent;
+  box-shadow: inset -4px 0 0 var(--accent);
+}
+[dir="ltr"] .sidebar-nav-link[aria-current="page"] { box-shadow: inset 4px 0 0 var(--accent); }
+.sidebar-nav-link[aria-current="page"] * { color: inherit; }
+.sidebar-brand-mark { border-radius: 0.6rem; }
+
+.app-topbar { background: color-mix(in srgb, var(--bg) 90%, transparent); }
+
+/* --- شريط التنقل السفلي (الهاتف) --------------------------------------------- */
+.mobile-dock { border-radius: 1rem; border-color: color-mix(in srgb, var(--ink) 14%, var(--line)); }
+.mobile-nav-link { border-radius: 0.6rem; }
+.mobile-nav-link[aria-current="page"] {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.mobile-nav-link[aria-current="page"] * { color: inherit; }
+.mobile-add-button { background: var(--accent) !important; color: #fff; box-shadow: 0 9px 22px color-mix(in srgb, var(--accent) 34%, transparent), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+
+/* --- العنوان الفرعي (eyebrow): علامة هامش زنجفرية ---------------------------- */
+.eyebrow {
+  position: relative;
+  padding-inline-start: 0.85rem;
+}
+.eyebrow::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-top: -0.2rem;
+  border-radius: 1px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 24%, var(--panel)); color: var(--ink); }
+
+/* --- حركة "القلم": ظهور مقتضب للعناصر الرئيسة -------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .app-main > * { animation: ink-in 420ms var(--ease-out-quint, ease-out) both; }
+  @keyframes ink-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* --- أرقام الدرجات والعدّادات بوجه الكتاب ------------------------------------ */
+.brain-stat__num,
+.hero-result-card strong,
+.mono-number:is(.text-2xl, .text-3xl, .text-4xl, .text-5xl) {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.brain-stat__num { font-size: 1.6rem; line-height: 1.2; }
+
+/* الدلالة الجانبية لا تحتاج علامة الهامش — الشريط نفسه هو الهامش. */
+.app-sidebar .eyebrow { padding-inline-start: 0; }
+.app-sidebar .eyebrow::before { display: none; }
+
+/* --- بطاقة الفهرسة: حافة علوية حبرية ----------------------------------------- */
+.academic-card {
+  border-top: 2px solid color-mix(in srgb, var(--brand) 62%, var(--line));
+}

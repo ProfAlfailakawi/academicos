@@ -583,7 +583,7 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .journey-card--mint, .journey-card--brand { background: linear-gradient(160deg, color-mix(in srgb, var(--brand-soft) 32%, var(--panel)), var(--panel) 55%); }
 .journey-card--sand { background: linear-gradient(160deg, color-mix(in srgb, var(--accent-soft) 34%, var(--panel)), var(--panel) 55%); }
 .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #dcecff 30%, var(--panel)), var(--panel) 55%); }
-.dark .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #18304b 34%, var(--panel)), var(--panel) 55%); }
+.dark .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #1d3a6e 34%, var(--panel)), var(--panel) 55%); }
 
 .understanding-card { background: linear-gradient(145deg, var(--brand-soft), color-mix(in srgb, var(--panel) 60%, var(--brand-soft))); }
 .understanding-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -1035,12 +1035,12 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .dossier-print-root button { display: none !important; }
 }
 
-/* Dark mode: primary buttons were pale mint with a white label (read as
-   disabled). Solid brand green with a white label instead — pure colour. */
+/* Dark mode: primary buttons were pale with a white label (read as
+   disabled). Solid ink-blue with a white label instead — pure colour. */
 :root.dark .brand-bg:not(.rounded-full),
 :root.dark .ui-button[data-variant="default"],
 :root.dark .plan-card__popular {
-  background: #1d7459;
+  background: #3f55b5;
   color: #ffffff;
 }
 :root.dark .ui-button[data-variant="default"] {

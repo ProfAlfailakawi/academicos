@@ -212,3 +212,5 @@ html[dir="ltr"] .app-sidebar { background-image: linear-gradient(270deg, transpa
 .academic-card {
   border-top: 2px solid color-mix(in srgb, var(--brand) 62%, var(--line));
 }
+:root.dark .mobile-add-button { color: #1c0e09; }
+.student-hero-visual > .hero-journey { border-radius: 14px; border-color: color-mix(in srgb, var(--ink) 16%, var(--line)); }

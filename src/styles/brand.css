@@ -826,7 +826,7 @@ html[dir="rtl"] .onboarding-invite__fill {
     color: var(--ink);
     background: linear-gradient(135deg, #23346b, #101a3d 74%);
   }
-  :root.dark .brand-hero { background: linear-gradient(135deg, #123a2f, #0a231c 74%); }
+  :root.dark .brand-hero { background: linear-gradient(135deg, #16224f, #0b1233 74%); }
 
   /* الرسمة تحمل خلفية فاتحة داخل الملف نفسه؛ تهدئتها ليلًا تُجلسها داخل السطح. */
   /* الرسمة متجهة الآن وتقرأ التوكنز، فلا تحتاج تصحيحًا في الوضع الليلي. */

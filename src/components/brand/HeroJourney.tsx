@@ -43,16 +43,15 @@ export function HeroJourney({ className = "" }: { className?: string }) {
       </defs>
 
       {/* soft field */}
-      <rect x="0" y="0" width="720" height="560" rx="34" fill="url(#hj-field)" />
-      {/* paper grid */}
-      <g stroke="var(--line)" strokeWidth="1" opacity="0.4">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <line key={`v${i}`} x1={40 + i * 80} y1="40" x2={40 + i * 80} y2="520" />
-        ))}
-        {Array.from({ length: 7 }).map((_, i) => (
-          <line key={`h${i}`} x1="40" y1={40 + i * 80} x2="680" y2={40 + i * 80} />
+      <rect x="0" y="0" width="720" height="560" rx="14" fill="url(#hj-field)" />
+      {/* ruled ledger paper + the reviewer's margin rule */}
+      <g stroke="var(--line)" strokeWidth="1" opacity="0.62">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <line key={`h${i}`} x1="0" y1={52 + i * 36} x2="720" y2={52 + i * 36} />
         ))}
       </g>
+      <line x1="644" y1="0" x2="644" y2="560" stroke="var(--accent)" strokeWidth="1.5" opacity="0.5" />
+      <line x1="638" y1="0" x2="638" y2="560" stroke="var(--accent)" strokeWidth="0.8" opacity="0.32" />
 
       {/* the dashed journey path */}
       <path
@@ -69,7 +68,7 @@ export function HeroJourney({ className = "" }: { className?: string }) {
 
       {/* 1 — the raw assignment (left) */}
       <g filter="url(#hj-shadow)">
-        <rect x="70" y="212" width="150" height="190" rx="16" fill="var(--panel)" stroke="var(--line)" strokeWidth="1.5" transform="rotate(-6 145 307)" />
+        <rect x="70" y="212" width="150" height="190" rx="8" fill="var(--panel)" stroke="var(--line)" strokeWidth="1.5" transform="rotate(-6 145 307)" />
         <g transform="rotate(-6 145 307)" stroke="var(--muted)" strokeWidth="6" strokeLinecap="round" opacity="0.55">
           <line x1="98" y1="250" x2="192" y2="250" />
           <line x1="98" y1="274" x2="192" y2="274" />
@@ -81,7 +80,8 @@ export function HeroJourney({ className = "" }: { className?: string }) {
 
       {/* 2 — the AcademicOS workspace (center): the ascent seal */}
       <g filter="url(#hj-shadow)">
-        <rect x="286" y="150" width="150" height="150" rx="34" fill="url(#hj-seal)" />
+        <rect x="286" y="150" width="150" height="150" rx="26" fill="url(#hj-seal)" />
+        <rect x="296" y="160" width="130" height="130" rx="18" fill="none" stroke="var(--panel)" strokeOpacity="0.3" strokeWidth="1.5" />
         <g fill="none" stroke="var(--panel)" strokeLinecap="round" strokeLinejoin="round">
           <path d="M330 258 L361 190 L392 258" strokeWidth="11" />
           <path d="M344 236 H378" strokeWidth="9" />
@@ -103,14 +103,17 @@ export function HeroJourney({ className = "" }: { className?: string }) {
 
       {/* 3 — the sealed evidence capsule (right) */}
       <g filter="url(#hj-shadow)">
-        <rect x="512" y="150" width="150" height="190" rx="16" fill="var(--panel)" stroke="var(--line)" strokeWidth="1.5" transform="rotate(5 587 245)" />
+        <rect x="512" y="150" width="150" height="190" rx="8" fill="var(--panel)" stroke="var(--line)" strokeWidth="1.5" transform="rotate(5 587 245)" />
         <g transform="rotate(5 587 245)">
           <g stroke="var(--muted)" strokeWidth="5" strokeLinecap="round" opacity="0.4">
             <line x1="540" y1="188" x2="634" y2="188" />
             <line x1="540" y1="208" x2="634" y2="208" />
             <line x1="540" y1="228" x2="600" y2="228" />
           </g>
-          {/* the gold seal stamp */}
+          {/* reviewer's marks: underline, margin tick, footnote index */}
+          <path d="M540 232 q14 -6 28 0 t28 0" fill="none" stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" />
+          <text x="636" y="172" fontSize="13" fontWeight="700" fill="var(--accent)" textAnchor="end">[1]</text>
+          {/* the evidence seal stamp */}
           <circle cx="587" cy="288" r="30" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="3 4" />
           <circle cx="587" cy="288" r="21" fill="color-mix(in srgb, var(--accent) 16%, var(--panel))" />
           <path d="M576 288 L584 296 L599 280" fill="none" stroke="var(--accent)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />

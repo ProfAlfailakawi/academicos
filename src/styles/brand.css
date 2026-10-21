@@ -1186,3 +1186,18 @@ html[dir="rtl"] .onboarding-invite__fill {
 /* --- Minimum readable text: 12px (replaces ad-hoc 10/11px) ---------------- */
 .text-meta { font-size: var(--text-meta); line-height: 1.6; }
 
+
+
+/* AcademicOS faculty workbench: a restrained evidence orbit around the existing course gateway. */
+.teacher-lite-atlas { position: relative; isolation: isolate; overflow: hidden; }
+.teacher-lite-atlas::after {
+  content: ""; position: absolute; z-index: 0; inset-inline-end: -4.5rem; inset-block-start: 50%;
+  width: clamp(10rem, 24vw, 18rem); aspect-ratio: 1; transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--brand) 14%, transparent); border-radius: 50%;
+  box-shadow: 0 0 0 1.2rem color-mix(in srgb, var(--accent) 5%, transparent), 0 0 0 2.4rem color-mix(in srgb, var(--brand) 4%, transparent);
+  pointer-events: none;
+}
+.teacher-lite-atlas > * { position: relative; z-index: 1; }
+.teacher-lite-atlas .hero-shield { box-shadow: 0 0 0 7px color-mix(in srgb, var(--brand) 6%, transparent), var(--shadow); }
+@media (max-width: 767px) { .teacher-lite-atlas::after { inset-inline-end: -8rem; opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .teacher-lite-atlas::after { transition: none; } }

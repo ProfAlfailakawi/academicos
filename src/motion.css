@@ -1,0 +1,131 @@
+/* ==========================================================================
+   AcademicOS — طبقة الحركة والصقل (Round 2). تُحمَّل أخيرًا.
+   عرض فقط: لا تمسّ منطقًا ولا أسماء أصناف يعتمد عليها JS أو الاختبارات.
+   القواعد: transform / opacity / stroke-dashoffset فقط · 120–300ms · مرّة واحدة ·
+   الحالة النهائية = التصميم الساكن (fill-mode: both) · كل شيء داخل
+   prefers-reduced-motion: no-preference وخارج .a11y-reduced-motion.
+   لا حركة على: تسليم الواجب، التصحيح/إدخال درجات المعيار (data-motion="off")،
+   حقول الكتابة، الجداول، نص القرآن، الاختبار، مبالغ الدفع.
+   ========================================================================== */
+:root {
+  --m-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --m-dur-1: 120ms;
+  --m-dur-2: 180ms;
+  --m-dur-3: 260ms;
+  --m-step: 40ms;
+  --m-rise: 8px;
+}
+
+/* ---- الحالة الساكنة (تظهر دائمًا، حتى مع تقليل الحركة) ------------------- */
+.academic-card > .eyebrow:first-child,
+.panel-flat > .eyebrow:first-child { margin-block-end: 0.125rem; }
+.calendar-month__chev, .workspace-more__chev, .notif-prefs summary svg:last-child { transform-origin: center; }
+
+/* عدّادات لوحة المؤسسة: بلاطة أيقونة + رقم بوجه العرض */
+.metric-tile { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.metric-tile__icon {
+  display: grid; place-items: center; flex: none;
+  width: 2rem; height: 2rem; border-radius: 0.625rem;
+  background: var(--brand-soft); color: var(--brand-2);
+}
+:root.dark .metric-tile__icon { color: var(--brand); }
+.metric-tile__value {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.85rem); line-height: 1.15;
+  font-variant-numeric: tabular-nums lining-nums; letter-spacing: 0;
+}
+
+@media (max-width: 639px) {
+  .metric-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 0.75rem; row-gap: 0.125rem; align-items: center; }
+  .metric-tile__icon { grid-row: 1 / span 2; }
+}
+
+/* خطّا الطرف: قياس الأرقام لا يلتفّ ولا يُقصّ */
+.app-main .tone-meter { overflow: hidden; }
+
+/* ---- الحركة ------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes m-rise {
+    from { opacity: 0; transform: translateY(var(--m-rise)); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes m-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes m-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes m-ring {
+    from { stroke-dashoffset: 120; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes m-bar {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  /* 1) ظهور متدرّج مرة واحدة للبطاقات داخل الشبكات (حد أقصى 8 × 40ms).
+        يُستثنى كل ما فيه حقل كتابة أو نموذج، وصفحة التصحيح كلها. */
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :is(.academic-card, .panel, .panel-flat):not(:has(textarea, form, [contenteditable])) {
+    animation: m-rise var(--m-dur-3) var(--m-ease) both;
+  }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(2) { animation-delay: calc(var(--m-step) * 1); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(3) { animation-delay: calc(var(--m-step) * 2); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(4) { animation-delay: calc(var(--m-step) * 3); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(5) { animation-delay: calc(var(--m-step) * 4); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(6) { animation-delay: calc(var(--m-step) * 5); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(7) { animation-delay: calc(var(--m-step) * 6); }
+  html:not(.a11y-reduced-motion) .app-main :is(.grid, .space-y-2, .space-y-3, .space-y-4) > :nth-child(n+8) { animation-delay: calc(var(--m-step) * 7); }
+  /* بطاقة داخل شبكة المقاييس تتبع إيقاعها نفسه */
+  html:not(.a11y-reduced-motion) .app-main .metric-tile-host > .panel { animation: m-rise var(--m-dur-3) var(--m-ease) both; }
+
+  /* 2) حلقات وأشرطة: ترسم نفسها مرة واحدة إلى القيمة الحقيقية */
+  html:not(.a11y-reduced-motion) .notif-rings svg circle:last-child { animation: m-ring 620ms var(--m-ease) 80ms both; }
+  html:not(.a11y-reduced-motion) .app-main .tone-meter > div:not(.dna-fillx),
+  html:not(.a11y-reduced-motion) .app-main .job-progress .h-full {
+    transform-origin: left center;
+    animation: m-bar 520ms var(--m-ease) 80ms both;
+  }
+  html[dir="rtl"]:not(.a11y-reduced-motion) .app-main .tone-meter > div:not(.dna-fillx),
+  html[dir="rtl"]:not(.a11y-reduced-motion) .app-main .job-progress .h-full { transform-origin: right center; }
+
+  /* 3) عبور المحتوى: لوحات التبويب والفتح/الإغلاق */
+  html:not(.a11y-reduced-motion) .app-main [role="tabpanel"] { animation: m-fade var(--m-dur-2) var(--m-ease) both; }
+  html:not(.a11y-reduced-motion) details[open] > :not(summary) { animation: m-fade var(--m-dur-2) var(--m-ease) both; }
+  html:not(.a11y-reduced-motion) :is(.calendar-month__chev, .workspace-more__chev) { transition: transform var(--m-dur-2) var(--m-ease); }
+
+  /* 4) النوافذ المنبثقة (حوار/درج): ظهور هادئ، والخلفية تتلاشى */
+  html:not(.a11y-reduced-motion) [role="dialog"][aria-modal="true"] { animation: m-pop var(--m-dur-3) var(--m-ease) both; }
+  html:not(.a11y-reduced-motion) :is([role="status"], [role="alert"]):not(.acad-dots):not(.acos-splash) { animation: m-fade var(--m-dur-2) var(--m-ease) both; }
+
+  /* 5) تفاعلات دقيقة */
+  html:not(.a11y-reduced-motion) :is(a.panel-flat, a > .academic-card, a.panel, .project-quick-row) {
+    transition: transform var(--m-dur-2) var(--m-ease), box-shadow var(--m-dur-2) var(--m-ease), border-color var(--m-dur-2) var(--m-ease);
+  }
+  html:not(.a11y-reduced-motion) :is(a.panel-flat:hover, a.panel:hover, .project-quick-row:hover) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  html:not(.a11y-reduced-motion) :is(.ui-button, .focus-ring):not([data-motion="off"] *):not(:disabled):active { transform: scale(0.98); }
+  html:not(.a11y-reduced-motion) .ui-button { transition-duration: var(--m-dur-2); transition-timing-function: var(--m-ease); }
+  html:not(.a11y-reduced-motion) :is(.focus-ring, .field) {
+    transition-property: box-shadow, border-color, background-color, color, transform;
+    transition-duration: var(--m-dur-2);
+    transition-timing-function: var(--m-ease);
+  }
+  html:not(.a11y-reduced-motion) .sidebar-nav-link,
+  html:not(.a11y-reduced-motion) .mobile-nav-link {
+    transition: background-color var(--m-dur-2) var(--m-ease), color var(--m-dur-2) var(--m-ease), box-shadow var(--m-dur-3) var(--m-ease), transform var(--m-dur-2) var(--m-ease);
+  }
+  html:not(.a11y-reduced-motion) .sidebar-nav-link[aria-current="page"] { animation: m-fade var(--m-dur-3) var(--m-ease) both; }
+  /* الأيقونة تنزاح قليلًا عند المرور على زر أو رابط (اتجاه منطقي لـ RTL) */
+  html:not(.a11y-reduced-motion) .directional-icon { transition: transform var(--m-dur-2) var(--m-ease); }
+  html:not(.a11y-reduced-motion) :is(a, button):hover > .directional-icon { translate: -2px 0; }
+  html[dir="ltr"]:not(.a11y-reduced-motion) :is(a, button):hover > .directional-icon { translate: 2px 0; }
+
+  /* 6) مناطق بلا حركة إطلاقًا: التصحيح وإدخال الدرجات والتسليم */
+  [data-motion="off"], [data-motion="off"] * { animation: none !important; }
+  [data-motion="off"] :is(.ui-button, .focus-ring):active { transform: none !important; }
+}

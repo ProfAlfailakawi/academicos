@@ -155,7 +155,7 @@ export function ControlPlane() {
         title={t('ctrl.title')}
         description={t('ctrl.desc')}
       />
-      <div className="odd-fill grid grid-cols-2 xl:grid-cols-7 gap-3">
+      <div className="odd-fill metric-tile-host grid grid-cols-2 xl:grid-cols-7 gap-3">
         <Metric icon={Users} label={t('ctrl.metric.users')} value={m.users} />
         <Metric icon={Building2} label={t('ctrl.metric.projects')} value={m.projects} />
         <Metric icon={Activity} label={t('ctrl.metric.active')} value={m.activeProjects} />
@@ -405,12 +405,12 @@ export function ControlPlane() {
 }
 function Metric({ icon: Icon, label, value }: any) {
   return (
-    <div className="panel rounded-2xl p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] muted">{label}</span>
-        <Icon size={15} className="brand-text" />
-      </div>
-      <div className="text-2xl font-semibold tracking-tight mt-3">{value}</div>
+    <div className="panel metric-tile rounded-2xl p-4">
+      <span className="metric-tile__icon" aria-hidden="true">
+        <Icon size={16} />
+      </span>
+      <div className="metric-tile__value">{value}</div>
+      <span className="text-[11px] muted leading-4">{label}</span>
     </div>
   );
 }

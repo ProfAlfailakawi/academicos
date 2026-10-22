@@ -9,6 +9,7 @@ import './index.css';
 import './styles/identity.css';
 import './components/dna/dna-theme.css';
 import './motion.css';
+import './final-polish.css';
 import { installAppUpdate } from './lib/app-update';
 
 declare global {

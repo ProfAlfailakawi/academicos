@@ -233,7 +233,7 @@ export function Login() {
 
   return (
     <div className="auth-shell min-h-screen grid lg:grid-cols-[1fr_.8fr] bg-[var(--bg)]">
-      <section className="auth-visual hidden lg:flex paper-grid p-10 xl:p-16 flex-col justify-between border-e hairline">
+      <aside className="auth-visual hidden lg:flex paper-grid p-10 xl:p-16 flex-col justify-between border-e hairline">
         <Link to="/" className="focus-ring rounded-2xl w-fit">
           <Logo markSize={42} caption={t("brand.tagline")} />
         </Link>
@@ -245,7 +245,7 @@ export function Login() {
           <p className="body-copy mt-5 text-base">{t("login.marketingBody")}</p>
         </div>
         <div className="text-xs muted">{t("login.privateNote")}</div>
-      </section>
+      </aside>
       <main className="relative flex flex-col md:flex-row items-center justify-center gap-3 p-4 md:p-8 md:pt-16">
         <div className="self-end md:absolute md:top-4 md:end-4"><LanguageSwitcher compact /></div>
         <Card className="auth-card w-full max-w-md">

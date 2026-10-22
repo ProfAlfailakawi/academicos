@@ -6,7 +6,7 @@
     </linearGradient>
   </defs>
   <rect width="48" height="48" rx="11" fill="url(#acosTile)"/>
-  <g fill="none" stroke="#fffdf8" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="#fcfdff" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14.6 34.6 L24 13.4 L33.4 34.6" stroke-width="3.7"/>
     <path d="M17.7 27.6 H30.3" stroke-width="3.1"/>
   </g>

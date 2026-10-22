@@ -812,15 +812,15 @@ html[dir="rtl"] .onboarding-invite__fill {
   }
   /* زر مقصود أن يظل فاتحًا فوق سطح داكن في السمتين. */
   .btn-on-deep {
-    background: #fffdf8;
+    background: #fcfdff;
     color: #17234d;
-    border-color: #fffdf8;
+    border-color: #fcfdff;
   }
   .btn-on-deep:hover { background: #ffffff; }
 
   /* أسطح "البطل" بلون العلامة: تبقى عميقة في السمتين ليصحّ النص الفاتح فوقها. */
   .brand-hero {
-    --ink: #fffdf8;
+    --ink: #fcfdff;
     --muted: rgba(255, 254, 250, 0.72);
     --line: rgba(255, 254, 250, 0.16);
     color: var(--ink);

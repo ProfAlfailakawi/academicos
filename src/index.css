@@ -23,19 +23,19 @@
 
 :root {
   color-scheme: light;
-  --bg: #f4f1ea;
-  --panel: #fffdf8;
-  --panel-2: #efebe1;
-  --panel-3: #e7e2d5;
-  --ink: #14182b;
-  --muted: #575a6c;
-  --line: #ddd6c8;
-  --line-strong: #cdc5b3;
+  --bg: #edf0f6;
+  --panel: #fcfdff;
+  --panel-2: #e6eaf3;
+  --panel-3: #dce2ef;
+  --ink: #131a33;
+  --muted: #565d78;
+  --line: #d3dae8;
+  --line-strong: #c0c9dd;
   --brand: #23346b;
   --brand-2: #17234d;
-  --brand-soft: #e4e8f5;
+  --brand-soft: #e1e7f6;
   --accent: #c8452d;
-  --accent-soft: #f8e3da;
+  --accent-soft: #fbe4dd;
   --danger: #a3223f;
   --warning: #8f5a14;
   --success: #2f6b47;
@@ -46,7 +46,7 @@
   --ring: color-mix(in srgb, var(--brand) 28%, transparent);
   /* لون النص فوق أي سطح مملوء بلون العلامة — يجب أن ينقلب مع السمة
      لأن --brand فاتح في الوضع الليلي. */
-  --on-brand: #fffdf8;
+  --on-brand: #fcfdff;
   /* ظل أغمق من --accent للنصوص الصغيرة فقط (≥4.5:1 على اللوحة). */
   --accent-ink: color-mix(in srgb, var(--accent) 72%, black);
   --info: #1f6a92;
@@ -612,7 +612,7 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .price-orbit { display: grid; justify-items: center; padding: 28px; border-radius: 28px; background: color-mix(in srgb, var(--panel) 84%, transparent); border: 1px solid color-mix(in srgb, white 55%, var(--line)); box-shadow: var(--shadow-sm); }
 .price-orbit__amount { color: var(--brand); font-size: clamp(45px, 7vw, 72px); font-weight: 900; letter-spacing: -.06em; line-height: 1; }
 .price-orbit__currency { margin-top: 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
-.teacher-lite-strip { color: #fffdf8; }
+.teacher-lite-strip { color: #fcfdff; }
 .plan-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
 .plan-card { position: relative; display: flex; flex-direction: column; min-height: 390px; padding: 22px; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow-xs); }
 .plan-card.is-popular { border-color: color-mix(in srgb, var(--brand) 58%, var(--line)); box-shadow: 0 18px 55px color-mix(in srgb, var(--brand) 13%, transparent); transform: translateY(-5px); }

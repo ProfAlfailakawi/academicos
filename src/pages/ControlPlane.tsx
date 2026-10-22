@@ -379,7 +379,7 @@ export function ControlPlane() {
             <CardContent>
               <div className="eyebrow">{t("ui.auditTrail")}</div>
               <h2 className="section-title mt-1">{t('ctrl.recentOps')}</h2>
-              <div className="mt-4 space-y-3 max-h-[420px] overflow-auto">
+              <div className="mt-4 space-y-3 max-h-[420px] overflow-auto" tabIndex={0}>
                 {data.audit.slice(0, 20).map((a) => (
                   <div
                     key={a.id}

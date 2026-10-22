@@ -292,7 +292,7 @@ export interface DnaStatusHeaderProps {
   actions?: React.ReactNode;
   children?: React.ReactNode;
   divider?: 'solid' | 'dashed';
-  headingLevel?: 2 | 3 | 4;
+  headingLevel?: 1 | 2 | 3 | 4;
   className?: string;
   as?: 'section' | 'div' | 'header';
 }

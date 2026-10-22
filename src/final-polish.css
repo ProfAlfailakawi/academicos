@@ -1,0 +1,64 @@
+/* ==========================================================================
+   AcademicOS — طبقة الصقل النهائي (Round 3). تُحمَّل أخيرًا بعد motion.css.
+   عرض فقط: لا تمسّ نصوصًا (i18n) ولا منطقًا ولا أسماء أصناف يعتمد عليها JS.
+   الغرض: (1) إصلاح إخفاقات القياس الموضوعي، (2) تهذيب التسلسل البصري.
+   ========================================================================== */
+
+/* ---- 1) تركيز لوحة المفاتيح: الشريحة التنبؤية كان ظلّها `none` يلغي الحلقة -- */
+.predictive-mobile:focus-visible,
+.predictive-chip:focus-visible,
+.prediction-palette-item:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---- 2) مبدّل اللغة المضغوط: القائمة الأصلية فوق الأيقونة بلا شفافية صفرية --- */
+@media (max-width: 1023px) {
+  .app-topbar .language-switcher select {
+    opacity: 1;
+    color: transparent;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .app-topbar .language-switcher select option { color: var(--ink); background: var(--panel); }
+}
+.language-switcher:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---- 3) الأزرار المعطّلة: مسطّحة هادئة بنص مقروء (≥4.5:1) بدل التعتيم ----- */
+:root:root:root .ui-button:is(:disabled, [aria-disabled="true"]):not([data-variant="ghost"]) {
+  opacity: 1;
+  filter: none;
+  box-shadow: none;
+  background: var(--panel-3);
+  color: var(--muted);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+:root:root:root .ui-button[data-variant="ghost"]:is(:disabled, [aria-disabled="true"]) {
+  opacity: 1;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ---- 4) كشف التمرير في الصفحة العامة: لا يهبط النص إلى 40% شفافية --------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes reveal-up {
+      from { opacity: 0.94; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
+  }
+}
+
+/* ---- 5) الطباعة العربية: عناوين متوازنة بلا أرملة، وأرقام جدولية ----------- */
+:is(h1, h2, .page-title, .onboard-title, .dna-htitle) { text-wrap: balance; }
+:is(.hero-figure, .score-figure, [data-figure], .metric-tile__value, .brain-stat__num, .dna-ring, .tone-meter) {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+}
+html[data-locale="ar"] .app-main :is(p, li) { text-wrap: pretty; }

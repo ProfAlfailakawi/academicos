@@ -465,7 +465,7 @@ export function Layout() {
       <a href="#main-content" className="skip-link focus-ring">
         {t("layout.skipToContent")}
       </a>
-      <aside className="app-sidebar app-sidebar--desktop hidden lg:flex fixed inset-y-0 w-[276px] bg-[var(--panel)] flex-col z-40">
+      <aside aria-label={t("layout.mainMenu")} className="app-sidebar app-sidebar--desktop hidden lg:flex fixed inset-y-0 w-[276px] bg-[var(--panel)] flex-col z-40">
         <SidebarContent
           userName={user?.displayName || "AcademicOS"}
           role={user?.role || "student"}

@@ -326,7 +326,7 @@ export function ProjectWorkspace() {
         <DnaStatusHeader
           as="div"
           divider="dashed"
-          headingLevel={2}
+          headingLevel={1}
           icon={<BookOpenCheck size={22} />}
           title={<span className="workspace-head__title">{project.title}</span>}
           subtitle={

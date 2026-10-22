@@ -122,7 +122,7 @@ export function AssignmentSubmissions() {
     ).length,
     immutable = current?.status === "released";
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-motion="off">
       <header className="panel-flat rounded-2xl p-5 md:p-6">
         <Link
           to={`/app/course/${course.id}`}

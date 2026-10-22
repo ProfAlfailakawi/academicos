@@ -8,6 +8,7 @@ import { I18nProvider } from './lib/i18n';
 import './index.css';
 import './styles/identity.css';
 import './components/dna/dna-theme.css';
+import './motion.css';
 import { installAppUpdate } from './lib/app-update';
 
 declare global {

@@ -151,6 +151,7 @@ import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evide
 import { registerRubricRoutes } from "./src/server/routes/rubric";
 import { registerInstructorRoutes } from "./src/server/routes/instructor";
 import { registerTeacherRequestRoutes } from "./src/server/routes/teacher-requests";
+import { registerPublicShareRoutes } from "./src/server/routes/public-share";
 import { registerLtiRoutes } from "./src/server/routes/lti";
 import type { AuthenticatedRequest, RouteDeps } from "./src/server/routes/types";
 import { realtimeHub } from "./src/server/realtime";
@@ -3513,39 +3514,6 @@ async function startServer() {
       }
     },
   );
-  async function publicShareResponse(req: any, res: any, password?: string) {
-    const share = await platformStore.resolvePublicShare(
-      String(req.params.token),
-      password,
-    );
-    if (!share)
-      return res.status(404).json({
-        error: "Share link is invalid, expired or revoked",
-        code: "SHARE_NOT_FOUND",
-      });
-    if ((share as any).passwordRequired)
-      return res.status((share as any).passwordInvalid ? 403 : 401).json({
-        error: (share as any).passwordInvalid
-          ? "Incorrect share password"
-          : "Password required",
-        code: (share as any).passwordInvalid
-          ? "SHARE_PASSWORD_INVALID"
-          : "SHARE_PASSWORD_REQUIRED",
-      });
-    res.setHeader("Cache-Control", "private, no-store");
-    return res.json({
-      success: true,
-      share: {
-        kind: share.kind,
-        label: share.label,
-        createdAt: share.createdAt,
-        expiresAt: share.expiresAt,
-        watermark: share.watermark,
-        viewCount: share.viewCount,
-        snapshot: (share as any).snapshot || {},
-      },
-    });
-  }
   app.post("/api/public/evidence-capsule/verify", async (req, res, next) => {
     try {
       const capsule = req.body?.capsule as EvidenceCapsule | undefined;
@@ -3574,19 +3542,9 @@ async function startServer() {
       next(e);
     }
   });
-  app.get("/api/public/share/:token", async (req, res, next) => {
-    try {
-      await publicShareResponse(req, res);
-    } catch (e) {
-      next(e);
-    }
-  });
-  app.post("/api/public/share/:token/access", async (req, res, next) => {
-    try {
-      await publicShareResponse(req, res, cleanField(req.body?.password, 120));
-    } catch (e) {
-      next(e);
-    }
+  registerPublicShareRoutes(app, {
+    resolvePublicShare: (token, password) => platformStore.resolvePublicShare(token, password),
+    cleanField,
   });
   app.get(
     "/api/notifications",

@@ -189,7 +189,7 @@ export function Settings() {
           </button>
         ))}
       </div>
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid lg:grid-cols-2 gap-5 items-start">
         <Card className={` ${tabCls("look")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export function Settings() {
                     type="button"
                     aria-pressed={numerals === style}
                     onClick={() => setNumerals(style)}
-                    className={`numerals-btn focus-ring rounded-xl border hairline px-1.5 py-2 min-h-11 whitespace-nowrap text-xs font-semibold ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
+                    className={`numerals-btn focus-ring rounded-xl border hairline px-1.5 py-2 min-h-11 text-xs font-semibold leading-tight ${numerals === style ? "brand-soft-bg brand-text" : "muted"}`}
                   >
                     {t(`settings.numerals.${style}`)}
                   </button>

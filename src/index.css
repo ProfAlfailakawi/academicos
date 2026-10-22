@@ -23,65 +23,65 @@
 
 :root {
   color-scheme: light;
-  --bg: #f3f5f2;
-  --panel: #fffefa;
-  --panel-2: #edf1ed;
-  --panel-3: #e6ebe7;
-  --ink: #14201b;
-  --muted: #56615b;
-  --line: #d9dfda;
-  --line-strong: #cbd3cd;
-  --brand: #0c5d49;
-  --brand-2: #073f33;
-  --brand-soft: #deeee7;
-  --accent: #a8763c;
-  --accent-soft: #f4eadc;
-  --danger: #a63c3c;
-  --warning: #93601e;
-  --success: #356846;
-  --shadow-xs: 0 1px 2px rgba(25, 39, 32, 0.045);
-  --shadow-sm: 0 8px 24px rgba(25, 39, 32, 0.055), 0 1px 2px rgba(25, 39, 32, 0.04);
-  --shadow: 0 18px 48px rgba(25, 39, 32, 0.075), 0 2px 8px rgba(25, 39, 32, 0.035);
-  --shadow-lg: 0 30px 80px rgba(17, 32, 25, 0.13), 0 8px 24px rgba(17, 32, 25, 0.055);
+  --bg: #edf0f6;
+  --panel: #fcfdff;
+  --panel-2: #e6eaf3;
+  --panel-3: #dce2ef;
+  --ink: #131a33;
+  --muted: #565d78;
+  --line: #d3dae8;
+  --line-strong: #c0c9dd;
+  --brand: #23346b;
+  --brand-2: #17234d;
+  --brand-soft: #e1e7f6;
+  --accent: #c8452d;
+  --accent-soft: #fbe4dd;
+  --danger: #a3223f;
+  --warning: #8f5a14;
+  --success: #2f6b47;
+  --shadow-xs: 0 1px 2px rgba(20, 24, 43, 0.045);
+  --shadow-sm: 0 8px 24px rgba(20, 24, 43, 0.055), 0 1px 2px rgba(20, 24, 43, 0.04);
+  --shadow: 0 18px 48px rgba(20, 24, 43, 0.075), 0 2px 8px rgba(20, 24, 43, 0.035);
+  --shadow-lg: 0 30px 80px rgba(20, 24, 43, 0.13), 0 8px 24px rgba(20, 24, 43, 0.055);
   --ring: color-mix(in srgb, var(--brand) 28%, transparent);
   /* لون النص فوق أي سطح مملوء بلون العلامة — يجب أن ينقلب مع السمة
      لأن --brand فاتح في الوضع الليلي. */
-  --on-brand: #ffffff;
+  --on-brand: #fcfdff;
   /* ظل أغمق من --accent للنصوص الصغيرة فقط (≥4.5:1 على اللوحة). */
   --accent-ink: color-mix(in srgb, var(--accent) 72%, black);
-  --info: #2c6a8c;
-  --insight: #61519c;
+  --info: #1f6a92;
+  --insight: #7b4fa0;
   /* أصغر حجم نص مسموح به في الواجهة (12px). */
   --text-meta: 0.75rem;
 }
 
 :root.dark {
   color-scheme: dark;
-  --bg: #0e1411;
-  --panel: #151c18;
-  --panel-2: #1c2520;
-  --panel-3: #25312a;
-  --ink: #edf3ef;
-  --muted: #9da9a2;
-  --line: #2b3731;
-  --line-strong: #3a4941;
-  --brand: #79c5a7;
-  --brand-2: #a1dcc4;
-  --brand-soft: #20372e;
-  --accent: #d3a56d;
-  --accent-soft: #362b20;
-  --danger: #e27b78;
-  --warning: #ddb269;
-  --success: #93c9a2;
+  --bg: #0f1220;
+  --panel: #161a2e;
+  --panel-2: #1d2240;
+  --panel-3: #272d50;
+  --ink: #eceefa;
+  --muted: #a0a5c2;
+  --line: #2a3050;
+  --line-strong: #3b4474;
+  --brand: #a6b6f7;
+  --brand-2: #c6d0fb;
+  --brand-soft: #1f2750;
+  --accent: #f08462;
+  --accent-soft: #3a2320;
+  --danger: #f0829a;
+  --warning: #e0b063;
+  --success: #8fcca0;
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
   --shadow-sm: 0 10px 28px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.14);
   --shadow: 0 22px 58px rgba(0, 0, 0, 0.26), 0 3px 9px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.38), 0 10px 30px rgba(0, 0, 0, 0.22);
   --ring: color-mix(in srgb, var(--brand) 38%, transparent);
-  --on-brand: #07120e;
+  --on-brand: #0c1022;
   --accent-ink: var(--accent);
   --info: #86bcd6;
-  --insight: #b6a6e6;
+  --insight: #c4a6e6;
 }
 
 * { box-sizing: border-box; }
@@ -260,8 +260,8 @@ html[data-locale="zh"] body { line-break: strict; word-break: normal; }
   border-inline-end: 1px solid var(--line);
 }
 .mobile-menu-close { inset-inline-end: .75rem; }
-html[dir="ltr"] .app-sidebar { box-shadow: 12px 0 38px rgba(20, 32, 27, .035); }
-html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 32, 27, .035); }
+html[dir="ltr"] .app-sidebar { box-shadow: 12px 0 38px rgba(20, 24, 43, .035); }
+html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 24, 43, .035); }
 .dark[dir="ltr"] .app-sidebar, html.dark[dir="ltr"] .app-sidebar { box-shadow: 12px 0 38px rgba(0, 0, 0, .17); }
 .dark[dir="rtl"] .app-sidebar, html.dark[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(0, 0, 0, .17); }
 @media (min-width: 1024px) {
@@ -329,7 +329,7 @@ html[dir="rtl"] .app-sidebar { box-shadow: -12px 0 38px rgba(20, 32, 27, .035); 
   border-radius: 22px;
   padding: 7px 8px 6px !important;
   background: var(--panel) !important;
-  box-shadow: 0 14px 40px rgba(18, 31, 25, .16), inset 0 1px 0 color-mix(in srgb, white 45%, transparent);
+  box-shadow: 0 14px 40px rgba(20, 24, 43, .16), inset 0 1px 0 color-mix(in srgb, white 45%, transparent);
   backdrop-filter: blur(22px) saturate(1.25);
 }
 .dark .mobile-dock { box-shadow: 0 18px 46px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.04); }
@@ -583,7 +583,7 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .journey-card--mint, .journey-card--brand { background: linear-gradient(160deg, color-mix(in srgb, var(--brand-soft) 32%, var(--panel)), var(--panel) 55%); }
 .journey-card--sand { background: linear-gradient(160deg, color-mix(in srgb, var(--accent-soft) 34%, var(--panel)), var(--panel) 55%); }
 .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #dcecff 30%, var(--panel)), var(--panel) 55%); }
-.dark .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #18304b 34%, var(--panel)), var(--panel) 55%); }
+.dark .journey-card--blue { background: linear-gradient(160deg, color-mix(in srgb, #1d3a6e 34%, var(--panel)), var(--panel) 55%); }
 
 .understanding-card { background: linear-gradient(145deg, var(--brand-soft), color-mix(in srgb, var(--panel) 60%, var(--brand-soft))); }
 .understanding-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -612,7 +612,7 @@ button, [role="button"], .ui-button, input, select { min-height: 44px; }
 .price-orbit { display: grid; justify-items: center; padding: 28px; border-radius: 28px; background: color-mix(in srgb, var(--panel) 84%, transparent); border: 1px solid color-mix(in srgb, white 55%, var(--line)); box-shadow: var(--shadow-sm); }
 .price-orbit__amount { color: var(--brand); font-size: clamp(45px, 7vw, 72px); font-weight: 900; letter-spacing: -.06em; line-height: 1; }
 .price-orbit__currency { margin-top: 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
-.teacher-lite-strip { color: #fffefa; }
+.teacher-lite-strip { color: #fcfdff; }
 .plan-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
 .plan-card { position: relative; display: flex; flex-direction: column; min-height: 390px; padding: 22px; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow-xs); }
 .plan-card.is-popular { border-color: color-mix(in srgb, var(--brand) 58%, var(--line)); box-shadow: 0 18px 55px color-mix(in srgb, var(--brand) 13%, transparent); transform: translateY(-5px); }
@@ -880,7 +880,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   body.pe-printing { background: #fff !important; color: #111 !important; }
   body.pe-printing .pe-print { display: block; font-size: 11pt; line-height: 1.7; color: #111; padding: 0; }
   .pe-print h1 { font-size: 18pt; margin: 4pt 0 6pt; }
-  .pe-print__brand { font-size: 9pt; letter-spacing: .02em; color: #0c5d49; font-weight: 700; }
+  .pe-print__brand { font-size: 9pt; letter-spacing: .02em; color: #23346b; font-weight: 700; }
   .pe-print table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
   .pe-print th, .pe-print td { border: 1px solid #c9ccc9; padding: 4pt 6pt; text-align: start; vertical-align: top; }
   .pe-print__entries tr { break-inside: avoid; }
@@ -1035,12 +1035,12 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .dossier-print-root button { display: none !important; }
 }
 
-/* Dark mode: primary buttons were pale mint with a white label (read as
-   disabled). Solid brand green with a white label instead — pure colour. */
+/* Dark mode: primary buttons were pale with a white label (read as
+   disabled). Solid ink-blue with a white label instead — pure colour. */
 :root.dark .brand-bg:not(.rounded-full),
 :root.dark .ui-button[data-variant="default"],
 :root.dark .plan-card__popular {
-  background: #1d7459;
+  background: #3f55b5;
   color: #ffffff;
 }
 :root.dark .ui-button[data-variant="default"] {

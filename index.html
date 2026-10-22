@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <script src="/locale-bootstrap.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f5f2" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1411" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#edf0f6" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1220" />
     <meta name="description" content="Upload any assignment — essay, lab report, case study or thesis. AcademicOS helps you understand it, build it yourself, check your evidence and prepare to defend it." />
     <meta name="color-scheme" content="light dark" />
     <!-- Social sharing (WhatsApp/Facebook/X). og:image is an absolute URL to a
@@ -28,7 +28,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="mask-icon" href="/icon-mono.svg" color="#0c5d49" />
+    <link rel="mask-icon" href="/icon-mono.svg" color="#23346b" />
     <!-- iOS لا يقرأ SVG لأيقونة الشاشة الرئيسية، ويعرض الشفافية سوداء. -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <!-- تشغيل التطبيق بوضع ملء الشاشة عند تثبيته على iOS وأندرويد. -->
@@ -101,26 +101,26 @@
       }
 
       :root {
-        --acos-boot-bg: #f3f5f2;
-        --acos-boot-ink: #14201b;
-        --acos-boot-muted: #66716b;
-        --acos-boot-line: #d9dfda;
-        --acos-boot-brand: #0c5d49;
-        --acos-boot-accent: #a8763c;
-        --acos-boot-glow: rgba(12, 93, 73, 0.13);
-        --acos-boot-glow-2: rgba(168, 118, 60, 0.1);
-        --acos-boot-word-os: #0c5d49; /* = --brand */
+        --acos-boot-bg: #edf0f6;
+        --acos-boot-ink: #131a33;
+        --acos-boot-muted: #5a617c;
+        --acos-boot-line: #d3dae8;
+        --acos-boot-brand: #23346b;
+        --acos-boot-accent: #c8452d;
+        --acos-boot-glow: rgba(35, 52, 107, 0.13);
+        --acos-boot-glow-2: rgba(200, 69, 45, 0.09);
+        --acos-boot-word-os: #23346b; /* = --brand */
       }
       html.dark {
-        --acos-boot-bg: #0e1411;
-        --acos-boot-ink: #edf3ef;
-        --acos-boot-muted: #9da9a2;
-        --acos-boot-line: #2b3731;
-        --acos-boot-brand: #79c5a7;
-        --acos-boot-accent: #d3a56d;
-        --acos-boot-glow: rgba(121, 197, 167, 0.12);
-        --acos-boot-glow-2: rgba(211, 165, 109, 0.08);
-        --acos-boot-word-os: #a1dcc4; /* = --brand-2 (dark) */
+        --acos-boot-bg: #0f1220;
+        --acos-boot-ink: #eceefa;
+        --acos-boot-muted: #a0a5c2;
+        --acos-boot-line: #2a3050;
+        --acos-boot-brand: #a6b6f7;
+        --acos-boot-accent: #f08462;
+        --acos-boot-glow: rgba(166, 182, 247, 0.12);
+        --acos-boot-glow-2: rgba(240, 132, 98, 0.08);
+        --acos-boot-word-os: #c6d0fb; /* = --brand-2 (dark) */
       }
       html { background: var(--acos-boot-bg); }
       html.acos-booting, html.acos-booting body { overflow: hidden; }

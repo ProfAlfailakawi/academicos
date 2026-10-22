@@ -795,7 +795,7 @@ html[dir="rtl"] .onboarding-invite__fill {
     --line-strong: #3a424b;
     --panel: #16181c;
     --warning: #ddb269;
-    --accent: #d3a56d;
+    --accent: #f08462;
     --success: #93c9a2;
     --danger: #e27b78;
     color: var(--ink);
@@ -805,28 +805,28 @@ html[dir="rtl"] .onboarding-invite__fill {
     border: 1px solid #262b32;
   }
   .strip-deep {
-    background: linear-gradient(120deg, #0c5d49, #06382c 72%);
+    background: linear-gradient(120deg, #23346b, #101a3d 72%);
   }
   :root.dark .strip-deep {
     background: linear-gradient(120deg, #12362c, #0b241d 72%);
   }
   /* زر مقصود أن يظل فاتحًا فوق سطح داكن في السمتين. */
   .btn-on-deep {
-    background: #fffefa;
-    color: #073f33;
-    border-color: #fffefa;
+    background: #fcfdff;
+    color: #17234d;
+    border-color: #fcfdff;
   }
   .btn-on-deep:hover { background: #ffffff; }
 
   /* أسطح "البطل" بلون العلامة: تبقى عميقة في السمتين ليصحّ النص الفاتح فوقها. */
   .brand-hero {
-    --ink: #fffefa;
+    --ink: #fcfdff;
     --muted: rgba(255, 254, 250, 0.72);
     --line: rgba(255, 254, 250, 0.16);
     color: var(--ink);
-    background: linear-gradient(135deg, #0c5d49, #063a2d 74%);
+    background: linear-gradient(135deg, #23346b, #101a3d 74%);
   }
-  :root.dark .brand-hero { background: linear-gradient(135deg, #123a2f, #0a231c 74%); }
+  :root.dark .brand-hero { background: linear-gradient(135deg, #16224f, #0b1233 74%); }
 
   /* الرسمة تحمل خلفية فاتحة داخل الملف نفسه؛ تهدئتها ليلًا تُجلسها داخل السطح. */
   /* الرسمة متجهة الآن وتقرأ التوكنز، فلا تحتاج تصحيحًا في الوضع الليلي. */

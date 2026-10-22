@@ -286,6 +286,7 @@ export function Passport() {
                         type="button"
                         disabled={portfolioBusy}
                         onClick={() => toggleProject(p.id)}
+                        aria-pressed={selected}
                         className={`focus-ring rounded-xl border hairline p-3 text-start ${selected ? "brand-soft-bg" : ""}`}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -297,7 +298,7 @@ export function Passport() {
                               {p.course}
                             </div>
                           </div>
-                          <span className="text-meta font-semibold">
+                          <span className={`text-meta font-semibold shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 ${selected ? "brand-text" : "muted"}`}>
                             {selected
                               ? t("passport.selected")
                               : t("passport.private")}

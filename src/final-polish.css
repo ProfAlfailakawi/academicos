@@ -35,7 +35,7 @@
   filter: none;
   box-shadow: none;
   background: var(--panel-3);
-  color: var(--muted);
+  color: color-mix(in srgb, var(--ink) 72%, var(--panel-3));
   border-color: var(--line);
   cursor: not-allowed;
 }
@@ -62,3 +62,7 @@
   letter-spacing: 0;
 }
 html[data-locale="ar"] .app-main :is(p, li) { text-wrap: pretty; }
+
+/* ---- 6) بطاقات الباقات: وصف أوضح (≥4.5:1) على لوح البطاقة -------------------- */
+.plan-card > p,
+.plan-price span { color: color-mix(in srgb, var(--ink) 78%, var(--panel)); }

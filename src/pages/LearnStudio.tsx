@@ -210,7 +210,7 @@ export function LearnStudio() {
             <label className="text-xs muted">{t("learn.topic")}</label>
             <input className="field w-full rounded-xl px-3 py-2 mt-1" placeholder={t("learn.topicPh")} value={topic} onChange={(e) => setTopic(e.target.value)} />
             <div className="flex items-center gap-3 mt-3">
-              <select className="field rounded-lg px-2 py-2 text-sm" value={level} onChange={(e) => setLevel(e.target.value)}>
+              <select aria-label={t("learn.level")} className="field rounded-lg px-2 py-2 text-sm" value={level} onChange={(e) => setLevel(e.target.value)}>
                 <option value="beginner">{t("level.beginner")}</option>
                 <option value="intermediate">{t("level.intermediate")}</option>
                 <option value="advanced">{t("level.advanced")}</option>

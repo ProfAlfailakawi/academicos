@@ -314,6 +314,7 @@ export function CourseOS() {
           </div>
           <div className="flex gap-2 flex-wrap items-center border-t hairline pt-4">
             <select
+              aria-label={t("users.colStatus")}
               value={course.status}
               onChange={(e) =>
                 setCourseStatus(e.target.value as CourseRecord["status"])

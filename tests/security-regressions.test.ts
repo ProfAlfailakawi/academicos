@@ -115,6 +115,10 @@ test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchabl
   // script-src has no 'unsafe-inline' (see tests/shell.test.ts).
   assert.match(server, /script-src-attr 'none'/);
   assert.match(server, /CSP_ALLOW_UNSAFE_EVAL/);
+  // ORBIT sensor is self-hosted (/orbit-sensor.js); only connect-src gains its beacon origin.
+  assert.match(server, /connect-src [^;]*https:\/\/orbitq8\.web\.app/);
+  assert.doesNotMatch(server, /script-src [^;]*orbitq8/);
+  assert.match(html, /<script src="\/orbit-sensor\.js" async><\/script>/);
   // No inline event-handler attribute may creep into the shell, or the
   // script-src-attr 'none' directive above would break the page.
   assert.equal(/\son[a-z]+\s*=/.test(html), false);

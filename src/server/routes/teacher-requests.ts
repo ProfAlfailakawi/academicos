@@ -4,6 +4,7 @@ import type { Express, NextFunction, Response } from "express";
 import { getAuth } from "firebase-admin/auth";
 import { getAppFirestore } from "../firebase-services";
 import { firestoreStore } from "../db";
+import { DemoSandbox } from "../demoSandbox";
 import { createNotification, sendConfiguredEmail } from "../notifications";
 import { SRV } from "../server-messages";
 import { resolveServerLocale, tx, txf } from "../server-locale";
@@ -25,7 +26,10 @@ type Extra = {
 
 export function registerTeacherRequestRoutes(app: Express, deps: RouteDeps & Extra) {
   const { authenticate, apiRateLimit, requireRoles, requireRecentPrivilegedAuth } = deps;
-  const store = () => firestoreTeacherRequestStore(getAppFirestore());
+  // Inside a demo request this is the visitor's in-memory sandbox, never the real
+  // Firestore (same seam as db() in ../db). Outside one it is unchanged.
+  const appDb = (): any => DemoSandbox.currentFirestore() || getAppFirestore();
+  const store = () => firestoreTeacherRequestStore(appDb());
   const fail = (res: Response, e: unknown, next: NextFunction) =>
     e instanceof TeacherRequestError
       ? res.status(e.status).json({ error: e.message, code: e.code })
@@ -97,7 +101,7 @@ export function registerTeacherRequestRoutes(app: Express, deps: RouteDeps & Ext
         );
         // Notify the applicant in their own language; delivery problems never undo the decision.
         try {
-          const profile = await getAppFirestore().collection("profiles").doc(targetUserId).get();
+          const profile = await appDb().collection("profiles").doc(targetUserId).get();
           const locale = resolveServerLocale(profile.exists ? (profile.data() as any)?.language : undefined, "ar");
           const title = tx(approved ? SRV.teacherApprovedTitle : SRV.teacherRejectedTitle, locale);
           const body = approved

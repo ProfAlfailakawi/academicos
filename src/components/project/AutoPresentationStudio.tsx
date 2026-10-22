@@ -62,30 +62,30 @@ export function AutoPresentationStudio({ project }: { project: ProjectDNA }) {
     const html = `<!doctype html><html lang="${locale}" dir="${meta.dir}"><meta charset="utf-8"><title>${escapeHtml(project.title)} · ${escapeHtml(t("pres.title"))}</title><style>
 @page{size:1600px 900px;margin:0}
 *{box-sizing:border-box}
-body{margin:0;background:#0b1310;color:#f3f7f4;text-align:start;
+body{margin:0;background:#0e1530;color:#f3f5fb;text-align:start;
   font-family:"Noto Sans","Noto Sans Arabic","Noto Sans SC","Noto Sans Devanagari","Noto Nastaliq Urdu",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;line-height:1.5}
 .slide{position:relative;width:100vw;min-height:100vh;padding:7vh 7vw 9vh;page-break-after:always;
   display:flex;flex-direction:column;justify-content:space-between;
-  background:radial-gradient(120vw 80vh at 85% -20%,rgba(12,93,73,.55),transparent 60%),linear-gradient(135deg,#0b1310,#111c17)}
-.slide::after{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:6px;background:linear-gradient(90deg,#79c5a7,#d3a56d)}
+  background:radial-gradient(120vw 80vh at 85% -20%,rgba(35,52,107,.7),transparent 60%),linear-gradient(135deg,#0e1530,#17234d)}
+.slide::after{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:6px;background:linear-gradient(90deg,#a9baf0 0 70%,#f08462 70% 100%)}
 header{display:flex;align-items:center;justify-content:space-between;gap:24px;
-  padding-bottom:20px;border-bottom:1px solid rgba(243,247,244,.14)}
-.eyebrow{color:#d3a56d;font-weight:700;letter-spacing:.13em;text-transform:uppercase;font-size:.85rem}
-.page{color:rgba(243,247,244,.5);font-size:.85rem;font-variant-numeric:tabular-nums}
+  padding-bottom:20px;border-bottom:1px solid rgba(243,245,251,.14)}
+.eyebrow{color:#f08462;font-weight:700;letter-spacing:.13em;text-transform:uppercase;font-size:.85rem}
+.page{color:rgba(243,245,251,.5);font-size:.85rem;font-variant-numeric:tabular-nums}
 .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding-block:4vh}
-h1{font-size:clamp(2.2rem,4.4vw,3.6rem);line-height:1.1;letter-spacing:-.03em;margin:0 0 .6rem;text-wrap:balance}
-h2{color:#79c5a7;font-size:clamp(1rem,1.5vw,1.35rem);font-weight:500;margin:0 0 2.2rem}
+h1{font-family:"Amiri Display",Amiri,"Noto Sans","Noto Sans Arabic","Noto Sans SC","Noto Sans Devanagari","Noto Nastaliq Urdu",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:clamp(2.2rem,4.4vw,3.6rem);line-height:1.1;letter-spacing:-.03em;margin:0 0 .6rem;text-wrap:balance}
+h2{color:#a9baf0;font-size:clamp(1rem,1.5vw,1.35rem);font-weight:500;margin:0 0 2.2rem}
 ul{margin:0;padding:0;list-style:none;display:grid;gap:1rem}
-li{position:relative;padding-inline-start:1.9rem;font-size:clamp(1.05rem,1.6vw,1.5rem);line-height:1.6;color:rgba(243,247,244,.92)}
-li::before{content:"";position:absolute;inset-inline-start:0;top:.62em;width:.62rem;height:.62rem;border-radius:50%;background:#79c5a7}
+li{position:relative;padding-inline-start:1.9rem;font-size:clamp(1.05rem,1.6vw,1.5rem);line-height:1.6;color:rgba(243,245,251,.92)}
+li::before{content:"";position:absolute;inset-inline-start:0;top:.62em;width:.62rem;height:.62rem;border-radius:2px;background:#f08462}
 footer{display:flex;align-items:center;justify-content:space-between;gap:24px;
-  padding-top:18px;border-top:1px solid rgba(243,247,244,.14);color:rgba(243,247,244,.55);font-size:.85rem}
-.notes{margin-top:2.4rem;padding:1.1rem 1.3rem;border:1px solid rgba(243,247,244,.16);border-radius:18px;
-  color:rgba(243,247,244,.78);font-size:.95rem}
-.notes strong{display:block;margin-bottom:.4rem;color:#d3a56d;letter-spacing:.06em;text-transform:uppercase;font-size:.75rem}
+  padding-top:18px;border-top:1px solid rgba(243,245,251,.14);color:rgba(243,245,251,.55);font-size:.85rem}
+.notes{margin-top:2.4rem;padding:1.1rem 1.3rem;border:1px solid rgba(243,245,251,.16);border-radius:10px;
+  color:rgba(243,245,251,.78);font-size:.95rem}
+.notes strong{display:block;margin-bottom:.4rem;color:#f08462;letter-spacing:.06em;text-transform:uppercase;font-size:.75rem}
 .notes p{margin:0}
-@media print{body{background:#0b1310}.notes{display:none}.slide{height:100vh;min-height:0}}
+@media print{body{background:#0e1530}.notes{display:none}.slide{height:100vh;min-height:0}}
 </style><body>${sections}</body></html>`;
     const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
     const a = document.createElement("a");

@@ -678,7 +678,7 @@ export function Layout() {
                   onClick={() => void resetDemo()}
                   title={t("demo.reset")}
                   aria-label={t("demo.reset")}
-                  className="demo-pill__reset focus-ring grid h-10 w-10 place-items-center rounded-full hover:bg-amber-500/25"
+                  className="demo-pill__reset focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-amber-500/25"
                 >
                   <RefreshCw size={12} aria-hidden="true" />
                 </button>

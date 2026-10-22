@@ -155,3 +155,12 @@ test("FieldValue.increment and FieldValue.delete behave like Firestore, not as s
   await ref.set({ value: FieldValue.increment(4) });
   assert.equal((await ref.get()).data()?.value, 4, "a non-merge set starts from zero");
 });
+
+test("the \"in\" operator matches any listed value", async () => {
+  const store = createDemoFirestore();
+  await store.collection("projects").doc("a").set({ courseId: "c1" });
+  await store.collection("projects").doc("b").set({ courseId: "c2" });
+  await store.collection("projects").doc("c").set({ courseId: "c3" });
+  const snap = await store.collection("projects").where("courseId", "in", ["c1", "c3"]).get();
+  assert.deepEqual(snap.docs.map((d) => d.id).sort(), ["a", "c"]);
+});

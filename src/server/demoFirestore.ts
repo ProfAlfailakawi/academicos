@@ -159,7 +159,7 @@ export interface DemoDocumentRef {
   delete(): Promise<void>;
 }
 
-type Filter = { field: string; value: unknown };
+type Filter = { field: string; value: unknown; op?: "==" | "in" };
 type Order = { field: string; direction: "asc" | "desc" };
 
 class Store {
@@ -258,14 +258,14 @@ class Query {
   ) {}
 
   where(field: string, op: string, value: unknown): Query {
-    if (op !== "==")
+    if (op !== "==" && op !== "in")
       throw new Error(
-        `Demo Firestore supports only "==" filters; received "${op}" on ${this.collectionName}.${field}`,
+        `Demo Firestore supports only "==" filters (plus "in"); received "${op}" on ${this.collectionName}.${field}`,
       );
     return new Query(
       this.store,
       this.collectionName,
-      [...this.filters, { field, value }],
+      [...this.filters, { field, value, op }],
       this.orders,
       this.max,
     );
@@ -295,8 +295,11 @@ class Query {
     let items = [...this.store.bucket(this.collectionName).entries()]
       .map(([id, data]) => ({ id, data }))
       .filter(({ data }) =>
-        this.filters.every(
-          (filter) => readPath(data, filter.field) === filter.value,
+        this.filters.every((filter) =>
+          filter.op === "in"
+            ? Array.isArray(filter.value) &&
+              filter.value.includes(readPath(data, filter.field))
+            : readPath(data, filter.field) === filter.value,
         ),
       );
     for (const order of [...this.orders].reverse()) {

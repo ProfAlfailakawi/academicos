@@ -117,6 +117,7 @@ import {
 import { externalServices } from "./src/server/external-adapters";
 import {
   assignableRolesFor,
+  authDomainFrameSource,
   buildScriptSrc,
   canManageUserRole,
   canSupportImpersonate,
@@ -2047,7 +2048,10 @@ async function startServer() {
         /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(configuredEmulator)
           ? ` ${new URL(configuredEmulator).origin}`
           : "";
-    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://orbitq8.web.app; frame-src 'self' https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
+    const authFrame = authDomainFrameSource(
+      process.env.VITE_FIREBASE_AUTH_DOMAIN || appletConfig.authDomain || "",
+    );
+    const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://orbitq8.web.app; frame-src 'self'${authFrame} https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
     res.setHeader(
       "Content-Security-Policy",
       `${csp}${process.env.NODE_ENV === "production" ? "; upgrade-insecure-requests" : ""}`,

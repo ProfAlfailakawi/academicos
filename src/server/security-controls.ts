@@ -39,11 +39,17 @@ export function validFutureIso(value: string, now = Date.now()) {
   return Number.isFinite(time) && time > now;
 }
 
-// script-src for the Content-Security-Policy. Covered by tests/csp.test.ts. Production never allows inline scripts; reCAPTCHA hosts are
-// allowed so Firebase App Check / phone auth keep working.
+// script-src for the Content-Security-Policy. Covered by tests/shell.test.ts. Production never allows inline scripts; reCAPTCHA hosts are
+// allowed so Firebase App Check / phone auth keep working, and apis.google.com because Firebase Auth loads its gapi iframe helper from there.
 export function buildScriptSrc(production: boolean, allowUnsafeEval: boolean) {
   const evalSource = allowUnsafeEval ? " 'unsafe-eval'" : "";
   return production
-    ? `'self'${evalSource} https://www.google.com https://www.gstatic.com https://www.recaptcha.net`
+    ? `'self'${evalSource} https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://apis.google.com`
     : `'self' 'unsafe-inline'${evalSource}`;
+}
+
+// The Firebase Auth helper iframe is served from the authDomain (https://<authDomain>/__/auth/iframe); only a plain hostname is accepted.
+export function authDomainFrameSource(authDomain: string) {
+  const host = String(authDomain || "").trim().toLowerCase();
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? ` https://${host}` : "";
 }

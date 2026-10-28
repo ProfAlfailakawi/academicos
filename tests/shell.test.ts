@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
-import { buildScriptSrc } from '../src/server/security-controls';
+import { authDomainFrameSource, buildScriptSrc } from '../src/server/security-controls';
 
 test('production script-src drops unsafe-inline but keeps reCAPTCHA hosts', () => {
   const prod = buildScriptSrc(true, true);
@@ -11,9 +11,18 @@ test('production script-src drops unsafe-inline but keeps reCAPTCHA hosts', () =
   assert.match(prod, /https:\/\/www\.google\.com/);
   assert.match(prod, /https:\/\/www\.gstatic\.com/);
   assert.match(prod, /https:\/\/www\.recaptcha\.net/);
+  // Firebase Auth loads its iframe helper from apis.google.com (blocked before: mobile console errors).
+  assert.match(prod, /https:\/\/apis\.google\.com/);
   assert.doesNotMatch(buildScriptSrc(true, false), /'unsafe-eval'/);
   // Vite's React refresh preamble is inline in development only.
   assert.match(buildScriptSrc(false, true), /'unsafe-inline'/);
+});
+
+test('the Firebase auth iframe host is allowed only when it is a plain hostname', () => {
+  assert.equal(authDomainFrameSource('academicos-3991f.firebaseapp.com'), ' https://academicos-3991f.firebaseapp.com');
+  assert.equal(authDomainFrameSource(''), '');
+  assert.equal(authDomainFrameSource("x.com; script-src *"), '');
+  assert.equal(authDomainFrameSource('https://x.com'), '');
 });
 
 test('index.html ships no inline scripts and defaults to Arabic RTL', async () => {

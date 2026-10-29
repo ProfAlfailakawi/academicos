@@ -401,17 +401,17 @@ export function Login() {
                   </label>
 
                   {mode !== "forgot" && (
-                    <label className="block">
+                    <div className="block">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold">{t("login.passwordLabel")}</span>
+                        <label htmlFor="login-password" className="text-xs font-semibold">{t("login.passwordLabel")}</label>
                         {mode === "login" && (
                           <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccessMsg(""); }} className="text-meta brand-text hover:underline">
                             {t("login.forgotPassword")}
                           </button>
                         )}
                       </div>
-                      <input autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-1.5" placeholder="••••••••" />
-                    </label>
+                      <input id="login-password" autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-1.5" placeholder="••••••••" />
+                    </div>
                   )}
 
                   {error && (

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { directHostGuard } from "./src/server/direct-host-guard";
+import { isHashedBuildAsset, staticCompression } from "./src/server/static-compression";
 import express, {
   type NextFunction,
   type Request,
@@ -9990,13 +9991,17 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
+    // Gzip/brotli for the built client and the HTML shell only. Every API, webhook and
+    // health route is registered above, so none of them reaches this middleware; its
+    // filter also refuses /api, /internal, webhook paths and text/event-stream.
+    app.use(staticCompression());
     app.use(
       express.static(distPath, {
         maxAge: "1h",
         setHeaders: (res, file) => {
           if (file.endsWith(".html") || file.endsWith("sw.js"))
             res.setHeader("Cache-Control", "no-cache");
-          else if (/\/assets\/.+\.[a-f0-9]{8,}\./i.test(file))
+          else if (isHashedBuildAsset(path.relative(distPath, file)))
             res.setHeader(
               "Cache-Control",
               "public, max-age=31536000, immutable",

@@ -123,3 +123,14 @@ test('CSP blocks inline event-handler attributes and keeps unsafe-eval switchabl
   // script-src-attr 'none' directive above would break the page.
   assert.equal(/\son[a-z]+\s*=/.test(html), false);
 });
+
+test('tutor lessons shaped by the learner\'s own material never enter the tenant-wide cache', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../src/server/routes/ai.ts', import.meta.url), 'utf8');
+  const explain = src.slice(src.indexOf('"/api/learn/explain"'), src.indexOf('"/api/learn/solve"'));
+  assert.ok(explain.length > 0, 'explain route located');
+  // The cache key is (topic, language, level) only, so `context` must disable both read and write.
+  assert.match(explain, /const cacheable = !context;/);
+  assert.match(explain, /cacheable \? await firestoreStore\.getLearnCache\(/);
+  assert.match(explain, /if \(cacheable\)\s+await firestoreStore\.setLearnCache\(/);
+});

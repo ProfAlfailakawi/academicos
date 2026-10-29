@@ -231,9 +231,13 @@ export function registerLearnRoutes(app: Express, deps: RouteDeps) {
           });
         }
         // اتساق: نفس (الموضوع+اللغة+المستوى) داخل نفس المقرر/الجامعة => نفس الشرح.
+        // The tenant-wide cache key has no `context` (the learner's own uploaded
+        // material). A lesson shaped by that untrusted text must stay personal,
+        // or one student's document could steer what every classmate is taught.
+        const cacheable = !context;
         const scope = cacheScope("tenant", a.tenantId);
         const key = learnCacheKey("tutor", { topic, language, level });
-        const cached = await firestoreStore.getLearnCache(scope, key);
+        const cached = cacheable ? await firestoreStore.getLearnCache(scope, key) : null;
         if (cached)
           return res.json({ success: true, lesson: cached, source: "cache" });
         const gate = await platformStore.reserveAiBudget(a.tenantId, a.userId);
@@ -250,11 +254,12 @@ export function registerLearnRoutes(app: Express, deps: RouteDeps) {
         }
         await firestoreStore.recordAIUsage(result.usage, a, "tutor");
         const lesson = toLesson(topic, language, level, result.output);
-        await firestoreStore.setLearnCache(scope, key, lesson, {
-          kind: "tutor",
-          language,
-          level,
-        });
+        if (cacheable)
+          await firestoreStore.setLearnCache(scope, key, lesson, {
+            kind: "tutor",
+            language,
+            level,
+          });
         await recordProductEventSafe(a, "tutor_explained", {
           properties: { language, level },
         });

@@ -599,7 +599,7 @@ const DEMO_BLOCKED_WRITE_PREFIXES = [
   "/api/admin/", "/api/teacher-requests", "/api/shares", "/api/platform/", "/api/billing/",
   "/api/security/", "/api/lifecycle/", "/api/feature-flags/",
   "/api/support/", "/api/tools/code/execute", "/api/jobs/",
-  "/api/notification-preferences", "/api/notifications/",
+  "/api/notification-preferences", "/api/notifications/", "/api/lti/",
 ];
 const DEMO_AI_PATTERN = /\/(assist|copilot|writer|viva|red-team|xray|improve-style|style-integrity|explain|solve|intake|semantic|translate)(\/|$|\?)/;
 const DEMO_AI_CALLS_PER_SESSION = 25;

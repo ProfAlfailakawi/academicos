@@ -4,6 +4,7 @@
 import { routeRateLimit } from "./route-rate-limit";
 import express, { type Express } from "express";
 import { firestoreStore } from "../db";
+import { DemoSandbox } from "../demoSandbox";
 import { resolveVariationSecret } from "../variation-secret";
 import {
   buildLoginRedirect,
@@ -105,6 +106,13 @@ export function registerLtiRoutes(app: Express, deps: RouteDeps & { adminRoles: 
     try {
       if (!admins.has(req.actor!.role)) return res.status(403).json({ error: "Forbidden", code: "FORBIDDEN" });
       const config = ltiConfig();
+      // The passback writes to the institution's real LMS gradebook with the
+      // tool's private key. Only actors of the tenant that owns the LTI
+      // registration may use it (fail closed when LTI_TENANT_ID is unset), and
+      // never the anonymous demo sandbox, which isolates Firestore but not
+      // outbound HTTP.
+      if (DemoSandbox.isDemoRequest() || !config.tenantId || req.actor!.tenantId !== config.tenantId)
+        return res.status(403).json({ error: "Forbidden", code: "LTI_TENANT_MISMATCH" });
       const key = toolPrivateKey();
       if (!config.configured || !config.agsEnabled || !key)
         throw new LtiError("LTI grade passback is not configured", "LTI_AGS_NOT_CONFIGURED", 503);

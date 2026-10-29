@@ -599,7 +599,7 @@ const DEMO_BLOCKED_WRITE_PREFIXES = [
   "/api/admin/", "/api/teacher-requests", "/api/shares", "/api/platform/", "/api/billing/",
   "/api/security/", "/api/lifecycle/", "/api/feature-flags/",
   "/api/support/", "/api/tools/code/execute", "/api/jobs/",
-  "/api/notification-preferences", "/api/notifications/",
+  "/api/notification-preferences", "/api/notifications/", "/api/lti/",
 ];
 const DEMO_AI_PATTERN = /\/(assist|copilot|writer|viva|red-team|xray|improve-style|style-integrity|explain|solve|intake|semantic|translate)(\/|$|\?)/;
 const DEMO_AI_CALLS_PER_SESSION = 25;
@@ -3971,10 +3971,20 @@ async function startServer() {
             updatedAt: p.updatedAt,
           }));
         if (FACULTY_ROLES.includes(a.role)) {
-          const [courses, assignments] = await Promise.all([
-            firestoreStore.listCourses(a.tenantId),
-            firestoreStore.listTenantAssignments(a.tenantId),
-          ]);
+          // Same scope as /api/courses and canReadCourse: course admins see the
+          // tenant catalog, every other faculty role only the courses they own
+          // (colleagues' drafts were listed before, linking to pages they
+          // cannot open, and their instructions were searchable).
+          const courseAdmin = COURSE_ADMIN_ROLES.has(a.role);
+          const courses = courseAdmin
+            ? await firestoreStore.listCourses(a.tenantId)
+            : await firestoreStore.listCoursesByOwner(a.tenantId, a.userId);
+          const assignments = courseAdmin
+            ? await firestoreStore.listTenantAssignments(a.tenantId)
+            : await firestoreStore.listAssignmentsForCourses(
+                a.tenantId,
+                courses.map((c) => c.id),
+              );
           results.push(
             ...courses
               .filter((c) =>
@@ -9881,6 +9891,18 @@ async function startServer() {
       // Clarification Room is backed by Firestore (clarificationThreads). The
       // remaining engines below are mounted but not yet UI-wired; empty/null
       // results degrade cleanly (404 / empty ledger) instead of fabricating state.
+      assignmentAccess: async (tenantId, assignmentId, actor) => {
+        const assignment = await firestoreStore.getAssignmentById(assignmentId, tenantId);
+        const course = assignment
+          ? await firestoreStore.getCourse(assignment.courseId, tenantId)
+          : null;
+        if (!course) return { manage: false, read: false };
+        const manage = canManageCourse(actor as { userId: string; role: UserRole }, course);
+        const read =
+          manage ||
+          Boolean(await firestoreStore.getCourseEnrollment(course.id, actor.userId, tenantId));
+        return { manage, read };
+      },
       getClarificationThread: (tenantId, threadId) =>
         firestoreStore.getClarificationThread(tenantId, threadId),
       saveClarificationThread: async (thread) => {

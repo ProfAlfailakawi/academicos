@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
+import { fileURLToPath } from 'node:url';
+// fileURLToPath decodes %20 etc.; URL.pathname broke the audit in any checkout path with a space.
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(root,p),'utf8');
 const checks=[];
 const expect=(name,condition,detail)=>checks.push({name,ok:Boolean(condition),detail});

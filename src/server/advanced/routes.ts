@@ -32,6 +32,9 @@ export interface AdvancedRouteContext {
     getAssignmentSubmissions: (tenantId: string, assignmentId: string) => Promise<any[]>;
     getProjectDNA: (tenantId: string, projectId: string, userId: string) => Promise<any | null>;
     saveProofOfLearning: (tenantId: string, projectId: string, userId: string, pol: unknown) => Promise<void>;
+    // Course-level access to an assignment: `manage` = owns/administers its
+    // course, `read` = manage or an active enrollment. Unknown/foreign → both false.
+    assignmentAccess: (tenantId: string, assignmentId: string, actor: { userId: string; role: string }) => Promise<{ manage: boolean; read: boolean }>;
     getClarificationThread: (tenantId: string, threadId: string) => Promise<ClarificationThread | null>;
     saveClarificationThread: (t: ClarificationThread) => Promise<void>;
     listAffectedProjectOwners: (tenantId: string, assignmentId: string) => Promise<Array<{ userId: string; projectId: string }>>;
@@ -80,9 +83,14 @@ export function registerAdvancedRoutes(app: Express, ctx: AdvancedRouteContext) 
   // 2) Predictive Grade-Loss Map — أين خسر الفوج درجات، مقابل جاهزية Rubric الحالية.
   app.get('/api/assignments/:assignmentId/grade-loss-map', authenticate, h(async (req, res) => {
     await gate(ctx, req, 'GradeLossMap');
-    const submissions = await data.getAssignmentSubmissions(req.actor.tenantId, req.params.assignmentId);
     const projectId = String(req.query.projectId || '');
     const dna = projectId ? await data.getProjectDNA(req.actor.tenantId, projectId, req.actor.userId) : null;
+    // Cohort grade data is only for the assignment's course (managers or
+    // enrolled students) or a student whose own project is linked to it.
+    const linked = Boolean(dna) && [dna.assignmentId, dna.aiPolicy?.assignmentId].includes(req.params.assignmentId);
+    if (!linked && !(await data.assignmentAccess(req.actor.tenantId, req.params.assignmentId, req.actor)).read)
+      throw Object.assign(new Error('Assignment not found'), { status: 404, code: 'NOT_FOUND' });
+    const submissions = await data.getAssignmentSubmissions(req.actor.tenantId, req.params.assignmentId);
     const locale = reqLocale(req);
     let map = buildGradeLossMap(submissions as any, dna?.rubric || [], locale);
     if (dna?.rubric?.length) map = alignRubricByTitle(map, dna.rubric);
@@ -107,7 +115,10 @@ export function registerAdvancedRoutes(app: Express, ctx: AdvancedRouteContext) 
   // 4) Live Clarification Room — جواب الأستaذ يُبثّ ويُحدّث DNA لكل الفصل.
   app.post('/api/clarifications/:threadId/answer', authenticate, requireRoles('instructor', 'professor', 'course_coordinator', 'department_admin', 'faculty_admin', 'superadmin', 'root_owner'), h(async (req, res) => {
     const thread = await data.getClarificationThread(req.actor.tenantId, req.params.threadId);
-    if (!thread) throw Object.assign(new Error('Thread not found'), { status: 404, code: 'NOT_FOUND' });
+    // Only someone who manages the assignment's course may publish the official
+    // answer (it rewrites every linked student's DNA deadline/requirements).
+    if (!thread || !(await data.assignmentAccess(req.actor.tenantId, thread.assignmentId, req.actor)).manage)
+      throw Object.assign(new Error('Thread not found'), { status: 404, code: 'NOT_FOUND' });
     const { thread: next, broadcast } = answerClarification(thread, { answer: String(req.body?.answer || ''), answeredBy: req.actor.userId, addRequirements: req.body?.addRequirements, clarifyDeadline: req.body?.clarifyDeadline });
     await data.saveClarificationThread(next);
     const affected = await data.listAffectedProjectOwners(req.actor.tenantId, thread.assignmentId);

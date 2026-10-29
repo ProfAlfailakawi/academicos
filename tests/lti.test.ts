@@ -97,3 +97,58 @@ test('AGS passback signs a client assertion and posts a score', async () => {
   await assert.rejects(postAgsScore(lineitem, token, { userId: 'u', scoreGiven: 11, scoreMaximum: 10 }, fetchImpl), /Invalid score/);
   assert.equal(toolJwks(env).keys.length, 1);
 });
+
+// ---- AGS route authorization (regression) ----------------------------------
+// The passback writes to the institution's real LMS gradebook with the tool's
+// private key, so it must stay inside the tenant that owns the LTI
+// registration and never be reachable from the anonymous demo sandbox.
+test('AGS route refuses other tenants, unbound deployments and demo sessions before any outbound call', async () => {
+  const express = (await import('express')).default;
+  const { registerLtiRoutes } = await import('../src/server/routes/lti');
+  const { DemoSandbox, DEMO_SESSION_TTL_MS, DEMO_TENANT_ID } = await import('../src/server/demoSandbox');
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  const outbound: string[] = [];
+  Object.assign(process.env, env);
+  const run = async (actor: any, opts: { tenant?: string; demo?: boolean } = {}) => {
+    if (opts.tenant === undefined) delete process.env.LTI_TENANT_ID;
+    else process.env.LTI_TENANT_ID = opts.tenant;
+    const demoToken = opts.demo ? DemoSandbox.create() : '';
+    const app = express();
+    const authenticate: any = (req: any, _res: any, next: any) => {
+      req.actor = actor;
+      return opts.demo ? DemoSandbox.run(demoToken, DEMO_SESSION_TTL_MS, next) : next();
+    };
+    registerLtiRoutes(app, { authenticate, apiRateLimit: (_q: any, _s: any, n: any) => n(), adminRoles: ['professor', 'university_admin'] } as any);
+    const server = await new Promise<import('node:http').Server>((r) => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+    const base = `http://127.0.0.1:${(server.address() as import('node:net').AddressInfo).port}`;
+    try {
+      const res = await realFetch(`${base}/api/lti/ags/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineitem: 'https://moodle.example.edu/mod/lti/services.php/2/lineitems/5/lineitem', userId: '7', scoreGiven: 0, scoreMaximum: 10 }),
+      });
+      return res.status;
+    } finally {
+      await new Promise<void>((r) => server.close(() => r()));
+      if (demoToken) DemoSandbox.destroy(demoToken);
+    }
+  };
+  globalThis.fetch = (async (url: any, init?: any) => {
+    if (String(url).startsWith('http://127.0.0.1')) return realFetch(url, init);
+    outbound.push(String(url));
+    return new Response(JSON.stringify({ access_token: 'tok' }), { status: 200 });
+  }) as typeof fetch;
+  try {
+    assert.equal(await run({ userId: 'p2', tenantId: 'tenant_B', role: 'professor' }, { tenant: 'tenant_A' }), 403);
+    assert.equal(await run({ userId: 'p2', tenantId: 'individual_p2', role: 'professor' }), 403, 'no LTI_TENANT_ID binding: fail closed');
+    assert.equal(await run({ userId: 'demo_user_instructor', tenantId: DEMO_TENANT_ID, role: 'professor' }, { tenant: DEMO_TENANT_ID, demo: true }), 403);
+    assert.deepEqual(outbound, [], 'no token request or score post may leave the server');
+    // The owning tenant still reaches the LMS (token request goes out).
+    assert.notEqual(await run({ userId: 'p1', tenantId: 'tenant_A', role: 'professor' }, { tenant: 'tenant_A' }), 403);
+    assert.ok(outbound.some((u) => u.endsWith('token.php')), 'owning tenant is not blocked');
+  } finally {
+    globalThis.fetch = realFetch;
+    process.env = saved;
+  }
+});

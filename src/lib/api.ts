@@ -64,6 +64,7 @@ import type {
   WorkspaceArtifactVersion,
 } from "../types";
 import { deviceTrustHeaders } from "./device-trust";
+import { isPlatformUpdating, PLATFORM_UPDATING_CODE, showUpdatingNotice, updatingMessage } from "./updating-notice";
 
 // The server generates academic content, audits, viva questions and plan copy in
 // the learner's language. It reads that language from Accept-Language, so the
@@ -165,6 +166,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const perform = async (forceRefresh = false) => {
     const headers = await authHeaders(baseHeaders, forceRefresh);
     const response = await fetch(path, { ...init, headers });
+    /* خادمُنا يجيب /api بـJSON دائمًا. صفحةُ 5xx بـHTML هي المنصّة تبدّل الخادم أثناء
+       النشر: شريطٌ هادئ واحد بدل لافتة الخطأ، والحالة نفسها تبقى (فيعيد طابور العمل
+       دون اتصال المحاولة كما كان). */
+    if (isPlatformUpdating(response.status, response.headers.get("content-type"))) {
+      showUpdatingNotice();
+      throw new ApiError(updatingMessage(), response.status, PLATFORM_UPDATING_CODE);
+    }
     const payload = await response.json().catch(() => ({}));
     return { response, payload };
   };
@@ -214,6 +222,10 @@ export function isNetworkFailure(error: unknown) {
 async function download(path: string) {
   const headers = await authHeaders();
   const response = await fetch(path, { headers });
+  if (isPlatformUpdating(response.status, response.headers.get("content-type"))) {
+    showUpdatingNotice();
+    throw new ApiError(updatingMessage(), response.status, PLATFORM_UPDATING_CODE);
+  }
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new ApiError(

@@ -2065,6 +2065,16 @@ async function startServer() {
     next();
   });
 
+  /*
+   * «هل الخادم يجيب؟» وحسب — لصفحة «نُحدّث البرنامج» (public/updating.html) وشريطها
+   * داخل التطبيق، يسألانها كل ثلاث ثوانٍ أثناء النشر. قبل حدّ المعدّل وApp Check
+   * عمدًا: لا تقرأ شيئًا ولا تكتب شيئًا، ولو مرّت بهما لأجاب App Check بـ401 فظنّت
+   * الصفحة أن الخادم لم يعد، ولاستهلك سؤالُ طلابِ شبكةٍ واحدة حصّتها المشتركة.
+   */
+  app.get("/api/health/live", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ ok: true });
+  });
   app.get("/env-config.js", (_req, res) => {
     res.setHeader("Content-Type", "application/javascript; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");

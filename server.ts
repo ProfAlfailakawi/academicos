@@ -3971,10 +3971,20 @@ async function startServer() {
             updatedAt: p.updatedAt,
           }));
         if (FACULTY_ROLES.includes(a.role)) {
-          const [courses, assignments] = await Promise.all([
-            firestoreStore.listCourses(a.tenantId),
-            firestoreStore.listTenantAssignments(a.tenantId),
-          ]);
+          // Same scope as /api/courses and canReadCourse: course admins see the
+          // tenant catalog, every other faculty role only the courses they own
+          // (colleagues' drafts were listed before, linking to pages they
+          // cannot open, and their instructions were searchable).
+          const courseAdmin = COURSE_ADMIN_ROLES.has(a.role);
+          const courses = courseAdmin
+            ? await firestoreStore.listCourses(a.tenantId)
+            : await firestoreStore.listCoursesByOwner(a.tenantId, a.userId);
+          const assignments = courseAdmin
+            ? await firestoreStore.listTenantAssignments(a.tenantId)
+            : await firestoreStore.listAssignmentsForCourses(
+                a.tenantId,
+                courses.map((c) => c.id),
+              );
           results.push(
             ...courses
               .filter((c) =>

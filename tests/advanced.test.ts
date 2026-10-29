@@ -193,3 +193,62 @@ test('whatsapp link code is deterministic and verifiable', () => {
   assert.equal(verifyLinkCode('user123', 'salt', code), true);
   assert.equal(verifyLinkCode('user123', 'salt', 'ZZZZZZ'), false);
 });
+
+// ---------------------------------------------------------------------------
+// Route authorization (regression): the clarification answer rewrites every
+// linked student's DNA, and the grade-loss map aggregates cohort grades — both
+// must be bound to the assignment's course, not just to the tenant + a role.
+test('advanced routes: clarification answer needs course management; grade-loss map needs course access', async () => {
+  const express = (await import('express')).default;
+  const { registerAdvancedRoutes } = await import('../src/server/advanced/routes');
+  const { RealtimeHub } = await import('../src/server/realtime');
+  const thread = { id: 'clr_1', assignmentId: 'asg_A', tenantId: 't1', question: 'Q?', origin: 'student_asked', status: 'open', upvotes: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' };
+  const patched: string[] = [];
+  let submissionsRead = 0;
+  let actor: any;
+  const app = express();
+  app.use(express.json());
+  registerAdvancedRoutes(app, {
+    authenticate: (req: any, _res: any, next: any) => { req.actor = actor; next(); },
+    requireRoles: (...roles: string[]) => (req: any, res: any, next: any) => roles.includes(req.actor.role) ? next() : res.status(403).end(),
+    realtime: new RealtimeHub(),
+    featureEnabled: () => true,
+    data: {
+      // Only prof_A manages asg_A's course; stu_A is enrolled in it.
+      assignmentAccess: async (_t: string, assignmentId: string, a: any) => ({
+        manage: assignmentId === 'asg_A' && a.userId === 'prof_A',
+        read: assignmentId === 'asg_A' && ['prof_A', 'stu_A'].includes(a.userId),
+      }),
+      getClarificationThread: async (_t: string, id: string) => (id === 'clr_1' ? (thread as any) : null),
+      saveClarificationThread: async () => {},
+      listAffectedProjectOwners: async () => [{ userId: 'stu_A', projectId: 'p1' }],
+      getProjectDNA: async (_t: string, projectId: string, userId: string) =>
+        projectId === 'p1' && userId === 'stu_A' ? { id: 'p1', deadlines: { final: '2026-12-01' }, requirements: [], rubric: [] } : null,
+      applyDnaPatchToProject: async (_t: string, projectId: string) => { patched.push(projectId); },
+      getAssignmentSubmissions: async () => { submissionsRead++; return []; },
+    } as any,
+  });
+  const server = await new Promise<import('node:http').Server>((r) => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+  const base = `http://127.0.0.1:${(server.address() as import('node:net').AddressInfo).port}`;
+  const answer = () => fetch(`${base}/api/clarifications/clr_1/answer`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answer: 'Use APA 7.', clarifyDeadline: '2026-12-20' }),
+  });
+  try {
+    actor = { userId: 'prof_B', tenantId: 't1', role: 'professor' };
+    assert.equal((await answer()).status, 404, 'a colleague who does not manage the course cannot answer');
+    assert.deepEqual(patched, []);
+    actor = { userId: 'prof_A', tenantId: 't1', role: 'professor' };
+    assert.equal((await answer()).status, 200, 'the course owner still can');
+    assert.deepEqual(patched, ['p1']);
+
+    actor = { userId: 'stu_X', tenantId: 't1', role: 'student' };
+    assert.equal((await fetch(`${base}/api/assignments/asg_A/grade-loss-map`)).status, 404, 'outsider gets nothing');
+    assert.equal(submissionsRead, 0);
+    actor = { userId: 'stu_A', tenantId: 't1', role: 'student' };
+    assert.equal((await fetch(`${base}/api/assignments/asg_A/grade-loss-map?projectId=p1`)).status, 200, 'enrolled student still sees the map');
+    assert.equal(submissionsRead, 1);
+  } finally {
+    await new Promise<void>((r) => server.close(() => r()));
+  }
+});

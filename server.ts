@@ -9881,6 +9881,18 @@ async function startServer() {
       // Clarification Room is backed by Firestore (clarificationThreads). The
       // remaining engines below are mounted but not yet UI-wired; empty/null
       // results degrade cleanly (404 / empty ledger) instead of fabricating state.
+      assignmentAccess: async (tenantId, assignmentId, actor) => {
+        const assignment = await firestoreStore.getAssignmentById(assignmentId, tenantId);
+        const course = assignment
+          ? await firestoreStore.getCourse(assignment.courseId, tenantId)
+          : null;
+        if (!course) return { manage: false, read: false };
+        const manage = canManageCourse(actor as { userId: string; role: UserRole }, course);
+        const read =
+          manage ||
+          Boolean(await firestoreStore.getCourseEnrollment(course.id, actor.userId, tenantId));
+        return { manage, read };
+      },
       getClarificationThread: (tenantId, threadId) =>
         firestoreStore.getClarificationThread(tenantId, threadId),
       saveClarificationThread: async (thread) => {

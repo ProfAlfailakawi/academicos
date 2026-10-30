@@ -1,5 +1,5 @@
 /**
- * «نُحدّث البرنامج» داخل التطبيق.
+ * «النظام قيد التحديث» داخل التطبيق.
  *
  * أثناء النشر تجيب واجهةُ Google الأمامية طلباتِ /api بصفحة HTML إنجليزية
  * (500/502/503/504) لا يكتبها خادمُنا — هو يجيب /api بـJSON دائمًا. كانت الشاشات
@@ -20,8 +20,8 @@ export const SERVER_BACK_EVENT = "academicos:server-back";
 
 /** الشريط يظهر خارج React، فنصّه هنا: العربية، وإلا فالإنجليزية لبقية اللغات. */
 const MESSAGES = {
-  ar: "نُحدّث البرنامج الآن ✨ لحظاتٍ ونعود.",
-  en: "We're updating AcademicOS ✨ Back in a moment.",
+  ar: "النظام قيد التحديث — يعود الاتصال تلقائياً.",
+  en: "AcademicOS is updating — reconnecting automatically.",
 };
 export const UPDATING_MESSAGE = MESSAGES.ar;
 
@@ -60,12 +60,21 @@ export function showUpdatingNotice(probe: () => Promise<boolean> = serverAnswers
   bar.setAttribute("role", "status");
   bar.setAttribute("aria-live", "polite");
   bar.dir = "auto";
-  bar.textContent = updatingMessage();
+  // بنية شريط الاتصال في البرنامج (OfflineBanner): لوحةٌ نيلية فاتحة بحدٍّ رفيع
+  // وزوايا 10px، وفي أولها مؤشّرُ الخطوة الجارية كما في صفحة التحديث.
+  const dot = document.createElement("span");
+  dot.setAttribute("aria-hidden", "true");
+  dot.style.cssText = "flex:none;width:7px;height:7px;border-radius:50%;background:var(--brand,#23346b);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand,#23346b) 16%,transparent)";
+  const text = document.createElement("span");
+  text.textContent = updatingMessage();
+  bar.append(dot, text);
   bar.style.cssText = [
-    "position:fixed", "inset-inline:0", "bottom:max(18px,env(safe-area-inset-bottom))", "margin:0 auto", "width:max-content", "max-width:calc(100vw - 32px)",
-    "z-index:2147483000", "padding:11px 18px", "border-radius:14px", "font-family:inherit", "font-size:14px", "font-weight:600", "line-height:1.6",
-    "background:var(--panel,#fcfdff)", "color:var(--ink,#131a33)", "border:1px solid var(--line,#d3dae8)",
-    "box-shadow:0 14px 36px rgb(23 35 77 / .18)", "text-align:center", "pointer-events:none",
+    "position:fixed", "inset-inline-start:16px", "bottom:max(16px,env(safe-area-inset-bottom))", "max-width:calc(100vw - 32px)",
+    "z-index:2147483000", "display:flex", "align-items:center", "gap:10px", "padding:10px 14px", "border-radius:10px",
+    "font-family:inherit", "font-size:14px", "font-weight:500", "line-height:1.6",
+    "background:color-mix(in srgb,var(--brand-soft,#e1e7f6) 92%,var(--panel,#fcfdff))", "color:var(--ink,#131a33)",
+    "border:1px solid color-mix(in srgb,var(--brand,#23346b) 22%,transparent)",
+    "box-shadow:var(--shadow-sm,0 8px 24px rgba(20,24,43,.055))", "pointer-events:none",
   ].join(";");
   document.body.appendChild(bar);
   notice = bar;

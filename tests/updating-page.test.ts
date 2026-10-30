@@ -1,5 +1,5 @@
 /**
- * «نُحدّث البرنامج» بدل صفحة Google الإنجليزية أثناء النشر.
+ * «النظام قيد التحديث» بدل صفحة Google الإنجليزية أثناء النشر.
  *
  *   U1) sw.js: التنقّلُ بـ 500/502/503/504 أو بانقطاعٍ والجهازُ متّصل ← صفحةُ التحديث (503، no-store)؛
  *       والنجاحُ والتحويلُ يمرّان كما هما؛ ودون اتصالٍ حقيقي يبقى الهيكلُ المخزّن.
@@ -89,7 +89,7 @@ function worker(net: Net, options: { online?: boolean } = {}) {
 
 const isUpdatingPage = async (response: Response | null) =>
   Boolean(response) && response!.status === 503 && response!.headers.get('cache-control') === 'no-store'
-  && /text\/html/.test(response!.headers.get('content-type') || '') && (await response!.clone().text()).includes('نُحدّث البرنامج الآن');
+  && /text\/html/.test(response!.headers.get('content-type') || '') && (await response!.clone().text()).includes('النظام قيد التحديث');
 
 test('U1 a 500/502/503/504 navigation shows the updating page (503, no-store)', async () => {
   for (const status of [500, 502, 503, 504]) {
@@ -185,8 +185,8 @@ test('U4 the page is self-contained, CSP-safe, RTL, light/dark, in the app ident
   assert.match(PAGE, /prefers-color-scheme:dark/);
   assert.match(PAGE, /:root\.dark\{/);
   assert.match(PAGE, /prefers-reduced-motion/);
-  assert.match(PAGE, /<title>نُحدّث البرنامج · AcademicOS<\/title>/);
-  for (const text of ['نُحدّث البرنامج الآن ✨', 'لحظاتٍ ونعود', 'أعد المحاولة الآن']) assert.ok(PAGE.includes(text), text);
+  assert.match(PAGE, /<title>تحديث النظام · AcademicOS<\/title>/);
+  for (const text of ['النظام قيد التحديث', 'AcademicOS is restarting on a new version', 'إعادة الاتصال الآن', 'id="step"', 'role="status" aria-live="polite"']) assert.ok(PAGE.includes(text), text);
   // The mark is the app's own icon (public/icon.svg).
   const icon = read('public/icon.svg');
   for (const piece of ['M14.6 34.6 L24 13.4 L33.4 34.6', 'M17.7 27.6 H30.3', '#c8452d', '#23346b']) {
@@ -243,7 +243,8 @@ test('U4 it backs off up to 15 s, slows to 30 s after three reloads in two minut
   const now = Date.now();
   const stuck = runPage({ health: [true], recent: [now - 5000, now - 4000, now - 3000] });
   assert.equal(await stuck.step(), 30000);
-  assert.match(stuck.nodes.lead.textContent, /وقتاً أطول/);
+  assert.match(stuck.nodes.title.textContent, /وقتاً أطول/);
+  assert.match(stuck.nodes.lead.textContent, /longer than usual/);
 
   const named = runPage({ health: [true], pathname: '/updating.html' });
   await named.step();
@@ -255,7 +256,8 @@ test('U4 offline it says so and does not ask the server; it honours the saved ap
   const page = runPage({ health: [true], online: false });
   await page.step();
   assert.equal(page.asked.length, 0);
-  assert.match(page.nodes.title.textContent, /لا اتصال/);
+  assert.match(page.nodes.title.textContent, /غير متصل/);
+  assert.match(page.nodes.step.textContent, /انتظار عودة الشبكة/);
   assert.ok(runPage({ health: [true], theme: 'dark' }).classes.has('dark'));
   assert.ok(runPage({ health: [true], theme: 'light' }).classes.has('light'));
   assert.equal(runPage({ health: [true], theme: 'system' }).classes.size, 0);
@@ -264,7 +266,7 @@ test('U4 offline it says so and does not ask the server; it honours the saved ap
 test('U5 the app tells the platform 5xx apart and shows one calm notice instead of an error', () => {
   assert.ok(isPlatformUpdating(502, 'text/html; charset=UTF-8') && isPlatformUpdating(503, '') && isPlatformUpdating(500, 'text/html') && isPlatformUpdating(504, null));
   assert.ok(!isPlatformUpdating(503, 'application/json; charset=utf-8') && !isPlatformUpdating(404, 'text/html') && !isPlatformUpdating(200, 'text/html'));
-  assert.match(UPDATING_MESSAGE, /نُحدّث البرنامج/);
+  assert.match(UPDATING_MESSAGE, /النظام قيد التحديث/);
 
   const api = read('src/lib/api.ts');
   const perform = api.slice(api.indexOf('const perform = async'), api.indexOf('let result = await perform(false);'));

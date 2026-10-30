@@ -229,7 +229,7 @@ function reconcileAfterReload(): boolean {
 
   void (async () => {
     /* الخادم يتبدّل الآن (نشرٌ جارٍ): ما نراه ليس نسخةً مخزّنة قديمة. المسحُ حينها يُسقط
-       العاملَ الذي يحمل صفحة «نُحدّث البرنامج» — ننتظر الخادم ثم نعيد التحميل بلا مسح. */
+       العاملَ الذي يحمل صفحة «النظام قيد التحديث» — ننتظر الخادم ثم نعيد التحميل بلا مسح. */
     if (!(await serverAnswers())) { showUpdatingNotice(serverAnswers, () => window.location.reload()); return; }
     writeLocal(HARD_KEY, '1');
     await purgeShell();

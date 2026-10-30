@@ -2554,14 +2554,14 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
     "سروس عارضی طور پر دستیاب نہیں ہے۔ براہِ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
   ),
   "ui.error.updating": UI(
-    "نُحدّث البرنامج الآن ✨ لحظاتٍ ونعود.",
-    "We're updating AcademicOS ✨ Back in a moment.",
-    "AcademicOS güncelleniyor ✨ Birazdan dönüyoruz.",
-    "AcademicOS 正在更新 ✨ 马上回来。",
-    "AcademicOS अपडेट हो रहा है ✨ बस एक पल में लौटते हैं।",
-    "Estamos actualizando AcademicOS ✨ Volvemos en un momento.",
-    "Mise à jour d’AcademicOS en cours ✨ De retour dans un instant.",
-    "AcademicOS اپ ڈیٹ ہو رہا ہے ✨ بس ایک لمحے میں واپس آتے ہیں۔"
+    "النظام قيد التحديث — يعود الاتصال تلقائياً.",
+    "AcademicOS is updating — reconnecting automatically.",
+    "AcademicOS güncelleniyor — bağlantı kendiliğinden yenilenecek.",
+    "AcademicOS 正在更新——连接将自动恢复。",
+    "AcademicOS अपडेट हो रहा है — कनेक्शन अपने आप बहाल होगा।",
+    "AcademicOS se está actualizando: la conexión se restablecerá sola.",
+    "AcademicOS est en cours de mise à jour — la connexion reprendra d’elle-même.",
+    "AcademicOS اپ ڈیٹ ہو رہا ہے — رابطہ خود بخود بحال ہو جائے گا۔"
   ),
   "ui.error.network": UI(
     "تعذر الاتصال بالخدمة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",

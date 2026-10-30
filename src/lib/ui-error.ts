@@ -20,6 +20,8 @@ export function localizedUiError(
     const code = String(error.code || "").toUpperCase();
 
     if (code === "DEMO_READ_ONLY") return t("ui.error.demoReadOnly");
+    // The platform swapping servers mid-deploy (src/lib/updating-notice.ts), not a failure.
+    if (code === "PLATFORM_UPDATING") return t("ui.error.updating");
     if (error.status === 402 || code.endsWith("_PLAN_REQUIRED")) return t("ui.error.planRequired");
 
     if (code === "AUTH_EXPIRED" || code === "AUTH_INVALID" || error.status === 401) {

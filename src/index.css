@@ -1212,3 +1212,16 @@ button.brand-bg:disabled,
 label:has(> input[type="checkbox"]:not(.sr-only)), label:has(> input[type="radio"]:not(.sr-only)) { min-height: 40px; }
 .app-sidebar :where(a, button), .predictive-chip { min-height: 40px; }
 summary { min-height: 40px; }
+
+
+/* iPhone Duo folded postures only. Unsupported/disabled Safari preview features
+   leave the existing site styles unchanged on every other device and posture. */
+@media (device-posture: folded) and (horizontal-viewport-segments: 2) {
+  html, body, #root { min-width: 0; max-width: 100%; }
+}
+@media (device-posture: folded) and (vertical-viewport-segments: 2) {
+  html, body, #root { min-width: 0; max-width: 100%; }
+}
+@media (device-posture: folded) and (orientation: landscape) and (max-height: 520px) {
+  html { scroll-padding-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom)); }
+}

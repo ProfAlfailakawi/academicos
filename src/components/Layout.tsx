@@ -1025,6 +1025,7 @@ function SidebarContent({
         to={academicWorkMode ? "/app/upload" : "/app"}
         className="rail-cta focus-ring brand-bg rounded-xl min-h-11 px-4 flex items-center justify-center gap-2 text-sm font-semibold mb-5"
         title={academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}
+        aria-label={academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}
       >
         {academicWorkMode ? <Plus size={17} /> : <Sparkles size={17} />}{" "}
         <span className="rail-label">{academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}</span>
@@ -1044,6 +1045,8 @@ function SidebarContent({
         {academicWorkMode && (
           <NavLink
             to="/app/settings"
+            title={t("layout.navAccountSettings")}
+            aria-label={t("layout.navAccountSettings")}
             className={({ isActive }) =>
               cn(
                 "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
@@ -1095,6 +1098,7 @@ function DesktopNav({ item }: { item: NavItem }) {
       to={item.to}
       end={item.end}
       title={t(item.label)}
+      aria-label={t(item.label)}
       className={({ isActive }) =>
         cn(
           "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",

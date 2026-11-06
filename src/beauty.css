@@ -92,11 +92,11 @@
     font-weight: 600;
     line-height: 1.3;
     box-shadow: 0 10px 24px rgb(0 0 0 / .22);
-    transform: translateX(calc(-100% - 78px)) translateY(10px);
+    transform: translateX(calc(-100% - 10px)) translateY(10px);
     animation: rail-tip .16s ease-out both;
   }
   html[dir="ltr"] .app-shell .app-sidebar--desktop :is(.sidebar-nav-link, .rail-cta, .rail-logout)[aria-label]:is(:hover, :focus-visible)::before {
-    transform: translateX(78px) translateY(10px);
+    transform: translateX(calc(var(--rail-w) + 4px)) translateY(10px);
   }
   @keyframes rail-tip { from { opacity: 0; } to { opacity: 1; } }
   .app-shell .app-sidebar--desktop .sidebar-nav-link:focus-visible,
@@ -129,8 +129,33 @@
 }
 
 /* Tile grids: an odd last tile spans the row instead of dangling on one side */
-@media (min-width: 600px) and (max-width: 1023.98px) {
-  .app-main .grid.sm\:grid-cols-2 > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (min-width: 600px) and (max-width: 819.98px) {
+  .app-main .grid:is(.sm\:grid-cols-2, .md\:grid-cols-2, .md\:grid-cols-4) > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 /* Native selects: full, un-clipped border and a comfortable touch height */
-select.field, .field select { min-height: 46px; line-height: 1.4; }
+select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; line-height: 1.4; }
+
+/* 900-1023: the labelled rail already carries menu + sign-out, so the top bar
+   drops their duplicates and keeps one line for search and the person chip. */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-topbar > .lg\:hidden:first-child,
+  .app-shell .app-topbar .topbar-logout { display: none; }
+  .app-shell .app-topbar .max-w-\[16rem\] { max-width: 10.5rem; flex-shrink: 1; min-width: 0; }
+  .app-shell .app-topbar .max-w-\[16rem\] > div:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-shell .command-trigger { min-width: 8.5rem; }
+}
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-topbar { gap: 0.75rem; }
+  .app-shell .app-topbar .demo-pill { margin-inline-end: .25rem; }
+}
+
+/* Icon + field + action rows that Tailwind only lays out from 768px: from 600px the icon sits beside the field */
+@media (min-width: 600px) and (max-width: 767.98px) {
+  .app-main .grid[class*="md:grid-cols-[auto_minmax(0,1fr)_auto]"] { grid-template-columns: auto minmax(0, 1fr); }
+  .app-main .grid[class*="md:grid-cols-[auto_minmax(0,1fr)_auto]"] > :nth-child(n+3) { grid-column: 1 / -1; }
+}
+/* Dashboard counters: icon beside number from 640px up, like the phone form, instead of tall airy tiles */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .metric-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .75rem; row-gap: .125rem; align-items: center; }
+  .metric-tile__icon { grid-row: 1 / span 2; }
+}

@@ -96,7 +96,8 @@ html { touch-action: manipulation; }
    word-per-line slivers) while a 830px column holds two, or three for trios. */
 @media (min-width: 600px) and (max-width: 1023.98px) {
   .app-main .grid.md\:grid-cols-2,
-  .app-main .grid.sm\:grid-cols-2:not(.md\:grid-cols-1) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+  .app-main .grid.sm\:grid-cols-2:not(.md\:grid-cols-1) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 262px), 1fr)); }
+  .app-main .grid.course-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
   .app-main .grid.md\:grid-cols-3,
   .app-main .grid.md\:grid-cols-4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
 }

@@ -10,6 +10,7 @@ import './styles/identity.css';
 import './components/dna/dna-theme.css';
 import './motion.css';
 import './final-polish.css';
+import './duo.css';
 import { installAppUpdate } from './lib/app-update';
 
 declare global {

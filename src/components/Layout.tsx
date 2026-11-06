@@ -1005,7 +1005,7 @@ function SidebarContent({
           ) : (
             <LogoMark variant="tile" size={40} className="sidebar-brand-mark rounded-xl" />
           )}
-          <div className="min-w-0">
+          <div className="rail-label min-w-0">
             <div
               dir="auto"
               title={branding.institutionName || "AcademicOS"}
@@ -1023,12 +1023,13 @@ function SidebarContent({
       </div>
       <NavLink
         to={academicWorkMode ? "/app/upload" : "/app"}
-        className="focus-ring brand-bg rounded-xl min-h-11 px-4 flex items-center justify-center gap-2 text-sm font-semibold mb-5"
+        className="rail-cta focus-ring brand-bg rounded-xl min-h-11 px-4 flex items-center justify-center gap-2 text-sm font-semibold mb-5"
+        title={academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}
       >
         {academicWorkMode ? <Plus size={17} /> : <Sparkles size={17} />}{" "}
-        {academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}
+        <span className="rail-label">{academicWorkMode ? t("layout.newAssignment") : t("layout.navBriefing")}</span>
       </NavLink>
-      <div className="eyebrow px-3 mb-2">{t(roleTranslationKey(role))}</div>
+      <div className="rail-label eyebrow px-3 mb-2">{t(roleTranslationKey(role))}</div>
       <nav className="space-y-1">
         {nav.map((item) => (
           <DesktopNav key={item.to} item={item} />
@@ -1038,7 +1039,7 @@ function SidebarContent({
         {/* الطالب لا يجد الإعدادات في قائمته الرئيسية فيبقى رابطها هنا له؛
             بقية الأدوار تصلها من «الإعدادات والسياسات» فلا يتكرّر الرابط. */}
         {(academicWorkMode || quickSettings) && (
-          <div className="eyebrow px-3 mb-2">{t("layout.system")}</div>
+          <div className="rail-label eyebrow px-3 mb-2">{t("layout.system")}</div>
         )}
         {academicWorkMode && (
           <NavLink
@@ -1053,16 +1054,16 @@ function SidebarContent({
             }
           >
             <Settings size={17} />
-            {t("layout.navAccountSettings")}
+            <span className="rail-label">{t("layout.navAccountSettings")}</span>
           </NavLink>
         )}
         {quickSettings}
-        <div className="mt-3 rounded-xl border hairline p-3">
+        <div className="rail-user mt-3 rounded-xl border hairline p-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg soft-bg flex items-center justify-center">
               <UserRound size={15} />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="rail-label min-w-0 flex-1">
               <div dir="auto" className="text-xs font-semibold leading-snug break-words" title={userName}>{userName}</div>
               <div className="text-meta muted">
                 {user?.emailVerified === false
@@ -1073,10 +1074,12 @@ function SidebarContent({
           </div>
           <button
             onClick={() => onLogout()}
-            className="focus-ring mt-3 w-full rounded-xl py-2 text-xs font-semibold text-danger hover:bg-danger/10 flex items-center justify-center gap-2 border border-danger/45 transition-colors"
+            title={logoutLabel || t("layout.logout")}
+            aria-label={logoutLabel || t("layout.logout")}
+            className="rail-logout focus-ring mt-3 w-full rounded-xl py-2 text-xs font-semibold text-danger hover:bg-danger/10 flex items-center justify-center gap-2 border border-danger/45 transition-colors"
           >
             <LogOut size={15} />
-            <span>{logoutLabel || t("layout.logout")}</span>
+            <span className="rail-label">{logoutLabel || t("layout.logout")}</span>
           </button>
         </div>
       </div>
@@ -1091,6 +1094,7 @@ function DesktopNav({ item }: { item: NavItem }) {
     <NavLink
       to={item.to}
       end={item.end}
+      title={t(item.label)}
       className={({ isActive }) =>
         cn(
           "sidebar-nav-link focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
@@ -1100,8 +1104,8 @@ function DesktopNav({ item }: { item: NavItem }) {
         )
       }
     >
-      <Icon size={17} />
-      <span>{t(item.label)}</span>
+      <Icon size={17} className="shrink-0" />
+      <span className="rail-label">{t(item.label)}</span>
     </NavLink>
   );
 }

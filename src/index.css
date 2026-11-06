@@ -90,6 +90,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(900px 540px at 88% -12%, color-mix(in srgb, var(--brand-soft) 62%, transparent), transparent 68%),
     radial-gradient(720px 460px at -8% 16%, color-mix(in srgb, var(--accent-soft) 40%, transparent), transparent 72%),
@@ -1212,16 +1213,4 @@ button.brand-bg:disabled,
 label:has(> input[type="checkbox"]:not(.sr-only)), label:has(> input[type="radio"]:not(.sr-only)) { min-height: 40px; }
 .app-sidebar :where(a, button), .predictive-chip { min-height: 40px; }
 summary { min-height: 40px; }
-
-
-/* iPhone Duo folded postures only. Unsupported/disabled Safari preview features
-   leave the existing site styles unchanged on every other device and posture. */
-@media (device-posture: folded) and (horizontal-viewport-segments: 2) {
-  html, body, #root { min-width: 0; max-width: 100%; }
-}
-@media (device-posture: folded) and (vertical-viewport-segments: 2) {
-  html, body, #root { min-width: 0; max-width: 100%; }
-}
-@media (device-posture: folded) and (orientation: landscape) and (max-height: 520px) {
-  html { scroll-padding-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom)); }
-}
+/* Duo / mid-width layout lives in duo.css (width-based; posture queries were a no-op by default). */

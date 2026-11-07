@@ -235,3 +235,56 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
 /* Active segmented tab: keep its ring inside the grid cell (no clipped edge) */
 .app-main .segmented.responsive-scroll > button { box-sizing: border-box; min-width: 0; }
 .app-main .segmented.responsive-scroll > button[aria-pressed="true"] { transform: none; }
+
+/* ==========================================================================
+   Round 6 — hairlines that never drop. A 1px CSS border at DPR 1.5 is 0.667
+   device px and WebKit may snap an edge away. The edge is therefore drawn as
+   an inset 1px box-shadow (rendered, not snapped); the real border stays in
+   layout but is transparent, so sizes do not move.
+   ========================================================================== */
+.panel, .panel-flat { border-color: transparent; }
+.panel { box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
+.panel-flat { box-shadow: inset 0 0 0 1px var(--line), var(--shadow-xs); }
+
+.field { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, white 35%, transparent), var(--shadow-xs); }
+.field:hover { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-xs); }
+.field:focus { border-color: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 58%, var(--line)), 0 0 0 4px var(--ring), var(--shadow-xs); }
+
+.ui-button[data-variant="outline"], .ui-button.hairline { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line), var(--shadow-xs); }
+.ui-button[data-variant="outline"]:hover { box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-xs); }
+
+.suggest-chip, .segmented > button { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.suggest-chip:hover, .segmented > button:hover { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); }
+.suggest-chip.is-active, .segmented > button[aria-pressed="true"] {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--brand)) 52%, transparent);
+}
+
+.rail-logout, .app-sidebar .rail-logout { border-color: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent); }
+.rail-user { border-color: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.mobile-dock { box-shadow: inset 0 0 0 1px var(--line), 0 10px 30px rgb(0 0 0 / .1); }
+
+/* ---- Folded dock: the FULL label, on up to two lines, fixed dock height ---- */
+@media (max-width: 599.98px) {
+  .mobile-dock .mobile-nav-link__label {
+    white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    font-size: 10.5px; line-height: 1.12; letter-spacing: -0.02em; text-align: center; min-height: 2.24em; max-width: 100%;
+  }
+  .mobile-dock .mobile-nav-link { min-height: 56px; justify-content: flex-start; padding-top: 6px; }
+}
+
+/* ---- Icon rail: footer actions pinned, never behind a scroll ---- */
+@media (min-width: 600px) and (max-width: 1023.98px) {
+  .app-shell .app-sidebar--desktop > div > div.mt-auto {
+    position: sticky; bottom: 0; z-index: 2;
+    background: linear-gradient(180deg, transparent, var(--panel) 14px);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Remaining bordered tiles/rows (theme choices, preference tiles, list rows) */
+.border.hairline:not(.panel):not(.panel-flat):not(.field):not(.ui-button):not(.rail-logout):not(.rail-user):not(.mobile-dock):not(.demo-pill) {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}

@@ -96,7 +96,7 @@
     animation: rail-tip .16s ease-out both;
   }
   html[dir="ltr"] .app-shell .app-sidebar--desktop :is(.sidebar-nav-link, .rail-cta, .rail-logout)[aria-label]:is(:hover, :focus-visible)::before {
-    transform: translateX(calc(var(--rail-w) + 4px)) translateY(10px);
+    transform: translateX(calc(var(--rail-w) + 28px)) translateY(10px);
   }
   @keyframes rail-tip { from { opacity: 0; } to { opacity: 1; } }
   .app-shell .app-sidebar--desktop .sidebar-nav-link:focus-visible,
@@ -158,4 +158,18 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
 @media (min-width: 640px) and (max-width: 1023.98px) {
   .metric-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .75rem; row-gap: .125rem; align-items: center; }
   .metric-tile__icon { grid-row: 1 / span 2; }
+}
+
+/* ---- Round 3 ---------------------------------------------------------- */
+/* Rail user card: the name stays on one line (full text in the title attribute). */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-sidebar--desktop .rail-user .rail-label > div:first-child {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}
+
+/* 900-1023: the labelled rail already shows the person; the top bar gives that room to the role pill */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-topbar .md\:flex:has(> .tone-tile) { display: none; }
+  .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 11rem; }
 }

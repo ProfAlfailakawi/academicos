@@ -986,7 +986,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
 
 /* Data tables become stacked cards on phones: each row is a card, each cell
    carries its column name (data-label), so nothing hides off-screen. */
-@media (max-width: 1023.98px) {
+@media (max-width: 1279.98px) {
   table.mobile-cards { min-width: 0 !important; display: block; }
   .mobile-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .mobile-cards tbody, .mobile-cards tr, .mobile-cards td { display: block; width: 100%; }
@@ -1006,7 +1006,7 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
   .mobile-cards td .field { width: auto; }
 }
 /* Compact variant of the stacked cards: two columns of label-over-value. */
-@media (max-width: 1023.98px) {
+@media (max-width: 1279.98px) {
   .mobile-cards--duo tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; column-gap: 12px; padding: 12px 14px; }
   .mobile-cards--duo td:not([data-label]) { grid-column: 1 / -1; padding: 0 0 8px !important; }
   .mobile-cards--duo td[data-label] {

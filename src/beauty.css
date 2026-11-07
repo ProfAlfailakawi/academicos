@@ -167,3 +167,9 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 }
+
+/* 900-1023: the labelled rail already shows the person; the top bar gives that room to the role pill */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-topbar .md\:flex:has(> .tone-tile) { display: none; }
+  .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 11rem; }
+}

@@ -216,3 +216,15 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   .app-main .segmented.responsive-scroll:has(> button:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .app-main .segmented.responsive-scroll > button { display: flex; align-items: center; justify-content: center; }
+/* Icon rail: long role menus (admin) must stay reachable on short screens — rail scrolls, sign-out never lost */
+@media (min-width: 600px) and (max-width: 1023.98px) {
+  .app-shell .app-sidebar--desktop { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .app-shell .app-sidebar--desktop::-webkit-scrollbar { display: none; }
+}
+@media (min-width: 600px) and (max-width: 899.98px) and (max-height: 720px) {
+  .app-shell .app-sidebar--desktop .sidebar-nav-link, .app-shell .app-sidebar--desktop .rail-cta { min-height: 44px; }
+  .app-shell .app-sidebar--desktop nav { gap: 2px; }
+  .app-shell .app-sidebar--desktop > div > div:first-child { padding: 2px 0 8px; }
+  .app-shell .app-sidebar--desktop .rail-cta { margin-bottom: 8px; }
+  .app-shell .app-sidebar--desktop > div > div.mt-auto { padding-top: 10px; }
+}

@@ -282,3 +282,9 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Remaining bordered tiles/rows (theme choices, preference tiles, list rows) */
+.border.hairline:not(.panel):not(.panel-flat):not(.field):not(.ui-button):not(.rail-logout):not(.rail-user):not(.mobile-dock):not(.demo-pill) {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}

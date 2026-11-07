@@ -288,3 +288,9 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   border-color: transparent;
   box-shadow: inset 0 0 0 1px var(--line);
 }
+
+/* Round 6 fix: native selects ignore an inset shadow (WebKit draws them itself), so they keep a real border */
+select.field, select.field:hover, select.field:focus { box-shadow: var(--shadow-xs); }
+select.field { border-color: var(--line); }
+select.field:hover { border-color: var(--line-strong); }
+select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--line)); box-shadow: 0 0 0 4px var(--ring), var(--shadow-xs); }

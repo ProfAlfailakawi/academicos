@@ -196,3 +196,11 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
     white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block; max-width: 100%;
   }
 }
+
+/* Icon-rail widths (600-899): the top bar keeps one tidy line — name clamps, subtitle yields */
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .app-shell .app-topbar .max-w-\[16rem\] { max-width: 8.5rem; min-width: 0; }
+  .app-shell .app-topbar .max-w-\[16rem\] > div:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-shell .app-topbar .max-w-\[16rem\] > .text-meta { display: none; }
+  .app-shell .app-topbar .command-trigger { min-width: 7.5rem; }
+}

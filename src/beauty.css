@@ -228,3 +228,10 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   .app-shell .app-sidebar--desktop .rail-cta { margin-bottom: 8px; }
   .app-shell .app-sidebar--desktop > div > div.mt-auto { padding-top: 10px; }
 }
+/* Folded dock: slightly tighter label type so long names (e.g. settings) keep more of their text */
+@media (max-width: 599.98px) {
+  .mobile-dock .mobile-nav-link__label { font-size: 11px; letter-spacing: -0.03em; }
+}
+/* Active segmented tab: keep its ring inside the grid cell (no clipped edge) */
+.app-main .segmented.responsive-scroll > button { box-sizing: border-box; min-width: 0; }
+.app-main .segmented.responsive-scroll > button[aria-pressed="true"] { transform: none; }

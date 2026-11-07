@@ -159,3 +159,11 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   .metric-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .75rem; row-gap: .125rem; align-items: center; }
   .metric-tile__icon { grid-row: 1 / span 2; }
 }
+
+/* ---- Round 3 ---------------------------------------------------------- */
+/* Rail user card: the name stays on one line (full text in the title attribute). */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  .app-shell .app-sidebar--desktop .rail-user .rail-label > div:first-child {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}

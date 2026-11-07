@@ -294,3 +294,8 @@ select.field, select.field:hover, select.field:focus { box-shadow: var(--shadow-
 select.field { border-color: var(--line); }
 select.field:hover { border-color: var(--line-strong); }
 select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--line)); box-shadow: 0 0 0 4px var(--ring), var(--shadow-xs); }
+
+/* Round 7: cards had a doubled top edge — the transparent real border (and the lost 2px accent) sat
+   outside the inset ring. The fill now stops at the padding box (no halo) and the accent is restored. */
+.panel, .panel-flat, .field, .ui-button[data-variant="outline"], .rail-user { background-clip: padding-box; }
+.academic-card { border-top-color: color-mix(in srgb, var(--brand) 62%, var(--line)); }

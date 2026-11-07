@@ -173,3 +173,26 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   .app-shell .app-topbar .md\:flex:has(> .tone-tile) { display: none; }
   .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 11rem; }
 }
+
+/* ---- Round 4 ---------------------------------------------------------- */
+/* Segmented tab rows share the width evenly below 1024px (no ragged wrap, no orphan tab). */
+@media (max-width: 1023.98px) {
+  .app-main .segmented.responsive-scroll {
+    display: grid; gap: .5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  }
+  .app-main .segmented.responsive-scroll > button {
+    width: 100%; min-height: 48px; padding-inline: .6rem; text-align: center; line-height: 1.3; text-wrap: balance;
+  }
+  /* four tabs: 2x2 on phones, one even row from 600px */
+  .app-main .segmented.responsive-scroll:has(> button:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 600px) and (max-width: 1023.98px) {
+  .app-main .segmented.responsive-scroll:has(> button:nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* Folded phone: dock labels stay on one line (text and aria untouched). */
+@media (max-width: 599.98px) {
+  .mobile-dock .mobile-nav-link__label {
+    white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block; max-width: 100%;
+  }
+}

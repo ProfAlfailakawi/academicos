@@ -204,3 +204,8 @@ select.field, .field select { height: 48px; min-height: 48px; padding-block: 0; 
   .app-shell .app-topbar .max-w-\[16rem\] > .text-meta { display: none; }
   .app-shell .app-topbar .command-trigger { min-width: 7.5rem; }
 }
+/* Icon-rail widths: the avatar stands for the person; the freed room keeps the demo role pill readable */
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .app-shell .app-topbar .max-w-\[16rem\] { display: none; }
+  .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 9.5rem; }
+}

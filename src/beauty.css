@@ -328,3 +328,30 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 @media (min-width: 600px) and (max-width: 899.98px) and (max-height: 700px) {
   .app-shell .app-sidebar--desktop .rail-user { flex-direction: column; }
 }
+
+/* ==========================================================================
+   Round 9 — responsive audit (2560 → 320, Chromium + WebKit). Presentation only.
+   ========================================================================== */
+/* Public headers on phones: the language select fills its 44px capsule (a real tap target). */
+@media (max-width: 639.98px) {
+  :is(.landing-head-actions, .public-bar__aside) .language-switcher { position: relative; min-height: 44px; }
+  :is(.landing-head-actions, .public-bar__aside) .language-switcher select { min-height: 42px; }
+}
+/* Narrowest phones (<375): the landing CTA stays on one line — the switcher
+   becomes the same icon-only capsule the app top bar uses, the CTA drops its arrow. */
+@media (max-width: 374.98px) {
+  .landing-head-actions .language-switcher { min-width: 44px; justify-content: center; padding-inline: .4rem; }
+  .landing-head-actions .language-switcher svg { display: inline-block !important; }
+  .landing-head-actions .language-switcher select { position: absolute; inset: 0; width: 100%; max-width: none; opacity: 1; color: transparent; appearance: none; -webkit-appearance: none; font-size: 16px; }
+  .landing-head-actions .language-switcher select option { color: var(--ink); background: var(--panel); }
+  .landing-head-actions .ui-button { white-space: nowrap; }
+  .landing-head-actions .ui-button .directional-icon { display: none; }
+}
+/* Small steppers on phones: neighbouring labels ("قيد التصحيح" | "مقفل داخليًا") no longer run together. */
+@media (max-width: 479.98px) {
+  .dna-steps[data-size='sm'] .dna-lbl { padding-inline: 3px; text-wrap: balance; }
+}
+/* Grading desk on phones: the four decision buttons form an even 2x2 block instead of a ragged stack. */
+@media (max-width: 479.98px) {
+  .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex: 1 1 calc(50% - .25rem); min-width: 0; justify-content: center; }
+}

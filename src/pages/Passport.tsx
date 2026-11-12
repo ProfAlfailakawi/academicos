@@ -159,7 +159,7 @@ export function Passport() {
       ) : (
         <>
           <div className="grid lg:grid-cols-[330px_1fr] gap-5">
-            <Card>
+            <Card className="lg:self-start lg:sticky lg:top-24">
               <CardContent className="text-center">
                 <div className="flex justify-center">
                   <Seal tone="brand">

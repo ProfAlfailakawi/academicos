@@ -351,7 +351,10 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 @media (max-width: 479.98px) {
   .dna-steps[data-size='sm'] .dna-lbl { padding-inline: 3px; text-wrap: balance; }
 }
-/* Grading desk on phones: the four decision buttons form an even 2x2 block instead of a ragged stack. */
+/* Grading desk on phones: the four decision buttons form an even 2x2 block (one full-width column under 375px) instead of a ragged stack. */
 @media (max-width: 479.98px) {
   .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex: 1 1 calc(50% - .25rem); min-width: 0; justify-content: center; }
+}
+@media (max-width: 374.98px) {
+  .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex-basis: 100%; }
 }

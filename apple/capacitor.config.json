@@ -1,0 +1,29 @@
+{
+  "appId": "com.dralfailakawi.academicos",
+  "appName": "AcademicOS",
+  "webDir": "www",
+  "server": {
+    "url": "https://academicos-edu.web.app",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "academicos-edu.web.app",
+      "*.firebaseapp.com",
+      "*.googleapis.com"
+    ]
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#EDF0F6",
+    "scheme": "AcademicOS",
+    "limitsNavigationsToAppBoundDomains": false,
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#EDF0F6",
+      "showSpinner": false
+    }
+  }
+}

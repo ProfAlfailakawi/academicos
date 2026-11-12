@@ -1,0 +1,22 @@
+{
+  "repo": "academicos",
+  "appId": "com.dralfailakawi.academicos",
+  "nameAr": "أكاديمك",
+  "nameEn": "AcademicOS",
+  "displayName": "AcademicOS",
+  "url": "https://academicos-edu.web.app",
+  "allowNavigation": [
+    "*.firebaseapp.com",
+    "*.googleapis.com"
+  ],
+  "icon": "public/icon-512.png",
+  "background": "#EDF0F6",
+  "backgroundDark": "#12151B",
+  "accent": "#3354C8",
+  "lsCategory": "public.app-category.education",
+  "camera": true,
+  "photos": true,
+  "devRegion": "en",
+  "version": "1.0.0",
+  "build": 1
+}

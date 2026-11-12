@@ -361,3 +361,61 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
 /* Two-column card lists that never grow more columns: a lone last card spans the
    row at every width, not only below 1280px (status page services). */
 .odd-fill.sm\:grid-cols-2:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]) > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+
+/* ==========================================================================
+   Round 10 — responsive audit (2560 → 320, Chromium + WebKit). Presentation only.
+   ========================================================================== */
+/* Language switchers outside the app top bar (landing, public bar, login, MFA, settings) on phones: the language select fills its 44px capsule (a real tap target). */
+@media (max-width: 639.98px) {
+  .language-switcher:not(.app-topbar .language-switcher) { position: relative; min-height: 44px; }
+  .language-switcher:not(.app-topbar .language-switcher) select { min-height: 42px; -webkit-appearance: none; appearance: none; padding-inline: 2px; }
+  /* WebKit draws a native menulist at its own 27px height unless appearance is reset; the globe icon stays as the cue. */
+}
+/* Narrowest phones (<375): the landing CTA stays on one line — the switcher
+   becomes the same icon-only capsule the app top bar uses, the CTA drops its arrow. */
+@media (max-width: 374.98px) {
+  .landing-head-actions .language-switcher { min-width: 44px; justify-content: center; padding-inline: .4rem; }
+  .landing-head-actions .language-switcher svg { display: inline-block !important; }
+  .landing-head-actions .language-switcher select { position: absolute; inset: 0; width: 100%; max-width: none; opacity: 1; color: transparent; appearance: none; -webkit-appearance: none; font-size: 16px; }
+  .landing-head-actions .language-switcher select option { color: var(--ink); background: var(--panel); }
+  .landing-head-actions .ui-button { white-space: nowrap; }
+  .landing-head-actions .ui-button .directional-icon { display: none; }
+}
+/* Public bar (about/info pages, status, shared evidence): same compact capsule up to 419px, where "فتح النظام" otherwise wraps and the language name is cut. */
+@media (max-width: 419.98px) {
+  .public-bar__aside .language-switcher { min-width: 44px; justify-content: center; padding-inline: .4rem; }
+  .public-bar__aside .language-switcher svg { display: inline-block !important; }
+  .public-bar__aside .language-switcher select { position: absolute; inset: 0; width: 100%; max-width: none; opacity: 1; color: transparent; appearance: none; -webkit-appearance: none; font-size: 16px; }
+  .public-bar__aside .language-switcher select option { color: var(--ink); background: var(--panel); }
+  .public-bar__aside .ui-button { white-space: nowrap; }
+  .public-bar__aside .ui-button .directional-icon { display: none; }
+}
+@media (max-width: 359.98px) {
+  .public-bar { gap: 8px; }
+  .public-bar__aside { gap: 6px; }
+}
+/* Small steppers on phones: neighbouring labels ("قيد التصحيح" | "مقفل داخليًا") no longer run together. */
+@media (max-width: 479.98px) {
+  .dna-steps[data-size='sm'] .dna-lbl { padding-inline: 3px; text-wrap: balance; }
+}
+/* Grading desk on phones: the four decision buttons form an even 2x2 block (one full-width column under 375px) instead of a ragged stack. */
+@media (max-width: 479.98px) {
+  .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex: 1 1 calc(50% - .25rem); min-width: 0; justify-content: center; }
+}
+@media (max-width: 374.98px) {
+  .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex-basis: 100%; }
+}
+/* Student home composer: when the hero column is narrow (two-column hero at ~1024-1280),
+   the start button wraps under the tools instead of sliding over "صوّر". */
+@media (min-width: 768px) {
+  .student-hero .academic-inbox > .border-t { flex-wrap: wrap; }
+  .student-hero .academic-inbox > .border-t > div:first-child { flex: 1 1 auto; min-width: min(100%, max-content); }
+  .student-hero .academic-inbox > .border-t > .ui-button { margin-inline-start: auto; }
+}
+/* Phones: a field that carries a small-text utility (support console status select) still
+   renders at 16px, so focusing it does not zoom the page on iOS. The small-text utility
+   is !important elsewhere, so this has to be too. */
+@media (max-width: 767.98px) {
+  html .app-main :is(select, textarea, input).field { font-size: 16px !important; }
+}

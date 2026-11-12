@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { BadgeCheck, ExternalLink, KeyRound, ShieldAlert, ShieldCheck, Clock3 } from "lucide-react";
+import { BadgeCheck, ExternalLink, KeyRound, Link2Off, ShieldAlert, ShieldCheck, Clock3 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import type { EvidenceCapsule, PublicPlatformShare } from "../types";
 import { Button } from "../components/ui/button";
@@ -74,8 +74,9 @@ export function PublicShare() {
             error={error}
           />
         ) : error ? (
-          <Card className="mt-16">
+          <Card className="mt-16 mx-auto max-w-xl">
             <CardContent className="py-16 text-center">
+              <span aria-hidden="true" className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-danger/10 text-danger"><Link2Off size={24} /></span>
               <div className="font-semibold">{t("share.cannotOpen")}</div>
               <p className="body-copy mt-2">{error}</p>
             </CardContent>

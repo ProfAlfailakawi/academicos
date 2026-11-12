@@ -143,7 +143,7 @@ export function Plans() {
                 <th scope="row" className="text-start py-3 font-semibold">{t(label)}</th>
                 {plans.map((plan) => {
                   const on = plan.id !== "preview" && (feature === "full_writer" || (feature === "viva" ? plan.id === "project_viva" || plan.id === "group" : plan.id === "group"));
-                  return <td key={plan.id} className="py-3 text-center">{on ? <><Check size={16} className="inline brand-text" aria-hidden="true" /><span className="sr-only">✓</span></> : <span className="muted" aria-label="—">—</span>}</td>;
+                  return <td key={plan.id} className="py-3 text-center">{on ? <><span aria-hidden="true" className="inline-grid h-6 w-6 place-items-center rounded-full brand-soft-bg brand-text align-middle"><Check size={14} /></span><span className="sr-only">✓</span></> : <span className="muted" aria-label="—">—</span>}</td>;
                 })}
               </tr>
             ))}

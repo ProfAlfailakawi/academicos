@@ -76,16 +76,16 @@ export function Status() {
             ))}
           </div>
         )}
-        <div className="grid sm:grid-cols-2 gap-3 mt-4">
+        <div className="odd-fill grid sm:grid-cols-2 gap-3 mt-4">
           {services.map(([label, ok]: any) => (
             <Card key={label}>
               <CardContent>
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-sm">{label}</div>
                   {ok ? (
-                    <CheckCircle2 size={16} className="text-success" aria-hidden="true" />
+                    <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-success/10 text-success"><CheckCircle2 size={17} /></span>
                   ) : (
-                    <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
+                    <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-warning/10 text-warning"><AlertTriangle size={17} /></span>
                   )}
                 </div>
                 <div className="text-meta muted mt-2">

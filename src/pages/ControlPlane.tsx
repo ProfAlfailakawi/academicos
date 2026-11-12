@@ -231,8 +231,8 @@ export function ControlPlane() {
           <div className="grid lg:grid-cols-2 gap-4 mt-5"><div className="space-y-2">{command.decisions.slice(0,5).map(d=><div key={d.id} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{d.title}</span><span className="text-sm font-semibold mono-number">{d.metric}</span></div><p className="text-[11px] muted leading-5 mt-1">{d.detail} {d.recommendation}</p></div>)}{!command.decisions.length&&<div className="rounded-xl brand-soft-bg p-4 text-sm font-semibold">{t('ctrl.noDecisions')}</div>}</div><div className="grid sm:grid-cols-2 gap-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">{command.operations.map(op=><div key={op.key} className="rounded-xl border hairline p-3 bg-[var(--bg)]"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{op.label}</span><span className={`h-2.5 w-2.5 rounded-full ${op.state === "ready" ? "bg-success" : op.state === "attention" ? "bg-warning" : "bg-danger"}`}/></div><div className="text-[11px] muted leading-4 mt-2">{op.detail}</div></div>)}</div></div>
         </section>
       )}
-      <div className="grid xl:grid-cols-[1.45fr_.8fr] gap-5">
-        <Card className="xl:self-start">
+      <div className="grid gap-5">
+        <Card>
           <CardContent>
             <details className="calendar-month">
             <summary className="focus-ring flex min-h-11 cursor-pointer items-center gap-3">
@@ -299,7 +299,7 @@ export function ControlPlane() {
             </details>
           </CardContent>
         </Card>
-        <div className="space-y-5">
+        <div className="control-ops-grid grid gap-5 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.6fr)] lg:items-start">
           <Card>
             <CardContent>
               <div className="eyebrow">{t("ui.systemTruth")}</div>
@@ -324,7 +324,7 @@ export function ControlPlane() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <CardContent>
               <div className="flex items-center gap-2">
                 <Flag size={16} className="brand-text" />
@@ -336,11 +336,11 @@ export function ControlPlane() {
               <p className="body-copy mt-2">
                 {t('ctrl.flagsNote')}
               </p>
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 grid gap-2 md:grid-cols-2">
                 {flags.map((f) => (
                   <div
                     key={f.key}
-                    className="rounded-xl bg-[var(--bg)] border hairline p-3"
+                    className="rounded-xl bg-[var(--bg)] border hairline p-3 flex flex-col justify-center"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -375,7 +375,7 @@ export function ControlPlane() {
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="lg:col-start-1 lg:row-start-2">
             <CardContent>
               <div className="eyebrow">{t("ui.auditTrail")}</div>
               <h2 className="section-title mt-1">{t('ctrl.recentOps')}</h2>

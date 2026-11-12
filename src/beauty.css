@@ -340,3 +340,20 @@ html:is([data-locale="ar"], [data-locale="ur"]) body :where(*):not(code, pre, kb
   letter-spacing: 0 !important;
 }
 html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text-transform: none; }
+
+/* Writer quick panel: four health rings sit in one row whenever the card is
+   wide enough, instead of a sparse 2x2 block across a full-width card. */
+.quality-rings { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+.quality-ring__dial { grid-auto-flow: column; align-items: baseline; gap: 1px; }
+
+/* Centered eyebrows: the margin diamond hugged the far edge of a full-width
+   block and floated away from its label. Shrink-wrap it so the two stay together. */
+.text-center > .eyebrow { display: inline-block; }
+
+/* Light button on the deep teacher strip: the strip redefines --panel as dark,
+   so the outline variant rendered black-on-navy. Keep the intended light pill. */
+.ui-button.btn-on-deep[data-variant] {
+  background: #fcfdff; color: #17234d; border-color: #fcfdff;
+  box-shadow: 0 6px 18px rgba(8, 12, 30, .28);
+}
+.ui-button.btn-on-deep[data-variant]:hover { background: #ffffff; }

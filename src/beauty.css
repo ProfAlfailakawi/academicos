@@ -328,3 +328,15 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 @media (min-width: 600px) and (max-width: 899.98px) and (max-height: 700px) {
   .app-shell .app-sidebar--desktop .rail-user { flex-direction: column; }
 }
+
+/* ==========================================================================
+   Round 9 — visual polish (2026-11-12). Presentation only.
+   ========================================================================== */
+
+/* Connected scripts (Arabic, Urdu): tracking breaks the joins between letters
+   and uppercase means nothing there. Eyebrows, Tailwind tracking-* utilities and
+   the compact dock labels all used it; Latin locales keep their tracking. */
+html:is([data-locale="ar"], [data-locale="ur"]) body :where(*):not(code, pre, kbd, samp) {
+  letter-spacing: 0 !important;
+}
+html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text-transform: none; }

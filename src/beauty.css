@@ -332,10 +332,10 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 /* ==========================================================================
    Round 9 — responsive audit (2560 → 320, Chromium + WebKit). Presentation only.
    ========================================================================== */
-/* Public pages (landing, public bar, login, MFA) on phones: the language select fills its 44px capsule (a real tap target). */
+/* Language switchers outside the app top bar (landing, public bar, login, MFA, settings) on phones: the language select fills its 44px capsule (a real tap target). */
 @media (max-width: 639.98px) {
-  .language-switcher--compact:not(.app-topbar .language-switcher) { position: relative; min-height: 44px; }
-  .language-switcher--compact:not(.app-topbar .language-switcher) select { min-height: 42px; -webkit-appearance: none; appearance: none; padding-inline: 2px; }
+  .language-switcher:not(.app-topbar .language-switcher) { position: relative; min-height: 44px; }
+  .language-switcher:not(.app-topbar .language-switcher) select { min-height: 42px; -webkit-appearance: none; appearance: none; padding-inline: 2px; }
   /* WebKit draws a native menulist at its own 27px height unless appearance is reset; the globe icon stays as the cue. */
 }
 /* Narrowest phones (<375): the landing CTA stays on one line — the switcher
@@ -347,6 +347,15 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
   .landing-head-actions .language-switcher select option { color: var(--ink); background: var(--panel); }
   .landing-head-actions .ui-button { white-space: nowrap; }
   .landing-head-actions .ui-button .directional-icon { display: none; }
+}
+/* Public bar (about/info pages, status, shared evidence): same compact capsule up to 419px, where "فتح النظام" otherwise wraps and the language name is cut. */
+@media (max-width: 419.98px) {
+  .public-bar__aside .language-switcher { min-width: 44px; justify-content: center; padding-inline: .4rem; }
+  .public-bar__aside .language-switcher svg { display: inline-block !important; }
+  .public-bar__aside .language-switcher select { position: absolute; inset: 0; width: 100%; max-width: none; opacity: 1; color: transparent; appearance: none; -webkit-appearance: none; font-size: 16px; }
+  .public-bar__aside .language-switcher select option { color: var(--ink); background: var(--panel); }
+  .public-bar__aside .ui-button { white-space: nowrap; }
+  .public-bar__aside .ui-button .directional-icon { display: none; }
 }
 /* Small steppers on phones: neighbouring labels ("قيد التصحيح" | "مقفل داخليًا") no longer run together. */
 @media (max-width: 479.98px) {

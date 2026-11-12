@@ -332,10 +332,11 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 /* ==========================================================================
    Round 9 — responsive audit (2560 → 320, Chromium + WebKit). Presentation only.
    ========================================================================== */
-/* Public headers on phones: the language select fills its 44px capsule (a real tap target). */
+/* Public pages (landing, public bar, login, MFA) on phones: the language select fills its 44px capsule (a real tap target). */
 @media (max-width: 639.98px) {
-  :is(.landing-head-actions, .public-bar__aside) .language-switcher { position: relative; min-height: 44px; }
-  :is(.landing-head-actions, .public-bar__aside) .language-switcher select { min-height: 42px; }
+  .language-switcher--compact:not(.app-topbar .language-switcher) { position: relative; min-height: 44px; }
+  .language-switcher--compact:not(.app-topbar .language-switcher) select { min-height: 42px; -webkit-appearance: none; appearance: none; padding-inline: 2px; }
+  /* WebKit draws a native menulist at its own 27px height unless appearance is reset; the globe icon stays as the cue. */
 }
 /* Narrowest phones (<375): the landing CTA stays on one line — the switcher
    becomes the same icon-only capsule the app top bar uses, the CTA drops its arrow. */
@@ -357,4 +358,11 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 }
 @media (max-width: 374.98px) {
   .app-main [data-motion="off"] .flex.flex-wrap.gap-2:has(> .ui-button:nth-child(3)) > .ui-button { flex-basis: 100%; }
+}
+/* Student home composer: when the hero column is narrow (two-column hero at ~1024-1280),
+   the start button wraps under the tools instead of sliding over "صوّر". */
+@media (min-width: 768px) {
+  .student-hero .academic-inbox > .border-t { flex-wrap: wrap; }
+  .student-hero .academic-inbox > .border-t > div:first-child { flex: 1 1 auto; min-width: min(100%, max-content); }
+  .student-hero .academic-inbox > .border-t > .ui-button { margin-inline-start: auto; }
 }

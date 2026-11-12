@@ -357,3 +357,7 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
   box-shadow: 0 6px 18px rgba(8, 12, 30, .28);
 }
 .ui-button.btn-on-deep[data-variant]:hover { background: #ffffff; }
+
+/* Two-column card lists that never grow more columns: a lone last card spans the
+   row at every width, not only below 1280px (status page services). */
+.odd-fill.sm\:grid-cols-2:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]) > :last-child:nth-child(odd) { grid-column: 1 / -1; }

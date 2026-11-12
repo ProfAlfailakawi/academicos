@@ -391,6 +391,10 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
   .public-bar__aside .ui-button { white-space: nowrap; }
   .public-bar__aside .ui-button .directional-icon { display: none; }
 }
+@media (max-width: 359.98px) {
+  .public-bar { gap: 8px; }
+  .public-bar__aside { gap: 6px; }
+}
 /* Small steppers on phones: neighbouring labels ("قيد التصحيح" | "مقفل داخليًا") no longer run together. */
 @media (max-width: 479.98px) {
   .dna-steps[data-size='sm'] .dna-lbl { padding-inline: 3px; text-wrap: balance; }
@@ -408,4 +412,10 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
   .student-hero .academic-inbox > .border-t { flex-wrap: wrap; }
   .student-hero .academic-inbox > .border-t > div:first-child { flex: 1 1 auto; min-width: min(100%, max-content); }
   .student-hero .academic-inbox > .border-t > .ui-button { margin-inline-start: auto; }
+}
+/* Phones: a field that carries a small-text utility (support console status select) still
+   renders at 16px, so focusing it does not zoom the page on iOS. The small-text utility
+   is !important elsewhere, so this has to be too. */
+@media (max-width: 767.98px) {
+  html .app-main :is(select, textarea, input).field { font-size: 16px !important; }
 }

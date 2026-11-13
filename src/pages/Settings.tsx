@@ -19,6 +19,7 @@ import {
 import { Link, useLocation } from "react-router";
 import { api } from "../lib/api";
 import { useAppPreferences } from "../contexts/AppContext";
+import { useAuth } from "../contexts/AuthContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -43,6 +44,7 @@ export function Settings() {
   const [deletionReason, setDeletionReason] = useState("");
   const { theme, setTheme, accessibility, setAccessibility } =
     useAppPreferences();
+  const { user } = useAuth();
   const [h, setH] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [exportBusy, setExportBusy] = useState(false);
@@ -66,11 +68,15 @@ export function Settings() {
       setJoinMessage(t("settings.reviewJoin"));
     }
   }, [location.hash, t]);
+  // Provider-level readiness is admin-only on the server; everyone else gets the
+  // public coarse flags and the detailed rows below are simply not rendered.
+  const isPlatformAdmin = ["admin", "superadmin", "root_owner"].includes(String(user?.role || ""));
   useEffect(() => {
-    api
-      .health()
+    (isPlatformAdmin ? api.adminHealth().catch(() => api.health()) : api.health())
       .then(setH)
       .catch(() => setH({ status: "error" }));
+  }, [isPlatformAdmin]);
+  useEffect(() => {
     api
       .profile()
       .then((r) => {
@@ -437,49 +443,53 @@ export function Settings() {
                   ok={h.aiConfigured}
                   value={h.aiConfigured ? t("ui.configured") : t("ui.notConfigured")}
                 />
-                <Service
-                  label={locale === "ar" ? "قراءة النص من الصور" : "OCR"}
-                  ok={h.ocr?.configured}
-                  value={
-                    h.ocr?.ensemble
-                      ? t("ui.ensemble")
-                      : h.ocr?.configured
-                        ? t("ui.singleProvider")
+                {h.ocr !== undefined && (
+                  <>
+                  <Service
+                    label={locale === "ar" ? "قراءة النص من الصور" : "OCR"}
+                    ok={h.ocr?.configured}
+                    value={
+                      h.ocr?.ensemble
+                        ? t("ui.ensemble")
+                        : h.ocr?.configured
+                          ? t("ui.singleProvider")
+                          : t("ui.notConfigured")
+                    }
+                  />
+                  <Service
+                    label={t("ui.malwareScan")}
+                    ok={h.malware?.configured}
+                    value={
+                      h.malware?.configured ? t("ui.configured") : t("ui.notConfigured")
+                    }
+                  />
+                  <Service
+                    label={t("ui.externalNotices")}
+                    ok={
+                      h.notifications?.email ||
+                      h.notifications?.push ||
+                      h.notifications?.sms
+                    }
+                    value={
+                      h.notifications?.email ||
+                      h.notifications?.push ||
+                      h.notifications?.sms
+                        ? t("ui.configured")
                         : t("ui.notConfigured")
-                  }
-                />
-                <Service
-                  label={t("ui.malwareScan")}
-                  ok={h.malware?.configured}
-                  value={
-                    h.malware?.configured ? t("ui.configured") : t("ui.notConfigured")
-                  }
-                />
-                <Service
-                  label={t("ui.externalNotices")}
-                  ok={
-                    h.notifications?.email ||
-                    h.notifications?.push ||
-                    h.notifications?.sms
-                  }
-                  value={
-                    h.notifications?.email ||
-                    h.notifications?.push ||
-                    h.notifications?.sms
-                      ? t("ui.configured")
-                      : t("ui.notConfigured")
-                  }
-                />
-                <Service
-                  label={t("ui.backup")}
-                  ok={h.backup?.configured}
-                  value={h.backup?.configured ? t("ui.configured") : t("ui.notConfigured")}
-                />
-                <Service
-                  label={t("ui.dataRegion")}
-                  ok
-                  value={locale === "ar" && (!h.dataRegion || h.dataRegion === "global") ? "عالمي" : h.dataRegion || "global"}
-                />
+                    }
+                  />
+                  <Service
+                    label={t("ui.backup")}
+                    ok={h.backup?.configured}
+                    value={h.backup?.configured ? t("ui.configured") : t("ui.notConfigured")}
+                  />
+                  <Service
+                    label={t("ui.dataRegion")}
+                    ok
+                    value={locale === "ar" && (!h.dataRegion || h.dataRegion === "global") ? "عالمي" : h.dataRegion || "global"}
+                  />
+                  </>
+                )}
               </div>
             ) : (
               <Skeleton shape="lines" className="mt-4" />

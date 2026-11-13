@@ -597,7 +597,19 @@ export const api = {
       `/api/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}/submissions/${encodeURIComponent(submissionId)}/grade`,
       { method: "PATCH", body: JSON.stringify(body) },
     ),
+  // Public, coarse capability flags only (status page, banners, writer AI badge).
   health: () =>
+    request<{
+      status: string;
+      firebase: boolean;
+      aiConfigured: boolean;
+      storageConfigured: boolean;
+      billing: { configured: boolean };
+      maintenance: boolean;
+      incidentBanner?: string;
+    }>("/api/health"),
+  // Platform admins only: full readiness detail (providers, OCR, malware, notifications).
+  adminHealth: () =>
     request<{
       status: string;
       mode: string;
@@ -620,7 +632,7 @@ export const api = {
       dataRegion: string;
       maintenance: boolean;
       incidentBanner?: string;
-    }>("/api/health"),
+    }>("/api/admin/health"),
   integrations: () =>
     request<{ success: true; integrations: IntegrationStatusRecord[] }>(
       "/api/integrations/status",

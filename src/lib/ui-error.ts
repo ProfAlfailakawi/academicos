@@ -1,4 +1,5 @@
 import { ApiError } from "./api";
+import { isAppleNativeShell } from "./platform";
 
 export type Translate = (key: string) => string;
 
@@ -25,7 +26,9 @@ export function localizedUiError(
     // No storage bucket on this deployment: say so plainly instead of "try again later".
     if (code === "STORAGE_NOT_CONFIGURED" || code === "STORAGE_BUCKET_NOT_FOUND")
       return t("ui.error.storageUnavailable");
-    if (error.status === 402 || code.endsWith("_PLAN_REQUIRED")) return t("ui.error.planRequired");
+    if (error.status === 402 || code.endsWith("_PLAN_REQUIRED"))
+      // iOS app (App Store 3.1.3(b)): neutral wording that does not point to buying.
+      return t(isAppleNativeShell() ? "ui.error.planRequiredNative" : "ui.error.planRequired");
 
     if (code === "AUTH_EXPIRED" || code === "AUTH_INVALID" || error.status === 401) {
       return t("ui.error.sessionExpired");

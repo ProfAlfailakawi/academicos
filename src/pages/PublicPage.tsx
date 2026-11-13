@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from "react-router";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
+import { isAppleNativeShell } from "../lib/platform";
 
 type PageContent = {
   eyebrow: string;
@@ -210,6 +211,8 @@ export function PublicPage() {
   }, [pageTitle]);
   if (["universities", "governments", "employers"].includes(slug))
     return <Navigate to="/" replace />;
+  // iOS app (App Store 3.1.1 / 3.1.3(b)): the pricing page is not shown there.
+  if (slug === "pricing" && isAppleNativeShell()) return <Navigate to="/" replace />;
   const c = pages[slug] || pages.about;
   return (
     <div className="min-h-screen bg-[var(--bg)]">

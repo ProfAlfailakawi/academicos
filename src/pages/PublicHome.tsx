@@ -14,6 +14,7 @@ import { JourneyFlow } from "../components/dna/JourneyFlow";
 import { DnaDraw } from "../components/dna/DnaKit";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { formatMoney, useI18n } from "../lib/i18n";
+import { isAppleNativeShell } from "../lib/platform";
 
 export function PublicHome() {
   const { t, locale } = useI18n();
@@ -25,6 +26,8 @@ export function PublicHome() {
     { icon: GraduationCap, title: t("landing.examTitle"), text: t("landing.examText"), to: "/login", tone: "blue" },
   ];
   const projectPrice = formatMoney(6.99, "USD", locale);
+  // iOS app (App Store 3.1.1 / 3.1.3(b)): no pricing link or section.
+  const appleShell = isAppleNativeShell();
   return (
     <div className="public-shell min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       {overtureActive && <Overture onDone={dismissOverture} />}
@@ -34,7 +37,7 @@ export function PublicHome() {
         </Link>
         <nav className="hidden lg:flex items-center gap-1 text-sm">
           <a href="#how" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navHow")}</a>
-          <a href="#pricing" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navPricing")}</a>
+          {!appleShell && <a href="#pricing" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navPricing")}</a>}
           <a href="#teacher" className="focus-ring rounded-xl px-3 py-2 muted hover:text-[var(--ink)]">{t("landing.navTeacher")}</a>
         </nav>
         <div className="landing-head-actions flex items-center gap-2"><LanguageSwitcher compact /><Button variant="ghost" asChild className="hidden sm:inline-flex"><Link to="/login">{t("landing.signIn")}</Link></Button><Button asChild><Link to="/login">{t("landing.tryNow")} <ArrowRight size={16} className="directional-icon" /></Link></Button></div>
@@ -85,12 +88,14 @@ export function PublicHome() {
           </div>
         </section>
 
+        {!appleShell && (
         <section id="pricing" className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-24">
           <div className="pricing-preview">
             <div><div className="eyebrow">{t("landing.studentPrice")}</div><h2 className="text-3xl md:text-5xl font-black tracking-[-.045em] mt-3">{t("landing.priceHeadline").replace("{price}", projectPrice)}</h2><p className="body-copy mt-4">{t("landing.priceBody")}</p></div>
             <div className="price-orbit"><span className="price-orbit__amount">{projectPrice}</span><span className="price-orbit__currency">{t("landing.perProject")}</span><Button asChild className="mt-5"><Link to="/login">{t("landing.seePlans")}</Link></Button></div>
           </div>
         </section>
+        )}
 
         <section id="teacher" className="teacher-lite-strip surface-deep strip-deep">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 flex flex-col md:flex-row items-center justify-between gap-6">

@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { formatMoney, useI18n } from "../lib/i18n";
 import { InlineLoader } from "../components/ui/AcademicLoader";
 import { localizedUiError } from "../lib/ui-error";
+import { isAppleNativeShell } from "../lib/platform";
 
 const FALLBACK = [
   { id: "preview", amountUsd: 0, pages: 3, projects: 1 },
@@ -86,6 +87,25 @@ export function Plans() {
       setMessage(localizedUiError(error, t, "plans.checkoutError"));
       setBusy("");
     }
+  }
+
+  // iOS app (App Store 3.1.1 / 3.1.3(b)): show the current plan status only — no prices, purchase buttons or links.
+  if (isAppleNativeShell()) {
+    const planName = access?.unlocked && access.planId ? t(`plans.plan.${access.planId}.name`) : t("plans.plan.preview.name");
+    return <div className="mx-auto max-w-3xl space-y-6">
+      <header className="text-center">
+        <h1 className="text-3xl md:text-4xl font-black tracking-[-.05em]">{t("layout.navPlans")}</h1>
+        <p className="body-copy mt-3">{t("plans.nativeManaged")}</p>
+      </header>
+      <section className="panel-flat rounded-[24px] p-4 md:p-5">
+        <div className="grid md:grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center">
+          <span className="h-12 w-12 rounded-2xl tone-tile"><BookOpenCheck size={20} /></span>
+          <label className="min-w-0"><span className="eyebrow">{t("plans.nativeProjectLabel")}</span>{loading ? <span className="field mt-2 flex items-center gap-2"><InlineLoader size={15}/> {t("plans.loadingProjects")}</span> : projects.length ? <select className="field mt-2" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{projects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.course}</option>)}</select> : <p className="text-xs muted mt-2">{t("plans.noProject")}</p>}</label>
+          {access?.unlocked && selected ? <Button asChild><Link to={`/app/project/${selected.id}`}>{t("plans.openProject")} <ArrowRight size={15} className="directional-icon" /></Link></Button> : null}
+        </div>
+        {selected && <div className="mt-3 flex flex-wrap gap-2 text-meta"><span className="rounded-full soft-bg px-3 py-1.5">{planName}</span>{access?.unlocked && <span className="rounded-full px-3 py-1.5 brand-soft-bg">{t("plans.active")}</span>}</div>}
+      </section>
+    </div>;
   }
 
   return <div className="mx-auto max-w-6xl space-y-8">

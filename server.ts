@@ -2234,8 +2234,31 @@ async function startServer() {
     }
     return storageProbe;
   }
+  /*
+   * /api/health is public (status page, signed-in banner, writer AI badge), so it
+   * carries only coarse capability booleans — no project id, database name,
+   * provider names or per-provider readiness. The full detail lives behind
+   * /api/admin/health for platform admins.
+   */
   app.get("/api/health", async (_req, res) => {
     const storage = await storageReadiness();
+    res.json({
+      status: "ok",
+      firebase: firebaseInitialized,
+      aiConfigured: aiConfigured(),
+      storageConfigured: storage.ready,
+      billing: { configured: billingStatus().configured },
+      maintenance: process.env.MAINTENANCE_MODE === "true",
+      incidentBanner: process.env.INCIDENT_BANNER || "",
+    });
+  });
+  app.get(
+    "/api/admin/health",
+    authenticate,
+    requireRoles("admin", "superadmin", "root_owner"),
+    async (_req, res) => {
+    const storage = await storageReadiness();
+    res.setHeader("Cache-Control", "no-store");
     res.json({
       status: "ok",
       mode: "production",
@@ -2268,7 +2291,8 @@ async function startServer() {
       maintenance: process.env.MAINTENANCE_MODE === "true",
       incidentBanner: process.env.INCIDENT_BANNER || "",
     });
-  });
+    },
+  );
   /*
    * فحص وصول Firestore الفعلي: قراءة واحدة صغيرة بمهلة، والنتيجة مخزّنة ٦٠ ثانية
    * فلا يصير الرابط العام بابًا لاستهلاك القراءات. يعتمد عليه النشر ليميّز
@@ -9980,6 +10004,8 @@ async function startServer() {
       AI_NOT_CONFIGURED: "The AI service is not configured on this server.",
       STORAGE_NOT_CONFIGURED:
         "Firebase Storage is not configured for this deployment.",
+      STORAGE_BUCKET_NOT_FOUND:
+        "File storage is not available on this deployment, so original files cannot be kept. Paste the assignment text instead.",
       BILLING_NOT_CONFIGURED:
         "The payment service is not configured for this deployment.",
       FIRESTORE_DATABASE_UNAVAILABLE:

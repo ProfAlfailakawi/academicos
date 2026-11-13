@@ -22,6 +22,9 @@ export function localizedUiError(
     if (code === "DEMO_READ_ONLY") return t("ui.error.demoReadOnly");
     // The platform swapping servers mid-deploy (src/lib/updating-notice.ts), not a failure.
     if (code === "PLATFORM_UPDATING") return t("ui.error.updating");
+    // No storage bucket on this deployment: say so plainly instead of "try again later".
+    if (code === "STORAGE_NOT_CONFIGURED" || code === "STORAGE_BUCKET_NOT_FOUND")
+      return t("ui.error.storageUnavailable");
     if (error.status === 402 || code.endsWith("_PLAN_REQUIRED")) return t("ui.error.planRequired");
 
     if (code === "AUTH_EXPIRED" || code === "AUTH_INVALID" || error.status === 401) {

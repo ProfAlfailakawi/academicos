@@ -150,7 +150,7 @@ npm run verify:launch-gates
 | 3 | اصنع الامتحان 🔄 | `advanced/reverse-assessment.ts` | `POST /api/projects/:id/reverse-assessment` | `ReverseAssessmentStudio.tsx` |
 | 4 | غرفة التوضيح الحيّة 📡 | `advanced/clarification-room.ts` | `POST /api/clarifications/:id/answer` | بثّ SSE |
 | 5 | اقتصاد الشرح 🎙️ | `advanced/peer-explanation.ts` | `POST /api/courses/:id/peer-explanations` | — |
-| 6 | الصندوق الأسود ✈️ | `advanced/learning-black-box.ts` + `lib/black-box-recorder.ts` | `POST /api/projects/:id/black-box/verify` | مسجّل محلي |
+| 6 | الصندوق الأسود ✈️ | `advanced/learning-black-box.ts` (مسجّل العميل `lib/black-box-recorder.ts` أُزيل) | `POST /api/projects/:id/black-box/verify` | مسجّل محلي |
 | 7 | إرث الخريجين 🏛️ | `advanced/alumni-legacy.ts` | `POST /api/projects/:id/legacy-listing` | — |
 | 8 | بوابة الواتساب 📱 | `advanced/whatsapp-gateway.ts` | `GET/POST /api/whatsapp/webhook` | — |
 

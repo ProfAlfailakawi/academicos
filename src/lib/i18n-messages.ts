@@ -2553,6 +2553,16 @@ export const MESSAGES: Record<string, Record<LocaleCode, string>> = {
     "Le service est temporairement indisponible. Réessayez dans quelques instants.",
     "سروس عارضی طور پر دستیاب نہیں ہے۔ براہِ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
   ),
+  "ui.error.storageUnavailable": UI(
+    "تخزين الملفات غير متاح على هذا الخادم حاليًا، فلا يمكن حفظ الملف الأصلي. الصق نص التكليف بدلًا منه.",
+    "File storage isn't available on this server right now, so the original file can't be kept. Paste the assignment text instead.",
+    "Dosya depolama bu sunucuda şu anda kullanılamıyor, bu yüzden özgün dosya saklanamıyor. Bunun yerine ödev metnini yapıştırın.",
+    "此服务器当前无法使用文件存储，因此无法保存原始文件。请改为粘贴作业文本。",
+    "इस सर्वर पर अभी फ़ाइल स्टोरेज उपलब्ध नहीं है, इसलिए मूल फ़ाइल सहेजी नहीं जा सकती। इसके बजाय असाइनमेंट का पाठ चिपकाएँ।",
+    "El almacenamiento de archivos no está disponible en este servidor, así que no se puede guardar el archivo original. Pega el texto de la tarea en su lugar.",
+    "Le stockage de fichiers n’est pas disponible sur ce serveur pour le moment ; le fichier d’origine ne peut donc pas être conservé. Collez plutôt le texte du devoir.",
+    "اس سرور پر ابھی فائل اسٹوریج دستیاب نہیں، اس لیے اصل فائل محفوظ نہیں ہو سکتی۔ اس کے بجائے اسائنمنٹ کا متن چسپاں کریں۔"
+  ),
   "ui.error.updating": UI(
     "النظام قيد التحديث — يعود الاتصال تلقائياً.",
     "AcademicOS is updating — reconnecting automatically.",

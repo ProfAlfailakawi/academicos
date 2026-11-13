@@ -134,3 +134,16 @@ test('tutor lessons shaped by the learner\'s own material never enter the tenant
   assert.match(explain, /cacheable \? await firestoreStore\.getLearnCache\(/);
   assert.match(explain, /if \(cacheable\)\s+await firestoreStore\.setLearnCache\(/);
 });
+
+test('public /api/health exposes only coarse flags; infra detail is admin-only', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../server.ts', import.meta.url), 'utf8');
+  const start = src.indexOf('app.get("/api/health", ');
+  const end = src.indexOf('"/api/admin/health"');
+  assert.ok(start > 0 && end > start, 'public and admin health routes located');
+  const publicHealth = src.slice(start, end);
+  for (const leak of ['firebaseProject', 'firestoreDatabase', 'aiProviders', 'billingStatus(),', 'ocrStatus', 'dataRegion'])
+    assert.equal(publicHealth.includes(leak), false, `public health must not expose ${leak}`);
+  const admin = src.slice(end, end + 400);
+  assert.match(admin, /authenticate,\s*requireRoles\("admin", "superadmin", "root_owner"\)/);
+});

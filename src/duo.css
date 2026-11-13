@@ -6,7 +6,8 @@
    changes the phone shell except safer sizing. */
 :root { --rail-w: 76px; }
 
-@media (min-width: 600px) and (max-width: 1023.98px) {
+@media (min-width: 600px) and (max-width: 1023.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .app-sidebar--desktop {
     display: flex !important;
     width: calc(var(--rail-w) + env(safe-area-inset-left, 0px)) !important;
@@ -43,7 +44,8 @@
 }
 
 /* Short windows (folded landscape 600x350, pinned video): tighter rail + topbar */
-@media (min-width: 600px) and (max-width: 1023.98px) and (max-height: 520px) {
+@media (min-width: 600px) and (max-width: 1023.98px) and (max-height: 520px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .app-topbar { height: 56px; }
   .app-shell .app-sidebar--desktop > div { padding-block: 8px; }
   .app-shell .app-sidebar--desktop .rail-cta { margin-bottom: 8px; }
@@ -51,7 +53,8 @@
 }
 
 /* Mid widths: a proper 12-col feel — wider gutters, capped line length */
-@media (min-width: 600px) and (max-width: 1023.98px) {
+@media (min-width: 600px) and (max-width: 1023.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .app-main { padding-inline: clamp(1rem, 3vw, 1.75rem); }
   .app-main .page-title { font-size: clamp(2rem, 4.4vw, 2.5rem); }
   .page-header__action { width: auto; }
@@ -79,7 +82,8 @@
 html { touch-action: manipulation; }
 
 /* Mid widths: top-bar search stays on one line; the keyboard hint is for desktops */
-@media (min-width: 600px) and (max-width: 1023.98px) {
+@media (min-width: 600px) and (max-width: 1023.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .command-trigger { white-space: nowrap; flex-shrink: 1; min-width: 0; }
   .app-shell .command-trigger span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .app-shell .command-trigger span:last-child { display: none; }
@@ -94,7 +98,8 @@ html { touch-action: manipulation; }
 /* Two-pane content from 640px: card collections use the width they really have.
    auto-fit with a floor means a 540px column holds one roomy card (not two
    word-per-line slivers) while a 830px column holds two, or three for trios. */
-@media (min-width: 600px) and (max-width: 1023.98px) {
+@media (min-width: 600px) and (max-width: 1023.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-main .grid.md\:grid-cols-2,
   .app-main .grid.sm\:grid-cols-2:not(.md\:grid-cols-1) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 262px), 1fr)); }
   .app-main .grid.course-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }

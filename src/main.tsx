@@ -12,6 +12,7 @@ import './motion.css';
 import './final-polish.css';
 import './duo.css';
 import './beauty.css';
+import './duo-edges.css';
 import { installAppUpdate } from './lib/app-update';
 
 declare global {

@@ -19,7 +19,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
     if (!this.state.failed) return this.props.children;
     const ar = document.documentElement.dir === "rtl";
     return (
-      <div role="alert" dir={ar ? "rtl" : "ltr"} style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, fontFamily: "inherit", textAlign: "center" }}>
+      <div role="alert" dir={ar ? "rtl" : "ltr"} className="error-screen" style={{ display: "grid", placeItems: "center", fontFamily: "inherit", textAlign: "center" }}>
         <div style={{ maxWidth: 420 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>
             {ar ? "حدث خطأ غير متوقع" : "Something went wrong"}

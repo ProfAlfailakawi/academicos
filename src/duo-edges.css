@@ -1,0 +1,172 @@
+/* ==========================================================================
+   Full-bleed edges (iPhone Duo pass, 2026-11-13). Loaded last.
+   Presentation only. Width/height based; no posture or viewport-segment queries.
+
+   The page already asks for the whole screen (`viewport-fit=cover`) and the PWA
+   uses a translucent status bar, so backgrounds run to every edge. What was
+   missing is the other half of that contract: content on the *end* side of the
+   page (the left edge in Arabic) never stepped back from the camera housing or
+   the rounded corner, and the 600-1023px rail added the LEFT inset on the RIGHT
+   (start) edge in RTL. These tokens give each physical side its own inset and
+   map start/end per direction, so backgrounds stay edge to edge and only the
+   content moves. With all insets at 0 (most browsers) nothing changes.
+   ========================================================================== */
+:root {
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+  --sa-start: var(--sa-l);
+  --sa-end: var(--sa-r);
+}
+[dir="rtl"] { --sa-start: var(--sa-r); --sa-end: var(--sa-l); }
+
+/* ---- 1) Height: the visible viewport, not the tallest one ------------------
+   `min-h-screen` is 100vh, which in Safari is the height with the toolbar
+   hidden, so centred screens (sign-in, MFA, error) sat lower than the middle
+   and short windows scrolled for nothing. */
+@supports (min-height: 100dvh) {
+  /* :where() keeps the sign-in shell's own 100svh rule (index.css) in charge there. */
+  :where(.min-h-screen), .public-page { min-height: 100dvh; }
+}
+
+/* ---- 2) App shell ----------------------------------------------------------- */
+/* Top bar under the status bar (installed app, translucent status bar). index.css
+   already did this with env(); the token keeps one source for every edge. */
+@media (max-width: 1023.98px) {
+  .app-shell .app-topbar { padding-top: var(--sa-t); }
+}
+
+/* Phone widths: no rail, so both sides of the content and top bar take their own inset. */
+@media (max-width: 599.98px) {
+  .app-shell .app-topbar {
+    padding-inline: calc(.75rem + var(--sa-start)) calc(.75rem + var(--sa-end)) !important;
+  }
+  .app-shell .app-main {
+    padding-inline: calc(1rem + var(--sa-start)) calc(1rem + var(--sa-end));
+  }
+  /* Floating dock: each physical side keeps clear of its own edge. */
+  .app-shell .mobile-dock {
+    inset-inline: auto !important;
+    left: max(8px, var(--sa-l)) !important;
+    right: max(8px, var(--sa-r)) !important;
+  }
+}
+
+/* Rail widths: the rail sits on the start edge and absorbs that edge's inset;
+   the content absorbs the other one. The short query is the folded screen held
+   sideways (about 594x368): Apple's compact-height rule, bars move to the side. */
+@media (min-width: 600px) and (max-width: 1023.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
+  .app-shell .app-sidebar--desktop {
+    width: calc(var(--rail-w) + var(--sa-start)) !important;
+    padding-inline: var(--sa-start) 0;
+    padding-top: var(--sa-t);
+  }
+  .app-shell .app-content {
+    margin-inline-start: calc(var(--rail-w) + var(--sa-start));
+    width: calc(100% - var(--rail-w) - var(--sa-start));
+  }
+  .app-shell .app-topbar { padding-inline-end: calc(1rem + var(--sa-end)); }
+  /* The rail already carries the logo; below 640px the top bar showed a second
+     "A" tile right next to it (sm:hidden). One mark per screen. */
+  .app-shell .app-topbar .sm\:hidden.rounded-xl { display: none; }
+  .app-shell .app-main {
+    padding-inline: clamp(1rem, 3vw, 1.75rem) calc(clamp(1rem, 3vw, 1.75rem) + var(--sa-end));
+  }
+}
+@media (min-width: 600px) and (max-width: 767.98px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
+  /* index.css holds the top bar to .75rem (!important) below 768px. */
+  .app-shell .app-topbar { padding-inline-end: calc(.75rem + var(--sa-end)) !important; }
+}
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .app-shell .app-topbar { padding-inline-end: calc(1.75rem + var(--sa-end)); }
+}
+@media (min-width: 1024px) {
+  .app-shell .app-main { padding-inline-end: calc(2.25rem + var(--sa-end)); }
+  .app-shell .app-topbar { padding-inline-end: calc(1.75rem + var(--sa-end)); }
+}
+
+/* Menu drawer (below 1024px): slides in from the start edge, under the status bar. */
+.app-shell .app-sidebar--mobile {
+  padding-top: var(--sa-t);
+  padding-bottom: var(--sa-b);
+  padding-inline-start: var(--sa-start);
+}
+
+/* ---- 3) Public pages: full-bleed bands, inset content ---------------------- */
+.public-shell :where(.public-header, .max-w-7xl.mx-auto.px-4) {
+  padding-left: calc(1rem + var(--sa-l));
+  padding-right: calc(1rem + var(--sa-r));
+}
+@media (max-width: 520px) {
+  .public-shell .public-header { padding-left: calc(12px + var(--sa-l)); padding-right: calc(12px + var(--sa-r)); }
+}
+.public-shell .public-header { padding-top: var(--sa-t); }
+.public-page {
+  padding-top: calc(16px + var(--sa-t));
+  padding-left: calc(16px + var(--sa-l));
+  padding-right: calc(16px + var(--sa-r));
+  padding-bottom: calc(16px + var(--sa-b));
+}
+.auth-shell > main {
+  padding-top: calc(1rem + var(--sa-t));
+  padding-left: calc(1rem + var(--sa-l));
+  padding-right: calc(1rem + var(--sa-r));
+  padding-bottom: calc(1rem + var(--sa-b));
+}
+@media (min-width: 768px) {
+  .public-shell :where(.public-header, .max-w-7xl.mx-auto.px-4) {
+    padding-left: calc(2rem + var(--sa-l));
+    padding-right: calc(2rem + var(--sa-r));
+  }
+  .public-page {
+    padding: calc(28px + var(--sa-t)) calc(40px + var(--sa-r)) calc(56px + var(--sa-b)) calc(40px + var(--sa-l));
+  }
+  .auth-shell > main {
+    padding: calc(4rem + var(--sa-t)) calc(2rem + var(--sa-r)) calc(2rem + var(--sa-b)) calc(2rem + var(--sa-l));
+  }
+  /* The switcher is absolutely placed from 768px, so padding alone never moved it. */
+  .auth-shell > main > .self-end {
+    top: calc(1rem + var(--sa-t));
+    inset-inline-end: calc(1rem + var(--sa-end));
+  }
+}
+
+/* ---- 4) Sign-in on short windows (folded screen sideways ~594x368, opened
+   sideways with a pinned panel ~951x350): the language row, the home link and
+   the lock tile pushed the first field to the fold. Height decides here. */
+@media (max-height: 480px) {
+  .auth-shell > main {
+    padding-top: calc(.75rem + var(--sa-t));
+    padding-bottom: calc(.75rem + var(--sa-b));
+    justify-content: center;
+  }
+  .auth-card > div { padding: 1rem 1.25rem 1.25rem; }
+  .auth-card > div > a:first-child, .auth-card > div > .ui-button:first-child { margin-bottom: .5rem; }
+  .auth-card .h-12.w-12.tone-tile { display: none; }
+  .auth-card h1 { margin-top: 0; }
+}
+@media (max-height: 480px) and (max-width: 767.98px) {
+  /* The switcher sits beside the card instead of on a row of its own. */
+  .auth-shell > main { flex-direction: row; align-items: flex-start; }
+  .auth-shell > main > .self-end { order: 2; align-self: flex-start; flex: none; }
+  .auth-shell > main > .auth-card { min-width: 0; }
+}
+
+/* ---- 5) Touch screens wider than a phone (opened Duo, Split View, iPad): the
+   44px capsule for the language select existed only below 640px, so from 640px
+   up the select was a 27px target. Pointer type, not width, decides here. */
+@media (pointer: coarse) {
+  .language-switcher:not(.app-topbar .language-switcher) { position: relative; min-height: 44px; }
+  .language-switcher:not(.app-topbar .language-switcher) select { min-height: 42px; -webkit-appearance: none; appearance: none; padding-inline: 2px; }
+  .demo-pill .demo-pill__role { min-height: 44px; }
+}
+
+/* ---- 6) Crash screen (ErrorBoundary): visible height, clear of every edge --- */
+.error-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: calc(24px + var(--sa-t)) calc(24px + var(--sa-r)) calc(24px + var(--sa-b)) calc(24px + var(--sa-l));
+}

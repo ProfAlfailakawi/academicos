@@ -45,6 +45,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { roleTranslationKey } from "../lib/role-labels";
 import { useDialogA11y } from "./AppDialog";
 import { OfflineBanner } from "./OfflineBanner";
+import { isAppleNativeShell } from "../lib/platform";
 
 type NavItem = {
   to: string;
@@ -313,7 +314,10 @@ export function Layout() {
   const nav = useMemo(
     () =>
       studentMode
-        ? studentNav
+        ? isAppleNativeShell()
+          ? // iOS app (App Store 3.1.1): no Plans/Pricing entry; Settings keeps the dock at four items.
+            [...studentNav.filter((item) => item.to !== "/app/plans"), { to: "/app/settings", label: "layout.navSettings", short: "layout.navSettings", icon: Settings }]
+          : studentNav
         : [
             {
               to: "/app",

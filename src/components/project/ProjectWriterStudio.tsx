@@ -24,6 +24,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { isAppleNativeShell } from "../../lib/platform";
 import type {
   ProjectDNA,
   ProjectAccess,
@@ -410,7 +411,8 @@ export function ProjectWriterStudio({
           </div>
         </section>
       )}
-      {document.accessTier === "preview" && (
+      {/* iOS app (App Store 3.1.1): no unlock/upgrade prompt; owners of a plan still see "complete pages". */}
+      {document.accessTier === "preview" && (access?.unlocked || !isAppleNativeShell()) && (
         <section className="rounded-[24px] border border-warning/30 bg-warning/10 p-4 md:p-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">

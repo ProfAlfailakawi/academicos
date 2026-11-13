@@ -25,6 +25,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { isAppleNativeShell } from "../lib/platform";
 
 type SettingsTab = "look" | "profile" | "billing" | "security";
 const SETTINGS_TABS: ReadonlyArray<readonly [SettingsTab, string]> = [
@@ -387,6 +388,8 @@ export function Settings() {
             {joinMessage && <p className="text-xs muted mt-3">{joinMessage}</p>}
           </CardContent>
         </Card>
+        {/* iOS app (App Store 3.1.1): no payment gateway or plans link. */}
+        {!isAppleNativeShell() && (
         <Card className={` ${tabCls("billing")}`}>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -415,6 +418,7 @@ export function Settings() {
             <Button className="mt-4" asChild><Link to="/app/plans">{t("settings.viewPlans")}</Link></Button>
           </CardContent>
         </Card>
+        )}
         <Card className={`lg:col-span-2 ${tabCls("billing")}`}>
           <CardContent>
             <div className="flex items-center gap-2">

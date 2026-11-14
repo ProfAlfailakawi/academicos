@@ -63,3 +63,16 @@ test('locale bootstrap switches direction per locale with an Arabic fallback', a
   assert.deepEqual(await runBootstrap({ saved: 'tr', languages: ['ar'] }).then((r) => [r.lang, r.dir]), ['tr', 'ltr']);
   assert.deepEqual(await runBootstrap({ throws: true }).then((r) => [r.lang, r.dir]), ['ar', 'rtl']);
 });
+
+test('authDomain follows the serving host only for the explicit allowlist', async () => {
+  const { resolveAuthDomain } = await import('../src/lib/auth-domain');
+  const cfg = 'academicos-3991f.firebaseapp.com';
+  assert.equal(resolveAuthDomain(cfg, 'academicos-edu.web.app'), 'academicos-edu.web.app');
+  assert.equal(resolveAuthDomain(cfg, 'ACADEMICOS-EDU.web.app:443'), 'academicos-edu.web.app');
+  assert.equal(resolveAuthDomain(cfg, 'localhost'), cfg);
+  assert.equal(resolveAuthDomain(cfg, 'localhost:3000'), cfg);
+  assert.equal(resolveAuthDomain(cfg, 'academicos-edu.web.app.evil.com'), cfg);
+  assert.equal(resolveAuthDomain(cfg, 'academicos-app-522016905178.europe-west2.run.app'), cfg);
+  assert.equal(resolveAuthDomain(cfg, undefined), cfg);
+  assert.equal(authDomainFrameSource(resolveAuthDomain(cfg, 'academicos-edu.web.app')), ' https://academicos-edu.web.app');
+});

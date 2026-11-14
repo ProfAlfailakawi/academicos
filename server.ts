@@ -126,6 +126,7 @@ import {
   privilegedMfaRequired,
   validFutureIso,
 } from "./src/server/security-controls";
+import { resolveAuthDomain } from "./src/lib/auth-domain";
 import { ocrStatus, runOcr } from "./src/server/ocr";
 import { fairUseMetrics, finalizeFreeBenefit, reserveFreeBenefit, type FairUseReservation } from "./src/server/abuse-guard";
 import { isUnsafeDocId } from "./src/server/doc-id";
@@ -2050,7 +2051,10 @@ async function startServer() {
           ? ` ${new URL(configuredEmulator).origin}`
           : "";
     const authFrame = authDomainFrameSource(
-      process.env.VITE_FIREBASE_AUTH_DOMAIN || appletConfig.authDomain || "",
+      resolveAuthDomain(
+        process.env.VITE_FIREBASE_AUTH_DOMAIN || appletConfig.authDomain || "",
+        String(req.headers['x-forwarded-host'] || req.headers.host || "").split(",")[0],
+      ),
     );
     const csp = `default-src 'self' data: blob:; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src ${devScript}; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'${devConnect} https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://orbitq8.web.app; frame-src 'self'${authFrame} https://www.google.com https://recaptcha.google.com https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'`;
     res.setHeader(

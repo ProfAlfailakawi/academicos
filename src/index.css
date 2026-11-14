@@ -116,6 +116,15 @@ svg.lucide {
   vector-effect: non-scaling-stroke;
 }
 
+/* A `grid` whose column template only starts at a breakpoint (md:grid-cols-N) has one
+   implicit auto column that grows to its widest child, so a long input or a
+   datetime field pushed the whole form past the card on a 320-380px phone.
+   Letting those children shrink fixes the class at the root; the components
+   layer loses to any `min-w-*` utility, so deliberate widths still win. */
+@layer components {
+  .grid:not([class*="grid-flow-"], [class*="auto-cols-"]) > * { min-width: 0; }
+}
+
 @layer components {
   .app-surface {
     @apply min-h-screen;
@@ -919,6 +928,9 @@ html[data-locale="ur"] :is(p, li, dd, .body-copy, .academic-text) { line-height:
     white-space: normal;
     text-overflow: clip;
     overflow: visible;
+    /* overflow:visible gives back the flex item's automatic min width, so a
+       long unbroken URL/DOI pushed its card wider than the phone. */
+    min-width: 0;
   }
   .app-main .line-clamp-2, .app-main .line-clamp-1, .app-main .line-clamp-3 {
     -webkit-line-clamp: unset; display: block; overflow: visible;
@@ -1214,3 +1226,9 @@ label:has(> input[type="checkbox"]:not(.sr-only)), label:has(> input[type="radio
 .app-sidebar :where(a, button), .predictive-chip { min-height: 40px; }
 summary { min-height: 40px; }
 /* Duo / mid-width layout lives in duo.css (width-based; posture queries were a no-op by default). */
+
+/* "More" disclosure in the project workspace: the active tool's long name
+   (e.g. the red-team tool) made the summary wider than a 320px screen. */
+.workspace-more { max-width: 100%; min-width: 0; }
+.workspace-more > summary { max-width: 100%; }
+.workspace-more__current { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

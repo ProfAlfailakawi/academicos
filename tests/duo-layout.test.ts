@@ -116,7 +116,7 @@ function matches(query: string, w: number, h: number): boolean {
 
 test('book = landscape only: portrait inner screen is a single column, iPads and phones are untouched', async () => {
   const s = await css('duo-edges.css');
-  const spreads = (s.match(/@media[^{]*min-width: 721px[^{]*\{/g) ?? []).filter((q) => q.includes('min-height: 520px') && !q.includes('display-mode'));
+  const spreads = (s.match(/@media[^{]*min-width: 721px[^{]*\{/g) ?? []).filter((q) => q.includes('min-height: 520px') && !q.includes('(orientation: portrait)'));
   assert.ok(spreads.length >= 2, 'book queries found');
   for (const q of spreads) assert.equal(q.replace(/^@media /, '').replace(/\s*\{$/, ''), BOOK);
   // no book/spread branch for 640-720 portrait survives in any stylesheet
@@ -133,18 +133,25 @@ test('book = landscape only: portrait inner screen is a single column, iPads and
   assert.doesNotMatch(beauty, /min-width: 761px/);
 });
 
-test('system widget keep-out: one token pair, inside DUO INNER + standalone only, physical right', async () => {
+test('system widget keep-out: one token pair, inside DUO INNER only (tab and installed app), physical right', async () => {
   const s = await css('duo-edges.css');
   const defs = s.match(/--duo-cutout-w: 116px; --duo-cutout-h: 116px;/g) ?? [];
   assert.equal(defs.length, 1, 'tokens defined once');
   const at = s.indexOf('--duo-cutout-w: 116px');
   const head = s.slice(s.lastIndexOf('@media', at), at);
-  const BOOKQ = 'screen and (display-mode: standalone) and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape)';
-  const PORTQ = 'screen and (display-mode: standalone) and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait)';
+  const BOOKQ = 'screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape)';
+  const PORTQ = 'screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait)';
   assert.ok(head.includes(BOOKQ) && head.includes(PORTQ), 'keep-out scope');
-  // every keep-out rule block is standalone-only, so ordinary browsers and phones never reserve the corner
+  // every keep-out rule block is scoped to the Duo inner screen by size alone: no display-mode anywhere
   const sec = s.slice(s.indexOf('10) System widget keep-out'));
-  for (const q of sec.match(/@media [^{]*\{/g) ?? []) assert.match(q, /display-mode: standalone/, q);
+  assert.doesNotMatch(s.slice(s.indexOf('*/', s.indexOf('10) System widget keep-out'))).replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode/);
+  const queries = (sec.match(/@media [^{]*\{/g) ?? []).map((q) => q.replace(/^@media /, '').replace(/\s*\{$/, ''));
+  assert.ok(queries.length >= 3, 'keep-out blocks found');
+  for (const q of queries) assert.ok(q === BOOKQ || q === PORTQ || q === `${BOOKQ},\n       ${PORTQ}`, q);
+  // the real queries, evaluated: the keep-out hits the inner screen only
+  const all = `${BOOKQ}, ${PORTQ}`;
+  for (const [w, h] of [[951, 669], [951, 585], [669, 867], [720, 900], [722, 585], [660, 800]]) assert.ok(matches(all, w, h), `${w}x${h} gets the keep-out`);
+  for (const [w, h] of [[390, 844], [844, 390], [932, 430], [744, 1024], [820, 1180], [1024, 768], [1180, 820], [1280, 800], [1440, 900], [367, 740], [951, 350]]) assert.ok(!matches(all, w, h), `${w}x${h} must not get the keep-out`);
   assert.match(sec, /--bar-h: var\(--duo-cutout-h\)/);
   assert.match(sec, /padding-right: calc\(var\(--pg-edge\) \+ var\(--duo-cutout-w\)\)/);
   assert.match(sec, /\.app-shell \.app-sidebar--desktop \{ padding-top: calc\(var\(--duo-cutout-h\)/);

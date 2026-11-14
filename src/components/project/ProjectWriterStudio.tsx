@@ -458,7 +458,7 @@ export function ProjectWriterStudio({
                   <Button size="sm" variant="outline" onClick={saveSection} disabled={actionBusy === "save" || draft === section?.content}>{actionBusy === "save" ? <InlineLoader size={14}/> : <Save size={14} />} {t("writer.save")}</Button>
                 </div>
               </div>
-              <div className="writer-toolbar px-3 md:px-5 py-3 border-b hairline flex gap-2 overflow-x-auto">
+              <div className="writer-toolbar px-3 md:px-5 py-3 border-b hairline flex flex-wrap md:flex-nowrap gap-2 md:overflow-x-auto">
                 {actionButtons.map(({ action, labelKey, icon: Icon, apply }) => (
                   <button key={action} type="button" onClick={() => runAction(action, apply)} disabled={Boolean(actionBusy)} className="writer-action focus-ring rounded-xl border hairline px-3 py-2 shrink-0 inline-flex items-center gap-2 text-meta font-semibold whitespace-nowrap">
                     {actionBusy === action ? <InlineLoader size={14}/> : !access?.canWriteFull ? <LockKeyhole size={14} /> : <Icon size={14} />}{t(labelKey)}

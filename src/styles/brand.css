@@ -275,7 +275,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 .onboard-frame { container-type: inline-size; }
 .onboard-shell {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   min-height: min(720px, calc(100svh - 12rem));
   border: 1px solid var(--line);
   border-radius: 28px;
@@ -433,6 +433,7 @@ html[dir="rtl"] .onboarding-invite__fill {
 }
 @media (min-width: 640px) { .onboard-main { padding: 2.25rem 2rem 2.5rem; } }
 @container (min-width: 940px) { .onboard-main { padding: 2.75rem 2.85rem; } }
+.onboard-shell > * { min-width: 0; }
 .onboard-body { width: 100%; max-width: 42rem; margin-inline: auto; }
 
 .onboard-steps {

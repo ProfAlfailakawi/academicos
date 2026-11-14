@@ -1065,13 +1065,13 @@ function AuditModal({
   return (
     <Modal title={t("pw.submissionReady")} onClose={onClose}>
       <div className="rounded-2xl brand-soft-bg p-5">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <ProgressRing playKey={`audit-ring:${audit.id}`} pct={audit.score ?? 0} size={88} stroke={9} tone={audit.status === "ready" || audit.status === "mostly_ready" ? "success" : audit.status === "needs_attention" ? "warning" : "danger"} label={`${audit.score ?? 0}%`}>
             <span className="text-xl font-semibold mono-number"><DnaCountUp value={audit.score ?? 0} format={(n) => `${n}%`} playKey={`audit-n:${audit.id}`} duration={800} /></span>
           </ProgressRing>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-40">
             <div className="text-meta muted">{t("pw.result")}</div>
-            <div className="text-2xl font-semibold mt-1">{label}</div>
+            <div className="text-xl sm:text-2xl font-semibold mt-1">{label}</div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta muted">
               <span className="inline-flex items-center gap-1.5"><SeverityDot tone="danger" />{audit.blockingIssues ?? 0} {t("pw.blocking")}</span>
               <span className="inline-flex items-center gap-1.5"><SeverityDot tone="warning" />{audit.warnings ?? 0} {t("pw.warning")}</span>

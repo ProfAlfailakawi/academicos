@@ -122,3 +122,25 @@ test('Duo is not an iPad: portrait book width is capped at 720px, landscape book
   const beauty = await css('beauty.css');
   assert.doesNotMatch(beauty, /min-width: 761px/);
 });
+
+test('narrow phones (320-382px): grids cannot be widened by a child, toolbars wrap instead of hiding actions', async () => {
+  const index = await css('index.css');
+  // an implicit auto column (md:grid-cols-N only) grew to its widest child and clipped forms on the folded screen
+  assert.match(index, /\.grid:not\(\[class\*="grid-flow-"\], \[class\*="auto-cols-"\]\) > \* \{ min-width: 0; \}/);
+  const brand = await css('styles/brand.css');
+  assert.match(brand, /\.onboard-shell \{[^}]*grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(brand, /\.onboard-shell > \* \{ min-width: 0; \}/);
+  const studio = await readFile(new URL('../src/components/project/ProjectWriterStudio.tsx', import.meta.url), 'utf8');
+  assert.match(studio, /writer-toolbar[^"]*flex flex-wrap md:flex-nowrap/);
+});
+
+test('wrapped (non-ellipsis) .truncate items can still shrink inside flex rows', async () => {
+  const index = await css('index.css');
+  assert.match(index, /\.app-main \.truncate:not\(\.keep-truncate\) \{[^}]*min-width: 0;/);
+});
+
+test('workspace "more" summary shrinks to the screen and ellipsizes the active tool name', async () => {
+  const index = await css('index.css');
+  assert.match(index, /\.workspace-more > summary \{ max-width: 100%; \}/);
+  assert.match(index, /\.workspace-more__current \{[^}]*text-overflow: ellipsis/);
+});

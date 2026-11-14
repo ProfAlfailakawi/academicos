@@ -206,8 +206,8 @@
    Pure CSS: nothing remounts when the window changes, so typed text,
    selection, scroll and open dialogs survive every fold.
    ========================================================================== */
-@media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px),
-       screen and (min-width: 761px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
+@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px),
+       screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
   :root {
     --spine: 32px;
     --pg: calc(50vw - var(--spine) / 2);
@@ -388,7 +388,7 @@
 
 /* Portrait book (about 669x867): the left page is tall and narrow, so the menu
    folds into a small dock at its foot instead of eating a column. */
-@media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px) {
+@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) {
   .app-shell:has(.duo-book) .app-sidebar--desktop {
     top: auto; bottom: calc(10px + var(--sa-b)); height: 60px;
     inset-inline-end: calc(var(--pg-edge) + var(--sa-end));
@@ -492,8 +492,8 @@
    9) Book spread for the public side (sign-in, landing, documents). Same
    geometry as §7: pages meet at the middle with the spine between them.
    ========================================================================== */
-@media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px),
-       screen and (min-width: 761px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
+@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px),
+       screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
   :is(.public-shell, .auth-shell, .public-page, .duo-doc, .duo-card-page, main:has(> .duo-doc-flow))::after {
     content: ""; position: fixed; inset-block: 0; left: calc(50% - var(--spine) / 2); width: var(--spine);
     z-index: 45; pointer-events: none;

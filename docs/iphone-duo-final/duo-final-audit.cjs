@@ -111,7 +111,7 @@ const SCREENS = [
 /* ---------------- in-page measurement ---------------- */
 function measure(opts) {
   const vw = innerWidth, vh = innerHeight, de = document.documentElement;
-  const SPREAD = '(min-width: 640px) and (max-width: 760px) and (min-height: 520px), (min-width: 761px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3)';
+  const SPREAD = '(min-width: 640px) and (max-width: 720px) and (min-height: 520px), (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3)';
   const LAPTOP = '(min-width: 520px) and (max-width: 1023.98px) and (max-height: 420px)';
   const spread = matchMedia(SPREAD).matches, laptop = matchMedia(LAPTOP).matches;
   const desc = (el) => { const t = (el.getAttribute('aria-label') || el.textContent || el.getAttribute('placeholder') || '').trim().replace(/\s+/g, ' ').slice(0, 40); const c = (typeof el.className === 'string' ? el.className : '').split(/\s+/).filter(Boolean).slice(0, 3).join('.'); return `${el.tagName.toLowerCase()}${c ? '.' + c : ''}${t ? ` "${t}"` : ''}`; };
@@ -316,7 +316,7 @@ function flush(report) {
     // print at ~658px: the book spread and laptop bar are screen-only
     await p.keyboard.press('Escape').catch(() => {});
     await p.setViewportSize({ width: 658, height: 900 }); await p.emulateMedia({ media: 'print' }); await p.waitForTimeout(300);
-    const print = await p.evaluate(() => ({ spreadQueryMatches: matchMedia('screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px)').matches, bookDisplay: getComputedStyle(document.querySelector('.duo-book') || document.body).display, spineShown: getComputedStyle(document.querySelector('.app-shell'), '::after').content !== 'none' && getComputedStyle(document.querySelector('.app-shell'), '::after').content !== '', overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+    const print = await p.evaluate(() => ({ spreadQueryMatches: matchMedia('screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px)').matches, bookDisplay: getComputedStyle(document.querySelector('.duo-book') || document.body).display, spineShown: getComputedStyle(document.querySelector('.app-shell'), '::after').content !== 'none' && getComputedStyle(document.querySelector('.app-shell'), '::after').content !== '', overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
     await p.emulateMedia({ media: 'screen' });
     report.live = { print, reloadsOrNavigations: navs, markerKept: steps.every((s) => s.marker === marker), textKept: steps.every((s) => s.value === 'نص تجريبي يجب أن يبقى بعد كل طيّة'), selectionKept: steps.every((s) => s.sel && s.sel[0] === 4 && s.sel[1] === 9), steps, dialog: dlg };
     console.log('live', JSON.stringify({ navs, markerKept: report.live.markerKept, textKept: report.live.textKept, selectionKept: report.live.selectionKept }));

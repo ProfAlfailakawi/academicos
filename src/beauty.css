@@ -318,11 +318,10 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
    footer (avatar + sign-out icon), bottom fade as the scroll cue, and room
    under the menu equal to the footer so no item hides behind it.
    ========================================================================== */
-/* Not in the book spread (duo-edges.css §7: 640-720 or 721-1000 at 4:3+, 520px+
+/* Not in the book spread (duo-edges.css §7: landscape, 721-1000 wide, 520-960
    tall), where the menu is a labelled left page and nothing is pinned. */
 @media (min-width: 600px) and (max-width: 1100px) and (max-height: 519.98px),
        (min-width: 600px) and (max-width: 639.98px) and (max-height: 700px),
-       (min-width: 721px) and (max-width: 1000px) and (max-height: 700px) and (max-aspect-ratio: 1333/1000),
        (min-width: 1000.02px) and (max-width: 1100px) and (max-height: 700px),
        (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .app-sidebar--desktop > div > nav { padding-bottom: 12px; }
@@ -346,7 +345,6 @@ select.field:focus { border-color: color-mix(in srgb, var(--brand) 58%, var(--li
 }
 @media (min-width: 600px) and (max-width: 899.98px) and (max-height: 519.98px),
        (min-width: 600px) and (max-width: 639.98px) and (max-height: 700px),
-       (min-width: 721px) and (max-width: 899.98px) and (max-height: 700px) and (max-aspect-ratio: 1333/1000),
        (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .app-shell .app-sidebar--desktop .rail-user { flex-direction: column; }
 }

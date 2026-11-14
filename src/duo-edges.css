@@ -134,6 +134,23 @@
   }
 }
 
+/* Public information pages: their header strip and text column keep clear of
+   both edges' insets at every width (they used fixed 16/32px gutters), and the
+   header bar may wrap at large text sizes instead of pushing the page sideways. */
+.duo-doc > div:first-child,
+.duo-doc > main > div:first-child {
+  padding-left: calc(1rem + var(--sa-l));
+  padding-right: calc(1rem + var(--sa-r));
+}
+@media (min-width: 768px) {
+  .duo-doc > div:first-child,
+  .duo-doc > main > div:first-child {
+    padding-left: calc(2rem + var(--sa-l));
+    padding-right: calc(2rem + var(--sa-r));
+  }
+}
+.public-bar { flex-wrap: wrap; }
+
 /* ---- 4) Sign-in on short windows (folded screen sideways ~594x368, opened
    sideways with a pinned panel ~951x350): the language row, the home link and
    the lock tile pushed the first field to the fold. Height decides here. */
@@ -215,18 +232,17 @@
 
   /* ---- Shell frame -------------------------------------------------------- */
   .app-shell .app-content { margin-inline: 0; width: 100%; }
-  .app-shell .mobile-dock { display: none !important; }
 
   /* Top bar across the spread, split at the spine. */
   .app-shell .app-topbar {
-    height: calc(var(--bar-h) + var(--sa-t)) !important; min-height: 0;
-    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far) !important;
-    gap: .5rem !important;
+    height: calc(var(--bar-h) + var(--sa-t)) !important; min-height: 0;  /* !important: index.css (max-width 1023) sets height: auto !important */
+    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far) !important;  /* !important: index.css (max-width 767) and §2 here set padding-inline !important */
+    gap: .5rem !important;  /* !important: index.css (max-width 767) sets gap !important */
   }
   .app-shell .app-topbar > .lg\:hidden:first-child,
-  .app-shell .app-topbar > .min-w-0.flex-1 { display: none !important; }
+  .app-shell .app-topbar > .min-w-0.flex-1 { display: none; }
   .app-shell .app-topbar .command-trigger {
-    display: flex !important; flex: 1 1 auto; min-width: 0; max-width: none; height: 44px; border-radius: 14px;
+    display: flex; flex: 1 1 auto; min-width: 0; max-width: none; height: 44px; border-radius: 14px;
   }
   .app-shell .app-topbar .command-trigger span:last-child { display: none; }
   .app-shell .app-topbar .topbar-tools {
@@ -240,15 +256,15 @@
   .app-shell .app-topbar .topbar-tools > :first-child { margin-inline-start: auto; }
   .app-shell .app-topbar .topbar-tools > .border-s { border: 0; padding-inline-start: 0; gap: .375rem; }
   .app-shell .app-topbar .topbar-tools .md\:flex:has(> .tone-tile) { display: none; }
-  .app-shell .app-topbar .topbar-tools .topbar-theme { display: inline-flex !important; }
-  .app-shell .app-topbar .topbar-tools .topbar-logout { display: none !important; }
+  .app-shell .app-topbar .topbar-tools .topbar-theme { display: inline-flex; }
+  .app-shell .app-topbar .topbar-tools .topbar-logout { display: none; }
   .app-shell .app-topbar .topbar-lang { display: block; }
   .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 7.5rem; }
   .app-shell .app-topbar .language-switcher { min-width: 44px; }
 
   /* Banners under the bar belong to the reading page. */
   .app-shell .app-content > :not(.app-topbar):not(.app-main) {
-    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far) !important;
+    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far);
     overflow-x: clip;
   }
   .app-shell .predictive-mobile { overflow: hidden; }
@@ -256,48 +272,48 @@
 
   /* Reading page. */
   .app-shell .app-main {
-    padding-block: 1.25rem 2.5rem !important;
-    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far) !important;
+    padding-block: 1.25rem 2.5rem !important;  /* !important: duo.css sets padding-bottom/padding-block !important at these widths */
+    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-far);
   }
   .app-main .page-title { font-size: clamp(1.7rem, 3.6vw, 2.25rem); }
 
   /* ---- Index spread: the menu is the left page ---------------------------- */
   .app-shell .app-sidebar--desktop {
-    display: flex !important;
     top: calc(var(--bar-h) + var(--sa-t)); bottom: 0;
     inset-inline-start: auto; inset-inline-end: 0;
-    width: var(--pg) !important;
-    padding: 0 0 var(--sa-b) !important;
-    padding-inline-end: var(--sa-end) !important;
-    background: transparent !important; background-image: none !important;
-    border: 0 !important; box-shadow: none !important;
+    width: var(--pg) !important;  /* !important: duo.css/beauty.css set the rail width !important */
+    padding: 0 0 var(--sa-b);
+    padding-inline-end: var(--sa-end);
+    background: transparent !important; background-image: none !important;  /* !important: beauty.css sets the rail background !important */
+    border: 0;
     overflow-y: auto; overscroll-behavior: contain;
   }
+  /* index.css draws the rail shadow per direction and theme (html[dir] / html.dark[dir]); match that weight instead of forcing it */
+  html[dir] .app-shell .app-sidebar.app-sidebar--desktop { box-shadow: none; }
   .app-shell .app-sidebar--desktop > div {
     min-height: 100%; height: auto; overflow: visible;
-    padding: 1rem var(--pg-edge) 1.25rem var(--pg-gut) !important;
+    padding-block: 1rem 1.25rem; padding-inline: var(--pg-gut) var(--pg-edge);
   }
-  html[dir="ltr"] .app-shell .app-sidebar--desktop > div { padding: 1rem var(--pg-gut) 1.25rem var(--pg-edge) !important; }
-  .app-shell .app-sidebar--desktop .rail-label { display: block !important; }
-  .app-shell .app-sidebar--desktop > div > div:first-child { padding: 0 2px 14px !important; }
-  .app-shell .app-sidebar--desktop > div > div:first-child > div { justify-content: flex-start !important; }
+  .app-shell .app-sidebar--desktop .rail-label { display: block !important; }  /* !important: duo.css hides .rail-label !important */
+  .app-shell .app-sidebar--desktop > div > div:first-child { padding: 0 2px 14px; }
+  .app-shell .app-sidebar--desktop > div > div:first-child > div { justify-content: flex-start; }
   .app-shell .app-sidebar--desktop :is(.sidebar-nav-link, .rail-logout) {
-    justify-content: flex-start !important; padding-inline: 14px !important; gap: .75rem !important; min-height: 48px;
+    justify-content: flex-start; padding-inline: 14px; gap: .75rem; min-height: 48px;
   }
-  .app-shell .app-sidebar--desktop .rail-cta { justify-content: center !important; gap: .5rem !important; min-height: 48px; padding-inline: 14px !important; margin-bottom: 1rem !important; }
-  .app-shell .app-sidebar--desktop .rail-logout { justify-content: center !important; }
+  .app-shell .app-sidebar--desktop .rail-cta { justify-content: center; gap: .5rem; min-height: 48px; padding-inline: 14px; margin-bottom: 1rem; }
+  .app-shell .app-sidebar--desktop .rail-logout { justify-content: center; }
   .app-shell .app-sidebar--desktop nav {
-    display: grid; gap: 6px; padding: 8px 0 !important;
-    border-block: 1px solid color-mix(in srgb, var(--line) 80%, transparent) !important;
+    display: grid; gap: 6px; padding: 8px 0;
+    border-block: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
   }
   .app-shell .app-sidebar--desktop .sidebar-nav-link { background-color: color-mix(in srgb, var(--panel) 72%, transparent); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); border-radius: 14px; }
   .app-shell .app-sidebar--desktop .sidebar-nav-link[aria-current="page"] { background: var(--brand); border-color: transparent; }
   .app-shell .app-sidebar--desktop .sidebar-nav-link[aria-current="page"]::after { display: none; }
   .app-shell .app-sidebar--desktop .sidebar-nav-link .rail-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .app-shell .app-sidebar--desktop .rail-user { padding: 10px !important; border: 1px solid var(--line) !important; background: color-mix(in srgb, var(--panel) 80%, transparent); }
-  .app-shell .app-sidebar--desktop .rail-user > div:first-child { justify-content: flex-start !important; }
+  .app-shell .app-sidebar--desktop .rail-user { padding: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 80%, transparent); }
+  .app-shell .app-sidebar--desktop .rail-user > div:first-child { justify-content: flex-start; }
   .app-shell .app-sidebar--desktop .rail-user .rail-label > div:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .app-shell .app-sidebar--desktop .sidebar-nav-link::before { display: none !important; }
+  .app-shell .app-sidebar--desktop .sidebar-nav-link::before { display: none; }
   .app-shell .app-sidebar--desktop > div > div.mt-auto { position: static; background: none; padding: 1rem 0 0; }
   .app-shell .app-sidebar--desktop > div > div.mt-auto::before { display: none; }
 
@@ -313,39 +329,39 @@
   .app-main .dna-headact > .flex { flex-wrap: wrap; }
 
   /* ---- Book spread: the page brings its own context ----------------------- */
-  .app-shell:has(.duo-book) .app-sidebar--desktop { width: calc(var(--duo-rail) + var(--sa-end)) !important; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div { padding: .75rem 10px 1rem !important; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-label { display: none !important; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child { padding: 0 0 12px !important; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child > div { justify-content: center !important; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop { width: calc(var(--duo-rail) + var(--sa-end)) !important; }  /* !important: duo.css/beauty.css set the rail width !important */
+  .app-shell:has(.duo-book) .app-sidebar--desktop > div { padding: .75rem 10px 1rem; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-label { display: none !important; }  /* !important: beauty.css (900-1023) shows .rail-label !important */
+  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child { padding: 0 0 12px; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child > div { justify-content: center; }
   .app-shell:has(.duo-book) .app-sidebar--desktop :is(.sidebar-nav-link, .rail-cta, .rail-logout) {
-    justify-content: center !important; padding-inline: 0 !important; gap: 0 !important;
+    justify-content: center; padding-inline: 0; gap: 0;
   }
-  .app-shell:has(.duo-book) .app-sidebar--desktop nav { border-block: 0 !important; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop nav { border-block: 0; }
   .app-shell:has(.duo-book) .app-sidebar--desktop .sidebar-nav-link { background-color: transparent; border-color: transparent; }
   .app-shell:has(.duo-book) .app-sidebar--desktop .sidebar-nav-link[aria-current="page"] { background: var(--brand); }
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user { padding: 6px !important; border: 0 !important; background: transparent; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user { padding: 6px; border: 0; background: transparent; }
   /* the avatar is not a control; the slim rail keeps only sign-out */
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user > div:first-child { display: none !important; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user > div:first-child { display: none; }
   .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user .rail-logout { margin-top: 0; }
   .app-shell:has(.duo-book) .app-main {
-    padding-inline-end: calc(var(--duo-rail) + var(--sa-end) + 6px) !important;
+    padding-inline-end: calc(var(--duo-rail) + var(--sa-end) + 6px);
   }
   .duo-book {
-    display: grid !important;
+    display: grid;
     grid-template-columns: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-start)) minmax(0, 1fr);
     grid-template-rows: repeat(14, auto) 1fr;
     column-gap: calc(var(--spine) + 2 * var(--pg-gut));
-    row-gap: 0 !important;
+    row-gap: 0;
     align-items: start;
   }
   /* A two-pane grid already inside the page (xl:grid-cols-[…]) lends its
      columns to the spread: it steps aside and its context child becomes the page. */
   .duo-book > .duo-unwrap { display: contents; }
-  .duo-book > *, .duo-book > .duo-unwrap > * { grid-column: 1; min-width: 0; margin-block: 0 !important; }
+  .duo-book > *, .duo-book > .duo-unwrap > * { grid-column: 1; min-width: 0; margin-block: 0; }
   .duo-book > :not(.duo-aside) ~ :not(.duo-aside),
-  .duo-book > .duo-unwrap > :not(.duo-aside) { margin-block-start: 1.25rem !important; }
-  .duo-book > .duo-unwrap:first-child > :first-child { margin-block-start: 0 !important; }
+  .duo-book > .duo-unwrap > :not(.duo-aside) { margin-block-start: 1.25rem; }
+  .duo-book > .duo-unwrap:first-child > :first-child { margin-block-start: 0; }
   .duo-book > .duo-aside, .duo-book > .duo-unwrap > .duo-aside {
     grid-column: 2; grid-row: 1 / -1; align-self: start;
     position: sticky; top: calc(var(--bar-h) + var(--sa-t) + 1rem);
@@ -358,51 +374,51 @@
   /* Hero cards sit in one page: text first, the emblem steps aside (beauty.css put them side by side for a full-width card). */
   .app-main .teacher-lite-hero { padding: 1.5rem; }
   .app-main .teacher-lite-hero > .grid { grid-template-columns: minmax(0, 1fr); }
-  .app-main .teacher-lite-hero .hero-shield { display: none !important; }
+  .app-main .teacher-lite-hero .hero-shield { display: none !important; }  /* !important: beauty.css sets .hero-shield display !important */
 
   /* ---- Dialogs open on the reading page; the scrim stays full-screen ------ */
   [role="dialog"][aria-modal="true"]:not(.fixed):not(.app-sidebar--mobile),
   .command-palette {
-    max-width: calc(var(--pg) - 2 * var(--pg-gut)) !important;
+    max-width: calc(var(--pg) - 2 * var(--pg-gut));
     position: relative;
     inset-inline-start: calc(-25vw - var(--spine) / 4);
   }
-  .app-sidebar--mobile { width: min(var(--pg), 340px) !important; }
+  .app-sidebar--mobile { width: min(var(--pg), 340px); }
 }
 
 /* Portrait book (about 669x867): the left page is tall and narrow, so the menu
    folds into a small dock at its foot instead of eating a column. */
 @media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px) {
   .app-shell:has(.duo-book) .app-sidebar--desktop {
-    top: auto !important; bottom: calc(10px + var(--sa-b)); height: 60px;
+    top: auto; bottom: calc(10px + var(--sa-b)); height: 60px;
     inset-inline-end: calc(var(--pg-edge) + var(--sa-end));
-    width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-end)) !important;
-    padding: 0 !important; border-radius: 20px;
-    background: color-mix(in srgb, var(--panel) 94%, transparent) !important;
-    box-shadow: inset 0 0 0 1px var(--line), 0 10px 28px rgb(0 0 0 / .08) !important;
+    width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-end)) !important;  /* !important: duo.css/beauty.css set the rail width !important */
+    padding: 0; border-radius: 20px;
+    background: color-mix(in srgb, var(--panel) 94%, transparent) !important;  /* !important: beauty.css sets the rail background !important */
+    box-shadow: inset 0 0 0 1px var(--line), 0 10px 28px rgb(0 0 0 / .08);
     overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
   }
   .app-shell:has(.duo-book) .app-sidebar--desktop > div {
-    flex-direction: row !important; align-items: center !important; gap: 4px;
-    height: 100%; min-height: 0; padding: 0 8px !important; overflow: visible;
+    flex-direction: row; align-items: center; gap: 4px;
+    height: 100%; min-height: 0; padding: 0 8px; overflow: visible;
   }
   .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child { display: none; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-cta { flex: 0 0 44px; width: 44px; min-height: 44px; height: 44px; margin: 0 !important; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop nav { display: flex; flex-direction: row; gap: 2px; padding: 0 !important; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-cta { flex: 0 0 44px; width: 44px; min-height: 44px; height: 44px; margin: 0; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop nav { display: flex; flex-direction: row; gap: 2px; padding: 0; }
   .app-shell:has(.duo-book) .app-sidebar--desktop .sidebar-nav-link { flex: 0 0 44px; width: 44px; min-height: 44px; height: 44px; }
   .app-shell:has(.duo-book) .app-sidebar--desktop > div > div.mt-auto {
     display: flex; flex-direction: row; align-items: center; gap: 2px;
-    margin: 0 !important; margin-inline-start: auto !important; padding: 0 !important;
+    margin: 0; margin-inline-start: auto; padding: 0;
   }
   .app-shell:has(.duo-book) .app-sidebar--desktop > div > div.mt-auto > a.sidebar-nav-link { margin: 0; }
   /* Sign-out moves up to the tools (theme stays one tap away in Settings). */
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user { display: none !important; }
-  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-logout { display: inline-flex !important; }
-  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-theme { display: none !important; }
-  .app-shell:has(.duo-book) .app-main { padding-inline-end: calc(var(--pg-edge) + var(--sa-end)) !important; }
+  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user { display: none; }
+  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-logout { display: inline-flex; }
+  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-theme { display: none; }
+  .app-shell:has(.duo-book) .app-main { padding-inline-end: calc(var(--pg-edge) + var(--sa-end)); }
   .duo-book .duo-aside { max-height: calc(100dvh - var(--bar-h) - var(--sa-t) - 96px - var(--sa-b)); }
   /* The tools share a 290px page: the theme switch waits in Settings, the demo role reads short. */
-  .app-shell .app-topbar .topbar-tools .topbar-theme { display: none !important; }
+  .app-shell .app-topbar .topbar-tools .topbar-theme { display: none; }
   .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 5.25rem; }
   /* A 290px page is a phone-width column: rows written "column, side by side from
      640px" stay a column here (the window is wide, the page is not). */
@@ -427,36 +443,36 @@
    ========================================================================== */
 @media screen and (min-width: 520px) and (max-width: 1023.98px) and (max-height: 420px) {
   :root { --lap-bar: 58px; --dock-w: clamp(250px, 40vw, 380px); }
-  .app-shell .app-sidebar--desktop { display: none !important; }
+  .app-shell .app-sidebar--desktop { display: none !important; }  /* !important: duo.css shows the rail with display: flex !important */
   .app-shell .app-content { margin-inline: 0; width: 100%; }
 
   .app-shell .app-topbar {
-    position: fixed !important; top: auto; bottom: 0; z-index: 41;
+    position: fixed; top: auto; bottom: 0; z-index: 41;
     inset-inline-start: var(--dock-w); inset-inline-end: 0;
-    height: calc(var(--lap-bar) + var(--sa-b)) !important; min-height: 0;
-    padding-top: 0 !important; padding-bottom: var(--sa-b);
-    padding-inline: .5rem calc(.75rem + var(--sa-end)) !important;
-    gap: .375rem !important;
+    height: calc(var(--lap-bar) + var(--sa-b)) !important; min-height: 0;  /* !important: index.css (max-width 1023) sets height: auto !important */
+    padding-top: 0; padding-bottom: var(--sa-b);
+    padding-inline: .5rem calc(.75rem + var(--sa-end)) !important;  /* !important: index.css (max-width 767) and §2 here set padding-inline !important */
+    gap: .375rem !important;  /* !important: index.css (max-width 767) sets gap !important */
     border-bottom: 0; border-top: 1px solid var(--line);
     background: color-mix(in srgb, var(--panel) 92%, transparent);
   }
-  .app-shell .app-topbar > .min-w-0.flex-1 > * { display: none !important; }
+  .app-shell .app-topbar > .min-w-0.flex-1 > * { display: none; }
   .app-shell .app-topbar .md\:flex:has(> .tone-tile) { display: none; }
-  .app-shell .app-topbar .command-trigger { width: 44px; min-width: 44px !important; height: 44px; flex: 0 0 auto; padding: 0; justify-content: center; }
+  .app-shell .app-topbar .command-trigger { width: 44px; min-width: 44px; height: 44px; flex: 0 0 auto; padding: 0; justify-content: center; }
   .app-shell .app-topbar .command-trigger span { display: none; }
   /* The menu button opens every destination the dock has no room for. */
-  .app-shell .app-topbar > .lg\:hidden:first-child { display: inline-flex !important; }
+  .app-shell .app-topbar > .lg\:hidden:first-child { display: inline-flex; }
   .app-shell .app-main :is(.text-5xl, .md\:text-5xl, .md\:text-\[34px\]) { font-size: clamp(1.6rem, 3.4vw, 2.1rem); line-height: 1.2; }
 
   .app-shell .mobile-dock {
-    display: block !important;
-    inset-inline: auto !important; left: auto !important; right: auto !important;
-    inset-inline-start: 0 !important; bottom: 0;
+    display: block !important;  /* !important: duo.css hides the dock with display: none !important */
+    inset-inline: auto !important; left: auto !important; right: auto !important;  /* !important: index.css and §2 here place the dock with !important insets */
+    inset-inline-start: 0 !important; bottom: 0;  /* !important: index.css and §2 here place the dock with !important insets */
     width: var(--dock-w);
     height: calc(var(--lap-bar) + var(--sa-b));
-    padding: 4px 6px var(--sa-b) !important; padding-inline-start: calc(6px + var(--sa-start)) !important;
-    border-radius: 0 !important; border: 0; border-top: 1px solid var(--line);
-    box-shadow: none !important;
+    padding: 4px 6px var(--sa-b) !important; padding-inline-start: calc(6px + var(--sa-start)) !important;  /* !important: index.css sets the dock padding !important */
+    border-radius: 0; border: 0; border-top: 1px solid var(--line);
+    box-shadow: none;
     background: color-mix(in srgb, var(--panel) 92%, transparent);
   }
   .app-shell .mobile-dock > .grid { height: 100%; align-items: center; }
@@ -467,8 +483,8 @@
 
   html { scroll-padding-bottom: calc(var(--lap-bar) + var(--sa-b) + 12px); }
   .app-shell .app-main {
-    padding-top: .875rem !important;
-    padding-bottom: calc(var(--lap-bar) + var(--sa-b) + 1.25rem) !important;
+    padding-top: .875rem !important;  /* !important: duo.css sets padding-top/padding-block !important */
+    padding-bottom: calc(var(--lap-bar) + var(--sa-b) + 1.25rem) !important;  /* !important: duo.css and index.css set padding-bottom !important */
   }
 }
 
@@ -495,11 +511,11 @@
   }
   .auth-shell > .auth-visual h1 { font-size: clamp(1.9rem, 4.4vw, 2.75rem); }
   .auth-shell > main {
-    grid-column: 1; grid-row: 1; flex-direction: column !important; justify-content: center;
-    padding-block: calc(1.25rem + var(--sa-t)) calc(1.25rem + var(--sa-b)) !important;
-    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-gut) !important;
+    grid-column: 1; grid-row: 1; flex-direction: column; justify-content: center;
+    padding-block: calc(1.25rem + var(--sa-t)) calc(1.25rem + var(--sa-b));
+    padding-inline: calc(var(--pg-edge) + var(--sa-start)) var(--pg-gut);
   }
-  .auth-shell > main > .self-end { position: static !important; align-self: flex-end; order: 0; }
+  .auth-shell > main > .self-end { position: static; align-self: flex-end; order: 0; }
   .auth-shell .auth-card { max-width: none; }
   .auth-shell .auth-card > div { padding: 1.25rem 1.25rem 1.5rem; }
 
@@ -509,13 +525,13 @@
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
     column-gap: calc(var(--spine) + 2 * var(--pg-gut)); row-gap: 1.5rem;
     /* symmetric about the middle even when the two edges have different insets */
-    max-width: none; padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important;
+    max-width: none; padding-inline: calc(var(--pg-edge) + var(--sa-x));
   }
   .public-shell main > section > .max-w-7xl > *, .public-shell main > section.max-w-7xl > * { min-width: 0; margin-top: 0; }
   .public-shell main > section#how > .journey-grid { grid-column: 2; grid-row: 1 / span 2; margin: 0; grid-template-columns: 1fr; }
   .public-shell main > section#how > :first-child { text-align: start; }
   .public-shell .student-hero-visual { min-height: 0; }
-  .public-shell h1 { font-size: clamp(2.1rem, 5.6vw, 3.1rem) !important; }
+  .public-shell h1 { font-size: clamp(2.1rem, 5.6vw, 3.1rem); }
   .public-shell main h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); }
   .public-shell .pricing-preview { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: calc(var(--spine) + 2 * var(--pg-gut)); }
   .public-shell .teacher-lite-strip > .max-w-7xl { flex-direction: row; }
@@ -529,11 +545,11 @@
   .public-page > div:first-child,
   .duo-doc > main > div:first-child,
   .duo-doc-flow {
-    max-width: none !important;
+    max-width: none;
     columns: 2; column-gap: calc(var(--spine) + 2 * var(--pg-gut)); column-fill: balance;
   }
-  .public-page { padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important; }
-  main:has(> .duo-doc-flow) { padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important; }
+  .public-page { padding-inline: calc(var(--pg-edge) + var(--sa-x)); }
+  main:has(> .duo-doc-flow) { padding-inline: calc(var(--pg-edge) + var(--sa-x)); }
   :is(.public-page > div:first-child, .duo-doc > main > div:first-child, .duo-doc-flow) > * { break-inside: avoid; }
   /* The header bar runs across the spread (brand right, tools left), the text flows below it. */
   :is(.public-page > div:first-child, .duo-doc-flow) > .public-bar { column-span: all; margin-bottom: 1.5rem; }
@@ -546,13 +562,13 @@
   .public-bar { max-width: none; column-gap: calc(var(--spine) + 2 * var(--pg-gut)); }
   .public-bar > * { max-width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut)); }
   .public-bar__aside .ui-button[data-variant="ghost"] { display: none; }
-  .duo-doc > main > div:first-child { padding-block: 2.5rem 3rem; padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important; }
-  .duo-doc > div:first-child { padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important; }
-  .duo-doc > footer { padding-inline: calc(var(--pg-edge) + var(--sa-x)) !important; }
+  .duo-doc > main > div:first-child { padding-block: 2.5rem 3rem; padding-inline: calc(var(--pg-edge) + var(--sa-x)); }
+  .duo-doc > div:first-child { padding-inline: calc(var(--pg-edge) + var(--sa-x)); }
+  .duo-doc > footer { padding-inline: calc(var(--pg-edge) + var(--sa-x)); }
   .duo-doc > footer > div { max-width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-x)); margin-inline: 0; }
 
   /* One-card pages (MFA set-up): the card on the right page, a quiet brand plate on the left. */
-  .duo-card-page { justify-items: start; padding-inline: calc(var(--pg-edge) + var(--sa-start)) calc(var(--pg) + var(--spine) / 2 + var(--pg-gut)) !important; }
+  .duo-card-page { justify-items: start; padding-inline: calc(var(--pg-edge) + var(--sa-start)) calc(var(--pg) + var(--spine) / 2 + var(--pg-gut)); }
   .duo-card-page > .max-w-xl { max-width: none; }
   .duo-card-page::before {
     content: ""; position: fixed; top: 0; bottom: 0; inset-inline-end: 0; width: var(--pg); pointer-events: none;
@@ -560,26 +576,10 @@
   }
 }
 @media screen and (min-width: 640px) and (max-width: 1023.98px) and (max-height: 420px) {
-  .app-shell .app-topbar .topbar-logout { display: inline-flex !important; }
+  .app-shell .app-topbar .topbar-logout { display: inline-flex; }
 }
 
 /* Slide-deck dots (presentation studio): a long deck wraps its dots between
    the previous/next buttons instead of running past the card edge. Any width. */
 .app-main .flex.gap-1\.5:has(> button.h-2\.5.rounded-full) { flex-wrap: wrap; justify-content: center; min-width: 0; flex: 1 1 0; }
 
-/* Public information pages: their header strip and text column keep clear of
-   both edges' insets at every width (they used fixed 16/32px gutters), and the
-   header bar may wrap at large text sizes instead of pushing the page sideways. */
-.duo-doc > div:first-child,
-.duo-doc > main > div:first-child {
-  padding-left: calc(1rem + var(--sa-l));
-  padding-right: calc(1rem + var(--sa-r));
-}
-@media (min-width: 768px) {
-  .duo-doc > div:first-child,
-  .duo-doc > main > div:first-child {
-    padding-left: calc(2rem + var(--sa-l));
-    padding-right: calc(2rem + var(--sa-r));
-  }
-}
-.public-bar { flex-wrap: wrap; }

@@ -215,7 +215,7 @@ export function PublicPage() {
   if (slug === "pricing" && isAppleNativeShell()) return <Navigate to="/" replace />;
   const c = pages[slug] || pages.about;
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="duo-doc min-h-screen bg-[var(--bg)]">
       <div className="px-4 md:px-8 pt-3">
         <PublicHeader
           className="max-w-7xl"

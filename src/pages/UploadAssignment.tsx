@@ -126,7 +126,7 @@ export function UploadAssignment() {
     setParams({ mode: value });
   }
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="duo-book mx-auto max-w-6xl space-y-6">
       <header className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 rounded-full brand-soft-bg px-3 py-1.5 text-meta font-semibold">
           <Sparkles size={14} />
@@ -157,7 +157,7 @@ export function UploadAssignment() {
           onClick={() => chooseMode("rescue")}
         />
       </div>
-      <div className="grid xl:grid-cols-[1fr_360px] gap-5 items-start">
+      <div className="duo-unwrap grid xl:grid-cols-[1fr_360px] gap-5 items-start">
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <UploadBlock
@@ -256,7 +256,7 @@ export function UploadAssignment() {
             </div>
           </CardContent>
         </Card>
-        <aside className="space-y-4 xl:sticky xl:top-24">
+        <aside className="duo-aside space-y-4 xl:sticky xl:top-24">
           <Card>
             <CardContent>
               <div className="flex items-center gap-2">

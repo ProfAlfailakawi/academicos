@@ -138,7 +138,7 @@ export function LearnStudio() {
     ) : null;
 
   return (
-    <div className="space-y-7">
+    <div className="duo-book space-y-7">
       <PageHeader
         eyebrow={t("ui.examCoach")}
         title={t("learn.heroTitle")}
@@ -157,6 +157,7 @@ export function LearnStudio() {
         }
       />
 
+      <div className="duo-aside space-y-7">
       <Card className="overflow-hidden">
         <CardContent>
           <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-5 items-start">
@@ -190,6 +191,7 @@ export function LearnStudio() {
         { key: "understand", icon: CheckCircle2, title: t("learn.flowUnderstand") },
         { key: "lock", icon: CheckCircle2, title: t("learn.flowLock") },
       ]} />
+      </div>
 
       <div className="flex gap-2">
         {(["explain", "solve"] as Tab[]).map((x) => (

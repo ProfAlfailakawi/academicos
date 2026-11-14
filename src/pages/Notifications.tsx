@@ -197,7 +197,7 @@ export function Notifications() {
     }
   }
   return (
-    <div className="space-y-7">
+    <div className="duo-book space-y-7">
       <PageHeader
         eyebrow={t("notif.eyebrow")}
         title={t("notif.title")}
@@ -272,7 +272,7 @@ export function Notifications() {
           })}
         </CardContent>
       </Card>
-      <div className="grid xl:grid-cols-[1fr_310px] gap-5">
+      <div className="duo-unwrap grid xl:grid-cols-[1fr_310px] gap-5">
         <section>
           <div
             className="flex items-center gap-2 mb-3"
@@ -426,7 +426,7 @@ export function Notifications() {
             />
           )}
         </section>
-        <aside>
+        <aside className="duo-aside">
           <Card>
             <CardContent>
               <details className="notif-prefs">

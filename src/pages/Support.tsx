@@ -49,7 +49,7 @@ export function Support() {
     }
   }
   return (
-    <div className="space-y-6">
+    <div className="duo-book space-y-6">
       <PageHeader
         eyebrow={t("ui.supportSystem")}
         title={t("support.title")}
@@ -60,7 +60,7 @@ export function Support() {
           {error}
         </div>
       )}
-      <div className="grid xl:grid-cols-[.8fr_1.2fr] gap-5">
+      <div className="duo-unwrap grid xl:grid-cols-[.8fr_1.2fr] gap-5">
         <Card>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function Support() {
             </form>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="duo-aside">
           <CardContent>
             <div className="flex items-center justify-between">
               <div>

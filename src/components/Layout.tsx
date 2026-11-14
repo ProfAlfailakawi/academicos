@@ -614,6 +614,9 @@ export function Layout() {
               <ArrowRight size={14} className="shrink-0 muted directional-icon" />
             </button>
           )}
+          {/* أدوات الشريط: «contents» فلا تغيّر شيئًا في أي مقاس، وفي وضع الكتاب
+              (الشاشة الداخلية للـDuo) تنتقل كتلةً واحدة إلى الصفحة اليسرى. */}
+          <div className="topbar-tools contents">
           <div className="topbar-lang hidden sm:block">
             <LanguageSwitcher compact />
           </div>
@@ -698,6 +701,7 @@ export function Layout() {
             >
               <LogOut size={18} />
             </Button>
+          </div>
           </div>
         </header>
 

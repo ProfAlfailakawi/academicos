@@ -122,7 +122,7 @@ export function AssignmentSubmissions() {
     ).length,
     immutable = current?.status === "released";
   return (
-    <div className="space-y-5" data-motion="off">
+    <div className="duo-book space-y-5" data-motion="off">
       <header className="panel-flat rounded-2xl p-5 md:p-6">
         <Link
           to={`/app/course/${course.id}`}
@@ -152,7 +152,7 @@ export function AssignmentSubmissions() {
           {error}
         </div>
       )}
-      <div className="grid xl:grid-cols-[360px_1fr] gap-5 items-start">
+      <div className="duo-unwrap grid xl:grid-cols-[360px_1fr] gap-5 items-start">
         <Card>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export function AssignmentSubmissions() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="duo-aside">
           <CardContent>
             {current && draft ? (
               <>

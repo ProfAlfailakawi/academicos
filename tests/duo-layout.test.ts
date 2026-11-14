@@ -63,7 +63,7 @@ test('book spread: the opened Duo reads as two pages around a spine (screen only
   // the top bar is split: search on the reading page, tools on the context page
   assert.match(s, /\.app-topbar \.topbar-tools \{\s*position: absolute;/);
   // pages bring their context; one grid row track absorbs a tall context page
-  assert.match(s, /\.duo-book \{\s*display: grid !important;[\s\S]*?grid-template-rows: repeat\(14, auto\) 1fr;/);
+  assert.match(s, /\.duo-book \{\s*display: grid;[\s\S]*?grid-template-rows: repeat\(14, auto\) 1fr;/);
   assert.match(s, /\.duo-book > \.duo-aside, \.duo-book > \.duo-unwrap > \.duo-aside \{\s*grid-column: 2; grid-row: 1 \/ -1;/);
   // dialogs: the panel moves to a page, the scrim stays full-screen
   assert.match(s, /\[role="dialog"\]\[aria-modal="true"\]:not\(\.fixed\):not\(\.app-sidebar--mobile\)/);
@@ -76,7 +76,7 @@ test('laptop posture: content on top, one control bar at the bottom that never c
   const block = s.slice(s.indexOf('@media screen and (min-width: 520px) and (max-width: 1023.98px) and (max-height: 420px) {'));
   assert.ok(block.length > 100);
   assert.match(block, /\.app-shell \.app-sidebar--desktop \{ display: none !important; \}/);
-  assert.match(block, /\.app-shell \.app-topbar \{\s*position: fixed !important; top: auto; bottom: 0;/);
+  assert.match(block, /\.app-shell \.app-topbar \{\s*position: fixed; top: auto; bottom: 0;/);
   assert.match(block, /\.app-shell \.mobile-dock \{\s*display: block !important;/);
   assert.match(block, /padding-bottom: calc\(var\(--lap-bar\) \+ var\(--sa-b\) \+ 1\.25rem\) !important;/);
 });
@@ -91,4 +91,12 @@ test('book pages: each page root marked .duo-book carries exactly one context pa
   // the top-bar tools wrapper is display:contents everywhere but the spread
   const layout = await readFile(new URL('../src/components/Layout.tsx', import.meta.url), 'utf8');
   assert.match(layout, /className="topbar-tools contents"/);
+});
+
+test('book/laptop layers: no stacked !important — each one answers an existing !important and says which', async () => {
+  const s = await css('duo-edges.css');
+  const fresh = s.slice(s.indexOf('7) Book spread'));
+  const lines = fresh.split('\n').filter((l) => l.includes('!important'));
+  assert.ok(lines.length <= 24, `${lines.length} !important in the book/laptop layers`);
+  for (const l of lines) assert.match(l, /\/\* !important: .+ \*\//, l.trim());
 });

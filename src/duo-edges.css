@@ -189,9 +189,11 @@
 }
 
 /* ==========================================================================
-   7) Book spread — the opened Duo held like a book (about 669x867 portrait,
-   951x585 landscape). Width x height only: Safari does not expose the hinge,
-   and this repo deliberately keeps posture/segment queries out of layout.
+   7) Book spread — the opened Duo held sideways like a book (about 951x585..669
+   landscape). Only landscape splits into two pages: the portrait inner screen
+   (about 669x867) is an ordinary single column with the 600-1023px rail.
+   Width x height x orientation only: Safari does not expose the hinge, and this
+   repo deliberately keeps posture/segment queries out of layout.
 
    Two pages around a calm spine at the middle of the viewport. Nothing that
    reads or takes a tap (text, field, button, table column) sits in the spine
@@ -206,8 +208,7 @@
    Pure CSS: nothing remounts when the window changes, so typed text,
    selection, scroll and open dialogs survive every fold.
    ========================================================================== */
-@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px),
-       screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
   :root {
     --spine: 32px;
     --pg: calc(50vw - var(--spine) / 2);
@@ -372,6 +373,18 @@
 
   .app-shell .app-main :is(.text-5xl, .md\:text-5xl) { font-size: clamp(1.85rem, 3.7vw, 2.6rem); line-height: 1.18; }
   /* Hero cards sit in one page: text first, the emblem steps aside (beauty.css put them side by side for a full-width card). */
+  /* Counters follow the PAGE (about 430px), not the 951px window the md:/sm: grid classes measure:
+     four read 2x2, three read two per row with the third spanning. */
+  .duo-book .grid.sm\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duo-book .grid.grid-cols-3:not(.notif-rings) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duo-book .grid.grid-cols-3:not(.notif-rings) > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  /* The workspace "more" menu opens inline inside its page (a floating panel would be clipped by
+     the scrolling context page and cross the spine). */
+  .duo-aside .workspace-more[open] { flex-basis: 100%; }
+  .duo-aside .workspace-more > div { position: static; width: 100%; max-width: none; }
+  /* Rows written "column, side by side from sm/md/lg" follow the page (about 430px), not the window. */
+  .app-main :is(.sm\:flex-row, .md\:flex-row, .lg\:flex-row).flex-col { flex-direction: column; align-items: stretch; }
+  .app-main .studio-head { flex-direction: column; align-items: stretch; padding: 1.15rem 1.2rem; }
   .app-main .teacher-lite-hero { padding: 1.5rem; }
   .app-main .teacher-lite-hero > .grid { grid-template-columns: minmax(0, 1fr); }
   .app-main .teacher-lite-hero .hero-shield { display: none !important; }  /* !important: beauty.css sets .hero-shield display !important */
@@ -384,54 +397,6 @@
     inset-inline-start: calc(-25vw - var(--spine) / 4);
   }
   .app-sidebar--mobile { width: min(var(--pg), 340px); }
-}
-
-/* Portrait book (about 669x867): the left page is tall and narrow, so the menu
-   folds into a small dock at its foot instead of eating a column. */
-@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) {
-  .app-shell:has(.duo-book) .app-sidebar--desktop {
-    top: auto; bottom: calc(10px + var(--sa-b)); height: 60px;
-    inset-inline-end: calc(var(--pg-edge) + var(--sa-end));
-    width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-end)) !important;  /* !important: duo.css/beauty.css set the rail width !important */
-    padding: 0; border-radius: 20px;
-    background: color-mix(in srgb, var(--panel) 94%, transparent) !important;  /* !important: beauty.css sets the rail background !important */
-    box-shadow: inset 0 0 0 1px var(--line), 0 10px 28px rgb(0 0 0 / .08);
-    overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-  }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div {
-    flex-direction: row; align-items: center; gap: 4px;
-    height: 100%; min-height: 0; padding: 0 8px; overflow: visible;
-  }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div:first-child { display: none; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-cta { flex: 0 0 44px; width: 44px; min-height: 44px; height: 44px; margin: 0; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop nav { display: flex; flex-direction: row; gap: 2px; padding: 0; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop .sidebar-nav-link { flex: 0 0 44px; width: 44px; min-height: 44px; height: 44px; }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div.mt-auto {
-    display: flex; flex-direction: row; align-items: center; gap: 2px;
-    margin: 0; margin-inline-start: auto; padding: 0;
-  }
-  .app-shell:has(.duo-book) .app-sidebar--desktop > div > div.mt-auto > a.sidebar-nav-link { margin: 0; }
-  /* Sign-out moves up to the tools (theme stays one tap away in Settings). */
-  .app-shell:has(.duo-book) .app-sidebar--desktop .rail-user { display: none; }
-  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-logout { display: inline-flex; }
-  .app-shell:has(.duo-book) .app-topbar .topbar-tools .topbar-theme { display: none; }
-  .app-shell:has(.duo-book) .app-main { padding-inline-end: calc(var(--pg-edge) + var(--sa-end)); }
-  .duo-book .duo-aside { max-height: calc(100dvh - var(--bar-h) - var(--sa-t) - 96px - var(--sa-b)); }
-  /* The tools share a 290px page: the theme switch waits in Settings, the demo role reads short. */
-  .app-shell .app-topbar .topbar-tools .topbar-theme { display: none; }
-  .app-shell .app-topbar .demo-pill .demo-pill__role { max-width: 5.25rem; }
-  /* A 290px page is a phone-width column: rows written "column, side by side from
-     640px" stay a column here (the window is wide, the page is not). */
-  .app-main .flex-col.sm\:flex-row { flex-direction: column; align-items: stretch; }
-  /* Calendar rows in a 290px page: the clock column waits (the date tile already says when). */
-  .calendar-month a > .sm\:flex { display: none; }
-  /* Phone-width page: four counters read 2x2, and the copy-link shortcut waits
-     in the course page exactly as it does below 420px. */
-  .duo-book .grid.sm\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .duo-book .min-\[420px\]\:grid { display: none; }
-  /* Three counters in a 250px column: two per row, the third spans. */
-  .duo-book .grid.grid-cols-3:not(.notif-rings) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .duo-book .grid.grid-cols-3:not(.notif-rings) > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
 /* ==========================================================================
@@ -492,8 +457,7 @@
    9) Book spread for the public side (sign-in, landing, documents). Same
    geometry as §7: pages meet at the middle with the spine between them.
    ========================================================================== */
-@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px),
-       screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3) {
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
   :is(.public-shell, .auth-shell, .public-page, .duo-doc, .duo-card-page, main:has(> .duo-doc-flow))::after {
     content: ""; position: fixed; inset-block: 0; left: calc(50% - var(--spine) / 2); width: var(--spine);
     z-index: 45; pointer-events: none;
@@ -583,3 +547,57 @@
    the previous/next buttons instead of running past the card edge. Any width. */
 .app-main .flex.gap-1\.5:has(> button.h-2\.5.rounded-full) { flex-wrap: wrap; justify-content: center; min-width: 0; flex: 1 1 0; }
 
+
+/* ==========================================================================
+   10) System widget keep-out (installed app on the Duo inner screen).
+   iOS floats a status widget (arrow, clock, ring, dots) over the PHYSICAL
+   top-right corner of the installed app, about 55-80px wide at 20-110px from
+   the edge and down to roughly y=125px. We cannot read its box, so a generous
+   corner is reserved: nothing readable or tappable sits in the top-right
+   --duo-cutout-w x --duo-cutout-h box. Backgrounds and heroes keep running
+   full-bleed behind it; only content steps aside.
+   Scope: the installed app (display-mode: standalone) on the Duo inner screen
+   (book = landscape, or the portrait inner screen). Browser tabs already avoid
+   the widget, and the outer folded screen (about 367x740) cannot be told apart
+   from an ordinary iPhone, which has no such widget: it is deliberately left out.
+   The box is physical: right, whatever the text direction.
+   ========================================================================== */
+@media screen and (display-mode: standalone) and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape),
+       screen and (display-mode: standalone) and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
+  :root { --duo-cutout-w: 116px; --duo-cutout-h: 116px; }
+  /* Dialogs and the search palette: nothing opens under the widget. */
+  .fixed.inset-0:has(> [role="dialog"][aria-modal="true"]),
+  .fixed.inset-0:has(> .command-palette) { padding-top: calc(var(--duo-cutout-h) + var(--sa-t) + 4px); }
+  .fixed.inset-0 > [role="dialog"][aria-modal="true"]:not(.app-sidebar--mobile),
+  [role="dialog"][aria-modal="true"]:not(.fixed):not(.app-sidebar--mobile) {
+    max-height: calc(100dvh - var(--duo-cutout-h) - var(--sa-t) - 1.5rem);
+  }
+  /* Header strip of the public information pages: the brand steps left of the box. */
+  .public-bar { margin-right: var(--duo-cutout-w); min-height: var(--duo-cutout-h); align-items: center; }
+}
+
+/* Book (landscape): the band above both pages is as tall as the keep-out box;
+   the search that opens the right page (the start page, Arabic) stands beside it. */
+@media screen and (display-mode: standalone) and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
+  :root { --bar-h: var(--duo-cutout-h); }
+  html[dir="rtl"] .app-shell .app-topbar { padding-right: calc(var(--pg-edge) + var(--duo-cutout-w)) !important; }  /* !important: the bar's padding-inline is !important in §7 */
+  html:not([dir="rtl"]) .app-shell .app-topbar .topbar-tools { inset-inline-end: calc(var(--pg-edge) + var(--sa-end) + var(--duo-cutout-w)); }
+  /* Right page of an LTR book is the first page: its first row clears the box too. */
+  html:not([dir="rtl"]) .app-shell .app-sidebar--desktop { top: calc(var(--bar-h) + var(--sa-t)); }
+  .auth-shell > main, .auth-shell > .auth-visual { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
+  .public-shell .public-header { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); align-items: center; padding-right: calc(var(--pg-edge) + var(--duo-cutout-w)); }
+}
+
+/* Portrait inner screen: the rail keeps its full-height background but its first
+   item starts under the box; the bar beside it leaves the box's overhang free. */
+@media screen and (display-mode: standalone) and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
+  .app-shell .app-topbar { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); }
+  html[dir="rtl"] .app-shell .app-sidebar--desktop { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
+  html[dir="rtl"] .app-shell .app-topbar { padding-right: calc(var(--duo-cutout-w) - var(--rail-w) + .75rem) !important; }  /* !important: index.css holds the bar's padding to .75rem below 768px */
+  html:not([dir="rtl"]) .app-shell .app-topbar { padding-right: calc(var(--duo-cutout-w) + .75rem) !important; }  /* !important: same rule as above */
+  .app-shell .app-topbar .topbar-logout { display: none; }  /* the rail carries sign-out; the bar gave up 116px of width */
+  .public-shell .public-header { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); align-items: center; padding-right: calc(1rem + var(--duo-cutout-w)); }
+  .auth-shell > main { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
+  .app-shell .app-sidebar--mobile { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
+  .app-shell .app-sidebar--mobile .mobile-menu-close { top: calc(var(--duo-cutout-h) + var(--sa-t) - 52px); }
+}

@@ -111,7 +111,7 @@ const SCREENS = [
 /* ---------------- in-page measurement ---------------- */
 function measure(opts) {
   const vw = innerWidth, vh = innerHeight, de = document.documentElement;
-  const SPREAD = '(min-width: 640px) and (max-width: 720px) and (min-height: 520px), (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3)';
+  const SPREAD = "(min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape)";
   const LAPTOP = '(min-width: 520px) and (max-width: 1023.98px) and (max-height: 420px)';
   const spread = matchMedia(SPREAD).matches, laptop = matchMedia(LAPTOP).matches;
   const desc = (el) => { const t = (el.getAttribute('aria-label') || el.textContent || el.getAttribute('placeholder') || '').trim().replace(/\s+/g, ' ').slice(0, 40); const c = (typeof el.className === 'string' ? el.className : '').split(/\s+/).filter(Boolean).slice(0, 3).join('.'); return `${el.tagName.toLowerCase()}${c ? '.' + c : ''}${t ? ` "${t}"` : ''}`; };

@@ -53,7 +53,7 @@ test('sign-in fits short windows and touch targets hold at every width', async (
   assert.match(s, /:where\(\.min-h-screen\)[^{]*\{ min-height: 100dvh; \}/);
 });
 
-const SPREAD = 'screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px),\n       screen and (min-width: 761px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3)';
+const SPREAD = 'screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px),\n       screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (min-aspect-ratio: 4/3)';
 
 test('book spread: the opened Duo reads as two pages around a spine (screen only, no posture queries)', async () => {
   const s = await css('duo-edges.css');
@@ -99,4 +99,26 @@ test('book/laptop layers: no stacked !important — each one answers an existing
   const lines = fresh.split('\n').filter((l) => l.includes('!important'));
   assert.ok(lines.length <= 24, `${lines.length} !important in the book/laptop layers`);
   for (const l of lines) assert.match(l, /\/\* !important: .+ \*\//, l.trim());
+});
+
+test('Duo is not an iPad: portrait book width is capped at 720px, landscape book at 1000px, all screen-scoped', async () => {
+  // iPad portrait starts at 744px and iPad landscape at 1024px; width is the only signal Safari gives.
+  const s = await css('duo-edges.css');
+  const spreads = (s.match(/@media[^{]*min-width: 640px[^{]*\{/g) ?? []).filter((q) => q.includes('min-height: 520px'));
+  assert.ok(spreads.length >= 3, 'book queries found');
+  for (const q of spreads) {
+    for (const part of q.replace(/^@media /, '').replace(/\s*\{$/, '').split(',')) {
+      assert.match(part.trim(), /^screen and /, part);
+      const min = Number(part.match(/min-width: ([\d.]+)px/)?.[1]);
+      const max = Number(part.match(/max-width: ([\d.]+)px/)?.[1]);
+      const portrait = min === 640;
+      assert.ok(max <= (portrait ? 720 : 1000), `${part}: book posture too wide for the Duo`);
+      assert.ok(portrait || min > 720, `${part}: landscape book overlaps the portrait cap`);
+    }
+  }
+  // laptop posture is height-driven: no iPad viewport (>= 660px tall) can reach it
+  for (const q of s.match(/@media[^{]*max-height: 420px[^{]*\{/g) ?? []) assert.match(q, /^@media screen and /, q);
+  // the pinned-rail carve-out in beauty.css follows the same caps
+  const beauty = await css('beauty.css');
+  assert.doesNotMatch(beauty, /min-width: 761px/);
 });

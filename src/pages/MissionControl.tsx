@@ -217,7 +217,7 @@ export function MissionControl() {
   const onboardingSteps = profile ? ONBOARDING_FIELDS.map((read) => read(profile)) : [];
   const onboardingDone = onboardingSteps.filter(Boolean).length;
   const showOnboardingInvite = Boolean(profile) && !profile?.onboardingCompleted;
-  return <div className="student-home space-y-6 md:space-y-8">
+  return <div className="student-home duo-book space-y-6 md:space-y-8">
     <section className="student-hero panel-flat rounded-[32px] overflow-hidden"><div className="grid lg:grid-cols-[1.03fr_.97fr] items-stretch">
       <div className="p-6 md:p-9 lg:p-11">
         <div className="inline-flex items-center gap-2 rounded-full brand-soft-bg px-3 py-1.5 text-meta font-semibold"><Sparkles size={14}/>{t("mission.smartInbox")}</div>
@@ -260,6 +260,8 @@ export function MissionControl() {
       </div>
     </section>}
 
+    {/* سياق الصفحة: في وضع الكتاب (الشاشة الداخلية للـDuo) يصير الصفحةَ اليسرى. */}
+    <div className="duo-aside space-y-6 md:space-y-8">
     {mission&&<section className="grid xl:grid-cols-[1.25fr_.75fr] gap-5"><Card className="overflow-hidden"><CardContent>
       <div className="flex items-start justify-between gap-4"><div><div className="eyebrow">{t("mission.today")} · {fmtMin(mission.availableMinutes)}</div><h2 className="section-title mt-1">{t("mission.startHere")}</h2><p className="body-copy mt-2">{t(mission.pressure.level==="critical"?"mission.pressureCriticalDesc":mission.pressure.level==="busy"?"mission.pressureBusyDesc":"mission.pressureCalmDesc").replace("{count}",String(mission.pressure.dueWithinSevenDays))}</p></div><span className={`rounded-full px-3 py-1.5 text-meta font-semibold ${mission.pressure.level==="critical"?"bg-danger/10 text-danger":mission.pressure.level==="busy"?"bg-warning/10 text-warning":"brand-soft-bg brand-text"}`}>{t(mission.pressure.level==="critical"?"mission.pressureCritical":mission.pressure.level==="busy"?"mission.pressureBusy":"mission.pressureCalm")}</span></div>
       <div className="mt-5 space-y-2">{mission.actions.slice(0,4).map((action,index)=><Link key={action.id} to={action.path} className="focus-ring rounded-2xl border hairline p-4 flex items-center gap-3 hover:bg-[var(--panel-2)]"><span className="h-10 w-10 rounded-xl tone-tile font-bold mono-number">{index+1}</span><span className="min-w-0 flex-1"><strong className="block text-sm">{action.title}</strong><span className="block text-meta muted mt-1 truncate">{action.projectTitle} · {t("mission.priorityReason")}</span></span><span className="inline-flex items-center gap-1 text-meta muted"><Clock3 size={12}/>{fmtMin(action.estimatedMinutes)}</span><ArrowRight size={15} className="muted directional-icon"/></Link>)}{!mission.actions.length&&<div className="rounded-2xl brand-soft-bg p-6 text-center"><CheckCircle2 size={22} className="mx-auto"/><strong className="block mt-2">{t("mission.noPressure")}</strong><p className="text-xs mt-1 opacity-75">{t("mission.noPressureDesc")}</p></div>}</div>
@@ -281,6 +283,7 @@ export function MissionControl() {
         {ACADEMIC_TOOLS.map((tool)=>{const Icon=tool.icon;return <Link key={tool.to} to={tool.to} className="focus-ring group rounded-2xl border hairline p-3.5 sm:p-4 bg-[var(--bg)] hover:bg-[var(--panel-2)] transition-colors"><span className="h-10 w-10 rounded-xl brand-soft-bg brand-text grid place-items-center"><Icon size={17}/></span><div className="mt-4 flex items-center justify-between gap-2"><strong className="text-sm">{t(tool.label)}</strong><ArrowRight size={14} className="muted directional-icon transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"/></div><p className="sr-only">{t(tool.detail)}</p></Link>})}
       </div>
     </section>
+    </div>
   </div>;
 }
 

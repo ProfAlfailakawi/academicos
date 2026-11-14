@@ -290,7 +290,7 @@ export function CourseOS() {
     0,
   );
   return (
-    <div className="space-y-5">
+    <div className="duo-book space-y-5">
       <header className="panel-flat rounded-2xl p-5 md:p-6">
         <div className="flex flex-col gap-5">
           <div>
@@ -358,8 +358,8 @@ export function CourseOS() {
           {error}
         </div>
       )}
-      <div className="grid xl:grid-cols-[.7fr_1.3fr] gap-5">
-        <div className="space-y-5">
+      <div className="duo-unwrap grid xl:grid-cols-[.7fr_1.3fr] gap-5">
+        <div className="duo-aside space-y-5">
           <Card>
             <CardContent>
               <div className="flex items-center gap-2">

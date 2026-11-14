@@ -304,7 +304,7 @@ export function ProjectWorkspace() {
     else setTab("writer");
   }
   return (
-    <div className="space-y-5">
+    <div className="duo-book space-y-5">
       {location.state?.justCompiled && (
         <div className="brand-soft-bg rounded-xl px-4 py-3 text-sm flex items-start gap-2">
           <CheckCircle2 size={17} className="mt-0.5 shrink-0" />
@@ -322,7 +322,7 @@ export function ProjectWorkspace() {
           {t("offline.projectCopy").replace("{date}", formatDate(offlineCopy, locale, { dateStyle: "medium", timeStyle: "short" }))}
         </div>
       )}
-      <header className="workspace-head">
+      <header className="workspace-head duo-aside">
         <DnaStatusHeader
           as="div"
           divider="dashed"

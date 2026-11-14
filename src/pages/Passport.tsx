@@ -143,7 +143,7 @@ export function Passport() {
     }
   };
   return (
-    <div className="space-y-7">
+    <div className="duo-book space-y-7">
       <PageHeader
         eyebrow={t("ui.academicPassport")}
         title={t("passport.title")}
@@ -158,8 +158,8 @@ export function Passport() {
         <Skeleton shape="panel" />
       ) : (
         <>
-          <div className="grid lg:grid-cols-[330px_1fr] gap-5">
-            <Card className="lg:self-start lg:sticky lg:top-24">
+          <div className="duo-unwrap grid lg:grid-cols-[330px_1fr] gap-5">
+            <Card className="duo-aside lg:self-start lg:sticky lg:top-24">
               <CardContent className="text-center">
                 <div className="flex justify-center">
                   <Seal tone="brand">

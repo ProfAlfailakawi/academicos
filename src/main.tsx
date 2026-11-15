@@ -19,6 +19,11 @@ declare global {
   interface Window { __acosBootReady?: () => void }
 }
 
+// تشخيص ركن الودجت: يُحمَّل فقط مع ?duo-debug=1.
+if (new URLSearchParams(location.search).get('duo-debug') === '1') {
+  void import('./duo-debug').then((m) => requestAnimationFrame(m.mountDuoDebug));
+}
+
 // التحديث الذاتي الصامت: بصمة الإصدار، منارتها، ثم التحديث والتصعيد عند اللزوم.
 installAppUpdate();
 

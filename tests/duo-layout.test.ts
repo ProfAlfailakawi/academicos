@@ -6,7 +6,8 @@ const css = async (f: string) => readFile(new URL(`../src/${f}`, import.meta.url
 
 test('Duo layout is width-based: no posture or viewport-segment queries decide layout', async () => {
   for (const f of ['index.css', 'duo.css', 'final-polish.css', 'motion.css', 'beauty.css', 'duo-edges.css']) {
-    const s = await css(f);
+    // the widget corner (section 10) is the one place that may name the hinge query, to cover a real fold if a browser ever exposes it
+    const s = (await css(f)).replace(/screen and \(horizontal-viewport-segments: 2\)/g, '');
     assert.doesNotMatch(s, /@media[^{]*(device-posture|viewport-segments)/, f);
   }
 });
@@ -133,28 +134,26 @@ test('book = landscape only: portrait inner screen is a single column, iPads and
   assert.doesNotMatch(beauty, /min-width: 761px/);
 });
 
-test('system widget keep-out: one token pair, inside DUO INNER only (tab and installed app), physical right', async () => {
+test('widget corner: three tokens, 0 outside the Duo set, physical right through --sa-r (no inline-end)', async () => {
   const s = await css('duo-edges.css');
-  const defs = s.match(/--duo-cutout-w: 116px; --duo-cutout-h: 116px;/g) ?? [];
-  assert.equal(defs.length, 1, 'tokens defined once');
-  const at = s.indexOf('--duo-cutout-w: 116px');
-  const head = s.slice(s.lastIndexOf('@media', at), at);
-  const BOOKQ = 'screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape)';
-  const PORTQ = 'screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait)';
-  assert.ok(head.includes(BOOKQ) && head.includes(PORTQ), 'keep-out scope');
-  // every keep-out rule block is scoped to the Duo inner screen by size alone: no display-mode anywhere
   const sec = s.slice(s.indexOf('10) System widget keep-out'));
+  // defaults are 0 and come BEFORE the Duo block (same specificity: the later one wins)
+  const zero = s.indexOf('--duo-widget-w: 0px;');
+  const duo = s.indexOf('--duo-widget-w: 96px;');
+  assert.ok(zero > 0 && duo > zero, 'defaults 0, then the Duo values');
+  assert.equal((s.match(/--duo-widget-w: 96px;/g) ?? []).length, 1, 'values defined once');
+  assert.match(s, /--duo-widget-gap: 8px;/);
+  assert.match(s, /--duo-widget-h: clamp\(64px, 31vh, 270px\);/);
+  assert.match(s, /--sa-r: max\(env\(safe-area-inset-right, 0px\), calc\(var\(--duo-widget-w\) \+ var\(--duo-widget-gap\)\)\);/);
+  assert.doesNotMatch(s, /cutout/, 'the old 116px cut-out tokens are gone');
+  // the Duo set, evaluated: portrait up to 700px, the two known landscape poses, the book query
+  const head = s.slice(s.lastIndexOf('@media', duo), duo);
+  const q = head.replace(/^@media /, '').replace(/,\s*screen and \(horizontal-viewport-segments: 2\)/, '').replace(/\s*\{\s*:root \{\s*$/, '');
+  for (const [w, h] of [[720, 900], [951, 800], [1000, 960], [540, 400], [382, 580], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932], [470, 780], [669, 867], [660, 800], [585, 951], [594, 368], [780, 470], [951, 585], [951, 669], [722, 585], [667, 375], [678, 457]]) assert.ok(matches(q, w, h), `${w}x${h} gets the widget box`);
+  for (const [w, h] of [[744, 1024], [721, 1100], [1001, 700], [820, 1180], [1024, 768], [1180, 820], [1280, 800], [1440, 900], [900, 250], [951, 1000]]) assert.ok(!matches(q, w, h), `${w}x${h} must not get the widget box`);
+  // physical right only
+  assert.doesNotMatch(sec.slice(sec.indexOf('*/')).replace(/\/\*[\s\S]*?\*\//g, ''), /inline-end|padding-inline-start/);
   assert.doesNotMatch(s.slice(s.indexOf('*/', s.indexOf('10) System widget keep-out'))).replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode/);
-  const queries = (sec.match(/@media [^{]*\{/g) ?? []).map((q) => q.replace(/^@media /, '').replace(/\s*\{$/, ''));
-  assert.ok(queries.length >= 3, 'keep-out blocks found');
-  for (const q of queries) assert.ok(q === BOOKQ || q === PORTQ || q === `${BOOKQ},\n       ${PORTQ}`, q);
-  // the real queries, evaluated: the keep-out hits the inner screen only
-  const all = `${BOOKQ}, ${PORTQ}`;
-  for (const [w, h] of [[951, 669], [951, 585], [669, 867], [720, 900], [722, 585], [660, 800]]) assert.ok(matches(all, w, h), `${w}x${h} gets the keep-out`);
-  for (const [w, h] of [[390, 844], [844, 390], [932, 430], [744, 1024], [820, 1180], [1024, 768], [1180, 820], [1280, 800], [1440, 900], [367, 740], [951, 350]]) assert.ok(!matches(all, w, h), `${w}x${h} must not get the keep-out`);
-  assert.match(sec, /--bar-h: var\(--duo-cutout-h\)/);
-  assert.match(sec, /padding-right: calc\(var\(--pg-edge\) \+ var\(--duo-cutout-w\)\)/);
-  assert.match(sec, /\.app-shell \.app-sidebar--desktop \{ padding-top: calc\(var\(--duo-cutout-h\)/);
 });
 
 test('book pages size from the page: counters and rows follow the ~430px page, not the 951px window', async () => {

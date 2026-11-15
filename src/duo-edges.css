@@ -13,7 +13,9 @@
    ========================================================================== */
 :root {
   --sa-t: env(safe-area-inset-top, 0px);
-  --sa-r: env(safe-area-inset-right, 0px);
+  /* Physical right: the system's own inset, or the Duo widget box (section 10), whichever is wider. */
+  --sa-r: max(env(safe-area-inset-right, 0px), calc(var(--duo-widget-w) + var(--duo-widget-gap)));
+  --sa-r-edge: env(safe-area-inset-right, 0px);
   --sa-b: env(safe-area-inset-bottom, 0px);
   --sa-l: env(safe-area-inset-left, 0px);
   --sa-start: var(--sa-l);
@@ -394,7 +396,8 @@
   .command-palette {
     max-width: calc(var(--pg) - 2 * var(--pg-gut));
     position: relative;
-    inset-inline-start: calc(-25vw - var(--spine) / 4);
+    /* The overlay's right padding (section 10) already moved the centre left by half the box: take that back out of the shift. */
+    inset-inline-start: calc(-25vw - var(--spine) / 4 + (var(--duo-widget-w) + var(--duo-widget-gap)) / 2);
   }
   .app-sidebar--mobile { width: min(var(--pg), 340px); }
 }
@@ -450,6 +453,9 @@
   .app-shell .app-main {
     padding-top: .875rem !important;  /* !important: duo.css sets padding-top/padding-block !important */
     padding-bottom: calc(var(--lap-bar) + var(--sa-b) + 1.25rem) !important;  /* !important: duo.css and index.css set padding-bottom !important */
+    /* The rail is gone here, and it was what absorbed the start edge (the right one
+       in Arabic, where the widget box lives): the page takes that inset itself. */
+    padding-inline-start: calc(clamp(1rem, 3vw, 1.75rem) + var(--sa-start));
   }
 }
 
@@ -549,55 +555,79 @@
 
 
 /* ==========================================================================
-   10) System widget keep-out (Duo inner screen, browser tab or installed app).
-   iOS floats a status widget (arrow, clock, ring, dots) over the PHYSICAL
-   top-right corner of the page (in a Safari tab as well as the installed app), about 55-80px wide at 20-110px from
-   the edge and down to roughly y=125px. We cannot read its box, so a generous
-   corner is reserved: nothing readable or tappable sits in the top-right
-   --duo-cutout-w x --duo-cutout-h box. Backgrounds and heroes keep running
-   full-bleed behind it; only content steps aside.
-   Scope: the Duo inner screen only (book = landscape, or the portrait inner
-   screen), in a browser tab AND in the installed app: no display-mode condition.
-   The outer folded screen (about 367x740) cannot be told apart
-   from an ordinary iPhone, which has no such widget: it is deliberately left out.
-   The box is physical: right, whatever the text direction.
+   10) System widget keep-out (iPhone Duo; browser tab, installed app, Capacitor).
+   iOS floats a status widget (torch capsule, account/location glyph, clock,
+   battery/Wi-Fi) over the PHYSICAL top-right corner of the page. It is not part
+   of the safe area (env() stays 0 in portrait), so nothing else reports it.
+   ESTIMATED from screenshots, not measured on a device. First pass (1371x2034):
+   x 82%-95% of the width, y 3%-30% of the height. Re-measured on the real in-app
+   shots (standard 44pt buttons = about 130px in a 1348px image, so about 2.95 px
+   per pt, i.e. an app viewport of about 457x678 CSS px, not a "known" size): the
+   column is about 54pt wide starting about 20pt from the right edge (its far edge
+   about 75pt in), y from about 20pt to about 166pt. Another measurement of the
+   native box says about 80px wide at 30-110px from the edge, down to y about 268.
+   The truth lies between 84-112px from the right and 174-270px from the top, so
+   the box takes the generous end. The owner can calibrate live: ?duo-debug=1&duo-w=NN&duo-h=NN.
+
+   ONE reserved box, three tokens, physical right (never inline-end: in Arabic the
+   start edge IS the right edge, the worst place for it):
+     --duo-widget-w    96px   (offset from the edge + the widget column)
+     --duo-widget-gap   8px   (air between the widget and content)
+     --duo-widget-h    clamp(64px, 31vh, 270px)
+   Outside the Duo set below all three are 0 and nothing changes. (Landscape
+   ordinary phones such as 667x375 or 844x390 fall inside the landscape band.)
+
+   How it is applied: the widget is a system overlay fixed to the SCREEN, so
+   content that scrolls under it would meet it again. The box therefore goes into
+   --sa-r, the right safe-area token every surface above already consumes (top
+   bar, main column, rail, drawer, public headers, sign-in, crash screen, book
+   pages). Backgrounds stay full-bleed (padding, not margin); only content steps
+   aside. Overlays that do not read --sa-r get their own rule below.
+
+   Duo set, by ranges and never by exact widths (the app viewport is a different
+   size from Safari's: no toolbars, so it is taller): portrait up to 720px wide and
+   at least 360px tall at ANY height (382x580, 457x678, 470x780, 669x867, 720x900 and the
+   taller full-screen app heights; an ordinary phone in portrait matches too, the
+   safe default: the cost there is a 104px right gutter), landscape 540-1000px wide
+   by 300-960px tall (594x368, 780x470, 867x669, 951x585 families), and
+   horizontal-viewport-segments: 2. Landscape geometry is NOT verified on a device.
    ========================================================================== */
-@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape),
-       screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
-  :root { --duo-cutout-w: 116px; --duo-cutout-h: 116px; }
-  /* Dialogs and the search palette: nothing opens under the widget. */
-  .fixed.inset-0:has(> [role="dialog"][aria-modal="true"]),
-  .fixed.inset-0:has(> .command-palette) { padding-top: calc(var(--duo-cutout-h) + var(--sa-t) + 4px); }
-  .fixed.inset-0 > [role="dialog"][aria-modal="true"]:not(.app-sidebar--mobile),
-  [role="dialog"][aria-modal="true"]:not(.fixed):not(.app-sidebar--mobile) {
-    max-height: calc(100dvh - var(--duo-cutout-h) - var(--sa-t) - 1.5rem);
+:root {
+  --duo-widget-w: 0px;
+  --duo-widget-gap: 0px;
+  --duo-widget-h: 0px;
+}
+@media screen and (orientation: portrait) and (max-width: 720px) and (min-height: 360px),
+       screen and (orientation: landscape) and (min-width: 540px) and (max-width: 1000px) and (min-height: 300px) and (max-height: 960px),
+       screen and (horizontal-viewport-segments: 2) {
+  :root {
+    --duo-widget-w: 96px;
+    --duo-widget-gap: 8px;
+    --duo-widget-h: clamp(64px, 31vh, 270px);
   }
-  /* Header strip of the public information pages: the brand steps left of the box. */
-  .public-bar { margin-right: var(--duo-cutout-w); min-height: var(--duo-cutout-h); align-items: center; }
 }
 
-/* Book (landscape): the band above both pages is as tall as the keep-out box;
-   the search that opens the right page (the start page, Arabic) stands beside it. */
-@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
-  :root { --bar-h: var(--duo-cutout-h); }
-  html[dir="rtl"] .app-shell .app-topbar { padding-right: calc(var(--pg-edge) + var(--duo-cutout-w)) !important; }  /* !important: the bar's padding-inline is !important in §7 */
-  html:not([dir="rtl"]) .app-shell .app-topbar .topbar-tools { inset-inline-end: calc(var(--pg-edge) + var(--sa-end) + var(--duo-cutout-w)); }
-  /* Right page of an LTR book is the first page: its first row clears the box too. */
-  html:not([dir="rtl"]) .app-shell .app-sidebar--desktop { top: calc(var(--bar-h) + var(--sa-t)); }
-  .auth-shell > main, .auth-shell > .auth-visual { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
-  .public-shell .public-header { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); align-items: center; padding-right: calc(var(--pg-edge) + var(--duo-cutout-w)); }
+/* Floating dock: it sits at the bottom, far below the box, so it keeps the
+   system inset only (it used --sa-r and would sit lopsided). */
+@media (max-width: 599.98px) {
+  .app-shell .mobile-dock { right: max(8px, var(--sa-r-edge)) !important; }  /* !important: same rule as section 2 */
 }
 
-/* Portrait inner screen: the rail keeps its full-height background but its first
-   item starts under the box; the bar beside it leaves the box's overhang free. */
-@media screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
-  .app-shell .app-topbar { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); }
-  html[dir="rtl"] .app-shell .app-sidebar--desktop { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
-  html[dir="rtl"] .app-shell .app-topbar { padding-right: calc(var(--duo-cutout-w) - var(--rail-w) + .75rem) !important; }  /* !important: index.css holds the bar's padding to .75rem below 768px */
-  html:not([dir="rtl"]) .app-shell .app-topbar { padding-right: calc(var(--duo-cutout-w) + .75rem) !important; }  /* !important: same rule as above */
-  .app-shell .app-topbar .topbar-logout { display: none; }  /* the rail carries sign-out; the bar gave up 116px of width */
-  .public-shell .public-header { min-height: calc(var(--duo-cutout-h) + var(--sa-t)); align-items: center; padding-right: calc(1rem + var(--duo-cutout-w)); }
-  .auth-shell > main { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
-  .app-shell .app-sidebar--mobile { padding-top: calc(var(--duo-cutout-h) + var(--sa-t)); }
-  .app-shell .app-sidebar--mobile .mobile-menu-close { top: calc(var(--duo-cutout-h) + var(--sa-t) - 52px); }
+/* Dialogs, sheets, the search palette, the dossier: every full-screen overlay
+   that centres a panel keeps that panel clear of the box on the right. The menu
+   drawer overlay is excluded: its panel reads --sa-start through section 2. The
+   scrim stays full-bleed (padding only). There is no toast or install banner
+   component in this app. */
+.fixed.inset-0:not(:has(> .app-sidebar--mobile)) {
+  padding-right: calc(1rem + var(--duo-widget-w) + var(--duo-widget-gap));
 }
+
+/* Content that lays out with Tailwind's px-4 / md:px-7 instead of the edge tokens. */
+.predictive-mobile-wrap { padding-left: calc(1rem + var(--sa-l)); padding-right: calc(1rem + var(--sa-r)); }
+@media (min-width: 768px) {
+  .predictive-mobile-wrap { padding-left: calc(1.75rem + var(--sa-l)); padding-right: calc(1.75rem + var(--sa-r)); }
+}
+/* The "more tools" menu hung from the summary toward the right edge in Arabic
+   (the logical end edge is the LEFT one there) and ran under the corner box; it
+   now grows from the summary's right edge toward the page, as it does in English. */
+html[dir="rtl"] .workspace-more > div { left: auto; right: 0; }

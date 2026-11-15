@@ -29,7 +29,7 @@ if (!BASE) {
 
 const SIZES = [[382, 580], [457, 678], [457, 760], [470, 780], [594, 368], [669, 867], [951, 585]];
 const VIEWPORTS = SIZES.flatMap(([w, h]) => [[w, h], [h, w]]).filter(([w, h], i, a) => a.findIndex(([x, y]) => x === w && y === h) === i);
-const TALL = [[720, 900], [951, 669], [951, 800], [960, 960], [382, 780], [382, 844], [470, 900], [669, 1000], [951, 700]];  // full-height app viewports (no browser toolbars)
+const TALL = [[720, 900], [951, 669], [951, 800], [1000, 960], [382, 780], [382, 844], [470, 900], [669, 1000], [951, 700]];  // full-height app viewports (no browser toolbars)
 const WK_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
 const SCHEMES = ['light', 'dark'];
 const click = (sel) => async (p) => { const l = p.locator(sel).first(); if (await l.count()) { await l.click({ timeout: 4000 }).catch(() => {}); await p.waitForTimeout(400); } };
@@ -142,7 +142,8 @@ async function run(role, vp, scheme, state, font200, mode, retry = 3) {
 }
 if (args.control) { args.quick = true; }
 const MODES = args.mode ? [String(args.mode)] : ['safari', 'app'];
-for (const mode of MODES) for (const vp of [...VIEWPORTS, ...TALL]) for (const scheme of SCHEMES) for (const st of STATES) {
+const ONLY_VP = args.vps ? String(args.vps).split(',') : null;
+for (const mode of MODES) for (const vp of [...VIEWPORTS, ...TALL].filter(([w, h]) => !ONLY_VP || ONLY_VP.includes(`${w}x${h}`))) for (const scheme of SCHEMES) for (const st of STATES) {
   if (args.quick && !QUICK.has(st.id)) continue;
   if (args.states && !String(args.states).split(',').includes(st.id)) continue;
   await run(st.role, vp, scheme, st, false, mode);

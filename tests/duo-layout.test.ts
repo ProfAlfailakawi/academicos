@@ -149,7 +149,7 @@ test('widget corner: three tokens, 0 outside the Duo set, physical right through
   // the Duo set, evaluated: portrait up to 700px, the two known landscape poses, the book query
   const head = s.slice(s.lastIndexOf('@media', duo), duo);
   const q = head.replace(/^@media /, '').replace(/,\s*screen and \(horizontal-viewport-segments: 2\)/, '').replace(/\s*\{\s*:root \{\s*$/, '');
-  for (const [w, h] of [[720, 900], [951, 800], [960, 960], [540, 400], [382, 580], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932], [470, 780], [669, 867], [660, 800], [585, 951], [594, 368], [780, 470], [951, 585], [951, 669], [722, 585], [667, 375], [678, 457]]) assert.ok(matches(q, w, h), `${w}x${h} gets the widget box`);
+  for (const [w, h] of [[720, 900], [951, 800], [1000, 960], [540, 400], [382, 580], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932], [470, 780], [669, 867], [660, 800], [585, 951], [594, 368], [780, 470], [951, 585], [951, 669], [722, 585], [667, 375], [678, 457]]) assert.ok(matches(q, w, h), `${w}x${h} gets the widget box`);
   for (const [w, h] of [[744, 1024], [721, 1100], [1001, 700], [820, 1180], [1024, 768], [1180, 820], [1280, 800], [1440, 900], [900, 250], [951, 1000]]) assert.ok(!matches(q, w, h), `${w}x${h} must not get the widget box`);
   // physical right only
   assert.doesNotMatch(sec.slice(sec.indexOf('*/')).replace(/\/\*[\s\S]*?\*\//g, ''), /inline-end|padding-inline-start/);

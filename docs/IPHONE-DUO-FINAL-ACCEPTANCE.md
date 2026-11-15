@@ -294,3 +294,90 @@ NODE_PATH=/opt/node22/lib/node_modules PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
 - لوحة البحث تبدأ عند y≈121px على الشاشة الداخلية (تحت الصندوق).
 
 **لم يُغطَّ:** جهاز حقيقي وSafari الفعلي، وصندوق الأداة الحقيقي (تقدير 116×116)، والصفحات التي تتطلب حسابًا حقيقيًا. بند الجولة السابقة (تداخل `.language-switcher` مع الزاوية بـ4px على `/` عند 660×800) لم يُعاد قياسه ولم يُعدَّل.
+
+
+## ركن الودجت (15 نوفمبر 2026): منطقة محجوزة واحدة لكل الوضعيات والشاشات
+
+> هذا القسم يحل محل ما ورد أعلاه عن `--duo-cutout-w/h: 116px` (القسم 10 القديم حُذف من `src/duo-edges.css`).
+> كل الأرقام تقدير من لقطات المالك، لا قياس على جهاز. لم يُجرَّب شيء على جهاز حقيقي ولا في WKWebView حقيقي.
+
+### السبب الجذري (من الكود)
+1. **النطاق**: القسم 10 القديم كان مربوطًا باستعلامين فقط: الكتاب العرضي (721–1000 × 520–960) والطولي 640–720. لذلك لم يشمل 382×580 ولا 457×678 ولا 470×780 ولا العرضي القصير 594×368 ولا أي نافذة أطول من 960 أو أقصر من 520.
+2. **المقاس**: الصندوق كان 116×116، بينما التقدير من اللقطات عرض 84–112 وارتفاع 174–270.
+3. **التغطية سطحًا سطحًا**: الإصلاح السابق كان قواعد منفصلة (شريط علوي، شريط الصفحات العامة، الدخول، الرف) مع `!important` متراكم، فبقيت سطوح بلا حجز: الأدراج، شريط «اقتراح لك»، قائمة «المزيد» في مساحة العمل (كانت تمتد نحو الحافة اليمنى بالعربية لأن `end-0` هو اليسار)، ومحتوى الوضع العرضي القصير (الرف مخفي هناك وهو من كان يمتص هامش البداية).
+4. **الأساس**: كل السطوح تقرأ أصلًا `--sa-r` (هامش الحافة اليمنى). `env(safe-area-inset-right)` يساوي 0 في الطولي، فلم يكن لدى أي سطح ما يدفعه. الإصلاح: الصندوق يدخل في `--sa-r` نفسه، فيتبعه كل ما كان يتبع الحافة (بدل قاعدة لكل سطح).
+
+### المتغيرات (مكان واحد: `src/duo-edges.css` القسم 10)
+| المتغير | القيمة | المعنى |
+|---|---|---|
+| `--duo-widget-w` | `96px` | يشمل البعد عن الحافة وعمود الودجت |
+| `--duo-widget-gap` | `8px` | فراغ بين الودجت والمحتوى |
+| `--duo-widget-h` | `clamp(64px, 31vh, 270px)` | حوالي 31% من الارتفاع بحد أقصى 270 |
+| `--sa-r` | `max(env(safe-area-inset-right), w + gap)` | الهامش الفيزيائي الأيمن الذي تقرؤه كل السطوح |
+
+خارج مجموعة Duo الثلاثة تساوي 0 ولا يتغير شيء. المجموعة بنطاقات لا بعروض دقيقة (التطبيق أطول من Safari لأنه بلا أشرطة): طولي حتى 720px وبارتفاع 360px فأكثر في أي ارتفاع (يشمل 720×900 الذي حمته الجولات السابقة)، وعرضي 540–1000 × 300–960 (يشمل 951×669 و951×800)، و`horizontal-viewport-segments: 2`. الحجز على اليمين الفيزيائي دائمًا (لا `inline-end`). هواتف عادية في الطولي (≤720px) تطابق المجموعة أيضًا، وكلفتها هامش أيمن 104px: هذا الافتراض الآمن المطلوب. وكذلك هواتف عرضية مثل 844×390 تقع داخل النطاق العرضي.
+
+### التقدير من اللقطات (لا قياس جهاز)
+- لقطة أولى 1371×2034: x≈82%–95%، y≈3%–30%.
+- لقطات التطبيق الحقيقية (1348px عرضًا): أزرار 44pt قياسية تقيس ≈130px أي ≈2.95 px لكل pt، فنافذة التطبيق ≈457×678 (ليست مقاسًا «معروفًا»). العمود ≈54pt عرضًا يبدأ ≈20pt من الحافة (حافته البعيدة ≈75pt)، ومن y≈20pt إلى ≈166pt. قياس آخر للصندوق الأصلي: ≈80px من 30 إلى 110px عن الحافة حتى y≈268.
+- الحقيقة بين 84–112px أفقيًا و174–270px رأسيًا، فأُخذ الطرف السخي.
+- **معايرة المالك على الجهاز**: `?duo-debug=1&duo-w=110&duo-h=270` يبدّل القيمتين لهذه الصفحة فقط ويرسم الإطار الأحمر؛ عدّل حتى يغطي الإطار الكبسولة كاملة ثم أرسل لقطة.
+
+### الجرد (ما حُجز)
+| الملف / المحدد | ما فُعل |
+|---|---|
+| `src/duo-edges.css` `:root --sa-r` | الصندوق داخل الهامش الأيمن: يحجز الشريط العلوي، عمود المحتوى، الرف، الدرج (`.app-sidebar--mobile`)، ترويسات الصفحات العامة، الدخول (`.auth-shell`)، شاشة الخطأ (`.error-screen`)، الصفحات المزدوجة (الكتاب) |
+| `.app-shell .app-topbar` (sticky) | عبر `--sa-r` |
+| `.app-shell .app-main` (الوضع الجانبي/الرف/الهاتف) | عبر `--sa-r` |
+| `.app-sidebar--desktop` (الرف، RTL = اليمين) | عرض الرف + الهامش |
+| `.app-sidebar--mobile` (الدرج) | `padding-inline-start: var(--sa-start)` |
+| `.public-header` / `.public-page` / `.auth-shell > main` / `.duo-doc` | عبر `--sa-r` |
+| `.error-screen` (ErrorBoundary) | عبر `--sa-r` |
+| `.fixed.inset-0` (AppDialog، الحوارات، لوحة البحث، نماذج المشروع، PlatformHub، UserManagement، الملف الأكاديمي) | `padding-right` بقدر الصندوق (الخلفية المعتمة تبقى كاملة) |
+| `.mobile-dock` (ثابت أسفل) | يحتفظ بهامش النظام فقط (بعيد عن الصندوق) |
+| `.predictive-mobile-wrap` («اقتراح لك») | كان `px-4` بلا هامش حافة: أُصلح |
+| `.workspace-more > div` (قائمة «المزيد») | في RTL كانت تتمدد نحو الحافة اليمنى: تثبّت على الحافة اليمنى للملخص |
+| `.app-main` في الوضع «اللابتوب/العرضي القصير» | الرف مخفي فلا يمتص هامش البداية: `padding-inline-start` يضيفه |
+| `apple/www/index.html`, `apple/www/offline.html` | استعلام الصندوق نفسه (`padding-right: max(104px, env(...))`) للصفحات المضمّنة |
+| `index.html` شاشة الإقلاع `#acos-boot` | لا يحتاج: محتواها في المنتصف |
+| `src/duo-debug.ts` + `main.tsx` | صفحة التشخيص (تُحمَّل فقط مع `?duo-debug=1`) |
+| `ProjectWriterStudio`/`CurriculumTwin`/`Passport`/`UploadAssignment` `xl:sticky` | لا يحتاج: عمودان داخل المحتوى المحجوز، و`xl` فوق مجموعة Duo |
+| `.app-sidebar--desktop` (مفتوح فقط ≥1024px) | لا يحتاج |
+| خلفيات `absolute inset-0` والأسطح المعتمة (scrims) | لا تحتاج (بلا نص ولا تفاعل) |
+| إشعارات toast / شريط تثبيت PWA | غير موجودة في هذا المشروع (لا مكوّن ولا `beforeinstallprompt`)، فلا شيء لإخفائه |
+
+### التطبيق (Capacitor) مقابل Safari
+- **ما يختلف**: معرّف المتصفح بلا `Safari/`، و`navigator.standalone` غير معرّف، و`display-mode: standalone` خطأ، ولا أشرطة متصفح فالنافذة أطول، و`window.Capacitor` موجود، و`contentInset: never` مع `viewport-fit=cover` (الصفحة تبدأ من 0,0 و`env()` = 0). `apple/capacitor.config.json` يفتح الموقع عبر `server.url`، فالقواعد نفسها تعمل.
+- **ما يغطيه الحارس**: سياق «app» مع معرّف WKWebView و`window.Capacitor` و`navigator.standalone` غير معرّف وDPR 2 و`isMobile`، على نفس المصفوفة، مع ارتفاعات كاملة أطول (382×780، 382×844، 470×900، 669×1000، 951×700) والنافذة المستنتجة 457×678 و457×760.
+- **كشف الجهاز لا يعتمد على Safari**: استعلامات وسائط بأبعاد فقط، بلا عرض دقيق، ولا نسبة أبعاد، ولا حد أعلى للارتفاع في الطولي، ولا JS.
+- **صدق**: سياق التطبيق **محاكى** في WebKit سطح مكتب (WPE) وليس WKWebView حقيقيًا ولا جهازًا؛ على المالك التأكد بـ`?duo-debug=1` في TestFlight (اللوحة تطبع `Capacitor: native ios` وحالة معرّف المتصفح وهل المنطقة نشطة).
+
+### حارس التقاطع
+- الملف: `tests/e2e/duo-widget-guard.mjs`، أمر `npm run test:duo-widget` (و`test:duo-widget:quick`). **محلي فقط ولم يُضف إلى CI عمدًا**: `playwright install --with-deps webkit` يفشل على `ubuntu-latest` الحالي. التحقق السريع في `npm test` عبر اختبار CSS في `tests/duo-layout.test.ts`.
+- يقيس عبر عنصر مجسّ (`height: var(--duo-widget-h)` ثم `getBoundingClientRect`) لا عبر `getComputedStyle`، ويفشل صراحة إذا كان الصندوق 0 في أي خلية (لا نجاح فارغ)، وفيه «ضبط سلبي» (`--control`) يفرض الصندوق على بناء الأساس ويجب أن يرصد تقاطعات.
+- المصفوفة: 7 مقاسات × اتجاهان + 5 ارتفاعات كاملة، فاتح/داكن، نص 200%، دخول، رئيسية عامة، صفحة عامة، خطأ، رئيسية طالب، مشاريع، مساحة عمل، رئيسية أستاذ، قائمة جانبية، لوحة بحث، قائمة/حوار، في سياقي Safari وapp.
+- الاستثناءات المسجلة: الخلفيات المعتمة الممتدة (`button.absolute.inset-0` بلا نص)، وSVG زخرفي أو `aria-hidden`، و`.sr-only` (مخفي بصريًا).
+- النتيجة والأرقام: انظر وصف الـPR (تُملأ بعد التشغيل الأخير).
+
+### اللقطات (قبل/بعد، الإطار الأحمر من السكربت لا من الصفحة)
+| المقاس | قبل | بعد |
+|---|---|---|
+| رئيسية 382×580 | ![](iphone-duo-widget-corner/before-home-382x580.png) | ![](iphone-duo-widget-corner/after-home-382x580.png) |
+| رئيسية 669×867 | ![](iphone-duo-widget-corner/before-home-669x867.png) | ![](iphone-duo-widget-corner/after-home-669x867.png) |
+| رئيسية 951×585 | ![](iphone-duo-widget-corner/before-home-951x585.png) | ![](iphone-duo-widget-corner/after-home-951x585.png) |
+| دخول 382×580 | ![](iphone-duo-widget-corner/before-signin-382x580.png) | ![](iphone-duo-widget-corner/after-signin-382x580.png) |
+| دخول 669×867 | ![](iphone-duo-widget-corner/before-signin-669x867.png) | ![](iphone-duo-widget-corner/after-signin-669x867.png) |
+| دخول 951×585 | ![](iphone-duo-widget-corner/before-signin-951x585.png) | ![](iphone-duo-widget-corner/after-signin-951x585.png) |
+
+«قبل» من بناء محلي لفرع الأساس (لا وصول للموقع المنشور). الصور على DPR 1.
+
+### خطوات فحص المالك على الجهاز
+1. افتح التطبيق (TestFlight) ثم الرابط مع `?duo-debug=1` (يمكن تغيير الصفحة بعد ذلك لأن المعامل يُقرأ عند التحميل).
+2. تأكد أن اللوحة السفلية اليسرى تقول `zone active: YES` وأن `Capacitor: native ios`.
+3. تأكد أن الإطار الأحمر لا يغطي شعارًا ولا عنوانًا ولا زرًّا، وأنه يغطي كبسولة المصباح والوقت والبطارية كاملة. وإلا جرّب `&duo-w=110&duo-h=270` وأرسل لقطة.
+4. كرّر في: الدخول، الرئيسية، القائمة الجانبية، حوار، كتاب/مفتوح/عرضي.
+
+### دخول Google داخل التطبيق: غير موجود في هذا المشروع
+- لا `signInWithPopup` ولا `signInWithRedirect` ولا `GoogleAuthProvider` ولا `OAuthProvider` ولا `apple.com` في `src` أو `server*`. الدخول: `signInWithEmailAndPassword` (`src/contexts/AuthContext.tsx:269`) وهاتف `PhoneAuthProvider` (`src/pages/Login.tsx`).
+- غلاف Capacitor يفتح الموقع عبر `server.url` (`apple/capacitor.config.json`)، لكن بلا مزود Google فالخطأ «missing initial state» غير موجود هنا. `allowNavigation` يحتوي `*.firebaseapp.com` و`*.googleapis.com` ولا `UIApplication.shared.open` ولا `CFBundleURLTypes` في `Info.plist`.
+- **التوصية P0 إن أُضيف Google لاحقًا (لم تُنفَّذ)**: `@capgo/capacitor-social-login` للدخول الأصلي ثم `signInWithCredential` في Firebase من `src/contexts/AuthContext.tsx` و`src/pages/Login.tsx`؛ إضافة iOS client ID وURL scheme معكوسًا في `apple/ios/App/App/Info.plist` (`CFBundleURLTypes`)؛ `npx cap sync ios`؛ ثم بناء وأرشفة iOS جديد ورفعه إلى TestFlight.

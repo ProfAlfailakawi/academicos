@@ -439,3 +439,14 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
 @media (max-width: 767.98px) {
   html .app-main :is(select, textarea, input).field { font-size: 16px !important; }
 }
+
+/* Duo folded portrait (382px): preserve the landing CTA's intrinsic width.
+   The language capsule and brand mark fit beside it, so its label never breaks into a vertical stack. */
+@media (max-width: 419.98px) {
+  .public-header .landing-head-actions { flex-shrink: 0; }
+  .public-header .landing-head-actions > a:last-child {
+    flex: 0 0 auto;
+    width: max-content;
+    white-space: nowrap;
+  }
+}

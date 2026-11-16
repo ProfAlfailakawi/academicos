@@ -453,7 +453,8 @@ html:is([data-locale="ar"], [data-locale="ur"]) :is(.eyebrow, .uppercase) { text
 
 
 /* Duo inner portrait (600–767px): the public header has room to keep the primary action on one line. */
-@media (min-width: 600px) and (max-width: 767.98px) and (min-height: 421px) {
+@media (min-width: 600px) and (max-width: 767.98px) and (min-height: 421px),
+       (min-width: 520px) and (max-width: 599.98px) and (max-height: 480px) {
   .public-header .landing-head-actions > a:last-child {
     flex: 0 0 auto;
     width: max-content;

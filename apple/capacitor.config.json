@@ -13,7 +13,7 @@
   },
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#EDF0F6",
+    "backgroundColor": "#1D2C5C",
     "scheme": "AcademicOS",
     "limitsNavigationsToAppBoundDomains": false,
     "preferredContentMode": "mobile"
@@ -22,7 +22,7 @@
     "SplashScreen": {
       "launchShowDuration": 600,
       "launchAutoHide": true,
-      "backgroundColor": "#EDF0F6",
+      "backgroundColor": "#1D2C5C",
       "showSpinner": false
     }
   }

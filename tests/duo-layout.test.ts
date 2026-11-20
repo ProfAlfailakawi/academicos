@@ -34,7 +34,8 @@ test('edge layer: per-side safe-area tokens, start/end swap in RTL, loaded last'
   assert.match(s, /width: calc\(var\(--rail-w\) \+ var\(--sa-start\)\) !important/);
   const main = await readFile(new URL('../src/main.tsx', import.meta.url), 'utf8');
   const imports = [...main.matchAll(/import '\.\/([\w-]+\.css)'/g)].map((m) => m[1]);
-  assert.equal(imports.at(-1), 'duo-edges.css');
+  // The Duo device layer (scoped to html[data-device="duo"]) follows it as the very last sheet.
+  assert.deepEqual(imports.slice(-2), ['duo-edges.css', 'duo-device.css']);
 });
 
 test('compact height decides the rail: the folded screen held sideways is not a phone with two bars', async () => {
@@ -183,4 +184,15 @@ test('workspace "more" summary shrinks to the screen and ellipsizes the active t
   const index = await css('index.css');
   assert.match(index, /\.workspace-more > summary \{ max-width: 100%; \}/);
   assert.match(index, /\.workspace-more__current \{[^}]*text-overflow: ellipsis/);
+});
+
+test('Duo device layer: every rule is scoped to data-device="duo", so iPhone and iPad never change', async () => {
+  const s = (await css('duo-device.css')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const selectors = [...s.matchAll(/(?:^|[;}])\s*([^@{};][^{};]*)\{/g)].map((m) => m[1].trim()).filter((x) => x && !x.startsWith('@'));
+  assert.ok(selectors.length > 20);
+  const topLevel = (sel: string) => { const out: string[] = []; let depth = 0, cur = ''; for (const ch of sel) { if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch; } return [...out, cur]; };
+  for (const sel of selectors) for (const part of topLevel(sel)) assert.match(part.trim(), /^(html|:root)\[data-device="duo"\]/, part);
+  // Insets come from iOS only: no fixed widget reservation on the Duo.
+  assert.match(s, /--duo-widget-w: 0px/);
+  assert.match(s, /--sa-r: var\(--duo-in-r\)/);
 });

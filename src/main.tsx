@@ -13,11 +13,16 @@ import './final-polish.css';
 import './duo.css';
 import './beauty.css';
 import './duo-edges.css';
+import './duo-device.css';
 import { installAppUpdate } from './lib/app-update';
+import { installDuoMarkers } from './lib/duo-markers';
 
 declare global {
   interface Window { __acosBootReady?: () => void }
 }
+
+// علامات iPhone Duo (data-device / data-shell / data-widget-side) قبل أول رسم.
+installDuoMarkers();
 
 // تشخيص ركن الودجت: يُحمَّل فقط مع ?duo-debug=1.
 if (new URLSearchParams(location.search).get('duo-debug') === '1') {

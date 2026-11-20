@@ -197,7 +197,7 @@ export function Notifications() {
     }
   }
   return (
-    <div className="duo-book space-y-7">
+    <div className="duo-book notif-book space-y-7">
       <PageHeader
         eyebrow={t("notif.eyebrow")}
         title={t("notif.title")}

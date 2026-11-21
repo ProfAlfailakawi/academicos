@@ -16,12 +16,8 @@
     display: grid; place-items: center; text-align: center;
     padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   }
-  /* Duo widget corner: same set and numbers as src/duo-edges.css section 10 (96px + 8px on the physical right). */
-  @media screen and (orientation: portrait) and (max-width: 720px) and (min-height: 360px),
-         screen and (orientation: landscape) and (min-width: 540px) and (max-width: 1000px) and (min-height: 300px) and (max-height: 960px),
-         screen and (horizontal-viewport-segments: 2) {
-    body { padding-right: max(104px, env(safe-area-inset-right)); }
-  }
+  /* No fixed widget gutter here: a width-only rule also caught every ordinary iPhone. The safe-area
+     padding above is the only reservation (iOS reports the Duo widget column as an inset). */
   main { max-width: 26rem; }
   h1 { font: -apple-system-title2; font-weight: 700; margin: 0 0 .5rem; }
   p { color: var(--muted); line-height: 1.6; margin: 0 0 1.5rem; }

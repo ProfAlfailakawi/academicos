@@ -606,6 +606,17 @@
     --duo-widget-h: clamp(64px, 31vh, 270px);
   }
 }
+/* The block above matches by size alone, so it also caught every ordinary iPhone in portrait
+   (390/402/430 wide), narrow iPad/desktop windows and phone landscape: an empty ~116px strip
+   on the right. The fixed box belongs to a real iPhone Duo only (html[data-device="duo"], where
+   duo-device.css replaces it with the insets iOS reports), so every other screen is reset here.
+   Higher specificity than ":root" above; the native shell's inline values (real occlusion
+   regions on <html style>) still win. */
+:root:not([data-device="duo"]) {
+  --duo-widget-w: 0px;
+  --duo-widget-gap: 0px;
+  --duo-widget-h: 0px;
+}
 
 /* Floating dock: it sits at the bottom, far below the box, so it keeps the
    system inset only (it used --sa-r and would sit lopsided). */

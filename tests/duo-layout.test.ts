@@ -150,11 +150,36 @@ test('widget corner: three tokens, 0 outside the Duo set, physical right through
   // the Duo set, evaluated: portrait up to 700px, the two known landscape poses, the book query
   const head = s.slice(s.lastIndexOf('@media', duo), duo);
   const q = head.replace(/^@media /, '').replace(/,\s*screen and \(horizontal-viewport-segments: 2\)/, '').replace(/\s*\{\s*:root \{\s*$/, '');
-  for (const [w, h] of [[720, 900], [951, 800], [1000, 960], [540, 400], [382, 580], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932], [470, 780], [669, 867], [660, 800], [585, 951], [594, 368], [780, 470], [951, 585], [951, 669], [722, 585], [667, 375], [678, 457]]) assert.ok(matches(q, w, h), `${w}x${h} gets the widget box`);
+  for (const [w, h] of [[720, 900], [951, 800], [1000, 960], [540, 400], [382, 580], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932], [470, 780], [669, 867], [660, 800], [585, 951], [594, 368], [780, 470], [951, 585], [951, 669], [722, 585], [667, 375], [678, 457]]) assert.ok(matches(q, w, h), `${w}x${h} matches the size-only media layer (neutralised off the Duo below)`);
   for (const [w, h] of [[744, 1024], [721, 1100], [1001, 700], [820, 1180], [1024, 768], [1180, 820], [1280, 800], [1440, 900], [900, 250], [951, 1000]]) assert.ok(!matches(q, w, h), `${w}x${h} must not get the widget box`);
   // physical right only
   assert.doesNotMatch(sec.slice(sec.indexOf('*/')).replace(/\/\*[\s\S]*?\*\//g, ''), /inline-end|padding-inline-start/);
   assert.doesNotMatch(s.slice(s.indexOf('*/', s.indexOf('10) System widget keep-out'))).replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode/);
+});
+
+test('fixed widget reservation is unreachable outside a real Duo: a higher-specificity reset follows every activation', async () => {
+  const s = (await css('duo-edges.css')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const reset = s.match(/:root:not\(\[data-device="duo"\]\) \{([^}]*)\}/);
+  assert.ok(reset, 'reset rule for every screen that is not the Duo');
+  const resetAt = s.indexOf(reset![0]);
+  const live = [...s.matchAll(/(--duo-widget-(?:w|gap|h)):\s*([^;]+);/g)].filter((m) => !/^0(px)?$/.test(m[2].trim()));
+  assert.ok(live.length >= 3, 'the size-only activation is still there (the reset neutralises it)');
+  for (const m of live) {
+    assert.ok(m.index! < resetAt, `${m[1]}: ${m[2]} must come before the reset`);
+    assert.match(reset![1], new RegExp(`${m[1]}:\\s*0px;`), `${m[1]} reset to 0`);
+  }
+  // Only ":root" (0,1,0) sets the live values, so ":root:not([data-device=duo])" (0,2,0) always wins.
+  for (const m of s.matchAll(/([^{}]+)\{[^{}]*--duo-widget-w:\s*96px/g)) assert.equal(m[1].trim(), ':root');
+  // No other stylesheet brings the fixed box back.
+  for (const f of ['index.css', 'duo.css', 'final-polish.css', 'motion.css', 'beauty.css', 'duo-device.css']) assert.doesNotMatch(await css(f), /--duo-widget-(w|gap|h):\s*(?!\s|0px)[^;]+;/, f);
+});
+
+test('the native shell fallback pages carry no width-only widget gutter', async () => {
+  for (const name of ['index.html', 'offline.html']) {
+    const page = (await readFile(new URL(`../apple/www/${name}`, import.meta.url), 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(page, /104px|96px/, name);
+    assert.doesNotMatch(page, /@media[^{]*max-width:\s*720px/, name);
+  }
 });
 
 test('book pages size from the page: counters and rows follow the ~430px page, not the 951px window', async () => {

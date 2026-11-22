@@ -32,8 +32,9 @@
   --sa-l: var(--duo-in-l);
   --sa-start: var(--duo-in-l);
   --sa-end: var(--duo-in-r);
-  /* Where the clock ends inside its column (no API reports it; measured on the simulator). */
-  --duo-clock-end: 160px;
+  /* Where the clock ends inside its column (no API reports it). The box ends near y=170pt on the
+     outer screen, so the capsule starts at 176pt: below it, never inside it. */
+  --duo-clock-end: 176px;
 }
 :root[data-device="duo"][dir="rtl"] {
   --sa-start: var(--duo-in-r);

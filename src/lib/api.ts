@@ -376,6 +376,18 @@ export const api = {
       "/api/notification-preferences",
       { method: "PATCH", body: JSON.stringify(body) },
     ),
+  nativePushStatus: () =>
+    request<{ success: true; configured: boolean; ids: string[] }>("/api/push/status"),
+  subscribeNativePush: (token: string) =>
+    request<{ success: true; id: string }>("/api/push/subscribe-native", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+  unsubscribeNativePush: (token: string) =>
+    request<{ success: true; removed: boolean }>("/api/push/unsubscribe-native", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
   createShare: (body: {
     kind: "passport" | "portfolio" | "credential" | "project";
     targetId?: string;

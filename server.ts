@@ -152,6 +152,7 @@ import { registerAiServiceRoutes, registerLearnRoutes } from "./src/server/route
 import { registerProcessEvidenceRoutes } from "./src/server/routes/process-evidence";
 import { registerRubricRoutes } from "./src/server/routes/rubric";
 import { registerInstructorRoutes } from "./src/server/routes/instructor";
+import { registerNativePushRoutes } from "./src/server/routes/native-push";
 import { registerTeacherRequestRoutes } from "./src/server/routes/teacher-requests";
 import { registerPublicShareRoutes } from "./src/server/routes/public-share";
 import { registerLtiRoutes } from "./src/server/routes/lti";
@@ -599,7 +600,7 @@ const DEMO_BLOCKED_WRITE_PREFIXES = [
   "/api/admin/", "/api/teacher-requests", "/api/shares", "/api/platform/", "/api/billing/",
   "/api/security/", "/api/lifecycle/", "/api/feature-flags/",
   "/api/support/", "/api/tools/code/execute", "/api/jobs/",
-  "/api/notification-preferences", "/api/notifications/", "/api/lti/",
+  "/api/notification-preferences", "/api/notifications/", "/api/push/", "/api/lti/",
 ];
 const DEMO_AI_PATTERN = /\/(assist|copilot|writer|viva|red-team|xray|improve-style|style-integrity|explain|solve|intake|semantic|translate)(\/|$|\?)/;
 const DEMO_AI_CALLS_PER_SESSION = 25;
@@ -3585,6 +3586,7 @@ async function startServer() {
     resolvePublicShare: (token, password) => platformStore.resolvePublicShare(token, password),
     cleanField,
   });
+  registerNativePushRoutes(app, { authenticate });
   app.get(
     "/api/notifications",
     authenticate,

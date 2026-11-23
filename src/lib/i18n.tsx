@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { MESSAGES } from "./i18n-messages";
+import { nativeTextOverride } from "./native-text";
 
 // نظام تدويل خفيف بلا اعتماديات — يدعم لغات الناس الحقيقية مع RTL/LTR والسرد الصوتي.
 export type LocaleCode = "ar" | "en" | "tr" | "zh" | "hi" | "es" | "fr" | "ur";
@@ -217,6 +218,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const t = useCallback(
     (key: string) => {
+      const native = nativeTextOverride(key, locale);
+      if (native) return native;
       const entry = DICT[key];
       return entry ? entry[locale] || entry.en || key : key;
     },

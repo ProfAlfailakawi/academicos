@@ -24,6 +24,7 @@ import { Card, CardContent } from "../ui/card";
 import { formatDateTime, useI18n } from "../../lib/i18n";
 import { InlineLoader } from "../ui/AcademicLoader";
 import { speechRecognitionLangs, startDictation } from "../../lib/speech";
+import { isAppleNativeShell } from "../../lib/platform";
 import { questionSeconds, type VivaTimeSetting } from "../../lib/viva-access";
 
 const ACCESS_KEY = "academicos.viva.access.v1";
@@ -319,7 +320,7 @@ export function VivaStudio({ project }: { project: ProjectDNA }) {
             <p id={`q_hint_${activeQuestion.id}`} className="sr-only">{t("viva.a11y.answerHint")}</p>
             {listening && <p className="mt-2 text-xs muted" aria-hidden="true">{interim ? <span dir="auto">{interim}…</span> : t("viva.a11y.recording")}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button variant={listening ? "default" : "outline"} aria-pressed={listening} onClick={toggleListening}>{listening ? <MicOff size={16} /> : <Mic size={16} />}{listening ? t("viva.stopRecording") : t("viva.answerVoice")}</Button>
+              {!isAppleNativeShell() && <Button variant={listening ? "default" : "outline"} aria-pressed={listening} onClick={toggleListening}>{listening ? <MicOff size={16} /> : <Mic size={16} />}{listening ? t("viva.stopRecording") : t("viva.answerVoice")}</Button>}
               {currentIndex < session.questions.length - 1 ? (
                 <Button onClick={nextQuestion} disabled={!activeAnswer.trim()}><SkipForward size={16} />{t("viva.saveNext")}</Button>
               ) : (

@@ -1,6 +1,7 @@
 // Web Speech API helpers for dictation (viva answers).
 
 import type { LocaleCode } from "./i18n";
+import { isAppleNativeShell } from "./platform";
 
 /**
  * Recognition language candidates, most specific first. Arabic prefers the
@@ -18,7 +19,7 @@ export function speechRecognitionLangs(locale: LocaleCode, speechTag: string): s
 }
 
 export function speechRecognitionSupported() {
-  return typeof window !== "undefined" && Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  return typeof window !== "undefined" && !isAppleNativeShell() && Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 }
 
 export interface DictationHandlers {
@@ -34,7 +35,7 @@ export interface DictationHandlers {
  * language as unsupported. Returns a stop() function.
  */
 export function startDictation(langs: string[], handlers: DictationHandlers): () => void {
-  const Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const Recognition = isAppleNativeShell() ? undefined : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   if (!Recognition) {
     handlers.onError?.("unsupported");
     return () => undefined;

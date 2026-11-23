@@ -1,0 +1,72 @@
+/* ==========================================================================
+   حركة شريط التنقّل (src/lib/dockMotion.ts) — بصرية فقط.
+   مؤشّرٌ واحد (.dm-ind) ينزلق تحت الوجهة النشطة بدل خلفيةٍ تقفز من زرٍّ إلى زرّ،
+   والزرّ ينضغط تحت الإصبع فورًا ويعود بنعومة. الموضع والحجم والترتيب والوجهات كما هي.
+   الشريط السفلي (الهاتف والدوو) وكبسولة الدوو، وعمود التنقّل على الدوو وحده.
+   ========================================================================== */
+.mobile-dock[data-dm-ready] {
+  /* لون الزرّ النشط السابق نفسه (styles/identity.css): خلفية العلامة ونصّها فوقها. */
+  --dm-ind-bg: var(--brand);
+  --dm-ind-ring: transparent;
+  --dm-ind-radius: 0.6rem;
+  transition: transform .32s cubic-bezier(.32,.72,0,1), opacity .22s ease;
+}
+html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] {
+  --dm-ind-bg: var(--brand);
+  --dm-ind-ring: transparent;
+  --dm-ind-radius: 14px;
+}
+:is(.mobile-dock, html[data-device="duo"] .app-sidebar--desktop nav) > .dm-ind {
+  position: absolute; z-index: 0; pointer-events: none; opacity: 0;
+  border-radius: var(--dm-ind-radius); background: var(--dm-ind-bg);
+  box-shadow: inset 0 0 0 1px var(--dm-ind-ring);
+  transition: transform .26s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;
+}
+:is(.mobile-dock, html[data-device="duo"] .app-sidebar--desktop nav) > .dm-ind.dm-press { transform: scale(.94); transition-duration: .09s; transition-timing-function: ease-out; }
+
+.mobile-dock[data-dm-ready] .mobile-nav-link,
+html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link {
+  position: relative; z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .26s cubic-bezier(.34,1.56,.64,1), color .2s ease;
+}
+/* الخلفية النشطة صار يرسمها المؤشّر المنزلق. */
+html .app-shell .mobile-dock[data-dm-ready] .mobile-nav-link:is([aria-current="page"], :active),
+html[data-device="duo"] .app-shell .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link:is([aria-current="page"], :active) {
+  background: transparent; background-color: transparent; animation: none;
+}
+html[data-device="duo"] .app-shell .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link[aria-current="page"] { box-shadow: none; border-color: transparent; }
+.mobile-dock[data-dm-ready] .mobile-nav-link.dm-press,
+html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link.dm-press {
+  transform: scale(.9); transition-duration: .09s; transition-timing-function: ease-out;
+}
+/* الأيقونة التي صارت نشطة تتنفّس مرّةً واحدة، فيُفهم الانتقال دون لونٍ وحده. */
+.mobile-dock[data-dm-ready] .mobile-nav-link[aria-current="page"] > svg,
+html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link[aria-current="page"] > svg {
+  animation: dm-pop .38s cubic-bezier(.32,.72,0,1);
+}
+@keyframes dm-pop { 0% { transform: scale(.84); } 55% { transform: scale(1.07); } 100% { transform: none; } }
+.mobile-dock[data-dm-ready] .mobile-nav-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* لوحة المفاتيح: يتنحّى الشريط ويعود حين تُغلق. */
+.mobile-dock.dm-kb { transform: translateY(calc(100% + 28px)); opacity: 0; pointer-events: none; }
+
+/* كبسولة الدوو الداكنة في التطبيق (الخارجية): مؤشّرٌ دائري بلون الحالة النشطة السابقة. */
+html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock[data-dm-ready] .mobile-nav-link[aria-current="page"] { background: transparent; }
+html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .mobile-dock[data-dm-ready] {
+  --dm-ind-bg: rgb(0 0 0 / .32); --dm-ind-ring: rgb(255 255 255 / .1); --dm-ind-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-dock[data-dm-ready], .mobile-dock > .dm-ind, .mobile-dock[data-dm-ready] .mobile-nav-link,
+  html[data-device="duo"] .app-sidebar--desktop nav > .dm-ind,
+  html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link { transition: none; }
+  .mobile-dock[data-dm-ready] .mobile-nav-link[aria-current="page"] > svg,
+  html[data-device="duo"] .app-sidebar--desktop nav[data-dm-ready] .sidebar-nav-link[aria-current="page"] > svg { animation: none; }
+}
+html.a11y-reduced-motion .mobile-dock[data-dm-ready] .mobile-nav-link[aria-current="page"] > svg { animation: none; }
+@media (prefers-contrast: more) {
+  .mobile-dock[data-dm-ready] { --dm-ind-ring: var(--ink); }
+}
+/* الشريط السفلي ثابتٌ أصلًا (fixed)، والعمود يحتاج مرجعًا. */
+html[data-device="duo"] .app-sidebar--desktop nav[data-dm] { position: relative; }

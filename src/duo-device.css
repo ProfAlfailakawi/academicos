@@ -35,6 +35,8 @@
   /* Where the clock ends inside its column (no API reports it). The box ends near y=170pt on the
      outer screen, so the capsule starts at 176pt: below it, never inside it. */
   --duo-clock-end: 176px;
+  /* Held sideways the column is short and the box ends near y=110pt (measured in schedule-kw). */
+  --duo-clock-end-wide: 116px;
 }
 :root[data-device="duo"][dir="rtl"] {
   --sa-start: var(--duo-in-r);
@@ -111,9 +113,9 @@ html[data-device="duo"] .app-sidebar--mobile .mobile-menu-close { top: calc(.75r
     -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
   }
   html[data-device="duo"][data-shell="app"][data-widget-side="right"] .app-shell .mobile-dock { right: max(8px, calc((var(--duo-in-r) - 60px) / 2)) !important; }  /* !important: see above */
-  /* Landscape: the column is on the left and short, so the capsule starts higher. */
+  /* Landscape: the column is on the left and short, so the capsule starts higher, still below the clock box. */
   html[data-device="duo"][data-shell="app"][data-widget-side="left"] .app-shell .mobile-dock {
-    left: max(8px, calc((var(--duo-in-l) - 60px) / 2)) !important; top: 92px !important;  /* !important: see above */
+    left: max(8px, calc((var(--duo-in-l) - 60px) / 2)) !important; top: var(--duo-clock-end-wide) !important;  /* !important: see above */
   }
   html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock > .grid {
     display: flex; flex-direction: column; align-items: center; gap: 6px; height: auto;
@@ -193,11 +195,16 @@ html[data-device="duo"] .app-sidebar--mobile .mobile-menu-close { top: calc(.75r
 
 /* ---- 7) Public pages and sign-in: content clear of every inset ------------- */
 html[data-device="duo"] .auth-shell > main,
-html[data-device="duo"] .public-page {
+html[data-device="duo"] .public-page,
+html[data-device="duo"] main:has(> .duo-doc-flow) {
   padding-top: calc(1rem + var(--duo-in-t));
   padding-left: calc(1rem + var(--duo-in-l));
   padding-right: calc(1rem + var(--duo-in-r));
 }
+
+/* The landing hero's floating chips stay inside the screen (their -2%/-3% offsets crossed the edge). */
+html[data-device="duo"] :is(.hero-el--assignment, .hero-el--citation) { inset-inline-start: 0; }
+html[data-device="duo"] :is(.hero-el--source, .hero-el--evidence) { inset-inline-end: 0; }
 
 /* ---- 8) Spread (landscape inner): no near-empty page ------------------------ */
 @media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
@@ -205,4 +212,28 @@ html[data-device="duo"] .public-page {
      filters join it there, and the list reads alone on the start page. */
   html[data-device="duo"] .duo-book.notif-book > :nth-child(2) { grid-column: 2; grid-row: 1; margin-block-start: 0; }
   html[data-device="duo"] .duo-book.notif-book > .duo-unwrap > .duo-aside { grid-row: 2 / -1; margin-block-start: 1rem; top: auto; position: static; }
+}
+
+/* Every Duo posture: the palette never starts at the very top edge of the screen. */
+html[data-device="duo"] .fixed.inset-0:has(> .command-palette) { padding-top: calc(var(--duo-in-t) + 16px); }
+
+/* ---- 9) Spread (landscape inner): pages meet at the spine, overlays on one page -- */
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
+  /* Section 7 pads only the inset side, which moved the two text columns of the short public
+     documents off the middle: the right column started on the spine. Both edges take the larger
+     inset, so the columns meet at the spine whichever side the clock is on. */
+  html[data-device="duo"] :is(.public-page, main:has(> .duo-doc-flow)) {
+    padding-left: calc(var(--pg-edge) + max(var(--duo-in-l), var(--duo-in-r)));
+    padding-right: calc(var(--pg-edge) + max(var(--duo-in-l), var(--duo-in-r)));
+  }
+  /* The command palette opens on the reading (right) page, below the bar, clear of the clock. */
+  html[data-device="duo"] .fixed.inset-0:has(> .command-palette) {
+    justify-content: flex-start;
+    padding-top: calc(var(--bar-h) + var(--duo-in-t) + 12px);
+    padding-inline-start: calc(var(--pg-edge) + var(--sa-start));
+  }
+  html[data-device="duo"] .fixed.inset-0 > .command-palette {
+    inset-inline-start: 0;
+    max-width: calc(var(--pg) - var(--pg-edge) - var(--pg-gut) - var(--sa-start));
+  }
 }

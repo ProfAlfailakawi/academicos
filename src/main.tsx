@@ -16,6 +16,8 @@ import './duo-edges.css';
 import './duo-device.css';
 import { installAppUpdate } from './lib/app-update';
 import { installDuoMarkers } from './lib/duo-markers';
+import { installDockMotion } from './lib/dockMotion';
+import './styles/dock-motion.css';
 
 declare global {
   interface Window { __acosBootReady?: () => void }
@@ -38,6 +40,12 @@ createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><
 
 // تسليم الشاشة إلى React بعد أول رسم. المؤقّت احتياطٌ للتبويب المخفي
 // حيث لا يعمل requestAnimationFrame؛ والاستدعاء آمن للتكرار.
+// حركة شريط التنقّل (بصرية فقط): الشريط السفلي وكبسولة الدوو، وعمود التنقّل على الدوو وحده.
+installDockMotion({ dock: '.mobile-dock', link: '.mobile-nav-link', active: '.mobile-nav-link[aria-current="page"]' });
+if (document.documentElement.dataset.device === 'duo') {
+  installDockMotion({ dock: '.app-sidebar--desktop nav', link: '.sidebar-nav-link', active: '.sidebar-nav-link[aria-current="page"]' });
+}
+
 const handOff = () => window.__acosBootReady?.();
 requestAnimationFrame(() => requestAnimationFrame(handOff));
 setTimeout(handOff, 400);

@@ -12,6 +12,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { useI18n } from "../lib/i18n";
 import { FoldText } from "../components/VisualBits";
 import { InlineLoader } from "../components/ui/AcademicLoader";
+import { isAppleNativeShell } from "../lib/platform";
 
 const MAX = 20 * 1024 * 1024;
 type Intent = "auto" | "write" | "rescue" | "exam";
@@ -229,7 +230,7 @@ export function MissionControl() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-t hairline pt-3 px-1"><div className="flex items-center gap-1.5 flex-wrap max-w-full">
             <input ref={fileInput} type="file" multiple className="hidden" accept=".pdf,.docx,.pptx,.txt,.md,image/*" onChange={(e)=>{const selected=Array.from(e.target.files||[]).slice(0,5);setFiles(selected);e.currentTarget.value="";}}/>
             <input ref={cameraInput} type="file" className="hidden" accept="image/*" capture="environment" onChange={(e)=>{const selected=Array.from(e.target.files||[]).slice(0,1);setFiles(selected);e.currentTarget.value="";}}/>
-            <ToolButton icon={Paperclip} label={t("mission.upload")} onClick={()=>fileInput.current?.click()}/><ToolButton icon={Camera} label={t("mission.camera")} onClick={()=>cameraInput.current?.click()}/><ToolButton icon={listening?LoaderCircle:Mic2} label={listening?t("mission.listening"):t("mission.speak")} onClick={voiceInput} spin={listening} disabled={listening}/>
+            <ToolButton icon={Paperclip} label={t("mission.upload")} onClick={()=>fileInput.current?.click()}/><ToolButton icon={Camera} label={t("mission.camera")} onClick={()=>cameraInput.current?.click()}/>{!isAppleNativeShell() && <ToolButton icon={listening?LoaderCircle:Mic2} label={listening?t("mission.listening"):t("mission.speak")} onClick={voiceInput} spin={listening} disabled={listening}/>}
           </div><Button onClick={launch} disabled={!canGo||busy} className="min-w-40">{busy?<InlineLoader size={16}/>:<WandSparkles size={16}/>} {busy?t("mission.processing"):t("mission.start")}<ArrowRight size={15} className="directional-icon"/></Button></div>
         </div>
         <div className="flex gap-2 flex-wrap mt-3" aria-label={t("mission.optionalRouting")}>{(["auto","write","rescue","exam"] as Intent[]).map((value)=><button key={value} onClick={()=>setIntent(value)} className={`focus-ring rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all ${intent===value?"bg-[var(--brand)] text-[color:var(--on-brand)] border-[var(--brand)] shadow-xs":"bg-[var(--panel)] text-[var(--ink)] border-[var(--line-strong)] hover:bg-[var(--panel-2)]"}`}>{t(`mission.intent.${value}`)}{value==="auto"&&canGo?` · ${t("mission.routesTo")} ${intentLabel(resolvedIntent)}`:""}</button>)}</div>

@@ -23,6 +23,7 @@ import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/EmptyState";
+import { NativePushCard } from "../components/NativePushCard";
 import { formatDateTime, useI18n } from "../lib/i18n";
 import { localizedUiError } from "../lib/ui-error";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -427,6 +428,7 @@ export function Notifications() {
           )}
         </section>
         <aside className="duo-aside">
+          <NativePushCard onEnabled={() => setPrefs((p) => ({ ...p, push: true }))} />
           <Card>
             <CardContent>
               <details className="notif-prefs">

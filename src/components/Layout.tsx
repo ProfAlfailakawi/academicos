@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { onNativePushOpened } from "../lib/native-push";
 import {
   Command,
   CreditCard,
@@ -119,6 +120,16 @@ export function Layout() {
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+  /* لمسُ تنبيهٍ من iOS يفتح وجهته داخل التطبيق — مسارٌ نسبي من خادمنا وحده. */
+  useEffect(() => {
+    let stop = () => {};
+    void onNativePushOpened((url) => {
+      if (url.startsWith("/") && !url.startsWith("//")) navigate(url);
+    }).then((fn) => {
+      stop = fn;
+    });
+    return () => stop();
+  }, [navigate]);
   useEffect(() => {
     if (user) {
       api

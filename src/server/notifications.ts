@@ -3,6 +3,7 @@ import { getAppFirestore } from './firebase-services';
 import type { NotificationPreferences, NotificationRecord, UserRole } from '../types';
 import { platformStore } from './platform-store';
 import { DemoSandbox } from './demoSandbox';
+import { pushForNotification } from './native-push';
 
 const COLLECTION='notifications';
 const PREFERENCES='notificationPreferences';
@@ -15,6 +16,8 @@ type CreateNotice=Omit<NotificationRecord,'id'|'createdAt'|'delivery'>;
 export async function createNotification(input:CreateNotice){
   const item:NotificationRecord={...input,id:randomUUID(),createdAt:now(),delivery:Object.fromEntries(input.channels.map(c=>[c,c==='in_app'?'sent':'pending']))};
   await db().collection(COLLECTION).doc(item.id).set(item);
+  // كل إشعارٍ شخصي يصل كذلك إلى تطبيق صاحبه على iOS (إن فعّل التنبيهات). لا يُنتظر.
+  pushForNotification(item);
   return item;
 }
 

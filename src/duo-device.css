@@ -32,9 +32,11 @@
   --sa-l: var(--duo-in-l);
   --sa-start: var(--duo-in-l);
   --sa-end: var(--duo-in-r);
-  /* Where the clock ends inside its column (no API reports it). The box ends near y=170pt on the
-     outer screen, so the capsule starts at 176pt: below it, never inside it. */
-  --duo-clock-end: 176px;
+  /* Where the clock ends inside its column. On the real outer screen the box runs from the top pill
+     down to the battery ring (~235pt, owner's device shots 2026-11-26; ~170pt in emulation), so the
+     capsule starts at 244pt, or below the widget height the native shell publishes when that is larger.
+     Same on the outer screen held sideways. */
+  --duo-clock-end: max(244px, calc(var(--duo-widget-h, 0px) + 8px));
   /* Held sideways the column is short and the box ends near y=110pt (measured in schedule-kw). */
   --duo-clock-end-wide: 116px;
 }
@@ -105,6 +107,8 @@ html[data-device="duo"] .app-sidebar--mobile .mobile-menu-close { top: calc(.75r
     display: block !important;  /* !important: duo.css hides the dock with display: none !important in some bands */
     inset: auto !important;  /* !important: index.css and duo-edges.css place the dock with !important insets */
     top: var(--duo-clock-end) !important; bottom: auto !important;  /* !important: duo-edges.css section 8 sets bottom */
+    /* sideways the screen is too short for the whole capsule under the clock: it scrolls inside itself */
+    max-height: calc(100dvh - var(--duo-clock-end) - 8px - var(--duo-in-b)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
     width: 60px !important; height: auto !important;  /* !important: duo-edges.css section 8 sets the bar size */
     padding: 6px !important;  /* !important: index.css sets the dock padding !important */
     border-radius: 30px; border: 1px solid rgb(255 255 255 / .1);
@@ -113,9 +117,9 @@ html[data-device="duo"] .app-sidebar--mobile .mobile-menu-close { top: calc(.75r
     -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
   }
   html[data-device="duo"][data-shell="app"][data-widget-side="right"] .app-shell .mobile-dock { right: max(8px, calc((var(--duo-in-r) - 60px) / 2)) !important; }  /* !important: see above */
-  /* Landscape: the column is on the left and short, so the capsule starts higher, still below the clock box. */
+  /* Column on the left (held sideways): the same start under the clock box. */
   html[data-device="duo"][data-shell="app"][data-widget-side="left"] .app-shell .mobile-dock {
-    left: max(8px, calc((var(--duo-in-l) - 60px) / 2)) !important; top: var(--duo-clock-end-wide) !important;  /* !important: see above */
+    left: max(8px, calc((var(--duo-in-l) - 60px) / 2)) !important;  /* !important: see above */
   }
   html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock > .grid {
     display: flex; flex-direction: column; align-items: center; gap: 6px; height: auto;

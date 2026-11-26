@@ -259,3 +259,61 @@ html[data-device="duo"] .fixed.inset-0:has(> .command-palette) { padding-top: ca
    tab row instead, full width, as it already does on a phone and in the book spread. */
 html[data-device="duo"] .workspace-more[open] { flex-basis: 100%; }
 html[data-device="duo"] .workspace-more > div { position: static; width: 100%; max-width: none; }
+
+/* ---- 10) Owner notes 2026-11-26: full screen is not a book, the margin stays in the margin -------
+   - Inner landscape in the app: iOS can report a zero right inset while the clock sits in the top-right
+     corner (duo-markers.ts then calls the side "right"). The clock column is kept there, so the logo and
+     the menu never sit under it.
+   - Full screen is not a book: no hairline and no fold shadow in the middle. The pages keep their gap on
+     the hinge; the device's own hinge is the line (this repo keeps posture/segment queries out of CSS).
+   - The ruled paper's margin line (40px from the start edge of .paper-grid) crossed the sign-in heading
+     and text on the facing page: the copy now starts past the margin, the line stays in the margin. */
+@media screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px) {
+  :root[data-device="duo"][data-shell="app"][data-widget-side="right"] { --duo-in-r: max(env(safe-area-inset-right, 0px), 84px); }
+}
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
+  html[data-device="duo"] :is(.app-shell, .duo-spine-host, .public-shell, .auth-shell, .public-page, .duo-doc, .duo-card-page, main:has(> .duo-doc-flow))::after { display: none; }
+  html[data-device="duo"] .auth-shell > .auth-visual.paper-grid { padding-inline-start: 60px; }
+  /* Both pages of the sign-in spread keep the same outer edge (the clock column), so they read as equal pages. */
+  html[data-device="duo"] .auth-shell > .auth-visual { padding-inline-end: calc(var(--pg-edge) + max(var(--duo-in-l), var(--duo-in-r))); }
+  html[data-device="duo"] .auth-shell > main { padding-inline-start: calc(var(--pg-edge) + max(var(--duo-in-l), var(--duo-in-r))); }
+  html[data-device="duo"] .public-page.paper-grid,
+  html[data-device="duo"] main.paper-grid { padding-inline-start: max(60px, calc(var(--pg-edge) + max(var(--duo-in-l), var(--duo-in-r)))); }
+}
+
+/* ---- 11) Inner landscape in the app: the same dark capsule under the clock -------------------------
+   Owner 2026-11-26: one professional navigation, the dark vertical capsule in the clock column, in every
+   posture that has one (as on the outer screen, section 5). The dock becomes the capsule and the rail
+   beside the left page steps aside (the capsule carries the same destinations); sign-out, which lived at
+   the foot of the rail, stays in the top bar. The two pages take the same outer edge, so the gap between
+   them sits on the middle. */
+@media screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px) {
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock {
+    display: block !important; inset: auto !important; top: var(--duo-clock-end-wide) !important; bottom: auto !important;  /* !important: index.css, duo.css and duo-edges.css place and hide the dock with !important */
+    width: 60px !important; height: auto !important; padding: 6px !important;  /* !important: see section 5 */
+    border-radius: 30px; border: 1px solid rgb(255 255 255 / .1);
+    background: rgb(29 44 92 / .9) !important;  /* !important: see section 5 */
+    box-shadow: 0 1px 0 rgb(255 255 255 / .08) inset, 0 12px 32px rgb(10 14 30 / .28);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  }
+  html[data-device="duo"][data-shell="app"][data-widget-side="right"] .app-shell .mobile-dock { right: max(8px, calc((var(--duo-in-r) - 60px) / 2)) !important; }  /* !important: see section 5 */
+  html[data-device="duo"][data-shell="app"][data-widget-side="left"] .app-shell .mobile-dock { left: max(8px, calc((var(--duo-in-l) - 60px) / 2)) !important; }  /* !important: see section 5 */
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock > .grid { display: flex; flex-direction: column; align-items: center; gap: 6px; height: auto; max-width: none; margin: 0; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock .-mt-5 { margin-top: 0; order: -1; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock :is(.-mt-5 > .text-meta, .mobile-nav-link__label) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock .mobile-add-button { height: 46px; width: 46px; border-radius: 50%; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock .mobile-nav-link { width: 46px; height: 46px; min-height: 46px; padding: 0; border-radius: 50%; display: grid; place-items: center; color: rgb(255 255 255 / .82); background: none; position: relative; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock .mobile-nav-link[aria-current="page"] { background: rgb(0 0 0 / .32); color: #fff; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .mobile-dock .mobile-nav-link * { color: inherit; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .app-sidebar--desktop { display: none !important; }  /* !important: see section 5 */
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .app-content { margin-inline: 0 !important; width: 100% !important; }  /* !important: see section 5 */
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .app-main {
+    padding-left: calc(clamp(1rem, 3vw, 1.75rem) + max(var(--duo-in-l), var(--duo-in-r))) !important;  /* !important: see section 5 */
+    padding-right: calc(clamp(1rem, 3vw, 1.75rem) + max(var(--duo-in-l), var(--duo-in-r))) !important;  /* !important: see section 5 */
+    padding-bottom: calc(1.5rem + var(--duo-in-b)) !important;  /* !important: see section 5 */
+  }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .app-topbar .topbar-tools .topbar-logout { display: inline-flex; }
+  html[data-device="duo"][data-shell="app"]:not([data-widget-side="none"]) .app-shell .app-topbar {
+    padding-left: calc(.75rem + max(var(--duo-in-l), var(--duo-in-r))) !important; padding-right: calc(.75rem + max(var(--duo-in-l), var(--duo-in-r))) !important;  /* !important: see section 5 */
+  }
+}
